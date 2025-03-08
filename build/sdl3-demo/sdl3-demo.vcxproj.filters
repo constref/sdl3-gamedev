@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="S:\projects\constref\sdl3-demo\sdl3-demo\sdl3-demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="S:\projects\constref\sdl3-demo\sdl3-demo\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{93DB7D17-0D1A-3CD8-A4A8-809C5650DEF9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
