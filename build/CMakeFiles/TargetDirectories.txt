@@ -1,3 +1,0 @@
-S:/projects/constref/sdl3-demo/build/CMakeFiles/ALL_BUILD.dir
-S:/projects/constref/sdl3-demo/build/CMakeFiles/ZERO_CHECK.dir
-S:/projects/constref/sdl3-demo/build/sdl3-demo/CMakeFiles/sdl3-demo.dir
