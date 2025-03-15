@@ -3,32 +3,49 @@
 
 using namespace std;
 
-void cleanup(SDL_Window *win);
+struct SDLState
+{
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+};
+
+void cleanup(SDLState &state);
 
 int main(int argc, char *argv[])
 {
+	SDLState state;
+
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
 		return 1;
 	}
 
-	// create window
+	// create the window
 	int width = 800;
 	int height = 600;
-	SDL_Window *win = SDL_CreateWindow("SDL3 Demo", width, height, 0);
-	if (!win)
+	state.window = SDL_CreateWindow("SDL3 Demo", width, height, 0);
+	if (!state.window)
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", win);
-		cleanup(win);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
+		cleanup(state);
 		return 1;
 	}
 
-	// start event loop
+	// create the renderer
+	state.renderer = SDL_CreateRenderer(state.window, nullptr);
+	if (!state.renderer)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating renderer", state.window);
+		cleanup(state);
+		return 1;
+	}
+
+	// start the game loop
 	bool running = true;
-	SDL_Event event{ 0 };
 	while (running)
 	{
+		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -40,14 +57,22 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+
+		// perform drawing commands
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_RenderClear(state.renderer);
+
+		// swap buffers and present
+		SDL_RenderPresent(state.renderer);
 	}
 
-	cleanup(win);
+	cleanup(state);
 	return 0;
 }
 
-void cleanup(SDL_Window *win)
+void cleanup(SDLState &state)
 {
-	SDL_DestroyWindow(win);
+	SDL_DestroyRenderer(state.renderer);
+	SDL_DestroyWindow(state.window);
 	SDL_Quit();
 }
