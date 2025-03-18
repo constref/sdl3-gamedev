@@ -1,5 +1,6 @@
 ﻿#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
 	// create the window
 	int width = 800;
 	int height = 600;
-	state.window = SDL_CreateWindow("SDL3 Demo", width, height, 0);
+	state.window = SDL_CreateWindow("SDL3 Demo", width, height, SDL_WINDOW_RESIZABLE);
 	if (!state.window)
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
@@ -41,6 +42,15 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	// configure presentation
+	int logW = 640;
+	int logH = 320;
+	SDL_SetRenderLogicalPresentation(state.renderer, logW, logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+	// load game assets
+	SDL_Texture *idleTex = IMG_LoadTexture(state.renderer, "data/idle.png");
+	SDL_SetTextureScaleMode(idleTex, SDL_SCALEMODE_NEAREST);
+
 	// start the game loop
 	bool running = true;
 	while (running)
@@ -55,17 +65,40 @@ int main(int argc, char *argv[])
 					running = false;
 					break;
 				}
+				case SDL_EVENT_WINDOW_RESIZED:
+				{
+					width = event.window.data1;
+					height = event.window.data2;
+					break;
+				}
 			}
 		}
 
 		// perform drawing commands
-		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 		SDL_RenderClear(state.renderer);
+
+		SDL_FRect src{
+			.x = 0,
+			.y = 0,
+			.w = 32,
+			.h = 32
+		};
+
+		SDL_FRect dst{
+			.x = 0,
+			.y = 0,
+			.w = 32,
+			.h = 32
+		};
+
+		SDL_RenderTexture(state.renderer, idleTex, &src, &dst);
 
 		// swap buffers and present
 		SDL_RenderPresent(state.renderer);
 	}
 
+	SDL_DestroyTexture(idleTex);
 	cleanup(state);
 	return 0;
 }

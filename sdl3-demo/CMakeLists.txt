@@ -1,5 +1,5 @@
 ﻿find_package(SDL3 REQUIRED)
-find_package(SDL3_Image REQUIRED)
+find_package(SDL3_image REQUIRED)
 
 add_executable (sdl3-demo "sdl3-demo.cpp")
 
