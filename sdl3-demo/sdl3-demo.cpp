@@ -30,6 +30,7 @@ struct GameObject
 {
 	ObjectType type;
 	glm::vec2 position, velocity, acceleration;
+	SDL_Rect collider;
 	Animation *animation;
 	SDL_Texture *texture;
 	bool isGrounded;
@@ -38,6 +39,12 @@ struct GameObject
 	{
 		type = ObjectType::level;
 		position = velocity = acceleration = glm::vec2(0, 0);
+		collider = SDL_Rect{
+			.x = 0,
+			.y = 0,
+			.w = 0,
+			.h = 0
+		};
 		animation = nullptr;
 		texture = nullptr;
 		isGrounded = false;
@@ -78,17 +85,22 @@ struct GameState
 /*
 	1 - Ground
 	2 - Panel
+	3 - Enemy
 */
 
 const int MAP_ROWS = 5;
 const int MAP_COLS = 50;
 short map[MAP_ROWS][MAP_COLS] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
+const int TILE_SIZE = 32;
+const int MAP_W = MAP_COLS * TILE_SIZE;
+const int MAP_H = MAP_ROWS * TILE_SIZE;
+
 
 bool initialize(SDLState &state);
 void handleInput(SDLState &state, GameState &gameState, SDL_Scancode key, bool isDown);
@@ -102,6 +114,13 @@ int main(int argc, char *argv[])
 	state.height = 900;
 	state.logW = 512;
 	state.logH = 288;
+
+	SDL_FRect mapViewport{
+		.x = 0,
+		.y = 0,
+		.w = static_cast<float>(state.logW),
+		.h = static_cast<float>(state.logH)
+	};
 
 	if (!initialize(state))
 	{
@@ -142,17 +161,23 @@ int main(int argc, char *argv[])
 	SDL_Texture *bg4Tex = IMG_LoadTexture(state.renderer, "data/bg_layer4.png");
 	SDL_SetTextureScaleMode(bg4Tex, SDL_SCALEMODE_NEAREST);
 
-	SDL_Texture *groundTex = IMG_LoadTexture(state.renderer, "data/ground.png");
+	SDL_Texture *groundTex = IMG_LoadTexture(state.renderer, "data/tiles/ground.png");
 	SDL_SetTextureScaleMode(groundTex, SDL_SCALEMODE_NEAREST);
-	SDL_Texture *panelTex = IMG_LoadTexture(state.renderer, "data/panel.png");
+	SDL_Texture *panelTex = IMG_LoadTexture(state.renderer, "data/tiles/panel.png");
 	SDL_SetTextureScaleMode(panelTex, SDL_SCALEMODE_NEAREST);
 
+	SDL_Texture *enemyTex = IMG_LoadTexture(state.renderer, "data/enemy.png");
+	SDL_SetTextureScaleMode(enemyTex, SDL_SCALEMODE_NEAREST);
+	Animation enemyAnim(4, 1.0f);
+
 	// setup game data
+	const int spriteSize = 32;
 	const bool *keys = SDL_GetKeyboardState(nullptr);
 	GameState gs;
-
-	const float floor = state.logH;
-	const int spriteSize = 32;
+	gs.player.position.x = mapViewport.w / 2 - spriteSize / 2;
+	gs.player.collider = SDL_Rect{
+		.x = 8, .y = 0, .w = 16, .h = spriteSize
+	};
 
 	float bg2Scroll = 0;
 	float bg3Scroll = 0;
@@ -163,29 +188,41 @@ int main(int argc, char *argv[])
 	{
 		for (int c = 0; c < MAP_COLS; ++c)
 		{
+			const auto createObject = [&state](ObjectType type, int r, int c, SDL_Texture *tex)
+			{
+				GameObject o;
+				o.type = type;
+				o.texture = tex;
+				o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * tex->h);
+				o.velocity = glm::vec2(0, 0);
+				o.acceleration = glm::vec2(0, 0);
+				o.collider = SDL_Rect{
+					.x = 0, .y = 0, .w = spriteSize, .h = spriteSize
+				};
+
+				return o;
+			};
+
 			switch (map[r][c])
 			{
 				case 1:
 				{
 					// ground
-					GameObject o;
-					o.type = ObjectType::level;
-					o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * groundTex->w);
-					o.velocity = glm::vec2(0, 0);
-					o.acceleration = glm::vec2(0, 0);
-					o.texture = groundTex;
+					GameObject o = createObject(ObjectType::level, r, c, groundTex);
 					gs.objects.push_back(o);
 					break;
 				}
 				case 2:
 				{
 					// paneling
-					GameObject o;
-					o.type = ObjectType::level;
-					o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * groundTex->w);
-					o.velocity = glm::vec2(0, 0);
-					o.acceleration = glm::vec2(0, 0);
-					o.texture = panelTex;
+					GameObject o = createObject(ObjectType::level, r, c, panelTex);
+					gs.objects.push_back(o);
+					break;
+				}
+				case 3:
+				{
+					// enemy
+					GameObject o = createObject(ObjectType::enemy, r, c, enemyTex);
 					gs.objects.push_back(o);
 					break;
 				}
@@ -271,7 +308,7 @@ int main(int argc, char *argv[])
 			handleShooting(&animShootRun, shootRunTex, &animRun, runTex);
 
 			// if velocity and direction have different signs, we're sliding
-			// and moving in the opposite direction
+			// and starting to move in the opposite direction
 			if (gs.player.velocity.x * gs.direction < 0)
 			{
 				// sliding and shooting?
@@ -279,35 +316,31 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		// apply some constant gravity if not grounded
 		if (!gs.player.isGrounded)
 		{
-			// apply some constant gravity
 			gs.player.velocity += glm::vec2(0, 500) * deltaTime;
 		}
 
 		// check for collisions
 		glm::vec2 newPos = gs.player.position;
 
-		// x-axis movement
+		// x-axis movement and check
 		newPos.x += gs.player.velocity.x * deltaTime;
-		SDL_Rect pRect{
-			.x = static_cast<int>(newPos.x),
-			.y = static_cast<int>(newPos.y),
-			.w = spriteSize,
-			.h = spriteSize
-		};
-
 		for (const GameObject &o : gs.objects)
 		{
 			SDL_Rect oRect{
-				.x = static_cast<int>(o.position.x),
-				.y = static_cast<int>(o.position.y),
-				.w = o.texture->w,
-				.h = o.texture->h
+				.x = static_cast<int>(o.position.x) + o.collider.x,
+				.y = static_cast<int>(o.position.y) + o.collider.y,
+				.w = o.collider.w, .h = o.collider.h
 			};
 
-			pRect.x = static_cast<int>(newPos.x);
-			pRect.y = static_cast<int>(newPos.y);
+			SDL_Rect pRect{
+				.x = static_cast<int>(newPos.x) + gs.player.collider.x,
+				.y = static_cast<int>(newPos.y) + gs.player.collider.y,
+				.w = gs.player.collider.w,
+				.h = gs.player.collider.h
+			};
 
 			SDL_Rect result{ 0 };
 			if (SDL_GetRectIntersection(&pRect, &oRect, &result))
@@ -315,30 +348,35 @@ int main(int argc, char *argv[])
 				if (gs.player.velocity.x > 0)
 				{
 					// going right
-					newPos.x = oRect.x - spriteSize;
+					newPos.x = oRect.x - oRect.w + gs.player.collider.x;
 					gs.player.velocity.x = 0;
 				}
 				else if (gs.player.velocity.x < 0)
 				{
-					newPos.x = oRect.x + oRect.w;
+					newPos.x = oRect.x + o.collider.w;
+					newPos.x = oRect.x + oRect.w - gs.player.collider.x;
 					gs.player.velocity.x = 0;
 				}
 			}
 		}
 
-		// y-axis movement
+		// y-axis movement and check
 		gs.player.isGrounded = false;
 		newPos.y += gs.player.velocity.y * deltaTime;
 		for (const GameObject &o : gs.objects)
 		{
+			SDL_Rect pRect{
+				.x = static_cast<int>(newPos.x) + gs.player.collider.x,
+				.y = static_cast<int>(newPos.y) + gs.player.collider.y,
+				.w = gs.player.collider.w,
+				.h = gs.player.collider.h
+			};
 			SDL_Rect oRect{
 				.x = static_cast<int>(o.position.x),
 				.y = static_cast<int>(o.position.y),
-				.w = o.texture->w,
-				.h = o.texture->h
+				.w = o.collider.w,
+				.h = o.collider.h
 			};
-			pRect.x = static_cast<int>(newPos.x);
-			pRect.y = static_cast<int>(newPos.y);
 
 			SDL_Rect result{ 0 };
 			if (SDL_GetRectIntersection(&pRect, &oRect, &result))
@@ -361,6 +399,12 @@ int main(int argc, char *argv[])
 		// use a sensor to check if on ground
 		if (!gs.player.isGrounded)
 		{
+			SDL_Rect pRect{
+				.x = static_cast<int>(newPos.x) + gs.player.collider.x,
+				.y = static_cast<int>(newPos.y) + gs.player.collider.y,
+				.w = gs.player.collider.w,
+				.h = gs.player.collider.h
+			};
 			SDL_Rect groundSensor{
 				.x = pRect.x,
 				.y = pRect.y + pRect.h,
@@ -372,8 +416,8 @@ int main(int argc, char *argv[])
 				SDL_Rect oRect{
 					.x = static_cast<int>(o.position.x),
 					.y = static_cast<int>(o.position.y),
-					.w = o.texture->w,
-					.h = o.texture->h
+					.w = o.collider.w,
+					.h = o.collider.h
 				};
 				if (SDL_HasRectIntersection(&groundSensor, &oRect))
 				{
@@ -384,7 +428,9 @@ int main(int argc, char *argv[])
 		}
 
 		// finally overwrite with the resolved position (if collisions occurred)
+		const float moveXDiff = newPos.x - gs.player.position.x;
 		gs.player.position = newPos;
+		mapViewport.x += moveXDiff;
 
 		// move our selected animation forward
 		gs.player.animation->progress(deltaTime);
@@ -399,22 +445,47 @@ int main(int argc, char *argv[])
 		// draw the level tiles
 		for (const GameObject &o : gs.objects)
 		{
-			SDL_FRect src{
-				.x = 0,
-				.y = 0,
-				.w = static_cast<float>(o.texture->w),
-				.h = static_cast<float>(o.texture->h)
-			};
+			if (o.type == ObjectType::level)
+			{
+				SDL_FRect src{
+					.x = 0,
+					.y = 0,
+					.w = static_cast<float>(o.texture->w),
+					.h = static_cast<float>(o.texture->h)
+				};
 
-			SDL_FRect dst{
-				.x = o.position.x,
-				.y = o.position.y,
-				.w = static_cast<float>(o.texture->w),
-				.h = static_cast<float>(o.texture->h)
-			};
-			SDL_RenderTexture(state.renderer, o.texture, &src, &dst);
+				SDL_FRect dst{
+					.x = o.position.x - mapViewport.x,
+					.y = o.position.y,
+					.w = static_cast<float>(o.texture->w),
+					.h = static_cast<float>(o.texture->h)
+				};
+				SDL_RenderTexture(state.renderer, o.texture, &src, &dst);
+			}
+			else if (o.type == ObjectType::enemy)
+			{
+				SDL_FRect src{
+					.x = static_cast<float>(enemyAnim.currentFrame() * spriteSize),
+					.y = 0,
+					.w = static_cast<float>(spriteSize),
+					.h = static_cast<float>(spriteSize)
+				};
+
+				SDL_FRect dst{
+					.x = o.position.x - mapViewport.x,
+					.y = o.position.y,
+					.w = static_cast<float>(spriteSize),
+					.h = static_cast<float>(spriteSize)
+				};
+
+				glm::vec2 pDir = gs.player.position - o.position; // direction of player
+				SDL_RenderTextureRotated(state.renderer, o.texture, &src, &dst, 0, nullptr,
+					pDir.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+			}
 		}
+		enemyAnim.progress(deltaTime);
 
+		// draw the player
 		SDL_FRect src{
 			.x = gs.player.animation->currentFrame() * static_cast<float>(spriteSize),
 			.y = 0,
@@ -423,7 +494,7 @@ int main(int argc, char *argv[])
 		};
 
 		SDL_FRect dst{
-			.x = gs.player.position.x,
+			.x = gs.player.position.x - mapViewport.x,
 			.y = gs.player.position.y,
 			.w = spriteSize,
 			.h = spriteSize
@@ -434,6 +505,12 @@ int main(int argc, char *argv[])
 
 		//// DEBUGGING
 		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
+		//SDL_FRect colliderRect{
+		//	.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
+		//	.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
+		//	.w = static_cast<float>(gs.player.collider.w),
+		//	.h = static_cast<float>(gs.player.collider.h)
+		//};
 		//SDL_RenderRect(state.renderer, &colliderRect);
 
 		// swap buffers and present
@@ -459,6 +536,7 @@ int main(int argc, char *argv[])
 	SDL_DestroyTexture(bg4Tex);
 	SDL_DestroyTexture(groundTex);
 	SDL_DestroyTexture(panelTex);
+	SDL_DestroyTexture(enemyTex);
 	cleanup(state);
 	return 0;
 }
