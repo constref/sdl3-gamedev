@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 	GameState gs;
 	gs.player.position.x = mapViewport.w / 2 - spriteSize / 2;
 	gs.player.collider = SDL_Rect{
-		.x = 8, .y = 0, .w = 16, .h = spriteSize
+		.x = 11, .y = 0, .w = 10, .h = spriteSize
 	};
 
 	float bg2Scroll = 0;
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 	while (running)
 	{
 		uint64_t nowTime = SDL_GetTicks();
-		float deltaTime = (nowTime - gs.prevTime) / 1000.0f;
+		float deltaTime = min((nowTime - gs.prevTime) / 1000.0f, 1 / 60.0f);
 
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
 			};
 
 			SDL_Rect pRect{
-				.x = static_cast<int>(newPos.x) + gs.player.collider.x,
+				.x = static_cast<int>(gs.player.velocity.x > 0 ? ceil(newPos.x) : newPos.x) + gs.player.collider.x,
 				.y = static_cast<int>(newPos.y) + gs.player.collider.y,
 				.w = gs.player.collider.w,
 				.h = gs.player.collider.h
@@ -503,7 +503,7 @@ int main(int argc, char *argv[])
 		SDL_RenderTextureRotated(state.renderer, gs.player.texture, &src, &dst, 0, nullptr,
 			(gs.flipHorizontal) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 
-		//// DEBUGGING
+		// DEBUGGING
 		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
 		//SDL_FRect colliderRect{
 		//	.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
