@@ -94,7 +94,7 @@ short map[MAP_ROWS][MAP_COLS] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const int TILE_SIZE = 32;
@@ -279,6 +279,8 @@ int main(int argc, char *argv[])
 				gs.player.animation = nonShootAnim;
 				gs.player.texture = nonShootTex;
 			}
+
+			// spawn some bullets
 		};
 
 		if (gs.playerState == PlayerState::idle)
@@ -287,7 +289,7 @@ int main(int argc, char *argv[])
 			if (gs.player.velocity.x)
 			{
 				// apply inverse force to decelerate
-				const float fac = gs.player.velocity.x > 0 ? -1 : 1;
+				const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
 				gs.player.velocity += fac * gs.player.acceleration * deltaTime;
 				animRun.reset();
 				animShootRun.reset();
@@ -348,14 +350,15 @@ int main(int argc, char *argv[])
 				if (gs.player.velocity.x > 0)
 				{
 					// going right
-					newPos.x = oRect.x - oRect.w + gs.player.collider.x;
+					newPos.x = static_cast<float>(oRect.x - oRect.w + gs.player.collider.x);
 				}
 				else if (gs.player.velocity.x < 0)
 				{
-					newPos.x = oRect.x + o.collider.w;
-					newPos.x = oRect.x + oRect.w - gs.player.collider.x;
+					newPos.x = static_cast<float>(oRect.x + o.collider.w);
+					newPos.x = static_cast<float>(oRect.x + oRect.w - gs.player.collider.x);
 				}
 
+				// bounce off enemies
 				if (o.type == ObjectType::enemy)
 				{
 					gs.player.velocity.x *= -1.0f;
@@ -391,12 +394,12 @@ int main(int argc, char *argv[])
 				if (gs.player.velocity.y > 0)
 				{
 					// going down
-					newPos.y = oRect.y - spriteSize;
+					newPos.y = static_cast<float>(oRect.y - spriteSize);
 					gs.player.isGrounded = true;
 				}
 				else if (gs.player.velocity.y < 0)
 				{
-					newPos.y = oRect.y + oRect.h;
+					newPos.y = static_cast<float>(oRect.y + oRect.h);
 				}
 
 				if (o.type == ObjectType::enemy)
@@ -427,16 +430,19 @@ int main(int argc, char *argv[])
 			};
 			for (const GameObject &o : gs.objects)
 			{
-				SDL_Rect oRect{
-					.x = static_cast<int>(o.position.x),
-					.y = static_cast<int>(o.position.y),
-					.w = o.collider.w,
-					.h = o.collider.h
-				};
-				if (SDL_HasRectIntersection(&groundSensor, &oRect))
+				if (o.type == ObjectType::level)
 				{
-					gs.player.isGrounded = true;
-					continue;
+					SDL_Rect oRect{
+						.x = static_cast<int>(o.position.x),
+						.y = static_cast<int>(o.position.y),
+						.w = o.collider.w,
+						.h = o.collider.h
+					};
+					if (SDL_HasRectIntersection(&groundSensor, &oRect))
+					{
+						gs.player.isGrounded = true;
+						continue;
+					}
 				}
 			}
 		}
