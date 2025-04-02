@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 
 			// if velocity and direction have different signs, we're sliding
 			// and starting to move in the opposite direction
-			if (gs.player.velocity.x * gs.direction < 0)
+			if (gs.player.velocity.x * gs.direction < 0 && gs.player.isGrounded)
 			{
 				// sliding and shooting?
 				handleShooting(&animSlideShoot, slideShootTex, &animSlide, slideTex);
@@ -349,12 +349,19 @@ int main(int argc, char *argv[])
 				{
 					// going right
 					newPos.x = oRect.x - oRect.w + gs.player.collider.x;
-					gs.player.velocity.x = 0;
 				}
 				else if (gs.player.velocity.x < 0)
 				{
 					newPos.x = oRect.x + o.collider.w;
 					newPos.x = oRect.x + oRect.w - gs.player.collider.x;
+				}
+
+				if (o.type == ObjectType::enemy)
+				{
+					gs.player.velocity.x *= -1.0f;
+				}
+				else
+				{
 					gs.player.velocity.x = 0;
 				}
 			}
@@ -385,12 +392,19 @@ int main(int argc, char *argv[])
 				{
 					// going down
 					newPos.y = oRect.y - spriteSize;
-					gs.player.velocity.y = 0;
 					gs.player.isGrounded = true;
 				}
 				else if (gs.player.velocity.y < 0)
 				{
 					newPos.y = oRect.y + oRect.h;
+				}
+
+				if (o.type == ObjectType::enemy)
+				{
+					gs.player.velocity.y *= -1.0f;
+				}
+				else
+				{
 					gs.player.velocity.y = 0;
 				}
 			}
