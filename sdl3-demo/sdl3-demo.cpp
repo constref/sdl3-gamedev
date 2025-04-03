@@ -4,6 +4,7 @@
 #include <format>
 #include <vector>
 #include <glm/glm.hpp>
+#include <functional>
 
 #include "animation.h"
 
@@ -14,6 +15,7 @@ struct SDLState
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	int width, height, logW, logH;
+	bool fullscreen;
 };
 
 enum class PlayerState
@@ -107,7 +109,7 @@ bool initialize(SDLState &state);
 void handleInput(SDLState &state, GameState &gameState, SDL_Scancode key, bool isDown);
 void drawBackgroundLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 void loadGameData(GameState &gs);
-void moveAndCollisions(GameObject &a, GameState &gs, float deltaTime);
+bool checkCollision(GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
 
 int main(int argc, char *argv[])
@@ -170,7 +172,7 @@ int main(int argc, char *argv[])
 
 	SDL_Texture *enemyTex = IMG_LoadTexture(state.renderer, "data/enemy.png");
 	SDL_SetTextureScaleMode(enemyTex, SDL_SCALEMODE_NEAREST);
-	Animation enemyAnim(4, 1.0f);
+	Animation animEnemy(8, 1.0f);
 
 	SDL_Texture *bulletTex = IMG_LoadTexture(state.renderer, "data/bullet.png");
 	SDL_SetTextureScaleMode(bulletTex, SDL_SCALEMODE_NEAREST);
@@ -355,12 +357,20 @@ int main(int argc, char *argv[])
 
 		// handle player collisions
 		glm::vec2 oldPos = gs.player.position;
-		moveAndCollisions(gs.player, gs, deltaTime);
+		gs.player.position += gs.player.velocity * deltaTime;
+		for (GameObject &obj : gs.objects)
+		{
+			checkCollision(gs.player, obj, deltaTime);
+		}
 
 		// handle bullet collisions
-		for (GameObject &b : gs.bullets)
+		for (GameObject &bullet : gs.bullets)
 		{
-			moveAndCollisions(b, gs, deltaTime);
+			bullet.position += bullet.velocity * deltaTime;
+			for (GameObject &obj : gs.objects)
+			{
+				checkCollision(bullet, obj, deltaTime);
+			}
 		}
 
 		// use a sensor to check if on ground
@@ -431,28 +441,55 @@ int main(int argc, char *argv[])
 				};
 				SDL_RenderTexture(state.renderer, o.texture, &src, &dst);
 			}
-			else if (o.type == ObjectType::enemy)
+		}
+
+		animBullet.progress(deltaTime);
+		animEnemy.progress(deltaTime);
+
+		// draw the player
+		SDL_FRect src{
+			.x = gs.player.animation->currentFrame() * static_cast<float>(spriteSize),
+			.y = 0,
+			.w = spriteSize,
+			.h = spriteSize
+		};
+
+		SDL_FRect dst{
+			.x = gs.player.position.x - mapViewport.x,
+			.y = gs.player.position.y,
+			.w = spriteSize,
+			.h = spriteSize
+		};
+
+		SDL_RenderTextureRotated(state.renderer, gs.player.texture, &src, &dst, 0, nullptr,
+			(gs.flipHorizontal) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+
+		// draw just enemies
+		for (GameObject &e : gs.objects)
+		{
+			if (e.type == ObjectType::enemy)
 			{
 				SDL_FRect src{
-					.x = static_cast<float>(enemyAnim.currentFrame() * spriteSize),
+					.x = static_cast<float>(animEnemy.currentFrame() * spriteSize),
 					.y = 0,
 					.w = static_cast<float>(spriteSize),
 					.h = static_cast<float>(spriteSize)
 				};
 
 				SDL_FRect dst{
-					.x = o.position.x - mapViewport.x,
-					.y = o.position.y,
+					.x = e.position.x - mapViewport.x,
+					.y = e.position.y,
 					.w = static_cast<float>(spriteSize),
 					.h = static_cast<float>(spriteSize)
 				};
 
-				glm::vec2 pDir = gs.player.position - o.position; // direction of player
-				SDL_RenderTextureRotated(state.renderer, o.texture, &src, &dst, 0, nullptr,
+				glm::vec2 pDir = gs.player.position - e.position; // direction of player
+				SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr,
 					pDir.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 			}
 		}
 
+		// draw bullets
 		if (gs.bullets.size())
 		{
 			for (GameObject &b : gs.bullets)
@@ -473,26 +510,6 @@ int main(int argc, char *argv[])
 				SDL_RenderTextureRotated(state.renderer, b.texture, &src, &dst, 0, nullptr, SDL_FLIP_NONE);
 			}
 		}
-		animBullet.progress(deltaTime);
-		enemyAnim.progress(deltaTime);
-
-		// draw the player
-		SDL_FRect src{
-			.x = gs.player.animation->currentFrame() * static_cast<float>(spriteSize),
-			.y = 0,
-			.w = spriteSize,
-			.h = spriteSize
-		};
-
-		SDL_FRect dst{
-			.x = gs.player.position.x - mapViewport.x,
-			.y = gs.player.position.y,
-			.w = spriteSize,
-			.h = spriteSize
-		};
-
-		SDL_RenderTextureRotated(state.renderer, gs.player.texture, &src, &dst, 0, nullptr,
-			(gs.flipHorizontal) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 
 		// DEBUGGING
 		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
@@ -628,8 +645,8 @@ void drawBackgroundLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float
 	SDL_FRect dst{
 		.x = scrollPos,
 		.y = 0,
-		.w = static_cast<float>(state.logW * 2),
-		.h = static_cast<float>(state.logH)
+		.w = static_cast<float>(tex->w * 2),
+		.h = static_cast<float>(tex->h)
 	};
 
 	scrollPos -= gs.player.velocity.x * scrollFactor * deltaTime;
@@ -651,7 +668,7 @@ bool initialize(SDLState &state)
 	}
 
 	// create the window
-	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE);
+	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN);
 	if (!state.window)
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
@@ -674,39 +691,36 @@ bool initialize(SDLState &state)
 	return initSuccess;
 }
 
-void moveAndCollisions(GameObject &a, GameState &gs, float deltaTime )
+bool checkCollision(GameObject &a, GameObject &b, float deltaTime)
 {
-	glm::vec2 newPos = a.position;
+	bool isColliding = false;
+	a.isGrounded = false;
+	SDL_Rect aRect{
+		.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
+		.y = static_cast<int>(a.position.y) + a.collider.y,
+		.w = a.collider.w, .h = a.collider.h
+	};
+	SDL_Rect bRect{
+		.x = static_cast<int>(b.position.x) + b.collider.x,
+		.y = static_cast<int>(b.position.y) + b.collider.y,
+		.w = b.collider.w, .h = b.collider.h
+	};
 
-	// x-axis movement and check
-	newPos.x += a.velocity.x * deltaTime;
-	for (GameObject &b : gs.objects)
+	SDL_Rect collisionRect{ 0 };
+	if (SDL_GetRectIntersection(&aRect, &bRect, &collisionRect))
 	{
-		SDL_Rect bRect{
-			.x = static_cast<int>(b.position.x) + b.collider.x,
-			.y = static_cast<int>(b.position.y) + b.collider.y,
-			.w = b.collider.w, .h = b.collider.h
-		};
-
-		SDL_Rect aRect{
-			.x = static_cast<int>(a.velocity.x > 0 ? ceil(newPos.x) : newPos.x) + a.collider.x,
-			.y = static_cast<int>(newPos.y) + a.collider.y,
-			.w = a.collider.w,
-			.h = a.collider.h
-		};
-
-		SDL_Rect result{ 0 };
-		if (SDL_GetRectIntersection(&aRect, &bRect, &result))
+		isColliding = true;
+		if (collisionRect.w <= collisionRect.h) // w == h == 1 when jumping up over the corner of a box
 		{
 			if (a.velocity.x > 0)
 			{
 				// going right
-				newPos.x = static_cast<float>((aRect.x - a.collider.x) - result.w);
+				a.position.x = static_cast<float>((aRect.x - a.collider.x) - collisionRect.w);
 			}
 			else if (a.velocity.x < 0)
 			{
 				// going left
-				newPos.x = static_cast<float>((aRect.x - a.collider.x) + result.w);
+				a.position.x = static_cast<float>((aRect.x - a.collider.x) + collisionRect.w);
 			}
 
 			// bounce off enemies
@@ -719,40 +733,17 @@ void moveAndCollisions(GameObject &a, GameState &gs, float deltaTime )
 				a.velocity.x = 0;
 			}
 		}
-	}
-
-	// y-axis movement and check
-	a.isGrounded = false;
-	newPos.y += a.velocity.y * deltaTime;
-
-	for (GameObject &b : gs.objects)
-	{
-
-		SDL_Rect aRect{
-			.x = static_cast<int>(newPos.x) + a.collider.x,
-			.y = static_cast<int>(newPos.y) + a.collider.y,
-			.w = a.collider.w,
-			.h = a.collider.h
-		};
-		SDL_Rect bRect{
-			.x = static_cast<int>(b.position.x) + b.collider.x,
-			.y = static_cast<int>(b.position.y) + b.collider.y,
-			.w = b.collider.w,
-			.h = b.collider.h
-		};
-
-		SDL_Rect result{ 0 };
-		if (SDL_GetRectIntersection(&aRect, &bRect, &result))
+		else
 		{
 			if (a.velocity.y > 0)
 			{
 				// going down
-				newPos.y = static_cast<float>((aRect.y - a.collider.y) - result.h);
+				a.position.y = static_cast<float>((aRect.y - a.collider.y) - collisionRect.h);
 				a.isGrounded = true;
 			}
 			else if (a.velocity.y < 0)
 			{
-				newPos.y = static_cast<float>((aRect.y - a.collider.y) + result.h);
+				a.position.y = static_cast<float>((aRect.y - a.collider.y) + collisionRect.h);
 			}
 
 			if (b.type == ObjectType::enemy)
@@ -765,7 +756,7 @@ void moveAndCollisions(GameObject &a, GameState &gs, float deltaTime )
 			}
 		}
 	}
-	a.position = newPos;
+	return isColliding;
 }
 
 void cleanup(SDLState &state)
