@@ -5,6 +5,9 @@ class Animation
 	int frameCount;
 	float length, time;
 public:
+	Animation() : frameCount(0), length(1), time(0)
+	{
+	}
 	Animation(int frameCount, float length)
 		: frameCount(frameCount), length(length), time(0)
 	{
