@@ -202,7 +202,7 @@ struct Resources
 };
 
 bool initialize(SDLState &state);
-void handleInput(SDLState &state, GameState &gs);
+void handleInput(SDLState &state, GameState &gs, const bool *keys);
 void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		handleInput(state, gs);
+		handleInput(state, gs, keys);
 		update(gs, gs.player, res, deltaTime);
 
 		// move our selected animation forward
@@ -531,10 +531,8 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void handleInput(SDLState &state, GameState &gs)
+void handleInput(SDLState &state, GameState &gs, const bool *keys)
 {
-	const bool *keys = SDL_GetKeyboardState(nullptr);
-
 	// common for all states
 	gs.direction = 0;
 	if (keys[SDL_SCANCODE_A])
