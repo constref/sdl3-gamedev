@@ -394,6 +394,7 @@ int main(int argc, char *argv[])
 			if (!a.isGrounded && foundGround)
 			{
 				// trigger landing event
+				gs.playerState = PlayerState::idle;
 			}
 			a.isGrounded = foundGround;
 		}
@@ -495,14 +496,14 @@ int main(int argc, char *argv[])
 		}
 
 		// DEBUGGING
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-		SDL_FRect colliderRect{
-			.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
-			.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
-			.w = static_cast<float>(gs.player.collider.w),
-			.h = static_cast<float>(gs.player.collider.h)
-		};
-		SDL_RenderRect(state.renderer, &colliderRect);
+		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
+		//SDL_FRect colliderRect{
+		//	.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
+		//	.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
+		//	.w = static_cast<float>(gs.player.collider.w),
+		//	.h = static_cast<float>(gs.player.collider.h)
+		//};
+		//SDL_RenderRect(state.renderer, &colliderRect);
 
 		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
 		//SDL_FRect groundRect{
@@ -533,21 +534,27 @@ int main(int argc, char *argv[])
 void handleInput(SDLState &state, GameState &gs)
 {
 	const bool *keys = SDL_GetKeyboardState(nullptr);
+
+	// common for all states
+	gs.direction = 0;
+	if (keys[SDL_SCANCODE_A])
+	{
+		gs.direction += -1;
+		gs.flipHorizontal = true;
+	}
+	if (keys[SDL_SCANCODE_D])
+	{
+		gs.direction += 1;
+		gs.flipHorizontal = false;
+	}
+
 	switch (gs.playerState)
 	{
 		case PlayerState::idle:
 		{
-			if (keys[SDL_SCANCODE_A])
+			if (gs.direction)
 			{
 				gs.playerState = PlayerState::running;
-				gs.direction += -1;
-				gs.flipHorizontal = true;
-			}
-			if (keys[SDL_SCANCODE_D])
-			{
-				gs.playerState = PlayerState::running;
-				gs.direction += 1;
-				gs.flipHorizontal = false;
 			}
 
 			gs.isShooting = keys[SDL_SCANCODE_J];
@@ -564,20 +571,6 @@ void handleInput(SDLState &state, GameState &gs)
 		}
 		case PlayerState::running:
 		{
-			int dir = 0;
-			if (keys[SDL_SCANCODE_A])
-			{
-				gs.playerState = PlayerState::running;
-				dir += -1;
-				gs.flipHorizontal = true;
-			}
-			if (keys[SDL_SCANCODE_D])
-			{
-				gs.playerState = PlayerState::running;
-				dir += 1;
-				gs.flipHorizontal = false;
-			}
-			gs.direction = dir;
 			if (!gs.direction)
 			{
 				gs.playerState = PlayerState::idle;
@@ -597,18 +590,9 @@ void handleInput(SDLState &state, GameState &gs)
 		}
 		case PlayerState::jumping:
 		{
-			int dir = 0;
-			if (keys[SDL_SCANCODE_A])
+			if (!gs.direction)
 			{
-				gs.playerState = PlayerState::running;
-				dir += -1;
-				gs.flipHorizontal = true;
-			}
-			if (keys[SDL_SCANCODE_D])
-			{
-				gs.playerState = PlayerState::running;
-				dir += 1;
-				gs.flipHorizontal = false;
+				gs.playerState = PlayerState::idle;
 			}
 			gs.isShooting = keys[SDL_SCANCODE_J];
 			break;
@@ -634,7 +618,7 @@ void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime)
 				{
 					// spawn some bullets
 					const float xOffset = gs.flipHorizontal ? 0 : 32 / 2 + 10.0f;
-					const float xDir = gs.flipHorizontal ? -1.0f : 1.0f;
+					const float xDir = gs.flipHorizontal ? -1.0f : 1.0f; // TODO: Try to use direction here
 					GameObject b;
 					b.position = gs.player.position + glm::vec2(xOffset, 32 / 2 + 1);
 					int yVelRand = SDL_rand(40) - 20; // -20 to 20
