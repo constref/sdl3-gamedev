@@ -28,6 +28,11 @@ enum class ObjectType
 	player, enemy, level, bullet
 };
 
+enum class KeyState
+{
+	down, up
+};
+
 struct GameObject
 {
 	ObjectType type;
@@ -56,7 +61,7 @@ struct GameObject
 
 struct GameState
 {
-	PlayerState playerState, prevPlayerState;
+	PlayerState playerState;
 	GameObject player;
 	std::vector<GameObject> objects;
 	std::vector<GameObject> bullets;
@@ -202,8 +207,8 @@ struct Resources
 };
 
 bool initialize(SDLState &state);
-void handleInput(SDLState &state, GameState &gs, const bool *keys);
-void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime);
+void handleInput(SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState);
+void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
@@ -284,7 +289,7 @@ int main(int argc, char *argv[])
 					// enemy
 					GameObject o = createObject(ObjectType::enemy, r, c, res.enemyTex);
 					o.collider = SDL_Rect{
-						.x = 8, .y = 0, .w = 16, .h = spriteSize
+						.x = 8, .y = 4, .w = 16, .h = spriteSize - 4
 					};
 					o.animations = { res.animEnemy };
 					o.currentAnimation = 0;
@@ -324,19 +329,18 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					//handleInput(state, gs, event.key.scancode, true);
+					handleInput(state, gs, event.key.scancode, KeyState::down);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
 				{
-					//handleInput(state, gs, event.key.scancode, false);
+					handleInput(state, gs, event.key.scancode, KeyState::up);
 					break;
 				}
 			}
 		}
 
-		handleInput(state, gs, keys);
-		update(gs, gs.player, res, deltaTime);
+		update(gs, gs.player, res, keys, deltaTime);
 
 		// move our selected animation forward
 		gs.player.animations[gs.player.currentAnimation].progress(deltaTime);
@@ -347,18 +351,6 @@ int main(int argc, char *argv[])
 		for (GameObject &obj : gs.objects)
 		{
 			checkCollision(gs, gs.player, obj, deltaTime);
-		}
-
-		// handle bullet collisions
-		for (GameObject &bullet : gs.bullets)
-		{
-			bullet.position += bullet.velocity * deltaTime;
-
-			bullet.animations[bullet.currentAnimation].progress(deltaTime);
-			for (GameObject &obj : gs.objects)
-			{
-				checkCollision(gs, bullet, obj, deltaTime);
-			}
 		}
 
 		// use a sensor to check if on ground
@@ -394,10 +386,24 @@ int main(int argc, char *argv[])
 			if (!a.isGrounded && foundGround)
 			{
 				// trigger landing event
-				gs.playerState = PlayerState::idle;
+				gs.playerState = a.velocity.x == 0 ? PlayerState::idle : PlayerState::running;
+				printf("LANDED\n");
 			}
 			a.isGrounded = foundGround;
 		}
+
+		// handle bullet collisions
+		for (GameObject &bullet : gs.bullets)
+		{
+			bullet.position += bullet.velocity * deltaTime;
+
+			bullet.animations[bullet.currentAnimation].progress(deltaTime);
+			for (GameObject &obj : gs.objects)
+			{
+				checkCollision(gs, bullet, obj, deltaTime);
+			}
+		}
+
 		// finally overwrite with the resolved position (if collisions occurred)
 		const float moveXDiff = gs.player.position.x - oldPos.x;
 		mapViewport.x += moveXDiff;
@@ -531,74 +537,47 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void handleInput(SDLState &state, GameState &gs, const bool *keys)
+void handleInput(SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState)
 {
 	// common for all states
-	gs.direction = 0;
-	if (keys[SDL_SCANCODE_A])
-	{
-		gs.direction += -1;
-		gs.flipHorizontal = true;
-	}
-	if (keys[SDL_SCANCODE_D])
-	{
-		gs.direction += 1;
-		gs.flipHorizontal = false;
-	}
+	const auto performJump = [&gs]() {
+		if (gs.player.isGrounded)
+		{
+			gs.playerState = PlayerState::jumping;
+			gs.player.velocity.y = gs.jumpForce;
+			gs.player.isGrounded = false;
+		}
+	};
 
 	switch (gs.playerState)
 	{
 		case PlayerState::idle:
 		{
-			if (gs.direction)
+			if (key == SDL_SCANCODE_K && keyState == KeyState::down)
 			{
-				gs.playerState = PlayerState::running;
-			}
-
-			gs.isShooting = keys[SDL_SCANCODE_J];
-			if (keys[SDL_SCANCODE_K])
-			{
-				if (gs.player.isGrounded)
-				{
-					gs.playerState = PlayerState::jumping;
-					gs.player.velocity.y = gs.jumpForce;
-					gs.player.isGrounded = false;
-				}
+				performJump();
 			}
 			break;
 		}
 		case PlayerState::running:
 		{
-			if (!gs.direction)
-			{
-				gs.playerState = PlayerState::idle;
-			}
-
-			gs.isShooting = keys[SDL_SCANCODE_J];
-			if (keys[SDL_SCANCODE_K])
+			if (key == SDL_SCANCODE_K && keyState == KeyState::down)
 			{
 				if (gs.player.isGrounded)
 				{
-					gs.playerState = PlayerState::jumping;
-					gs.player.velocity.y = gs.jumpForce;
-					gs.player.isGrounded = false;
+					performJump();
 				}
 			}
 			break;
 		}
 		case PlayerState::jumping:
 		{
-			if (!gs.direction)
-			{
-				gs.playerState = PlayerState::idle;
-			}
-			gs.isShooting = keys[SDL_SCANCODE_J];
 			break;
 		}
 	}
 }
 
-void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime)
+void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime)
 {
 	if (obj.type == ObjectType::player)
 	{
@@ -639,46 +618,75 @@ void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime)
 			}
 		};
 
-		if (gs.playerState == PlayerState::idle)
+		gs.direction = 0;
+		if (keys[SDL_SCANCODE_A])
 		{
-			// decelerate on idle
-			if (gs.player.velocity.x)
-			{
-				// apply inverse force to decelerate
-				const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
-				gs.player.velocity += fac * gs.player.acceleration * deltaTime;
-			}
-			// standing and shooting?
-			handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
+			gs.direction += -1;
+			gs.flipHorizontal = true;
 		}
-		else if (gs.playerState == PlayerState::running)
+		if (keys[SDL_SCANCODE_D])
 		{
-			gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
-			if (fabs(gs.player.velocity.x) > gs.maxSpeed)
-			{
-				gs.player.velocity.x = gs.direction * gs.maxSpeed;
-			}
+			gs.direction += 1;
+			gs.flipHorizontal = false;
+		}
+		if (gs.direction)
+		{
+			gs.playerState = PlayerState::running;
+		}
+		gs.isShooting = keys[SDL_SCANCODE_J];
 
-			// running and shooting?
-			handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
-
-			// if velocity and direction have different signs, we're sliding
-			// and starting to move in the opposite direction
-			if (gs.player.velocity.x * gs.direction < 0 && gs.player.isGrounded)
-			{
-				// sliding and shooting?
-				handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
-			}
-		}
-		else if (gs.playerState == PlayerState::jumping)
+		switch (gs.playerState)
 		{
-			gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
-			if (fabs(gs.player.velocity.x) > gs.maxSpeed)
+			case PlayerState::idle:
 			{
-				gs.player.velocity.x = gs.direction * gs.maxSpeed;
+				// decelerate on idle
+				if (gs.player.velocity.x)
+				{
+					// apply inverse force to decelerate
+					const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
+					gs.player.velocity += fac * gs.player.acceleration * deltaTime;
+				}
+				// standing and shooting?
+				handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
+				break;
 			}
-			handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
+			case PlayerState::running:
+			{
+				if (!gs.direction)
+				{
+					gs.playerState = PlayerState::idle;
+				}
+
+				gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
+				if (fabs(gs.player.velocity.x) > gs.maxSpeed)
+				{
+					gs.player.velocity.x = gs.direction * gs.maxSpeed;
+				}
+
+				// running and shooting?
+				handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
+
+				// if velocity and direction have different signs, we're sliding
+				// and starting to move in the opposite direction
+				if (gs.player.velocity.x * gs.direction < 0 && gs.player.isGrounded)
+				{
+					// sliding and shooting?
+					handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
+				}
+				break;
+			}
+			case PlayerState::jumping:
+			{
+				gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
+				if (fabs(gs.player.velocity.x) > gs.maxSpeed)
+				{
+					gs.player.velocity.x = gs.direction * gs.maxSpeed;
+				}
+				handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
+				break;
+			}
 		}
+
 		// apply some constant gravity if not grounded
 		if (!gs.player.isGrounded)
 		{
