@@ -20,7 +20,7 @@ struct SDLState
 
 enum class PlayerState
 {
-	idle, running
+	idle, running, jumping
 };
 
 enum class ObjectType
@@ -56,7 +56,7 @@ struct GameObject
 
 struct GameState
 {
-	PlayerState playerState;
+	PlayerState playerState, prevPlayerState;
 	GameObject player;
 	std::vector<GameObject> objects;
 	std::vector<GameObject> bullets;
@@ -202,7 +202,7 @@ struct Resources
 };
 
 bool initialize(SDLState &state);
-void handleInput(SDLState &state, GameState &gameState, SDL_Scancode key, bool isDown);
+void handleInput(SDLState &state, GameState &gs);
 void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
@@ -324,18 +324,22 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					handleInput(state, gs, event.key.scancode, true);
+					//handleInput(state, gs, event.key.scancode, true);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
 				{
-					handleInput(state, gs, event.key.scancode, false);
+					//handleInput(state, gs, event.key.scancode, false);
 					break;
 				}
 			}
 		}
 
+		handleInput(state, gs);
 		update(gs, gs.player, res, deltaTime);
+
+		// move our selected animation forward
+		gs.player.animations[gs.player.currentAnimation].progress(deltaTime);
 
 		// handle player collisions
 		glm::vec2 oldPos = gs.player.position;
@@ -358,20 +362,14 @@ int main(int argc, char *argv[])
 		}
 
 		// use a sensor to check if on ground
-		if (!gs.player.isGrounded)
 		{
-			SDL_Rect pRect{
-				.x = static_cast<int>(gs.player.position.x) + gs.player.collider.x,
-				.y = static_cast<int>(gs.player.position.y) + gs.player.collider.y,
-				.w = gs.player.collider.w,
-				.h = gs.player.collider.h
-			};
+			GameObject &a = gs.player;
 			SDL_Rect groundSensor{
-				.x = pRect.x,
-				.y = pRect.y + pRect.h,
-				.w = pRect.w,
-				.h = 1
+				.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
+				.y = static_cast<int>(a.position.y) + a.collider.y + a.collider.h,
+				.w = a.collider.w, .h = 1
 			};
+			bool foundGround = false;
 			for (const GameObject &o : gs.objects)
 			{
 				if (o.type == ObjectType::level)
@@ -382,21 +380,26 @@ int main(int argc, char *argv[])
 						.w = o.collider.w,
 						.h = o.collider.h
 					};
-					if (SDL_HasRectIntersection(&groundSensor, &oRect))
+					SDL_Rect cRect{ 0 };
+					if (SDL_GetRectIntersection(&groundSensor, &oRect, &cRect))
 					{
-						gs.player.isGrounded = true;
-						continue;
+						if (cRect.w > cRect.h)
+						{
+							foundGround = true;
+							continue;
+						}
 					}
 				}
 			}
+			if (!a.isGrounded && foundGround)
+			{
+				// trigger landing event
+			}
+			a.isGrounded = foundGround;
 		}
-
 		// finally overwrite with the resolved position (if collisions occurred)
 		const float moveXDiff = gs.player.position.x - oldPos.x;
 		mapViewport.x += moveXDiff;
-
-		// move our selected animation forward
-		gs.player.animations[gs.player.currentAnimation].progress(deltaTime);
 
 		// perform drawing commands
 		SDL_RenderTexture(state.renderer, res.bg1Tex, nullptr, nullptr);
@@ -492,14 +495,24 @@ int main(int argc, char *argv[])
 		}
 
 		// DEBUGGING
-		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-		//SDL_FRect colliderRect{
-		//	.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
-		//	.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
-		//	.w = static_cast<float>(gs.player.collider.w),
-		//	.h = static_cast<float>(gs.player.collider.h)
+		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
+		SDL_FRect colliderRect{
+			.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
+			.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
+			.w = static_cast<float>(gs.player.collider.w),
+			.h = static_cast<float>(gs.player.collider.h)
+		};
+		SDL_RenderRect(state.renderer, &colliderRect);
+
+		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
+		//SDL_FRect groundRect{
+		//	.x = groundSensor.x - mapViewport.x,
+		//	.y = groundSensor.y - mapViewport.y,
+		//	.w = static_cast<float>(groundSensor.w),
+		//	.h = static_cast<float>(groundSensor.h)
 		//};
-		//SDL_RenderRect(state.renderer, &colliderRect);
+		//SDL_RenderRect(state.renderer, &groundRect);
+
 
 		// swap buffers and present
 		SDL_RenderPresent(state.renderer);
@@ -507,8 +520,8 @@ int main(int argc, char *argv[])
 
 		// show some stats
 		gs.globalTime += deltaTime;
-		SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- G({}) B({})",
-			gs.globalTime, gs.direction, gs.player.isGrounded, gs.bullets.size()
+		SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({})",
+			gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size()
 		).c_str());
 	}
 
@@ -517,79 +530,87 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void handleInput(SDLState &state, GameState &gs, SDL_Scancode key, bool isDown)
+void handleInput(SDLState &state, GameState &gs)
 {
+	const bool *keys = SDL_GetKeyboardState(nullptr);
 	switch (gs.playerState)
 	{
 		case PlayerState::idle:
 		{
-			if (key == SDL_SCANCODE_A && isDown)
+			if (keys[SDL_SCANCODE_A])
 			{
 				gs.playerState = PlayerState::running;
-				gs.direction = -1;
+				gs.direction += -1;
 				gs.flipHorizontal = true;
 			}
-			else if (key == SDL_SCANCODE_D && isDown)
+			if (keys[SDL_SCANCODE_D])
 			{
 				gs.playerState = PlayerState::running;
-				gs.direction = 1;
+				gs.direction += 1;
 				gs.flipHorizontal = false;
 			}
-			else if (key == SDL_SCANCODE_J)
+
+			gs.isShooting = keys[SDL_SCANCODE_J];
+			if (keys[SDL_SCANCODE_K])
 			{
-				gs.isShooting = isDown;
-			}
-			else if (key == SDL_SCANCODE_K && isDown)
-			{
-				// only jump if we aren't already jumping/falling
 				if (gs.player.isGrounded)
 				{
+					gs.playerState = PlayerState::jumping;
 					gs.player.velocity.y = gs.jumpForce;
+					gs.player.isGrounded = false;
 				}
 			}
 			break;
 		}
 		case PlayerState::running:
 		{
-			if (key == SDL_SCANCODE_A)
+			int dir = 0;
+			if (keys[SDL_SCANCODE_A])
 			{
-				if (isDown)
-				{
-					gs.direction = -1;
-					gs.flipHorizontal = true;
-				}
-				else if (gs.direction == -1)
-				{
-					// if we release the A key and are going left, go idle
-					gs.playerState = PlayerState::idle;
-					gs.direction = 0;
-				}
+				gs.playerState = PlayerState::running;
+				dir += -1;
+				gs.flipHorizontal = true;
 			}
-			else if (key == SDL_SCANCODE_D)
+			if (keys[SDL_SCANCODE_D])
 			{
-				if (isDown)
-				{
-					gs.direction = 1;
-					gs.flipHorizontal = false;
-				}
-				else if (gs.direction == 1) // going left
-				{
-					// if we release the D key and are going right, go idle
-					gs.playerState = PlayerState::idle;
-					gs.direction = 0;
-				}
+				gs.playerState = PlayerState::running;
+				dir += 1;
+				gs.flipHorizontal = false;
 			}
-			else if (key == SDL_SCANCODE_J)
+			gs.direction = dir;
+			if (!gs.direction)
 			{
-				gs.isShooting = isDown;
+				gs.playerState = PlayerState::idle;
 			}
-			else if (key == SDL_SCANCODE_K && isDown)
+
+			gs.isShooting = keys[SDL_SCANCODE_J];
+			if (keys[SDL_SCANCODE_K])
 			{
 				if (gs.player.isGrounded)
 				{
+					gs.playerState = PlayerState::jumping;
 					gs.player.velocity.y = gs.jumpForce;
+					gs.player.isGrounded = false;
 				}
 			}
+			break;
+		}
+		case PlayerState::jumping:
+		{
+			int dir = 0;
+			if (keys[SDL_SCANCODE_A])
+			{
+				gs.playerState = PlayerState::running;
+				dir += -1;
+				gs.flipHorizontal = true;
+			}
+			if (keys[SDL_SCANCODE_D])
+			{
+				gs.playerState = PlayerState::running;
+				dir += 1;
+				gs.flipHorizontal = false;
+			}
+			gs.isShooting = keys[SDL_SCANCODE_J];
 			break;
 		}
 	}
@@ -646,7 +667,7 @@ void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime)
 				gs.player.velocity += fac * gs.player.acceleration * deltaTime;
 			}
 			// standing and shooting?
-			handleShooting(PlayerAnimation::shoot , res.shootTex, PlayerAnimation::idle, res.idleTex);
+			handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
 		}
 		else if (gs.playerState == PlayerState::running)
 		{
@@ -666,6 +687,15 @@ void update(GameState &gs, GameObject &obj, Resources &res, float deltaTime)
 				// sliding and shooting?
 				handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
 			}
+		}
+		else if (gs.playerState == PlayerState::jumping)
+		{
+			gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
+			if (fabs(gs.player.velocity.x) > gs.maxSpeed)
+			{
+				gs.player.velocity.x = gs.direction * gs.maxSpeed;
+			}
+			handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
 		}
 		// apply some constant gravity if not grounded
 		if (!gs.player.isGrounded)
@@ -707,7 +737,7 @@ bool initialize(SDLState &state)
 	}
 
 	// create the window
-	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN);
+	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE);
 	if (!state.window)
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
@@ -815,7 +845,6 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 
 void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime)
 {
-	a.isGrounded = false;
 	SDL_Rect aRect{
 		.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
 		.y = static_cast<int>(a.position.y) + a.collider.y,
