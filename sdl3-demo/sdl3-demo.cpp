@@ -366,9 +366,10 @@ int main(int argc, char *argv[])
 		}
 
 		// use a sensor to check if on ground
+		SDL_Rect groundSensor{ 0 };
 		{
 			GameObject &a = gs.player;
-			SDL_Rect groundSensor{
+			groundSensor = SDL_Rect {
 				.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
 				.y = static_cast<int>(a.position.y) + a.collider.y + a.collider.h,
 				.w = a.collider.w, .h = 1 // using 2 pixels as collision response could push collider far enough for ground sensor to not trip
@@ -513,23 +514,23 @@ int main(int argc, char *argv[])
 		}
 
 		// DEBUGGING
-		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-		//SDL_FRect colliderRect{
-		//	.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
-		//	.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
-		//	.w = static_cast<float>(gs.player.collider.w),
-		//	.h = static_cast<float>(gs.player.collider.h)
-		//};
-		//SDL_RenderRect(state.renderer, &colliderRect);
+		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
+		SDL_FRect colliderRect{
+			.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
+			.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
+			.w = static_cast<float>(gs.player.collider.w),
+			.h = static_cast<float>(gs.player.collider.h)
+		};
+		SDL_RenderRect(state.renderer, &colliderRect);
 
-		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
-		//SDL_FRect groundRect{
-		//	.x = groundSensor.x - mapViewport.x,
-		//	.y = groundSensor.y - mapViewport.y,
-		//	.w = static_cast<float>(groundSensor.w),
-		//	.h = static_cast<float>(groundSensor.h)
-		//};
-		//SDL_RenderRect(state.renderer, &groundRect);
+		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
+		SDL_FRect groundRect{
+			.x = groundSensor.x - mapViewport.x,
+			.y = groundSensor.y - mapViewport.y,
+			.w = static_cast<float>(groundSensor.w),
+			.h = static_cast<float>(groundSensor.h)
+		};
+		SDL_RenderRect(state.renderer, &groundRect);
 
 
 		// swap buffers and present
@@ -541,9 +542,9 @@ int main(int argc, char *argv[])
 		printf(std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})\n",
 			gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size(),
 			gs.player.velocity.x, gs.player.velocity.y).c_str());
-		//SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})",
-		//	gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size(),
-		//	gs.player.velocity.x, gs.player.velocity.y).c_str());
+		SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})",
+			gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size(),
+			gs.player.velocity.x, gs.player.velocity.y).c_str());
 	}
 
 	res.cleanup();
@@ -664,13 +665,17 @@ void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, fl
 				}
 				else
 				{
-					// decelerate on idle
+					// decelerate horizontally
 					if (gs.player.velocity.x)
 					{
 						// apply inverse force to decelerate
-						const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
-						gs.player.velocity.x += fac * gs.player.acceleration.x * deltaTime;
-						setZeroIfNear(gs.player.velocity.x);
+						const float fac = gs.player.velocity.x > 0 ? -1.5f : 1.5f;
+						float decAmount = fac * gs.player.acceleration.x * deltaTime;
+						gs.player.velocity.x += decAmount;
+						if (std::abs(gs.player.velocity.x) < decAmount)
+						{
+							gs.player.velocity.x = 0;
+						}
 					}
 					// standing and shooting?
 					handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
