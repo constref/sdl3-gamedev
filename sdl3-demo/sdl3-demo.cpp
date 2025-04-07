@@ -16,6 +16,14 @@ struct SDLState
 	SDL_Renderer *renderer;
 	int width, height, logW, logH;
 	bool fullscreen;
+
+	SDLState() : window(nullptr), renderer(nullptr), fullscreen(false)
+	{
+		width = 1600;
+		height = 900;
+		logW = 512;
+		logH = 288;
+	}
 };
 
 enum class PlayerState
@@ -37,7 +45,7 @@ struct GameObject
 {
 	ObjectType type;
 	glm::vec2 position, velocity, acceleration;
-	SDL_Rect collider;
+	SDL_FRect collider;
 	SDL_Texture *texture;
 	bool isGrounded;
 	std::vector<Animation> animations;
@@ -47,7 +55,7 @@ struct GameObject
 	{
 		type = ObjectType::level;
 		position = velocity = acceleration = glm::vec2(0, 0);
-		collider = SDL_Rect{
+		collider = SDL_FRect{
 			.x = 0,
 			.y = 0,
 			.w = 0,
@@ -228,10 +236,6 @@ void setZeroIfNear(float &v)
 int main(int argc, char *argv[])
 {
 	SDLState state;
-	state.width = 1600;
-	state.height = 900;
-	state.logW = 512;
-	state.logH = 288;
 	SDL_FRect mapViewport{
 		.x = 0,
 		.y = 0,
@@ -253,7 +257,7 @@ int main(int argc, char *argv[])
 	const bool *keys = SDL_GetKeyboardState(nullptr);
 	GameState gs;
 	gs.player.position.x = mapViewport.w / 2 - spriteSize / 2;
-	gs.player.collider = SDL_Rect{
+	gs.player.collider = SDL_FRect{
 		.x = 11, .y = 2, .w = 10, .h = 30
 	};
 
@@ -274,7 +278,7 @@ int main(int argc, char *argv[])
 				o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * tex->h);
 				o.velocity = glm::vec2(0, 0);
 				o.acceleration = glm::vec2(0, 0);
-				o.collider = SDL_Rect{
+				o.collider = SDL_FRect{
 					.x = 0, .y = 0, .w = spriteSize, .h = spriteSize
 				};
 				return o;
@@ -300,7 +304,7 @@ int main(int argc, char *argv[])
 				{
 					// enemy
 					GameObject o = createObject(ObjectType::enemy, r, c, res.enemyTex);
-					o.collider = SDL_Rect{
+					o.collider = SDL_FRect{
 						.x = 8, .y = 4, .w = 16, .h = spriteSize - 4
 					};
 					o.animations = { res.animEnemy };
@@ -360,18 +364,19 @@ int main(int argc, char *argv[])
 		// handle player collisions
 		glm::vec2 oldPos = gs.player.position;
 		gs.player.position += gs.player.velocity * deltaTime;
+
 		for (GameObject &obj : gs.objects)
 		{
 			checkCollision(gs, gs.player, obj, deltaTime);
 		}
 
 		// use a sensor to check if on ground
-		SDL_Rect groundSensor{ 0 };
+		SDL_FRect groundSensor{ 0 };
 		{
 			GameObject &a = gs.player;
-			groundSensor = SDL_Rect {
-				.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
-				.y = static_cast<int>(a.position.y) + a.collider.y + a.collider.h,
+			groundSensor = SDL_FRect{
+				.x = a.position.x + a.collider.x,
+				.y = a.position.y + a.collider.y + a.collider.h,
 				.w = a.collider.w, .h = 1 // using 2 pixels as collision response could push collider far enough for ground sensor to not trip
 			};
 			bool foundGround = false;
@@ -379,14 +384,14 @@ int main(int argc, char *argv[])
 			{
 				if (o.type == ObjectType::level)
 				{
-					SDL_Rect oRect{
-						.x = static_cast<int>(o.position.x),
-						.y = static_cast<int>(o.position.y),
+					SDL_FRect oRect{
+						.x = o.position.x,
+						.y = o.position.y,
 						.w = o.collider.w,
 						.h = o.collider.h
 					};
-					SDL_Rect cRect{ 0 };
-					if (SDL_GetRectIntersection(&groundSensor, &oRect, &cRect))
+					SDL_FRect cRect{ 0 };
+					if (SDL_GetRectIntersectionFloat(&groundSensor, &oRect, &cRect))
 					{
 						if (cRect.w > cRect.h)
 						{
@@ -514,23 +519,22 @@ int main(int argc, char *argv[])
 		}
 
 		// DEBUGGING
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-		SDL_FRect colliderRect{
-			.x = gs.player.position.x + static_cast<float>(gs.player.collider.x) - mapViewport.x,
-			.y = gs.player.position.y + static_cast<float>(gs.player.collider.y) - mapViewport.y,
-			.w = static_cast<float>(gs.player.collider.w),
-			.h = static_cast<float>(gs.player.collider.h)
-		};
-		SDL_RenderRect(state.renderer, &colliderRect);
+		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
+		//SDL_FRect colliderRect{
+		//	.x = gs.player.position.x + gs.player.collider.x - mapViewport.x,
+		//	.y = gs.player.position.y + gs.player.collider.y - mapViewport.y,
+		//	.w = gs.player.collider.w, .h = gs.player.collider.h
+		//};
+		//SDL_RenderRect(state.renderer, &colliderRect);
 
-		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
-		SDL_FRect groundRect{
-			.x = groundSensor.x - mapViewport.x,
-			.y = groundSensor.y - mapViewport.y,
-			.w = static_cast<float>(groundSensor.w),
-			.h = static_cast<float>(groundSensor.h)
-		};
-		SDL_RenderRect(state.renderer, &groundRect);
+		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
+		//SDL_FRect groundRect{
+		//	.x = groundSensor.x - mapViewport.x,
+		//	.y = groundSensor.y - mapViewport.y,
+		//	.w = static_cast<float>(groundSensor.w),
+		//	.h = static_cast<float>(groundSensor.h)
+		//};
+		//SDL_RenderRect(state.renderer, &groundRect);
 
 
 		// swap buffers and present
@@ -617,8 +621,10 @@ void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, fl
 					b.texture = res.bulletTex;
 					b.animations = { res.animBullet };
 					b.currentAnimation = 0;
-					b.collider = SDL_Rect{
-						.x = 0, .y = 0, .w = res.bulletTex->h, .h = res.bulletTex->h
+					b.collider = SDL_FRect{
+						.x = 0, .y = 0,
+						.w = static_cast<float>(res.bulletTex->h),
+						.h = static_cast<float>(res.bulletTex->h)
 					};
 					gs.bullets.push_back(b);
 
@@ -671,10 +677,14 @@ void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, fl
 						// apply inverse force to decelerate
 						const float fac = gs.player.velocity.x > 0 ? -1.5f : 1.5f;
 						float decAmount = fac * gs.player.acceleration.x * deltaTime;
-						gs.player.velocity.x += decAmount;
+						// if the velocity left is less than the per-frame deceleration amount, just set to zero
 						if (std::abs(gs.player.velocity.x) < decAmount)
 						{
 							gs.player.velocity.x = 0;
+						}
+						else
+						{
+							gs.player.velocity.x += decAmount;
 						}
 					}
 					// standing and shooting?
@@ -727,7 +737,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 		.h = static_cast<float>(tex->h)
 	};
 	SDL_FRect dst{
-		.x = scrollPos, .y = 0,
+		.x = scrollPos, .y = 10,
 		.w = static_cast<float>(tex->w * 2),
 		.h = static_cast<float>(tex->h)
 	};
@@ -740,7 +750,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 	SDL_RenderTextureTiled(state.renderer, tex, &src, 1, &dst);
 }
 
-void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aRect, SDL_Rect &bRect, SDL_Rect &cRect, float deltaTime)
+void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
 	if (a.type == ObjectType::player)
 	{
@@ -749,12 +759,12 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			if (a.velocity.x > 0)
 			{
 				// going right
-				a.position.x = static_cast<float>((aRect.x - a.collider.x) - cRect.w);
+				a.position.x = (aRect.x - a.collider.x) - cRect.w;
 			}
 			else if (a.velocity.x < 0)
 			{
 				// going left
-				a.position.x = static_cast<float>((aRect.x - a.collider.x) + cRect.w);
+				a.position.x = (aRect.x - a.collider.x) + cRect.w;
 			}
 
 			// bounce off enemies
@@ -772,11 +782,11 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			if (a.velocity.y > 0)
 			{
 				// going down
-				a.position.y = static_cast<float>((aRect.y - a.collider.y) - cRect.h);
+				a.position.y = (aRect.y - a.collider.y) - cRect.h;
 			}
 			else if (a.velocity.y < 0)
 			{
-				a.position.y = static_cast<float>((aRect.y - a.collider.y) + cRect.h);
+				a.position.y = (aRect.y - a.collider.y) + cRect.h;
 			}
 
 			if (b.type == ObjectType::enemy)
@@ -796,12 +806,12 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			if (a.velocity.x > 0)
 			{
 				// going right
-				a.position.x = static_cast<float>((aRect.x - a.collider.x) - cRect.w);
+				a.position.x = (aRect.x - a.collider.x) - cRect.w;
 			}
 			else if (a.velocity.x < 0)
 			{
 				// going left
-				a.position.x = static_cast<float>((aRect.x - a.collider.x) + cRect.w);
+				a.position.x = (aRect.x - a.collider.x) + cRect.w;
 			}
 			a.velocity.x = 0;
 		}
@@ -810,11 +820,11 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			if (a.velocity.y > 0)
 			{
 				// going down
-				a.position.y = static_cast<float>((aRect.y - a.collider.y) - cRect.h);
+				a.position.y = (aRect.y - a.collider.y) - cRect.h;
 			}
 			else if (a.velocity.y < 0)
 			{
-				a.position.y = static_cast<float>((aRect.y - a.collider.y) + cRect.h);
+				a.position.y = (aRect.y - a.collider.y) + cRect.h;
 			}
 			a.velocity.y = 0;
 		}
@@ -825,19 +835,19 @@ bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime
 {
 	bool hasCollision = false;
 
-	SDL_Rect aRect{
-		.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
-		.y = static_cast<int>(a.position.y) + a.collider.y,
+	SDL_FRect aRect{
+		.x = a.position.x + a.collider.x,
+		.y = a.position.y + a.collider.y,
 		.w = a.collider.w, .h = a.collider.h
 	};
-	SDL_Rect bRect{
-		.x = static_cast<int>(b.position.x) + b.collider.x,
-		.y = static_cast<int>(b.position.y) + b.collider.y,
+	SDL_FRect bRect{
+		.x = b.position.x + b.collider.x,
+		.y = b.position.y + b.collider.y,
 		.w = b.collider.w, .h = b.collider.h
 	};
 
-	SDL_Rect cRect{ 0 };
-	if (SDL_GetRectIntersection(&aRect, &bRect, &cRect))
+	SDL_FRect cRect{ 0 };
+	if (SDL_GetRectIntersectionFloat(&aRect, &bRect, &cRect))
 	{
 		hasCollision = true;
 		collisionResponse(gs, a, b, aRect, bRect, cRect, deltaTime);
