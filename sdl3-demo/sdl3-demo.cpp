@@ -210,8 +210,20 @@ bool initialize(SDLState &state);
 void handleInput(SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState);
 void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
-void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
+bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
+
+bool isNearZero(float v, float epsilon = 0.0001f)
+{
+	return std::abs(v) < 0.0001f;
+}
+void setZeroIfNear(float &v)
+{
+	if (isNearZero(v))
+	{
+		v = 0;
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -359,7 +371,7 @@ int main(int argc, char *argv[])
 			SDL_Rect groundSensor{
 				.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
 				.y = static_cast<int>(a.position.y) + a.collider.y + a.collider.h,
-				.w = a.collider.w, .h = 1
+				.w = a.collider.w, .h = 1 // using 2 pixels as collision response could push collider far enough for ground sensor to not trip
 			};
 			bool foundGround = false;
 			for (const GameObject &o : gs.objects)
@@ -387,7 +399,6 @@ int main(int argc, char *argv[])
 			{
 				// trigger landing event
 				gs.playerState = a.velocity.x == 0 ? PlayerState::idle : PlayerState::running;
-				printf("LANDED\n");
 			}
 			a.isGrounded = foundGround;
 		}
@@ -527,9 +538,12 @@ int main(int argc, char *argv[])
 
 		// show some stats
 		gs.globalTime += deltaTime;
-		SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({})",
-			gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size()
-		).c_str());
+		printf(std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})\n",
+			gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size(),
+			gs.player.velocity.x, gs.player.velocity.y).c_str());
+		//SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})",
+		//	gs.globalTime, static_cast<int>(gs.playerState), gs.direction, gs.player.isGrounded, gs.bullets.size(),
+		//	gs.player.velocity.x, gs.player.velocity.y).c_str());
 	}
 
 	res.cleanup();
@@ -539,7 +553,6 @@ int main(int argc, char *argv[])
 
 void handleInput(SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState)
 {
-	// common for all states
 	const auto performJump = [&gs]() {
 		if (gs.player.isGrounded)
 		{
@@ -618,6 +631,7 @@ void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, fl
 			}
 		};
 
+		// continuous input polling, running and/or shooting
 		gs.direction = 0;
 		if (keys[SDL_SCANCODE_A])
 		{
@@ -629,59 +643,64 @@ void update(GameState &gs, GameObject &obj, Resources &res, const bool *keys, fl
 			gs.direction += 1;
 			gs.flipHorizontal = false;
 		}
-		if (gs.direction)
-		{
-			gs.playerState = PlayerState::running;
-		}
 		gs.isShooting = keys[SDL_SCANCODE_J];
 
+		// apply velocity based movement
+		gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
+		if (std::abs(gs.player.velocity.x) > gs.maxSpeed)
+		{
+			gs.player.velocity.x = gs.direction * gs.maxSpeed;
+		}
+
+		// handle state specifics
 		switch (gs.playerState)
 		{
 			case PlayerState::idle:
 			{
-				// decelerate on idle
-				if (gs.player.velocity.x)
+				// if play is holding a direction, move to running state
+				if (gs.direction)
 				{
-					// apply inverse force to decelerate
-					const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
-					gs.player.velocity += fac * gs.player.acceleration * deltaTime;
+					gs.playerState = PlayerState::running;
 				}
-				// standing and shooting?
-				handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
+				else
+				{
+					// decelerate on idle
+					if (gs.player.velocity.x)
+					{
+						// apply inverse force to decelerate
+						const float fac = gs.player.velocity.x > 0 ? -1.0f : 1.0f;
+						gs.player.velocity.x += fac * gs.player.acceleration.x * deltaTime;
+						setZeroIfNear(gs.player.velocity.x);
+					}
+					// standing and shooting?
+					handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
+				}
 				break;
 			}
 			case PlayerState::running:
 			{
+				// if direction is 0, then we're idling
 				if (!gs.direction)
 				{
 					gs.playerState = PlayerState::idle;
 				}
-
-				gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
-				if (fabs(gs.player.velocity.x) > gs.maxSpeed)
+				else
 				{
-					gs.player.velocity.x = gs.direction * gs.maxSpeed;
-				}
+					// running and shooting?
+					handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
 
-				// running and shooting?
-				handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
-
-				// if velocity and direction have different signs, we're sliding
-				// and starting to move in the opposite direction
-				if (gs.player.velocity.x * gs.direction < 0 && gs.player.isGrounded)
-				{
-					// sliding and shooting?
-					handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
+					// if velocity and direction have different signs, we're sliding
+					// and starting to move in the opposite direction
+					if (gs.player.velocity.x * gs.direction < 0 && gs.player.isGrounded)
+					{
+						// sliding and shooting?
+						handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
+					}
 				}
 				break;
 			}
 			case PlayerState::jumping:
 			{
-				gs.player.velocity += gs.direction * gs.player.acceleration * deltaTime;
-				if (fabs(gs.player.velocity.x) > gs.maxSpeed)
-				{
-					gs.player.velocity.x = gs.direction * gs.maxSpeed;
-				}
 				handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
 				break;
 			}
@@ -716,45 +735,11 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 	SDL_RenderTextureTiled(state.renderer, tex, &src, 1, &dst);
 }
 
-bool initialize(SDLState &state)
-{
-	bool initSuccess = true;
-
-	if (!SDL_Init(SDL_INIT_VIDEO))
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
-		initSuccess = false;
-	}
-
-	// create the window
-	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE);
-	if (!state.window)
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
-		cleanup(state);
-		initSuccess = false;
-	}
-
-	// create the renderer
-	state.renderer = SDL_CreateRenderer(state.window, nullptr);
-	if (!state.renderer)
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating renderer", state.window);
-		cleanup(state);
-		initSuccess = false;
-	}
-	SDL_SetRenderVSync(state.renderer, 1);
-
-	// configure presentation
-	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-	return initSuccess;
-}
-
 void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aRect, SDL_Rect &bRect, SDL_Rect &cRect, float deltaTime)
 {
 	if (a.type == ObjectType::player)
 	{
-		if (cRect.w <= cRect.h) // w == h == 1 when jumping up over the corner of a box
+		if (cRect.w < cRect.h)
 		{
 			if (a.velocity.x > 0)
 			{
@@ -783,7 +768,6 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			{
 				// going down
 				a.position.y = static_cast<float>((aRect.y - a.collider.y) - cRect.h);
-				a.isGrounded = true;
 			}
 			else if (a.velocity.y < 0)
 			{
@@ -822,7 +806,6 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 			{
 				// going down
 				a.position.y = static_cast<float>((aRect.y - a.collider.y) - cRect.h);
-				a.isGrounded = true;
 			}
 			else if (a.velocity.y < 0)
 			{
@@ -833,8 +816,10 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_Rect &aR
 	}
 }
 
-void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime)
+bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime)
 {
+	bool hasCollision = false;
+
 	SDL_Rect aRect{
 		.x = static_cast<int>(a.velocity.x > 0 ? ceil(a.position.x) : a.position.x) + a.collider.x,
 		.y = static_cast<int>(a.position.y) + a.collider.y,
@@ -849,8 +834,44 @@ void checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime
 	SDL_Rect cRect{ 0 };
 	if (SDL_GetRectIntersection(&aRect, &bRect, &cRect))
 	{
+		hasCollision = true;
 		collisionResponse(gs, a, b, aRect, bRect, cRect, deltaTime);
 	}
+	return hasCollision;
+}
+
+bool initialize(SDLState &state)
+{
+	bool initSuccess = true;
+
+	if (!SDL_Init(SDL_INIT_VIDEO))
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
+		initSuccess = false;
+	}
+
+	// create the window
+	state.window = SDL_CreateWindow("SDL3 Demo", state.width, state.height, SDL_WINDOW_RESIZABLE);
+	if (!state.window)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
+		cleanup(state);
+		initSuccess = false;
+	}
+
+	// create the renderer
+	state.renderer = SDL_CreateRenderer(state.window, nullptr);
+	if (!state.renderer)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating renderer", state.window);
+		cleanup(state);
+		initSuccess = false;
+	}
+	SDL_SetRenderVSync(state.renderer, 1);
+
+	// configure presentation
+	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+	return initSuccess;
 }
 
 void cleanup(SDLState &state)
