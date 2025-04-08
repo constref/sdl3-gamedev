@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
 			a.isGrounded = foundGround;
 		}
 
-		// handle bullet collisions
+		// update bullets
 		for (GameObject &bullet : gs.bullets)
 		{
 			if (bullet.data.bullet.state != BulletState::inactive)
@@ -474,6 +474,16 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		// update enemies
+		for (GameObject &o : gs.objects)
+		{
+			if (o.type == ObjectType::enemy)
+			{
+				o.position += o.velocity * deltaTime;
+				update(state, gs, o, res, keys, deltaTime);
+			}
+		}
+
 		// finally overwrite with the resolved position (if collisions occurred)
 		const float moveXDiff = gs.player.position.x - oldPos.x;
 		gs.mapViewport.x += moveXDiff;
@@ -482,7 +492,7 @@ int main(int argc, char *argv[])
 		SDL_RenderTexture(state.renderer, res.bg1Tex, nullptr, nullptr);
 
 		drawParalaxLayer(state, gs, res.bg4Tex, bg4Scroll, 0.005f, deltaTime); // furthest first
-		drawParalaxLayer(state, gs, res.bg3Tex, bg3Scroll, 0.025f, deltaTime);
+		drawParalaxLayer(state, gs, res.bg3Tex, bg3Scroll, 0.05f, deltaTime);
 		drawParalaxLayer(state, gs, res.bg2Tex, bg2Scroll, 0.1f, deltaTime);
 
 		// draw the level tiles
@@ -662,7 +672,10 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				if (gs.globalTime - bulletTime > 0.15f)
 				{
 					// spawn some bullets
-					const float xOffset = gs.flipHorizontal ? 0 : 32 / 2 + 10.0f;
+					const float left = -4;
+					const float right = 36;
+					const float t = (obj.direction + 1) / 2.0f; // -1/1 + 1 = 0/2 divided by 2.0f -> 0.0f/1.0f
+					const float xOffset = left + right * t; // lerp
 					GameObject b;
 					b.type = ObjectType::bullet;
 					b.data.bullet.state = BulletState::flying;
@@ -834,6 +847,9 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			}
 		}
 	}
+	else if (obj.type == ObjectType::enemy)
+	{
+	}
 }
 
 void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime)
@@ -859,7 +875,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 
 void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
-	if (a.type == ObjectType::player && b.type != ObjectType::bullet)
+	if (a.type == ObjectType::player)
 	{
 		if (cRect.w < cRect.h)
 		{
@@ -935,6 +951,11 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 		}
 		a.velocity *= 0;
 		a.acceleration *= 0;
+
+		if (b.type == ObjectType::enemy)
+		{
+			b.data.enemy.state = EnemyState::damaged;
+		}
 	}
 }
 
