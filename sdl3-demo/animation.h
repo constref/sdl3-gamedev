@@ -5,11 +5,11 @@ class Animation
 	int frameCount, loopCount;
 	float length, time;
 public:
-	Animation() : frameCount(0), length(1), time(0)
+	Animation() : frameCount(0), loopCount(0), length(1), time(0)
 	{
 	}
 	Animation(int frameCount, float length)
-		: frameCount(frameCount), length(length), time(0)
+		: frameCount(frameCount), loopCount(0), length(length), time(0)
 	{
 	}
 
