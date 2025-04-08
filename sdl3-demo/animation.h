@@ -2,7 +2,7 @@
 
 class Animation
 {
-	int frameCount;
+	int frameCount, loopCount;
 	float length, time;
 public:
 	Animation() : frameCount(0), length(1), time(0)
@@ -19,6 +19,7 @@ public:
 		if (time >= length)
 		{
 			time -= length;
+			loopCount++;
 		}
 	}
 
@@ -31,4 +32,5 @@ public:
 	void setTime(float time) { this->time = time; }
 	float currentTime() const { return time; }
 	int getFrameCount() const { return frameCount; }
+	int getLoopCount() const { return loopCount; }
 };
