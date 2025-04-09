@@ -33,7 +33,7 @@ enum class PlayerState
 
 enum class BulletState
 {
-	flying, collided, inactive
+	flying, disintagrating, inactive
 };
 
 enum class EnemyState
@@ -88,6 +88,8 @@ struct GameObject
 	unsigned int currentAnimation;
 	ObjectData data;
 	float direction;
+	bool shouldFlash;
+	float flashTimer;
 
 	GameObject()
 	{
@@ -104,6 +106,8 @@ struct GameObject
 		isGrounded = false;
 		currentAnimation = 0;
 		direction = 1;
+		shouldFlash = false;
+		flashTimer = 0;
 	}
 };
 
@@ -119,7 +123,6 @@ struct GameState
 	float maxSpeed;
 	float jumpForce;
 	SDL_FRect mapViewport;
-
 
 	GameState()
 	{
@@ -554,8 +557,26 @@ int main(int argc, char *argv[])
 				};
 
 				glm::vec2 pDir = gs.player.position - e.position; // vector pointing to player
-				SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr,
-					pDir.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+
+				if (!e.shouldFlash)
+				{
+					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr,
+						pDir.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+				}
+				else
+				{
+					SDL_SetTextureColorModFloat(e.texture, 3.0f, 1.5f, 1.5f);
+					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr,
+						pDir.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+					SDL_SetTextureColorModFloat(e.texture, 1.0f, 1.0f, 1.0f);
+
+					e.flashTimer += deltaTime;
+					if (e.flashTimer >= 0.05f)
+					{
+						e.flashTimer -= 0.05f;
+						e.shouldFlash = false;
+					}
+				}
 			}
 		}
 
@@ -669,7 +690,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 
 				static double bulletTime = 0;
 
-				if (gs.globalTime - bulletTime > 0.15f)
+				if (gs.globalTime - bulletTime > 0.1)
 				{
 					// spawn some bullets
 					const float left = -4;
@@ -830,13 +851,13 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				if (obj.velocity.x == 0 && obj.velocity.y == 0)
 				{
 					// switching to a colliding state and animation
-					obj.data.bullet.state = BulletState::collided;
+					obj.data.bullet.state = BulletState::disintagrating;
 					obj.texture = res.bulletHitTex;
 					obj.currentAnimation = static_cast<int>(BulletAnimation::colliding);
 				}
 				break;
 			}
-			case BulletState::collided:
+			case BulletState::disintagrating:
 			{
 				if (obj.animations[obj.currentAnimation].getLoopCount() > 0)
 				{
@@ -952,9 +973,11 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 		a.velocity *= 0;
 		a.acceleration *= 0;
 
-		if (b.type == ObjectType::enemy)
+		if (b.type == ObjectType::enemy && a.data.bullet.state == BulletState::flying)
 		{
 			b.data.enemy.state = EnemyState::damaged;
+			b.shouldFlash = true;
+			b.flashTimer = 0;
 		}
 	}
 }
