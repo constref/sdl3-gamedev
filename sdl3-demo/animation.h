@@ -3,8 +3,9 @@
 class Timer
 {
 	float length, time;
+	bool timeout;
 public:
-	Timer(float length) : length(length), time(0)
+	Timer(float length) : length(length), time(0), timeout(false)
 	{
 	}
 
@@ -15,12 +16,14 @@ public:
 		if (time >= length)
 		{
 			time -= length;
+			timeout = true;
 			return true;
 		}
 		return false;
 	}
 
-	void reset() { time = 0; }
+	void reset() { time = 0; timeout = false; }
+	bool isTimedOut() const { return timeout; }
 	void setTime(float time) { this->time = time; }
 	float currentTime() const { return time; }
 	float getLength() const { return length; }
