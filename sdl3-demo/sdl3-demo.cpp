@@ -71,6 +71,9 @@ struct EnemyData
 {
 	EnemyState state;
 	int hp;
+	Timer dmgTimer;
+
+	EnemyData() : dmgTimer(0.3f) { }
 };
 
 struct LevelData {};
@@ -82,7 +85,7 @@ union ObjectData
 	EnemyData enemy;
 	LevelData level;
 
-	ObjectData() { }
+	ObjectData() : level(LevelData()) { }
 };
 
 struct GameObject
@@ -724,8 +727,8 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			}
 			else
 			{
-				gs.player().currentAnimation = static_cast<int>(nonShootAnim);
-				gs.player().texture = nonShootTex;
+				obj.currentAnimation = static_cast<int>(nonShootAnim);
+				obj.texture = nonShootTex;
 			}
 		};
 
@@ -741,19 +744,19 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 		}
 		if (currentDirection)
 		{
-			gs.player().direction = currentDirection;
+			obj.direction = currentDirection;
 		}
 		gs.isShooting = keys[SDL_SCANCODE_J];
 
 		// apply velocity based movement
-		gs.player().velocity += currentDirection * gs.player().acceleration * deltaTime;
-		if (std::abs(gs.player().velocity.x) > gs.maxSpeed)
+		obj.velocity += currentDirection * obj.acceleration * deltaTime;
+		if (std::abs(obj.velocity.x) > gs.maxSpeed)
 		{
-			gs.player().velocity.x = currentDirection * gs.maxSpeed;
+			obj.velocity.x = currentDirection * gs.maxSpeed;
 		}
 
 		// handle state specifics
-		switch (gs.player().data.player.state)
+		switch (obj.data.player.state)
 		{
 			case PlayerState::idle:
 			{
@@ -768,16 +771,16 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 					if (gs.player().velocity.x)
 					{
 						// apply inverse force to decelerate
-						const float fac = gs.player().velocity.x > 0 ? -1.5f : 1.5f;
-						float decAmount = fac * gs.player().acceleration.x * deltaTime;
+						const float fac = obj.velocity.x > 0 ? -1.5f : 1.5f;
+						float decAmount = fac * obj.acceleration.x * deltaTime;
 						// if the velocity left is less than the per-frame deceleration amount, just set to zero
-						if (std::abs(gs.player().velocity.x) < decAmount)
+						if (std::abs(obj.velocity.x) < decAmount)
 						{
-							gs.player().velocity.x = 0;
+							obj.velocity.x = 0;
 						}
 						else
 						{
-							gs.player().velocity.x += decAmount;
+							obj.velocity.x += decAmount;
 						}
 					}
 					// standing and shooting?
@@ -790,7 +793,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				// if direction is 0, then we're idling
 				if (!currentDirection)
 				{
-					gs.player().data.player.state = PlayerState::idle;
+					obj.data.player.state = PlayerState::idle;
 				}
 				else
 				{
@@ -799,7 +802,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 
 					// if velocity and direction have different signs, we're sliding
 					// and starting to move in the opposite direction
-					if (gs.player().velocity.x * gs.player().direction < 0 && gs.player().isGrounded)
+					if (obj.velocity.x * obj.direction < 0 && obj.isGrounded)
 					{
 						// sliding and shooting?
 						handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
@@ -864,7 +867,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				obj.texture = res.enemyHitTex;
 				obj.currentAnimation = 1;
 
-				static Timer dmgTimer(0.2f);
+				Timer &dmgTimer = obj.data.enemy.dmgTimer;
 				if (dmgTimer.step(deltaTime))
 				{
 					obj.data.enemy.state = EnemyState::idle;
