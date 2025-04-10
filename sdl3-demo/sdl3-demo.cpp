@@ -262,7 +262,7 @@ struct Resources
 		animSlideShoot = Animation(4, 0.5f);
 		animEnemy = Animation(8, 1.0f);
 		animEnemyHit = Animation(8, 1.0f);
-		animEnemyDie = Animation(16, 2.0f, true);
+		animEnemyDie = Animation(18, 2.0f, true);
 		animBullet = Animation(4, 0.15f);
 		animBulletHit = Animation(4, 0.15f, true);
 	}
@@ -380,7 +380,8 @@ int main(int argc, char *argv[])
 					};
 
 					o.animations = {
-						res.animIdle, res.animRun, res.animShootRun, res.animShoot, res.animSlide, res.animSlideShoot
+						res.animIdle, res.animRun, res.animShootRun,
+						res.animShoot, res.animSlide, res.animSlideShoot
 					};
 					gs.objects.push_back(o);
 					gs.playerIndex = gs.objects.size() - 1;
@@ -769,12 +770,12 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				// if play is holding a direction, move to running state
 				if (currentDirection)
 				{
-					gs.player().data.player.state = PlayerState::running;
+					obj.data.player.state = PlayerState::running;
 				}
 				else
 				{
 					// decelerate horizontally
-					if (gs.player().velocity.x)
+					if (obj.velocity.x)
 					{
 						// apply inverse force to decelerate
 						const float fac = obj.velocity.x > 0 ? -1.5f : 1.5f;
@@ -868,6 +869,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			{
 				obj.texture = res.enemyTex;
 				obj.currentAnimation = 0;
+				obj.velocity.x *= 0.8f;
 				break;
 			}
 			case EnemyState::damaged:
@@ -889,6 +891,12 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 						obj.data.enemy.state = EnemyState::idle;
 					}
 				}
+				obj.velocity.x *= 0.9f;
+				break;
+			}
+			case EnemyState::dead:
+			{
+				obj.velocity.x = 0;
 				break;
 			}
 		}
@@ -994,7 +1002,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 							b.shouldFlash = true;
 							b.flashTimer.reset();
 
-							//b.velocity = glm::normalize(a.velocity) * deltaTime;
+							b.velocity += glm::normalize(a.velocity) * 2.0f;
 							genericResponse(false, 0);
 						}
 					}
