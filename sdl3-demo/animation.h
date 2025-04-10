@@ -3,19 +3,27 @@
 class Timer
 {
 	float length, time;
-	bool timeout;
+	bool timeout, oneshot;
 public:
-	Timer(float length) : length(length), time(0), timeout(false)
+	Timer(float length, bool oneshot = false) : length(length), time(0), timeout(false), oneshot(oneshot)
 	{
 	}
 
 	// return true one timeout
 	bool step(float deltaTime)
 	{
+		float prevTime = time;
 		time += deltaTime;
 		if (time >= length)
 		{
-			time -= length;
+			if (!oneshot)
+			{
+				time -= length;
+			}
+			else
+			{
+				time = prevTime;
+			}
 			timeout = true;
 			return true;
 		}
@@ -38,8 +46,8 @@ public:
 	Animation() : frameCount(0), loopCount(0), timer(0)
 	{
 	}
-	Animation(int frameCount, float length)
-		: frameCount(frameCount), loopCount(0), timer(length)
+	Animation(int frameCount, float length, bool oneshot = false)
+		: frameCount(frameCount), loopCount(0), timer(length, oneshot)
 	{
 	}
 

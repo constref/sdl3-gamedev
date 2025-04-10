@@ -51,12 +51,15 @@ enum class KeyState
 	down, up
 };
 
+static const float PISTOL_TIME = 0.3f;
+static const float ASSAULT_RIFLE_TIME = 0.1f;
+
 struct PlayerData
 {
 	PlayerState state;
 	Timer weaponTimer;
 
-	PlayerData() : weaponTimer(0.3f)
+	PlayerData() : weaponTimer(PISTOL_TIME)
 	{
 		state = PlayerState::idle;
 	}
@@ -73,7 +76,7 @@ struct EnemyData
 	int hp;
 	Timer dmgTimer;
 
-	EnemyData() : dmgTimer(0.3f) { }
+	EnemyData() : state(EnemyState::idle), hp(10), dmgTimer(0.3f) {}
 };
 
 struct LevelData {};
@@ -85,7 +88,7 @@ union ObjectData
 	EnemyData enemy;
 	LevelData level;
 
-	ObjectData() : level(LevelData()) { }
+	ObjectData() : level(LevelData()) {}
 };
 
 struct GameObject
@@ -133,6 +136,7 @@ struct GameState
 	float maxSpeed;
 	float jumpForce;
 	SDL_FRect mapViewport;
+	int playerIndex;
 
 	GameState()
 	{
@@ -141,24 +145,16 @@ struct GameState
 		globalTime = 0;
 		maxSpeed = 100;
 		jumpForce = -200;
-
-		GameObject player;
-		player.type = ObjectType::player;
-		player.dynamic = true;
-		player.position = glm::vec2(0, 0);
-		player.velocity = glm::vec2(0, 0);
-		player.acceleration = glm::vec2(300, 0);
-		objects.push_back(player);
-
 		mapViewport = SDL_FRect{
 			.x = 0,
 			.y = 0,
 			.w = 0,
 			.h = 0,
 		};
+		playerIndex = -1;
 	}
 
-	GameObject &player() { return objects[0]; }
+	GameObject &player() { return objects[playerIndex]; }
 };
 
 enum class PlayerAnimation
@@ -181,15 +177,16 @@ enum class BulletAnimation
 	1 - Ground
 	2 - Panel
 	3 - Enemy
+	4 - Player
 */
 
 const int MAP_ROWS = 5;
 const int MAP_COLS = 50;
 short map[MAP_ROWS][MAP_COLS] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 2, 0, 0, 2, 2, 0, 0, 0, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const int TILE_SIZE = 32;
@@ -212,6 +209,7 @@ struct Resources
 	SDL_Texture *panelTex;
 	SDL_Texture *enemyTex;
 	SDL_Texture *enemyHitTex;
+	SDL_Texture *enemyDieTex;
 	SDL_Texture *bulletTex;
 	SDL_Texture *bulletHitTex;
 
@@ -223,6 +221,7 @@ struct Resources
 	Animation animSlideShoot;
 	Animation animEnemy;
 	Animation animEnemyHit;
+	Animation animEnemyDie;
 	Animation animBullet;
 	Animation animBulletHit;
 
@@ -250,6 +249,7 @@ struct Resources
 		panelTex = loadTexture(state.renderer, "data/tiles/panel.png");
 		enemyTex = loadTexture(state.renderer, "data/enemy.png");
 		enemyHitTex = loadTexture(state.renderer, "data/enemy_hit.png");
+		enemyDieTex = loadTexture(state.renderer, "data/enemy_die.png");
 		bulletTex = loadTexture(state.renderer, "data/bullet.png");
 		bulletHitTex = loadTexture(state.renderer, "data/bullet_hit.png");
 
@@ -262,8 +262,9 @@ struct Resources
 		animSlideShoot = Animation(4, 0.5f);
 		animEnemy = Animation(8, 1.0f);
 		animEnemyHit = Animation(8, 1.0f);
+		animEnemyDie = Animation(16, 2.0f, true);
 		animBullet = Animation(4, 0.15f);
-		animBulletHit = Animation(4, 0.15f);
+		animBulletHit = Animation(4, 0.15f, true);
 	}
 
 	void cleanup()
@@ -282,29 +283,18 @@ struct Resources
 		SDL_DestroyTexture(panelTex);
 		SDL_DestroyTexture(enemyTex);
 		SDL_DestroyTexture(enemyHitTex);
+		SDL_DestroyTexture(enemyDieTex);
 		SDL_DestroyTexture(bulletTex);
 		SDL_DestroyTexture(bulletHitTex);
 	}
 };
 
 bool initialize(SDLState &state);
-void handleInput(const SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState);
+void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState);
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
-
-bool isNearZero(float v, float epsilon = 0.0001f)
-{
-	return std::abs(v) < 0.0001f;
-}
-void setZeroIfNear(float &v)
-{
-	if (isNearZero(v))
-	{
-		v = 0;
-	}
-}
 
 int main(int argc, char *argv[])
 {
@@ -328,16 +318,6 @@ int main(int argc, char *argv[])
 		.w = static_cast<float>(state.logW),
 		.h = static_cast<float>(state.logH)
 	};
-	gs.player().data.player = PlayerData();
-	gs.player().position.x = gs.mapViewport.w / 2 - spriteSize / 2;
-	gs.player().collider = SDL_FRect{
-		.x = 11, .y = 2, .w = 10, .h = 30
-	};
-
-	gs.player().animations = {
-		res.animIdle, res.animRun, res.animShootRun, res.animShoot, res.animSlide, res.animSlideShoot
-	};
-
 	// load map
 	for (int r = 0; r < MAP_ROWS; ++r)
 	{
@@ -383,8 +363,27 @@ int main(int argc, char *argv[])
 					o.collider = SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = spriteSize - 4
 					};
-					o.animations = { res.animEnemy, res.animEnemyHit };
+					o.animations = { res.animEnemy, res.animEnemyHit, res.animEnemyDie };
 					gs.objects.push_back(o);
+					break;
+				}
+				case 4:
+				{
+					GameObject o = createObject(ObjectType::player, r, c, res.idleTex);
+					o.type = ObjectType::player;
+					o.data.player = PlayerData();
+					o.dynamic = true;
+					o.velocity = glm::vec2(0, 0);
+					o.acceleration = glm::vec2(300, 0);
+					o.collider = SDL_FRect{
+						.x = 11, .y = 2, .w = 10, .h = 30
+					};
+
+					o.animations = {
+						res.animIdle, res.animRun, res.animShootRun, res.animShoot, res.animSlide, res.animSlideShoot
+					};
+					gs.objects.push_back(o);
+					gs.playerIndex = gs.objects.size() - 1;
 					break;
 				}
 			}
@@ -420,7 +419,7 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					handleInput(state, gs, event.key.scancode, KeyState::down);
+					handleInput(state, gs, gs.player(), event.key.scancode, KeyState::down);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
@@ -433,13 +432,12 @@ int main(int argc, char *argv[])
 							break;
 						}
 					}
-					handleInput(state, gs, event.key.scancode, KeyState::up);
+					handleInput(state, gs, gs.player(), event.key.scancode, KeyState::up);
 					break;
 				}
 			}
 		}
 
-		glm::vec2 oldPos = gs.player().position;
 		for (GameObject &objA : gs.objects)
 		{
 			update(state, gs, objA, res, keys, deltaTime);
@@ -456,7 +454,7 @@ int main(int argc, char *argv[])
 				objA.animations[objA.currentAnimation].progress(deltaTime);
 			}
 
-			// handle player collisions
+			// collision detection and response
 			objA.position += objA.velocity * deltaTime;
 
 			for (GameObject &objB : gs.objects)
@@ -527,7 +525,7 @@ int main(int argc, char *argv[])
 		}
 
 		// calculate viewport movement
-		gs.mapViewport.x += gs.player().position.x - oldPos.x;
+		gs.mapViewport.x = (gs.player().position.x + spriteSize / 2) - gs.mapViewport.w / 2;
 
 		// perform drawing commands
 		SDL_RenderTexture(state.renderer, res.bg1Tex, nullptr, nullptr);
@@ -540,35 +538,33 @@ int main(int argc, char *argv[])
 		for (GameObject &e : gs.objects)
 		{
 			int currentFrame = e.animations.size() ? e.animations[e.currentAnimation].currentFrame() : 0;
+			SDL_FRect src{
+				.x = static_cast<float>(currentFrame * spriteSize),
+				.y = 0,
+				.w = static_cast<float>(spriteSize),
+				.h = static_cast<float>(spriteSize)
+			};
+
+			SDL_FRect dst{
+				.x = e.position.x - gs.mapViewport.x,
+				.y = e.position.y,
+				.w = static_cast<float>(spriteSize),
+				.h = static_cast<float>(spriteSize)
+			};
+
+			if (!e.shouldFlash)
 			{
-				SDL_FRect src{
-					.x = static_cast<float>(currentFrame * spriteSize),
-					.y = 0,
-					.w = static_cast<float>(spriteSize),
-					.h = static_cast<float>(spriteSize)
-				};
+				SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+			}
+			else
+			{
+				SDL_SetTextureColorModFloat(e.texture, 2.5f, 1.5f, 1.5f);
+				SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+				SDL_SetTextureColorModFloat(e.texture, 1.0f, 1.0f, 1.0f);
 
-				SDL_FRect dst{
-					.x = e.position.x - gs.mapViewport.x,
-					.y = e.position.y,
-					.w = static_cast<float>(spriteSize),
-					.h = static_cast<float>(spriteSize)
-				};
-
-				if (!e.shouldFlash)
+				if (e.flashTimer.step(deltaTime))
 				{
-					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-				}
-				else
-				{
-					SDL_SetTextureColorModFloat(e.texture, 2.5f, 1.5f, 1.5f);
-					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-					SDL_SetTextureColorModFloat(e.texture, 1.0f, 1.0f, 1.0f);
-
-					if (e.flashTimer.step(deltaTime))
-					{
-						e.shouldFlash = false;
-					}
+					e.shouldFlash = false;
 				}
 			}
 		}
@@ -630,40 +626,50 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void handleInput(const SDLState &state, GameState &gs, SDL_Scancode key, KeyState keyState)
+void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState)
 {
-	const auto performJump = [&gs]() {
-		if (gs.player().isGrounded)
+	const auto performJump = [&gs, &obj]() {
+		if (obj.isGrounded)
 		{
-			gs.player().data.player.state = PlayerState::jumping;
-			gs.player().velocity.y = gs.jumpForce;
+			obj.data.player.state = PlayerState::jumping;
+			obj.velocity.y = gs.jumpForce;
 		}
 	};
 
-	switch (gs.player().data.player.state)
+	if (obj.type == ObjectType::player)
 	{
-		case PlayerState::idle:
+		switch (obj.data.player.state)
 		{
-			if (key == SDL_SCANCODE_K && keyState == KeyState::down)
+			case PlayerState::idle:
 			{
-				performJump();
-			}
-			break;
-		}
-		case PlayerState::running:
-		{
-			if (key == SDL_SCANCODE_K && keyState == KeyState::down)
-			{
-				if (gs.player().isGrounded)
+				if (key == SDL_SCANCODE_K && keyState == KeyState::down)
 				{
 					performJump();
 				}
+				else if (key == SDL_SCANCODE_1 && keyState == KeyState::down)
+				{
+					obj.data.player.weaponTimer = Timer(PISTOL_TIME);
+					break;
+				}
+				else if (key == SDL_SCANCODE_2 && keyState == KeyState::down)
+				{
+					obj.data.player.weaponTimer = Timer(ASSAULT_RIFLE_TIME);
+					break;
+				}
+				break;
 			}
-			break;
-		}
-		case PlayerState::jumping:
-		{
-			break;
+			case PlayerState::running:
+			{
+				if (key == SDL_SCANCODE_K && keyState == KeyState::down)
+				{
+					performJump();
+				}
+				break;
+			}
+			case PlayerState::jumping:
+			{
+				break;
+			}
 		}
 	}
 }
@@ -832,17 +838,19 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 		{
 			case BulletState::flying:
 			{
-				if (obj.velocity.x == 0 && obj.velocity.y == 0)
+				if (obj.velocity.x == 0)
 				{
+					obj.velocity *= 0;
 					// switching to a colliding state and animation
 					obj.data.bullet.state = BulletState::disintagrating;
-					obj.texture = res.bulletHitTex;
-					obj.currentAnimation = static_cast<int>(BulletAnimation::colliding);
 				}
 				break;
 			}
 			case BulletState::disintagrating:
 			{
+				obj.texture = res.bulletHitTex;
+				obj.currentAnimation = static_cast<int>(BulletAnimation::colliding);
+
 				if (obj.animations[obj.currentAnimation].getLoopCount() > 0)
 				{
 					// animation has played, remove bullet
@@ -864,13 +872,22 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			}
 			case EnemyState::damaged:
 			{
-				obj.texture = res.enemyHitTex;
-				obj.currentAnimation = 1;
-
-				Timer &dmgTimer = obj.data.enemy.dmgTimer;
-				if (dmgTimer.step(deltaTime))
+				if (obj.data.enemy.hp <= 0)
 				{
-					obj.data.enemy.state = EnemyState::idle;
+					obj.texture = res.enemyDieTex;
+					obj.currentAnimation = 2;
+					obj.data.enemy.state = EnemyState::dead;
+				}
+				else
+				{
+					obj.texture = res.enemyHitTex;
+					obj.currentAnimation = 1;
+
+					Timer &dmgTimer = obj.data.enemy.dmgTimer;
+					if (dmgTimer.step(deltaTime))
+					{
+						obj.data.enemy.state = EnemyState::idle;
+					}
 				}
 				break;
 			}
@@ -901,8 +918,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 
 void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
-	if (a.type == ObjectType::player)
-	{
+	const auto genericResponse = [&gs, &a, &b, &aRect, &bRect, &cRect, deltaTime](bool shouldFlash = false, float velFactor = 0) {
 		if (cRect.w < cRect.h)
 		{
 			if (a.velocity.x > 0)
@@ -915,17 +931,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 				// going left
 				a.position.x = (aRect.x - a.collider.x) + cRect.w;
 			}
-
-			// bounce off enemies
-			if (b.type == ObjectType::enemy)
-			{
-				a.shouldFlash = true;
-				a.velocity.x *= -1.0f;
-			}
-			else
-			{
-				a.velocity.x = 0;
-			}
+			a.velocity.x *= velFactor;
 		}
 		else
 		{
@@ -938,88 +944,68 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 			{
 				a.position.y = (aRect.y - a.collider.y) + cRect.h;
 			}
-
-			if (b.type == ObjectType::enemy)
-			{
-				a.shouldFlash = true;
-				a.velocity.y *= -1.0f;
-			}
-			else
-			{
-				a.velocity.y = 0;
-			}
+			a.velocity.y *= velFactor;
 		}
-	}
-	else if (a.type == ObjectType::bullet)
+		a.shouldFlash = shouldFlash;
+
+	};
+
+	switch (a.type)
 	{
-		if (cRect.w < cRect.h)
+		case ObjectType::player:
 		{
-			if (a.velocity.x > 0)
+			switch (b.type)
 			{
-				// going right
-				a.position.x = (aRect.x - a.collider.x) - cRect.w;
+				case ObjectType::level:
+				{
+					genericResponse();
+					break;
+				}
+				case ObjectType::enemy:
+				{
+					if (b.data.enemy.state != EnemyState::dead)
+					{
+						genericResponse(true, -1);
+					}
+					break;
+				}
 			}
-			else if (a.velocity.x < 0)
-			{
-				// going left
-				a.position.x = (aRect.x - a.collider.x) + cRect.w;
-			}
+			break;
 		}
-		else
+		case ObjectType::bullet:
 		{
-			if (a.velocity.y > 0)
+			if (a.data.bullet.state == BulletState::flying)
 			{
-				// going down
-				a.position.y = (aRect.y - a.collider.y) - cRect.h;
-			}
-			else if (a.velocity.y < 0)
-			{
-				a.position.y = (aRect.y - a.collider.y) + cRect.h;
-			}
-		}
+				switch (b.type)
+				{
+					case ObjectType::level:
+					{
+						genericResponse(false, 0);
+						break;
+					}
+					case ObjectType::enemy:
+					{
+						if (b.data.enemy.state != EnemyState::dead)
+						{
+							a.data.bullet.state = BulletState::disintagrating;
 
-		// apply damage to the enemy
-		if (b.type == ObjectType::enemy && a.data.bullet.state == BulletState::flying)
-		{
-			// trigger flashing to indicate damage
-			b.shouldFlash = true;
-			b.flashTimer.reset();
+							b.data.enemy.state = EnemyState::damaged;
+							b.data.enemy.hp--;
+							b.shouldFlash = true;
+							b.flashTimer.reset();
 
-			b.data.enemy.state = EnemyState::damaged;
-			b.velocity = glm::normalize(a.velocity) * deltaTime;
+							//b.velocity = glm::normalize(a.velocity) * deltaTime;
+							genericResponse(false, 0);
+						}
+					}
+				}
+			}
+			break;
 		}
-		// stop the bullet
-		a.velocity *= 0;
-		a.acceleration *= 0;
-	}
-	else if (a.type == ObjectType::enemy)
-	{
-		if (cRect.w < cRect.h)
+		case ObjectType::enemy:
 		{
-			if (a.velocity.x > 0)
-			{
-				// going right
-				a.position.x = (aRect.x - a.collider.x) - cRect.w;
-			}
-			else if (a.velocity.x < 0)
-			{
-				// going left
-				a.position.x = (aRect.x - a.collider.x) + cRect.w;
-			}
-			a.velocity.x = 0;
-		}
-		else
-		{
-			if (a.velocity.y > 0)
-			{
-				// going down
-				a.position.y = (aRect.y - a.collider.y) - cRect.h;
-			}
-			else if (a.velocity.y < 0)
-			{
-				a.position.y = (aRect.y - a.collider.y) + cRect.h;
-			}
-			a.velocity.y = 0;
+			genericResponse();
+			break;
 		}
 	}
 }
