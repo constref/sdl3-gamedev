@@ -184,7 +184,7 @@ const int MAP_ROWS = 5;
 const int MAP_COLS = 50;
 short map[MAP_ROWS][MAP_COLS] = {
 	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
@@ -694,8 +694,8 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 					obj.data.player.weaponTimer.reset();
 
 					// spawn some bullets
-					const float left = -2;
-					const float right = 34;
+					const float left = 4;
+					const float right = 24;
 					const float t = (obj.direction + 1) / 2.0f; // -1/1 + 1 = 0/2 divided by 2.0f -> 0.0f/1.0f
 					const float xOffset = left + right * t; // lerp
 					GameObject b;
@@ -927,17 +927,17 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
 	const auto genericResponse = [&gs, &a, &b, &aRect, &bRect, &cRect, deltaTime](bool shouldFlash = false, float velFactor = 0) {
-		if (cRect.w < cRect.h)
+		if (cRect.w <= cRect.h)
 		{
 			if (a.velocity.x > 0)
 			{
 				// going right
-				a.position.x = (aRect.x - a.collider.x) - cRect.w;
+				a.position.x = bRect.x - a.collider.w - a.collider.x;
 			}
 			else if (a.velocity.x < 0)
 			{
 				// going left
-				a.position.x = (aRect.x - a.collider.x) + cRect.w;
+				a.position.x = (bRect.x + bRect.w) - a.collider.x;
 			}
 			a.velocity.x *= velFactor;
 		}
@@ -946,11 +946,11 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 			if (a.velocity.y > 0)
 			{
 				// going down
-				a.position.y = (aRect.y - a.collider.y) - cRect.h;
+				a.position.y = bRect.y - a.collider.h - a.collider.y;
 			}
 			else if (a.velocity.y < 0)
 			{
-				a.position.y = (aRect.y - a.collider.y) + cRect.h;
+				a.position.y = (bRect.y + bRect.h) - a.collider.y;
 			}
 			a.velocity.y *= velFactor;
 		}
@@ -989,6 +989,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 					case ObjectType::level:
 					{
 						genericResponse(false, 0);
+						a.velocity *= 0;
 						break;
 					}
 					case ObjectType::enemy:
@@ -997,13 +998,15 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 						{
 							a.data.bullet.state = BulletState::disintagrating;
 
+							b.direction = a.direction * -1;
 							b.data.enemy.state = EnemyState::damaged;
-							b.data.enemy.hp--;
 							b.shouldFlash = true;
 							b.flashTimer.reset();
+							b.data.enemy.hp--;
 
-							b.velocity += glm::normalize(a.velocity) * 2.0f;
+							b.velocity.x += glm::normalize(a.velocity).x * 100;
 							genericResponse(false, 0);
+							a.velocity *= 0;
 						}
 					}
 				}
@@ -1012,7 +1015,10 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 		}
 		case ObjectType::enemy:
 		{
-			genericResponse();
+			if (b.type != ObjectType::enemy)
+			{
+				genericResponse();
+			}
 			break;
 		}
 	}
