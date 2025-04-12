@@ -140,6 +140,7 @@ struct GameState
 	float jumpForce;
 	SDL_FRect mapViewport;
 	size_t playerIndex;
+	bool debugMode;
 
 	GameState()
 	{
@@ -155,6 +156,7 @@ struct GameState
 			.h = 0,
 		};
 		playerIndex = -1;
+		debugMode = false;
 	}
 
 	GameObject &player() { return objects[GameState::LAYER_IDX_CHARACTERS][playerIndex]; }
@@ -186,10 +188,10 @@ enum class BulletAnimation
 const int MAP_ROWS = 5;
 const int MAP_COLS = 50;
 short map[MAP_ROWS][MAP_COLS] = {
-	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 3, 2, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
+	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 3, 0, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
 const int TILE_SIZE = 32;
@@ -295,6 +297,7 @@ struct Resources
 bool initialize(SDLState &state);
 void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState);
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
+void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
 bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
@@ -379,7 +382,7 @@ int main(int argc, char *argv[])
 					o.velocity = glm::vec2(0, 0);
 					o.acceleration = glm::vec2(300, 0);
 					o.collider = SDL_FRect{
-						.x = 11, .y = 2, .w = 10, .h = 30
+						.x = 11, .y = 6, .w = 10, .h = 26
 					};
 
 					o.animations = {
@@ -433,6 +436,11 @@ int main(int argc, char *argv[])
 						case SDL_SCANCODE_F11:
 						{
 							SDL_SetWindowFullscreen(state.window, true);
+							break;
+						}
+						case SDL_SCANCODE_F12:
+						{
+							gs.debugMode = !gs.debugMode;
 							break;
 						}
 					}
@@ -554,38 +562,9 @@ int main(int argc, char *argv[])
 		// draw the game objects and entities
 		for (auto &objLayer : gs.objects)
 		{
-			for (GameObject &e : objLayer)
+			for (GameObject &obj : objLayer)
 			{
-				int currentFrame = e.animations.size() ? e.animations[e.currentAnimation].currentFrame() : 0;
-				SDL_FRect src{
-					.x = static_cast<float>(currentFrame * spriteSize),
-					.y = 0,
-					.w = static_cast<float>(spriteSize),
-					.h = static_cast<float>(spriteSize)
-				};
-
-				SDL_FRect dst{
-					.x = e.position.x - gs.mapViewport.x,
-					.y = e.position.y,
-					.w = static_cast<float>(spriteSize),
-					.h = static_cast<float>(spriteSize)
-				};
-
-				if (!e.shouldFlash)
-				{
-					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-				}
-				else
-				{
-					SDL_SetTextureColorModFloat(e.texture, 2.5f, 1.5f, 1.5f);
-					SDL_RenderTextureRotated(state.renderer, e.texture, &src, &dst, 0, nullptr, e.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-					SDL_SetTextureColorModFloat(e.texture, 1.0f, 1.0f, 1.0f);
-
-					if (e.flashTimer.step(deltaTime))
-					{
-						e.shouldFlash = false;
-					}
-				}
+				drawObject(state, gs, obj, deltaTime);
 			}
 		}
 
@@ -611,14 +590,6 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		// DEBUGGING
-		//SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-		//SDL_FRect colliderRect{
-		//	.x = gs.player().position.x + gs.player().collider.x - mapViewport.x,
-		//	.y = gs.player().position.y + gs.player().collider.y - mapViewport.y,
-		//	.w = gs.player().collider.w, .h = gs.player().collider.h
-		//};
-		//SDL_RenderRect(state.renderer, &colliderRect);
 
 		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
 		//SDL_FRect groundRect{
@@ -644,6 +615,55 @@ int main(int argc, char *argv[])
 	res.cleanup();
 	cleanup(state);
 	return 0;
+}
+
+void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float deltaTime)
+{
+	const int spriteSize = 32;
+
+	int currentFrame = obj.animations.size() ? obj.animations[obj.currentAnimation].currentFrame() : 0;
+	SDL_FRect src{
+		.x = static_cast<float>(currentFrame * spriteSize),
+		.y = 0,
+		.w = static_cast<float>(spriteSize),
+		.h = static_cast<float>(spriteSize)
+	};
+
+	SDL_FRect dst{
+		.x = obj.position.x - gs.mapViewport.x,
+		.y = obj.position.y,
+		.w = static_cast<float>(spriteSize),
+		.h = static_cast<float>(spriteSize)
+	};
+
+	if (!obj.shouldFlash)
+	{
+		SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr, obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+	}
+	else
+	{
+		SDL_SetTextureColorModFloat(obj.texture, 2.5f, 1.5f, 1.5f);
+		SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr, obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+		SDL_SetTextureColorModFloat(obj.texture, 1.0f, 1.0f, 1.0f);
+
+		if (obj.flashTimer.step(deltaTime))
+		{
+			obj.shouldFlash = false;
+		}
+	}
+
+	if (gs.debugMode)
+	{
+		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 150);
+		SDL_FRect colliderRect{
+			.x = obj.position.x + obj.collider.x - gs.mapViewport.x,
+			.y = obj.position.y + obj.collider.y - gs.mapViewport.y,
+			.w = obj.collider.w, .h = obj.collider.h
+		};
+		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_BLEND);
+		SDL_RenderFillRect(state.renderer, &colliderRect);
+		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_NONE);
+	}
 }
 
 void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState)
@@ -882,13 +902,13 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 	}
 	else if (obj.type == ObjectType::enemy)
 	{
+		obj.velocity.x *= 0.9f;
 		switch (obj.data.enemy.state)
 		{
 			case EnemyState::idle:
 			{
 				obj.texture = res.enemyTex;
 				obj.currentAnimation = 0;
-				obj.velocity.x *= 0.8f;
 				break;
 			}
 			case EnemyState::damaged:
@@ -910,7 +930,6 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 						obj.data.enemy.state = EnemyState::idle;
 					}
 				}
-				obj.velocity.x *= 0.9f;
 				break;
 			}
 			case EnemyState::dead:
@@ -945,7 +964,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 
 void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
-	const auto genericResponse = [&gs, &a, &b, &aRect, &bRect, &cRect, deltaTime](bool shouldFlash = false, float velFactor = 0) {
+	const auto genericResponse = [&gs, &a, &b, &aRect, &bRect, &cRect, deltaTime](bool shouldFlash = false, float velXFactor = 0, float velYFactor = 0) {
 		if (cRect.w < cRect.h)
 		{
 			if (a.velocity.x > 0)
@@ -958,7 +977,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 				// going left
 				a.position.x += cRect.w;
 			}
-			a.velocity.x *= velFactor;
+			a.velocity.x *= velXFactor;
 		}
 		else
 		{
@@ -971,7 +990,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 			{
 				a.position.y += cRect.h;
 			}
-			a.velocity.y *= velFactor;
+			a.velocity.y *= velYFactor;
 		}
 		a.shouldFlash = shouldFlash;
 
@@ -992,7 +1011,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 				{
 					if (b.data.enemy.state != EnemyState::dead)
 					{
-						genericResponse(true, -1);
+						genericResponse(true, -1, -1);
 					}
 					break;
 				}
@@ -1007,8 +1026,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 				{
 					case ObjectType::level:
 					{
-						genericResponse(false, 0);
-						a.velocity *= 0;
+						genericResponse(false);
 						break;
 					}
 					case ObjectType::enemy:
@@ -1024,8 +1042,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 							b.data.enemy.hp--;
 
 							b.velocity.x += glm::normalize(a.velocity).x * 100;
-							genericResponse(false, 0);
-							a.velocity *= 0;
+							genericResponse(false);
 						}
 					}
 				}
