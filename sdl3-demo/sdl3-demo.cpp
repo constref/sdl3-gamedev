@@ -1,12 +1,13 @@
 ﻿#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <format>
 #include <vector>
 #include <array>
 #include <glm/glm.hpp>
 #include <functional>
-
+#include "gameobject.h"
 #include "animation.h"
 
 using namespace std;
@@ -15,116 +16,23 @@ struct SDLState
 {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	SDL_AudioDeviceID audioDevice;
 	int width, height, logW, logH;
 	bool fullscreen;
 
-	SDLState() : window(nullptr), renderer(nullptr), fullscreen(false)
+	SDLState() : window(nullptr), renderer(nullptr), audioDevice(0)
 	{
 		width = 1600;
 		height = 900;
 		logW = 512;
 		logH = 288;
+		fullscreen = false;
 	}
-};
-
-enum class PlayerState
-{
-	idle, running, jumping
-};
-
-enum class BulletState
-{
-	flying, disintagrating, inactive
-};
-
-enum class EnemyState
-{
-	idle, damaged, dead
-};
-
-enum class ObjectType
-{
-	player, enemy, level, bullet
 };
 
 enum class KeyState
 {
 	down, up
-};
-
-static const float PISTOL_TIME = 0.3f;
-static const float ASSAULT_RIFLE_TIME = 0.1f;
-
-struct PlayerData
-{
-	PlayerState state;
-	Timer weaponTimer;
-
-	PlayerData() : weaponTimer(PISTOL_TIME)
-	{
-		state = PlayerState::idle;
-	}
-};
-
-struct BulletData
-{
-	BulletState state;
-};
-
-struct EnemyData
-{
-	EnemyState state;
-	int hp;
-	Timer dmgTimer;
-
-	EnemyData() : state(EnemyState::idle), hp(10), dmgTimer(0.3f) {}
-};
-
-struct LevelData {};
-
-union ObjectData
-{
-	PlayerData player;
-	BulletData bullet;
-	EnemyData enemy;
-	LevelData level;
-
-	ObjectData() : level(LevelData()) {}
-};
-
-struct GameObject
-{
-	ObjectType type;
-	bool dynamic;
-	glm::vec2 position, velocity, acceleration;
-	SDL_FRect collider;
-	SDL_Texture *texture;
-	bool isGrounded;
-	std::vector<Animation> animations;
-	unsigned int currentAnimation;
-	ObjectData data;
-	float direction;
-	bool shouldFlash;
-	Timer flashTimer;
-
-	GameObject() : flashTimer(0.05f)
-	{
-		type = ObjectType::level;
-		dynamic = false;
-		data.level = LevelData();
-		position = velocity = acceleration = glm::vec2(0, 0);
-		collider = SDL_FRect{
-			.x = 0,
-			.y = 0,
-			.w = 0,
-			.h = 0
-		};
-		texture = nullptr;
-		isGrounded = false;
-		currentAnimation = 0;
-		direction = 1;
-		shouldFlash = false;
-	}
 };
 
 struct GameState
@@ -187,6 +95,9 @@ enum class BulletAnimation
 
 const int MAP_ROWS = 5;
 const int MAP_COLS = 50;
+const int TILE_SIZE = 32;
+const int MAP_W = MAP_COLS * TILE_SIZE;
+const int MAP_H = MAP_ROWS * TILE_SIZE;
 short map[MAP_ROWS][MAP_COLS] = {
 	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -194,9 +105,6 @@ short map[MAP_ROWS][MAP_COLS] = {
 	0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 3, 0, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
-const int TILE_SIZE = 32;
-const int MAP_W = MAP_COLS * TILE_SIZE;
-const int MAP_H = MAP_ROWS * TILE_SIZE;
 
 struct Resources
 {
@@ -218,17 +126,27 @@ struct Resources
 	SDL_Texture *bulletTex;
 	SDL_Texture *bulletHitTex;
 
-	Animation animIdle;
-	Animation animRun;
-	Animation animShootRun;
-	Animation animShoot;
-	Animation animSlide;
-	Animation animSlideShoot;
-	Animation animEnemy;
-	Animation animEnemyHit;
-	Animation animEnemyDie;
-	Animation animBullet;
-	Animation animBulletHit;
+	Mix_Music *music;
+	Mix_Chunk *chunkShoot;
+	Mix_Chunk *chunkShootHit;
+	Mix_Chunk *chunkWallHit;
+
+	int ANIM_IDX_PLAYER_IDLE = 0;
+	int ANIM_IDX_PLAYER_RUN = 1;
+	int ANIM_IDX_PLAYER_SHOOT_RUN = 2;
+	int ANIM_IDX_PLAYER_SHOOT = 3;
+	int ANIM_IDX_PLAYER_SLIDE = 4;
+	int ANIM_IDX_PLAYER_SLIDE_SHOOT = 5;
+	std::vector<Animation> playerAnims;
+
+	int ANIM_IDX_ENEMY_IDLE = 0;
+	int ANIM_IDX_ENEMY_HIT = 1;
+	int ANIM_IDX_ENEMY_DIE = 2;
+	std::vector<Animation> enemyAnims;
+
+	int ANIM_IDX_BULLET = 0;
+	int ANIM_IDX_BULLET_HIT = 1;
+	std::vector<Animation> bulletAnims;
 
 	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filePath)
 	{
@@ -258,18 +176,27 @@ struct Resources
 		bulletTex = loadTexture(state.renderer, "data/bullet.png");
 		bulletHitTex = loadTexture(state.renderer, "data/bullet_hit.png");
 
+		// load audio files
+		music = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+		chunkShoot = Mix_LoadWAV("data/audio/shoot.wav");
+		chunkShootHit = Mix_LoadWAV("data/audio/shoot_hit.wav");
+		chunkWallHit = Mix_LoadWAV("data/audio/wall_hit.wav");
+
 		// setup animations
-		animIdle = Animation(8, 1.6f);
-		animRun = Animation(4, 0.5f);
-		animShootRun = Animation(4, 0.5f);
-		animShoot = Animation(4, 0.5f);
-		animSlide = Animation(1, 1.0f);
-		animSlideShoot = Animation(4, 0.5f);
-		animEnemy = Animation(8, 1.0f);
-		animEnemyHit = Animation(8, 1.0f);
-		animEnemyDie = Animation(18, 2.0f, true);
-		animBullet = Animation(4, 0.15f);
-		animBulletHit = Animation(4, 0.15f, true);
+		playerAnims.resize(6);
+		playerAnims[ANIM_IDX_PLAYER_IDLE] = Animation(8, 1.6f);
+		playerAnims[ANIM_IDX_PLAYER_RUN] = Animation(4, 0.5f);
+		playerAnims[ANIM_IDX_PLAYER_SHOOT] = Animation(4, 0.5f);
+		playerAnims[ANIM_IDX_PLAYER_SHOOT_RUN] = Animation(4, 0.5f);
+		playerAnims[ANIM_IDX_PLAYER_SLIDE] = Animation(1, 1.0f);
+		playerAnims[ANIM_IDX_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
+		enemyAnims.resize(3);
+		enemyAnims[ANIM_IDX_ENEMY_IDLE] = Animation(8, 1.0f);
+		enemyAnims[ANIM_IDX_ENEMY_HIT] = Animation(8, 1.0f);
+		enemyAnims[ANIM_IDX_ENEMY_DIE] = Animation(18, 2.0f, true);
+		bulletAnims.resize(2);
+		bulletAnims[ANIM_IDX_BULLET] = Animation(4, 0.15f);
+		bulletAnims[ANIM_IDX_BULLET_HIT] = Animation(4, 0.15f, true);
 	}
 
 	void cleanup()
@@ -291,6 +218,11 @@ struct Resources
 		SDL_DestroyTexture(enemyDieTex);
 		SDL_DestroyTexture(bulletTex);
 		SDL_DestroyTexture(bulletHitTex);
+
+		Mix_FreeMusic(music);
+		Mix_FreeChunk(chunkShoot);
+		Mix_FreeChunk(chunkShootHit);
+		Mix_FreeChunk(chunkWallHit);
 	}
 };
 
@@ -299,7 +231,7 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
-bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime);
+bool checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
 
 int main(int argc, char *argv[])
@@ -369,7 +301,7 @@ int main(int argc, char *argv[])
 					o.collider = SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = spriteSize - 4
 					};
-					o.animations = { res.animEnemy, res.animEnemyHit, res.animEnemyDie };
+					o.animations = res.enemyAnims;
 					gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
 					break;
 				}
@@ -385,10 +317,7 @@ int main(int argc, char *argv[])
 						.x = 11, .y = 6, .w = 10, .h = 26
 					};
 
-					o.animations = {
-						res.animIdle, res.animRun, res.animShootRun,
-						res.animShoot, res.animSlide, res.animSlideShoot
-					};
+					o.animations = res.playerAnims;
 					gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
 					gs.playerIndex = gs.objects[GameState::LAYER_IDX_CHARACTERS].size() - 1;
 					break;
@@ -403,6 +332,8 @@ int main(int argc, char *argv[])
 
 	// start the game loop
 	bool running = true;
+	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
+	Mix_PlayMusic(res.music, -1);
 	while (running)
 	{
 		uint64_t nowTime = SDL_GetTicks();
@@ -477,7 +408,7 @@ int main(int argc, char *argv[])
 					{
 						if (&objA != &objB)
 						{
-							checkCollision(gs, objA, objB, deltaTime);
+							checkCollision(state, gs, res, objA, objB, deltaTime);
 						}
 					}
 				}
@@ -543,7 +474,7 @@ int main(int argc, char *argv[])
 				{
 					for (GameObject &obj : objLayer)
 					{
-						checkCollision(gs, bullet, obj, deltaTime);
+						checkCollision(state, gs, res, bullet, obj, deltaTime);
 					}
 				}
 			}
@@ -721,11 +652,11 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 		obj.data.player.weaponTimer.step(deltaTime);
 
 		// repeated code used for handling shooting animations
-		const auto handleShooting = [&](PlayerAnimation shootAnim, SDL_Texture *shootTex, PlayerAnimation nonShootAnim, SDL_Texture *nonShootTex)
+		const auto handleShooting = [&](const int shootAnim, SDL_Texture *shootTex, const int nonShootAnim, SDL_Texture *nonShootTex)
 		{
 			if (gs.isShooting)
 			{
-				obj.currentAnimation = static_cast<int>(shootAnim);
+				obj.currentAnimation = shootAnim;
 				obj.texture = shootTex;
 
 				if (obj.data.player.weaponTimer.isTimedOut())
@@ -744,8 +675,8 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 					int yVelRand = SDL_rand(40) - 20; // -20 to 20
 					b.velocity = glm::vec2(obj.velocity.x + 600.0f, yVelRand) * obj.direction;
 					b.texture = res.bulletTex;
-					b.animations = { res.animBullet, res.animBulletHit };
-					b.currentAnimation = static_cast<int>(BulletAnimation::flying);
+					b.animations = res.bulletAnims;
+					b.currentAnimation = res.ANIM_IDX_BULLET;
 					b.collider = SDL_FRect{
 						.x = 0, .y = 0,
 						.w = static_cast<float>(res.bulletTex->h),
@@ -769,11 +700,13 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 					{
 						gs.bullets.push_back(b);
 					}
+
+					Mix_PlayChannel(-1, res.chunkShoot, 0);
 				}
 			}
 			else
 			{
-				obj.currentAnimation = static_cast<int>(nonShootAnim);
+				obj.currentAnimation = nonShootAnim;
 				obj.texture = nonShootTex;
 			}
 		};
@@ -830,7 +763,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 						}
 					}
 					// standing and shooting?
-					handleShooting(PlayerAnimation::shoot, res.shootTex, PlayerAnimation::idle, res.idleTex);
+					handleShooting(res.ANIM_IDX_PLAYER_SHOOT, res.shootTex, res.ANIM_IDX_PLAYER_IDLE, res.idleTex);
 				}
 				break;
 			}
@@ -844,21 +777,21 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				else
 				{
 					// running and shooting?
-					handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
+					handleShooting(res.ANIM_IDX_PLAYER_SHOOT_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
 
 					// if velocity and direction have different signs, we're sliding
 					// and starting to move in the opposite direction
 					if (obj.velocity.x * obj.direction < 0 && obj.isGrounded)
 					{
 						// sliding and shooting?
-						handleShooting(PlayerAnimation::slideShoot, res.slideShootTex, PlayerAnimation::slide, res.slideTex);
+						handleShooting(res.ANIM_IDX_PLAYER_SLIDE_SHOOT, res.slideShootTex, res.ANIM_IDX_PLAYER_SLIDE, res.slideTex);
 					}
 				}
 				break;
 			}
 			case PlayerState::jumping:
 			{
-				handleShooting(PlayerAnimation::shootRun, res.shootRunTex, PlayerAnimation::run, res.runTex);
+				handleShooting(res.ANIM_IDX_PLAYER_SHOOT_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
 				break;
 			}
 		}
@@ -889,7 +822,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			case BulletState::disintagrating:
 			{
 				obj.texture = res.bulletHitTex;
-				obj.currentAnimation = static_cast<int>(BulletAnimation::colliding);
+				obj.currentAnimation = res.ANIM_IDX_BULLET_HIT;
 
 				if (obj.animations[obj.currentAnimation].getLoopCount() > 0)
 				{
@@ -908,7 +841,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			case EnemyState::idle:
 			{
 				obj.texture = res.enemyTex;
-				obj.currentAnimation = 0;
+				obj.currentAnimation = res.ANIM_IDX_ENEMY_IDLE;
 				break;
 			}
 			case EnemyState::damaged:
@@ -916,13 +849,13 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				if (obj.data.enemy.hp <= 0)
 				{
 					obj.texture = res.enemyDieTex;
-					obj.currentAnimation = 2;
+					obj.currentAnimation = res.ANIM_IDX_ENEMY_DIE;
 					obj.data.enemy.state = EnemyState::dead;
 				}
 				else
 				{
 					obj.texture = res.enemyHitTex;
-					obj.currentAnimation = 1;
+					obj.currentAnimation = res.ANIM_IDX_ENEMY_HIT;
 
 					Timer &dmgTimer = obj.data.enemy.dmgTimer;
 					if (dmgTimer.step(deltaTime))
@@ -962,7 +895,7 @@ void drawParalaxLayer(SDLState &state, GameState &gs, SDL_Texture *tex, float &s
 	SDL_RenderTextureTiled(state.renderer, tex, &src, 1, &dst);
 }
 
-void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
+void collisionResponse(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, SDL_FRect &aRect, SDL_FRect &bRect, SDL_FRect &cRect, float deltaTime)
 {
 	const auto genericResponse = [&gs, &a, &b, &aRect, &bRect, &cRect, deltaTime](bool shouldFlash = false, float velXFactor = 0, float velYFactor = 0) {
 		if (cRect.w < cRect.h)
@@ -993,7 +926,6 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 			a.velocity.y *= velYFactor;
 		}
 		a.shouldFlash = shouldFlash;
-
 	};
 
 	switch (a.type)
@@ -1027,6 +959,9 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 					case ObjectType::level:
 					{
 						genericResponse(false);
+						a.data.bullet.state = BulletState::disintagrating;
+
+						Mix_PlayChannel(-1, res.chunkWallHit, 0);
 						break;
 					}
 					case ObjectType::enemy:
@@ -1043,6 +978,8 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 
 							b.velocity.x += glm::normalize(a.velocity).x * 100;
 							genericResponse(false);
+
+							Mix_PlayChannel(-1, res.chunkShootHit, 0);
 						}
 					}
 				}
@@ -1060,7 +997,7 @@ void collisionResponse(GameState &gs, GameObject &a, GameObject &b, SDL_FRect &a
 	}
 }
 
-bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime)
+bool checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime)
 {
 	bool hasCollision = false;
 
@@ -1079,7 +1016,7 @@ bool checkCollision(GameState &gs, GameObject &a, GameObject &b, float deltaTime
 	if (SDL_GetRectIntersectionFloat(&aRect, &bRect, &cRect))
 	{
 		hasCollision = true;
-		collisionResponse(gs, a, b, aRect, bRect, cRect, deltaTime);
+		collisionResponse(state, gs, res, a, b, aRect, bRect, cRect, deltaTime);
 	}
 	return hasCollision;
 }
@@ -1088,7 +1025,7 @@ bool initialize(SDLState &state)
 {
 	bool initSuccess = true;
 
-	if (!SDL_Init(SDL_INIT_VIDEO))
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
 		initSuccess = false;
@@ -1115,6 +1052,15 @@ bool initialize(SDLState &state)
 
 	// configure presentation
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+	// initialize audio
+	if (!Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr))
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
+		cleanup(state);
+		initSuccess = false;
+	}
+
 	return initSuccess;
 }
 
@@ -1122,5 +1068,6 @@ void cleanup(SDLState &state)
 {
 	SDL_DestroyRenderer(state.renderer);
 	SDL_DestroyWindow(state.window);
+	Mix_CloseAudio();
 	SDL_Quit();
 }
