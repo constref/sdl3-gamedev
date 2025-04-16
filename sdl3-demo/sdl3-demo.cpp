@@ -383,13 +383,12 @@ int main(int argc, char *argv[])
 		{
 			for (GameObject &objA : objLayer)
 			{
-				update(state, gs, objA, res, keys, deltaTime);
-
 				// apply some constant gravity if not grounded
 				if (objA.dynamic && !objA.isGrounded)
 				{
 					objA.velocity += glm::vec2(0, 500) * deltaTime;
 				}
+				update(state, gs, objA, res, keys, deltaTime);
 
 				if (objA.animations.size())
 				{
@@ -429,10 +428,8 @@ int main(int argc, char *argv[])
 							if (o.type == ObjectType::level)
 							{
 								SDL_FRect oRect{
-									.x = o.position.x,
-									.y = o.position.y,
-									.w = o.collider.w,
-									.h = o.collider.h
+									.x = o.position.x, .y = o.position.y,
+									.w = o.collider.w, .h = o.collider.h
 								};
 								SDL_FRect cRect{ 0 };
 								if (SDL_GetRectIntersectionFloat(&groundSensor, &oRect, &cRect))
@@ -519,26 +516,21 @@ int main(int argc, char *argv[])
 			}
 		}
 
-
-		//SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
-		//SDL_FRect groundRect{
-		//	.x = groundSensor.x - mapViewport.x,
-		//	.y = groundSensor.y - mapViewport.y,
-		//	.w = static_cast<float>(groundSensor.w),
-		//	.h = static_cast<float>(groundSensor.h)
-		//};
-		//SDL_RenderRect(state.renderer, &groundRect);
-
-
+		if (gs.debugMode)
+		{
+			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			SDL_RenderDebugText(state.renderer, 5, 5,
+				std::format("Runtime: {:.1f}  {}  {}  G({}) B({}, ({}, {})",
+					gs.globalTime, static_cast<int>(gs.player().data.player.state),
+					gs.player().direction, gs.player().isGrounded, gs.bullets.size(),
+					gs.player().velocity.x, gs.player().velocity.y).c_str());
+		}
 		// swap buffers and present
 		SDL_RenderPresent(state.renderer);
 		gs.prevTime = nowTime;
 
 		// show some stats
 		gs.globalTime += deltaTime;
-		SDL_SetWindowTitle(state.window, std::format("Runtime: {:.3f} -- {} -- {} -- G({}) B({}, ({}, {})",
-			gs.globalTime, static_cast<int>(gs.player().data.player.state), gs.player().direction, gs.player().isGrounded, gs.bullets.size(),
-			gs.player().velocity.x, gs.player().velocity.y).c_str());
 	}
 
 	res.cleanup();
@@ -583,7 +575,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float del
 
 	if (gs.debugMode)
 	{
-		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 150);
+		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 100);
 		SDL_FRect colliderRect{
 			.x = obj.position.x + obj.collider.x - gs.mapViewport.x,
 			.y = obj.position.y + obj.collider.y - gs.mapViewport.y,
