@@ -22,7 +22,7 @@ enum class EnemyState
 
 enum class ObjectType
 {
-	player, enemy, level, bullet
+	player, enemy, level, bullet, foreground, background
 };
 
 static const float PISTOL_TIME = 0.3f;

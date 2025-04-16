@@ -36,6 +36,7 @@ struct GameState
 	static const size_t LAYER_IDX_CHARACTERS = 1;
 	std::array<std::vector<GameObject>, 2> objects;
 	std::vector<GameObject> bullets;
+	std::vector<GameObject> foreground, background;
 	bool isShooting;
 	uint64_t prevTime;
 	double globalTime;
@@ -86,6 +87,8 @@ enum class BulletAnimation
 	2 - Panel
 	3 - Enemy
 	4 - Player
+	5 - Grass
+	6 - Brick
 */
 
 const int MAP_ROWS = 5;
@@ -96,9 +99,25 @@ const int MAP_H = MAP_ROWS * TILE_SIZE;
 short map[MAP_ROWS][MAP_COLS] = {
 	4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 0, 3, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 0, 3, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 3, 0, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+};
+
+short foreground[MAP_ROWS][MAP_COLS] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+short background[MAP_ROWS][MAP_COLS] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 6, 6, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 struct Resources
@@ -120,6 +139,8 @@ struct Resources
 	SDL_Texture *enemyDieTex;
 	SDL_Texture *bulletTex;
 	SDL_Texture *bulletHitTex;
+	SDL_Texture *grassTex;
+	SDL_Texture *brickTex;
 
 	Mix_Music *music;
 	Mix_Chunk *chunkShoot;
@@ -170,6 +191,8 @@ struct Resources
 		enemyDieTex = loadTexture(state.renderer, "data/enemy_die.png");
 		bulletTex = loadTexture(state.renderer, "data/bullet.png");
 		bulletHitTex = loadTexture(state.renderer, "data/bullet_hit.png");
+		grassTex = loadTexture(state.renderer, "data/tiles/grass.png");
+		brickTex = loadTexture(state.renderer, "data/tiles/brick.png");
 
 		// load audio files
 		music = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
@@ -216,6 +239,8 @@ struct Resources
 		SDL_DestroyTexture(enemyDieTex);
 		SDL_DestroyTexture(bulletTex);
 		SDL_DestroyTexture(bulletHitTex);
+		SDL_DestroyTexture(grassTex);
+		SDL_DestroyTexture(brickTex);
 
 		Mix_FreeMusic(music);
 		Mix_FreeChunk(chunkShoot);
@@ -255,74 +280,92 @@ int main(int argc, char *argv[])
 		.h = static_cast<float>(state.logH)
 	};
 	// load map
-	for (int r = 0; r < MAP_ROWS; ++r)
+	const auto loadLayer = [&state, &res, &gs](short layer[MAP_ROWS][MAP_COLS])
 	{
-		for (int c = 0; c < MAP_COLS; ++c)
+		for (int r = 0; r < MAP_ROWS; ++r)
 		{
-			const auto createObject = [&state](ObjectType type, int r, int c, SDL_Texture *tex)
+			for (int c = 0; c < MAP_COLS; ++c)
 			{
-				GameObject o;
-				o.data.level = LevelData();
-				o.type = type;
-				o.texture = tex;
-				o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * tex->h);
-				o.velocity = glm::vec2(0, 0);
-				o.acceleration = glm::vec2(0, 0);
-				o.collider = SDL_FRect{
-					.x = 0, .y = 0, .w = spriteSize, .h = spriteSize
-				};
-				return o;
-			};
-
-			switch (map[r][c])
-			{
-				case 1:
+				const auto createObject = [&state](ObjectType type, int r, int c, SDL_Texture *tex)
 				{
-					// ground
-					GameObject o = createObject(ObjectType::level, r, c, res.groundTex);
-					gs.objects[GameState::LAYER_IDX_LEVEL].push_back(o);
-					break;
-				}
-				case 2:
-				{
-					// paneling
-					GameObject o = createObject(ObjectType::level, r, c, res.panelTex);
-					gs.objects[GameState::LAYER_IDX_LEVEL].push_back(o);
-					break;
-				}
-				case 3:
-				{
-					// enemy
-					GameObject o = createObject(ObjectType::enemy, r, c, res.enemyTex);
-					o.data.enemy = EnemyData();
-					o.dynamic = true;
-					o.collider = SDL_FRect{
-						.x = 10, .y = 4, .w = 12, .h = spriteSize - 4
-					};
-					o.animations = res.enemyAnims;
-					gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
-					break;
-				}
-				case 4:
-				{
-					GameObject o = createObject(ObjectType::player, r, c, res.idleTex);
-					o.type = ObjectType::player;
-					o.data.player = PlayerData();
-					o.dynamic = true;
+					GameObject o;
+					o.data.level = LevelData();
+					o.type = type;
+					o.texture = tex;
+					o.position = glm::vec2(c * spriteSize, state.logH - (MAP_ROWS - r) * tex->h);
 					o.velocity = glm::vec2(0, 0);
-					o.acceleration = glm::vec2(300, 0);
+					o.acceleration = glm::vec2(0, 0);
 					o.collider = SDL_FRect{
-						.x = 11, .y = 6, .w = 10, .h = 26
+						.x = 0, .y = 0, .w = spriteSize, .h = spriteSize
 					};
+					return o;
+				};
 
-					o.animations = res.playerAnims;
-					gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
-					gs.playerIndex = gs.objects[GameState::LAYER_IDX_CHARACTERS].size() - 1;
-					break;
+				switch (layer[r][c])
+				{
+					case 1:
+					{
+						// ground
+						GameObject o = createObject(ObjectType::level, r, c, res.groundTex);
+						gs.objects[GameState::LAYER_IDX_LEVEL].push_back(o);
+						break;
+					}
+					case 2:
+					{
+						// paneling
+						GameObject o = createObject(ObjectType::level, r, c, res.panelTex);
+						gs.objects[GameState::LAYER_IDX_LEVEL].push_back(o);
+						break;
+					}
+					case 3:
+					{
+						// enemy
+						GameObject o = createObject(ObjectType::enemy, r, c, res.enemyTex);
+						o.data.enemy = EnemyData();
+						o.dynamic = true;
+						o.collider = SDL_FRect{
+							.x = 10, .y = 4, .w = 12, .h = spriteSize - 4
+						};
+						o.animations = res.enemyAnims;
+						gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
+						break;
+					}
+					case 4:
+					{
+						GameObject o = createObject(ObjectType::player, r, c, res.idleTex);
+						o.type = ObjectType::player;
+						o.data.player = PlayerData();
+						o.dynamic = true;
+						o.velocity = glm::vec2(0, 0);
+						o.acceleration = glm::vec2(300, 0);
+						o.collider = SDL_FRect{
+							.x = 11, .y = 6, .w = 10, .h = 26
+						};
+
+						o.animations = res.playerAnims;
+						gs.objects[GameState::LAYER_IDX_CHARACTERS].push_back(o);
+						gs.playerIndex = gs.objects[GameState::LAYER_IDX_CHARACTERS].size() - 1;
+						break;
+					}
+					case 5:
+					{
+						GameObject o = createObject(ObjectType::foreground, r, c, res.grassTex);
+						gs.foreground.push_back(o);
+						break;
+					}
+					case 6:
+					{
+						GameObject o = createObject(ObjectType::background, r, c, res.brickTex);
+						gs.background.push_back(o);
+						break;
+					}
 				}
 			}
 		}
-	}
+	};
+	loadLayer(map);
+	loadLayer(foreground);
+	loadLayer(background);
 
 	float bg2Scroll = 0;
 	float bg3Scroll = 0;
@@ -485,6 +528,12 @@ int main(int argc, char *argv[])
 		drawParalaxLayer(state, gs, res.bg3Tex, bg3Scroll, 0.05f, deltaTime);
 		drawParalaxLayer(state, gs, res.bg2Tex, bg2Scroll, 0.1f, deltaTime);
 
+		// draw background objects
+		for (GameObject &obj : gs.background)
+		{
+			drawObject(state, gs, obj, deltaTime);
+		}
+
 		// draw the game objects and entities
 		for (auto &objLayer : gs.objects)
 		{
@@ -492,6 +541,12 @@ int main(int argc, char *argv[])
 			{
 				drawObject(state, gs, obj, deltaTime);
 			}
+		}
+
+		// draw foreground object
+		for (GameObject &obj : gs.foreground)
+		{
+			drawObject(state, gs, obj, deltaTime);
 		}
 
 		// draw bullets
