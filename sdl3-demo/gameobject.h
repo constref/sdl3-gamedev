@@ -17,7 +17,7 @@ enum class BulletState
 
 enum class EnemyState
 {
-	idle, damaged, dead
+	shambling, damaged, dead
 };
 
 enum class ObjectType
@@ -49,8 +49,10 @@ struct EnemyData
 	EnemyState state;
 	int hp;
 	Timer dmgTimer;
+	Timer thinkTimer;
 
-	EnemyData() : state(EnemyState::idle), hp(10), dmgTimer(0.3f) {}
+	EnemyData() :
+		state(EnemyState::shambling), hp(10), dmgTimer(0.3f), thinkTimer(1.0f) {}
 };
 
 struct LevelData {};

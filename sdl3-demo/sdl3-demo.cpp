@@ -30,11 +30,6 @@ struct SDLState
 	}
 };
 
-enum class KeyState
-{
-	down, up
-};
-
 struct GameState
 {
 	static const size_t LAYER_IDX_LEVEL = 0;
@@ -179,8 +174,11 @@ struct Resources
 		// load audio files
 		music = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 		chunkShoot = Mix_LoadWAV("data/audio/shoot.wav");
+		Mix_VolumeChunk(chunkShoot, MIX_MAX_VOLUME / 2);
 		chunkShootHit = Mix_LoadWAV("data/audio/shoot_hit.wav");
+		Mix_VolumeChunk(chunkShootHit, MIX_MAX_VOLUME / 2);
 		chunkWallHit = Mix_LoadWAV("data/audio/wall_hit.wav");
+		Mix_VolumeChunk(chunkWallHit, MIX_MAX_VOLUME / 2);
 
 		// setup animations
 		playerAnims.resize(6);
@@ -227,7 +225,7 @@ struct Resources
 };
 
 bool initialize(SDLState &state);
-void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState);
+void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, bool isKeyDown);
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float deltaTime);
 void drawParalaxLayer(SDLState &state, GameState &gameState, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
@@ -357,7 +355,7 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					handleInput(state, gs, gs.player(), event.key.scancode, KeyState::down);
+					handleInput(state, gs, gs.player(), event.key.scancode, true);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
@@ -375,7 +373,7 @@ int main(int argc, char *argv[])
 							break;
 						}
 					}
-					handleInput(state, gs, gs.player(), event.key.scancode, KeyState::up);
+					handleInput(state, gs, gs.player(), event.key.scancode, false);
 					break;
 				}
 			}
@@ -597,7 +595,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float del
 	}
 }
 
-void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, KeyState keyState)
+void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scancode key, bool isKeyDown)
 {
 	const auto performJump = [&gs, &obj]() {
 		if (obj.isGrounded)
@@ -613,16 +611,16 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 		{
 			case PlayerState::idle:
 			{
-				if (key == SDL_SCANCODE_K && keyState == KeyState::down)
+				if (key == SDL_SCANCODE_K && isKeyDown)
 				{
 					performJump();
 				}
-				else if (key == SDL_SCANCODE_1 && keyState == KeyState::down)
+				else if (key == SDL_SCANCODE_1 && isKeyDown)
 				{
 					obj.data.player.weaponTimer = Timer(PISTOL_TIME);
 					break;
 				}
-				else if (key == SDL_SCANCODE_2 && keyState == KeyState::down)
+				else if (key == SDL_SCANCODE_2 && isKeyDown)
 				{
 					obj.data.player.weaponTimer = Timer(ASSAULT_RIFLE_TIME);
 					break;
@@ -631,7 +629,7 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 			}
 			case PlayerState::running:
 			{
-				if (key == SDL_SCANCODE_K && keyState == KeyState::down)
+				if (key == SDL_SCANCODE_K && isKeyDown)
 				{
 					performJump();
 				}
@@ -835,11 +833,21 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 	}
 	else if (obj.type == ObjectType::enemy)
 	{
-		obj.velocity.x *= 0.9f;
+		glm::vec2 playerDir = gs.player().position - obj.position;
+		const float dist = glm::length(playerDir);
+		glm::vec2 dirNorm = glm::normalize(playerDir);
 		switch (obj.data.enemy.state)
 		{
-			case EnemyState::idle:
+			case EnemyState::shambling:
 			{
+				if (dist < 200)
+				{
+					obj.velocity.x = (obj.direction * 45.0f);
+					if (obj.data.enemy.thinkTimer.step(deltaTime))
+					{
+						obj.direction = dirNorm.x < 0 ? -1 : 1;
+					}
+				}
 				obj.texture = res.enemyTex;
 				obj.currentAnimation = res.ANIM_IDX_ENEMY_IDLE;
 				break;
@@ -860,7 +868,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 					Timer &dmgTimer = obj.data.enemy.dmgTimer;
 					if (dmgTimer.step(deltaTime))
 					{
-						obj.data.enemy.state = EnemyState::idle;
+						obj.data.enemy.state = EnemyState::shambling;
 					}
 				}
 				break;
@@ -912,6 +920,31 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources &re
 			}
 			a.velocity.x *= velXFactor;
 		}
+		else if (cRect.w == cRect.h)
+		{
+			if (a.velocity.x > 0)
+			{
+				// going right
+				a.position.x -= cRect.w;
+			}
+			else if (a.velocity.x < 0)
+			{
+				// going left
+				a.position.x += cRect.w;
+			}
+			a.velocity.x *= velXFactor;
+
+			if (a.velocity.y > 0)
+			{
+				// going down
+				a.position.y -= cRect.h;
+			}
+			else if (a.velocity.y < 0)
+			{
+				a.position.y += cRect.h;
+			}
+			a.velocity.y *= velYFactor;
+		}
 		else
 		{
 			if (a.velocity.y > 0)
@@ -959,6 +992,7 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources &re
 					case ObjectType::level:
 					{
 						genericResponse(false);
+						a.velocity *= 0;
 						a.data.bullet.state = BulletState::disintagrating;
 
 						Mix_PlayChannel(-1, res.chunkWallHit, 0);
@@ -968,15 +1002,15 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources &re
 					{
 						if (b.data.enemy.state != EnemyState::dead)
 						{
-							a.data.bullet.state = BulletState::disintagrating;
-
 							b.direction = a.direction * -1;
 							b.data.enemy.state = EnemyState::damaged;
 							b.shouldFlash = true;
 							b.flashTimer.reset();
 							b.data.enemy.hp--;
 
-							b.velocity.x += glm::normalize(a.velocity).x * 100;
+							b.velocity.x += glm::normalize(a.velocity).x * 25;
+							a.velocity *= 0;
+							a.data.bullet.state = BulletState::disintagrating;
 							genericResponse(false);
 
 							Mix_PlayChannel(-1, res.chunkShootHit, 0);
