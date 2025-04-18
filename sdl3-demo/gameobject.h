@@ -53,7 +53,7 @@ struct EnemyData
 	Timer thinkTimer;
 
 	EnemyData() :
-		state(EnemyState::shambling), hp(10), dmgTimer(0.3f), thinkTimer(1.0f) {}
+		state(EnemyState::shambling), hp(10), dmgTimer(0.5f), thinkTimer(1.0f) {}
 };
 
 struct LevelData {};
