@@ -206,7 +206,7 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime);
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float deltaTime);
 void drawParalaxLayer(SDL_Renderer *renderer, float xVel, SDL_Texture *tex, float &scrollPos, float scrollFactor, float deltaTime);
-bool checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime);
+void checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime);
 void cleanup(SDLState &state);
 
 int main(int argc, char *argv[])
@@ -228,16 +228,19 @@ int main(int argc, char *argv[])
 	// generate tiles from map layer arrays
 	createTiles(state, res, gs);
 
-	// start the game loop
-	bool running = true;
 	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
 	Mix_PlayMusic(res.music, -1);
+
+	// start the game loop
+	bool running = true;
 	while (running)
 	{
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = min((nowTime - gs.prevTime) / 1000.0f, 1 / 60.0f);
 		if (gs.paused)
+		{
 			deltaTime *= 0;
+		}
 
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
@@ -352,11 +355,7 @@ int main(int argc, char *argv[])
 							SDL_FRect cRect{ 0 };
 							if (SDL_GetRectIntersectionFloat(&sensorRect, &oRect, &cRect))
 							{
-								if (cRect.w > cRect.h)
-								{
-									foundGround = true;
-									continue;
-								}
+								foundGround = true;
 							}
 						}
 					}
@@ -497,7 +496,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float del
 	}
 	else
 	{
-		SDL_SetTextureColorModFloat(obj.texture, 2.5f, 1.5f, 1.5f);
+		SDL_SetTextureColorModFloat(obj.texture, 2.5f, 1.0f, 1.0f);
 		SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr, flipMode);
 		SDL_SetTextureColorModFloat(obj.texture, 1.0f, 1.0f, 1.0f);
 
@@ -507,7 +506,9 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float del
 		}
 	}
 
-	if (gs.debugMode)
+	if (gs.debugMode &&
+		obj.type != ObjectType::background &&
+		obj.type != ObjectType::foreground)
 	{
 		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 100);
 		SDL_FRect colliderRect{
@@ -572,7 +573,7 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime)
 {
-	const auto applyMovement = [deltaTime](GameObject &obj, float direction, float maxSpeed)
+	const auto applyAcceleration = [deltaTime](GameObject &obj, float direction, float maxSpeed)
 	{
 		// apply velocity based movement
 		obj.velocity += direction * obj.acceleration * deltaTime;
@@ -662,7 +663,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 		{
 			obj.direction = currentDirection;
 		}
-		applyMovement(obj, currentDirection, MAX_SPEED_PLAYER);
+		applyAcceleration(obj, currentDirection, MAX_SPEED_PLAYER);
 		gs.isShooting = keys[SDL_SCANCODE_J];
 
 		// handle state specifics
@@ -773,14 +774,12 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			{
 				if (dist < 200)
 				{
-					applyMovement(obj, obj.direction, MAX_SPEED_ENEMY);
 					if (obj.data.enemy.thinkTimer.step(deltaTime))
 					{
 						obj.direction = dirNorm.x < 0 ? -1.0f : 1.0f;
 					}
+					applyAcceleration(obj, obj.direction, MAX_SPEED_ENEMY);
 				}
-				obj.texture = res.enemyTex;
-				obj.currentAnimation = res.ANIM_IDX_ENEMY_IDLE;
 				break;
 			}
 			case EnemyState::damaged:
@@ -789,18 +788,21 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				if (obj.data.enemy.hp <= 0)
 				{
 					obj.data.enemy.state = EnemyState::dead;
-					obj.velocity.x = 0;
 					obj.acceleration.x = 0;
-
+					obj.velocity.x = 0;
 					obj.texture = res.enemyDieTex;
 					obj.currentAnimation = res.ANIM_IDX_ENEMY_DIE;
+
 					Mix_PlayChannel(-1, res.chunkMonsterDie, 0);
 				}
 				else
 				{
 					if (obj.data.enemy.dmgTimer.step(deltaTime))
 					{
+						// once the damaged timer runs out, switch back to shambling
 						obj.data.enemy.state = EnemyState::shambling;
+						obj.texture = res.enemyTex;
+						obj.currentAnimation = res.ANIM_IDX_ENEMY_IDLE;
 					}
 				}
 				break;
@@ -1052,10 +1054,8 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources &re
 	}
 }
 
-bool checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime)
+void checkCollision(const SDLState &state, GameState &gs, const Resources &res, GameObject &a, GameObject &b, float deltaTime)
 {
-	bool hasCollision = false;
-
 	SDL_FRect aRect{
 		.x = a.position.x + a.collider.x,
 		.y = a.position.y + a.collider.y,
@@ -1070,10 +1070,8 @@ bool checkCollision(const SDLState &state, GameState &gs, const Resources &res, 
 	SDL_FRect cRect{ 0 };
 	if (SDL_GetRectIntersectionFloat(&aRect, &bRect, &cRect))
 	{
-		hasCollision = true;
 		collisionResponse(state, gs, res, a, b, aRect, bRect, cRect, deltaTime);
 	}
-	return hasCollision;
 }
 
 bool initialize(SDLState &state)
