@@ -42,6 +42,7 @@ struct PlayerData
 struct BulletData
 {
 	BulletState state;
+	BulletData() : state(BulletState::flying) {}
 };
 
 struct EnemyData
@@ -98,7 +99,7 @@ struct GameObject
 		texture = nullptr;
 		isGrounded = false;
 		currentAnimation = 0;
-		direction = 1;
+		direction = 0;
 		shouldFlash = false;
 	}
 };
