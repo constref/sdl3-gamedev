@@ -101,7 +101,7 @@ struct GameObject
 		texture = nullptr;
 		isGrounded = false;
 		currentAnimation = 0;
-		direction = 0;
+		direction = 1;
 		shouldFlash = false;
 	}
 };
