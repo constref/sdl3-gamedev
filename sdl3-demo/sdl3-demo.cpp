@@ -30,8 +30,8 @@ struct SDLState
 	}
 };
 
-static const size_t LAYER_IDX_LEVEL = 0;
-static const size_t LAYER_IDX_CHARACTERS = 1;
+const size_t LAYER_IDX_LEVEL = 0;
+const size_t LAYER_IDX_CHARACTERS = 1;
 const float MAX_SPEED_PLAYER = 100;
 const float MAX_SPEED_ENEMY = 45;
 const float JUMP_FORCE = -200;
@@ -42,7 +42,6 @@ struct GameState
 	std::vector<GameObject> bullets;
 	std::vector<GameObject> background;
 	std::vector<GameObject> foreground;
-	bool isShooting;
 	uint64_t prevTime;
 	double globalTime;
 	SDL_FRect mapViewport;
@@ -55,7 +54,6 @@ struct GameState
 
 	GameState()
 	{
-		isShooting = false;
 		prevTime = SDL_GetTicks();
 		globalTime = 0;
 		mapViewport = SDL_FRect{
@@ -110,10 +108,10 @@ struct Resources
 
 	int ANIM_IDX_PLAYER_IDLE = 0;
 	int ANIM_IDX_PLAYER_RUN = 1;
-	int ANIM_IDX_PLAYER_SHOOT_RUN = 2;
-	int ANIM_IDX_PLAYER_SHOOT = 3;
-	int ANIM_IDX_PLAYER_SLIDE = 4;
-	int ANIM_IDX_PLAYER_SLIDE_SHOOT = 5;
+	//int ANIM_IDX_PLAYER_SHOOT_RUN = 2;
+	int ANIM_IDX_PLAYER_SHOOT = 2;
+	int ANIM_IDX_PLAYER_SLIDE = 3;
+	int ANIM_IDX_PLAYER_SLIDE_SHOOT = 4;
 	std::vector<Animation> playerAnims;
 
 	int ANIM_IDX_ENEMY_IDLE = 0;
@@ -172,7 +170,7 @@ struct Resources
 		playerAnims[ANIM_IDX_PLAYER_IDLE] = Animation(8, 1.6f);
 		playerAnims[ANIM_IDX_PLAYER_RUN] = Animation(4, 0.5f);
 		playerAnims[ANIM_IDX_PLAYER_SHOOT] = Animation(4, 0.5f);
-		playerAnims[ANIM_IDX_PLAYER_SHOOT_RUN] = Animation(4, 0.5f);
+		//playerAnims[ANIM_IDX_PLAYER_SHOOT_RUN] = Animation(4, 0.5f);
 		playerAnims[ANIM_IDX_PLAYER_SLIDE] = Animation(1, 1.0f);
 		playerAnims[ANIM_IDX_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
 		enemyAnims.resize(3);
@@ -573,9 +571,9 @@ void handleInput(const SDLState &state, GameState &gs, GameObject &obj, SDL_Scan
 
 void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &res, const bool *keys, float deltaTime)
 {
+	// function to accelerate and limit speed
 	const auto applyAcceleration = [deltaTime](GameObject &obj, float direction, float maxSpeed)
 	{
-		// apply velocity based movement
 		obj.velocity += direction * obj.acceleration * deltaTime;
 		if (std::abs(obj.velocity.x) > maxSpeed)
 		{
@@ -591,7 +589,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 		// repeated code used for handling shooting animations
 		const auto handleShooting = [&](const int shootAnim, SDL_Texture *shootTex, const int nonShootAnim, SDL_Texture *nonShootTex)
 		{
-			if (gs.isShooting)
+			if (obj.data.player.isShooting)
 			{
 				obj.currentAnimation = shootAnim;
 				obj.texture = shootTex;
@@ -664,14 +662,14 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			obj.direction = currentDirection;
 		}
 		applyAcceleration(obj, currentDirection, MAX_SPEED_PLAYER);
-		gs.isShooting = keys[SDL_SCANCODE_J];
+		obj.data.player.isShooting = keys[SDL_SCANCODE_J];
 
 		// handle state specifics
 		switch (obj.data.player.state)
 		{
 			case PlayerState::idle:
 			{
-				// if play is holding a direction, move to running state
+				// if holding a direction, switch to the running state
 				if (currentDirection)
 				{
 					obj.data.player.state = PlayerState::running;
@@ -709,7 +707,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 				else
 				{
 					// running and shooting?
-					handleShooting(res.ANIM_IDX_PLAYER_SHOOT_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
+					handleShooting(res.ANIM_IDX_PLAYER_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
 
 					// if velocity and direction have different signs, we're sliding
 					// and starting to move in the opposite direction
@@ -723,7 +721,7 @@ void update(const SDLState &state, GameState &gs, GameObject &obj, Resources &re
 			}
 			case PlayerState::jumping:
 			{
-				handleShooting(res.ANIM_IDX_PLAYER_SHOOT_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
+				handleShooting(res.ANIM_IDX_PLAYER_RUN, res.shootRunTex, res.ANIM_IDX_PLAYER_RUN, res.runTex);
 				break;
 			}
 		}

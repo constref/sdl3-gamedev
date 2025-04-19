@@ -32,10 +32,12 @@ struct PlayerData
 {
 	PlayerState state;
 	Timer weaponTimer;
+	bool isShooting;
 
 	PlayerData() : weaponTimer(PISTOL_TIME)
 	{
 		state = PlayerState::idle;
+		isShooting = false;
 	}
 };
 
