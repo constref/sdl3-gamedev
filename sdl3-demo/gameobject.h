@@ -77,6 +77,7 @@ struct GameObject
 	bool dynamic;
 	bool grounded;
 	SDL_FRect collider;
+	bool collidable;
 	Timer flashTimer;
 	bool shouldFlash;
 	int spriteFrame;
@@ -93,5 +94,6 @@ struct GameObject
 		grounded = false;
 		shouldFlash = false;
 		spriteFrame = 1;
+		collidable = false;
 	}
 };
