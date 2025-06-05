@@ -3,11 +3,15 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <vector>
+#include <sstream>
 #include <string>
 #include <array>
 #include <format>
+#include <tinyxml2.h>
+#include <filesystem>
 
 #include "gameobject.h"
+#include "tmx.h"
 
 using namespace std;
 
@@ -57,6 +61,20 @@ struct GameState
 	GameObject &player() { return layers[LAYER_IDX_CHARACTERS][playerIndex]; }
 };
 
+struct TileSet
+{
+	int count, tileWidth, tileHeight, rows, columns, firstgid;
+	SDL_Texture *texture;
+
+public:
+	TileSet(int firstgid, int count, int tileWidth, int tileHeight, int columns, SDL_Texture *texture)
+		: firstgid(firstgid), count(count), tileWidth(tileWidth), tileHeight(tileHeight), columns(columns)
+	{
+		rows = count / columns;
+		this->texture = texture;
+	}
+};
+
 struct Resources
 {
 	const int ANIM_PLAYER_IDLE = 0;
@@ -74,13 +92,15 @@ struct Resources
 	std::vector<Animation> enemyAnims;
 
 	std::vector<SDL_Texture *> textures;
-	SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
-		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
+	SDL_Texture *texIdle, *texRun, *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<Mix_Chunk*> chunks;
+	std::vector<Mix_Chunk *> chunks;
 	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
 	Mix_Music *musicMain;
+
+	std::vector<TileSet> tileSets;
+	std::unique_ptr<tmx::Map> map;
 
 	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
 	{
@@ -90,9 +110,9 @@ struct Resources
 		return tex;
 	}
 
-	Mix_Chunk* loadChunk(const std::string& filepath)
+	Mix_Chunk *loadChunk(const std::string &filepath)
 	{
-		Mix_Chunk* chunk = Mix_LoadWAV(filepath.c_str());
+		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
 		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
 		chunks.push_back(chunk);
 		return chunk;
@@ -117,10 +137,6 @@ struct Resources
 		texIdle = loadTexture(state.renderer, "data/idle.png");
 		texRun = loadTexture(state.renderer, "data/run.png");
 		texSlide = loadTexture(state.renderer, "data/slide.png");
-		texBrick = loadTexture(state.renderer, "data/tiles/brick.png");
-		texGrass = loadTexture(state.renderer, "data/tiles/grass.png");
-		texGround = loadTexture(state.renderer, "data/tiles/ground.png");
-		texPanel = loadTexture(state.renderer, "data/tiles/panel.png");
 		texBg1 = loadTexture(state.renderer, "data/bg/bg_layer1.png");
 		texBg2 = loadTexture(state.renderer, "data/bg/bg_layer2.png");
 		texBg3 = loadTexture(state.renderer, "data/bg/bg_layer3.png");
@@ -139,6 +155,106 @@ struct Resources
 		chunkEnemyHit = loadChunk("data/audio/shoot_hit.wav");
 
 		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+
+		// load TMX map
+		using namespace tinyxml2;
+		std::filesystem::path tilesPath("data/tiles");
+		std::filesystem::path mapPath("data/maps/level1.tmx");
+
+		XMLDocument doc;
+		doc.LoadFile(mapPath.string().c_str());
+		XMLElement *mapDoc = doc.FirstChildElement("map");
+		if (mapDoc)
+		{
+			tmx::Map *map = new tmx::Map;
+			map->mapWidth = mapDoc->IntAttribute("width");
+			map->mapHeight = mapDoc->IntAttribute("height");
+
+			for (XMLElement *child = mapDoc->FirstChildElement();
+				child != nullptr; child = child->NextSiblingElement())
+			{
+				if (std::string(child->Name()) == "tileset")
+				{
+					int firstgid = child->IntAttribute("firstgid");
+
+					// load tileset XML
+					XMLDocument tilesetDoc;
+					auto sourcePath = mapPath.parent_path().append(child->Attribute("source"));
+					tilesetDoc.LoadFile(sourcePath.string().c_str());
+
+					XMLElement *ts = tilesetDoc.FirstChildElement("tileset");
+					if (ts)
+					{
+						int tileWidth = ts->IntAttribute("tilewidth");
+						int tileHeight = ts->IntAttribute("tileheight");
+						int count = ts->IntAttribute("tilecount");
+						int columns = ts->IntAttribute("columns");
+
+						// load tileset image
+						XMLElement *image = ts->FirstChildElement("image");
+						if (image)
+						{
+							const char *sourceFile = image->Attribute("source");
+							std::filesystem::path filePath(sourceFile);
+							const std::string filename = filePath.filename().string();
+
+							SDL_Texture *texture = loadTexture(state.renderer, tilesPath.append(filename).string());
+
+							int width = image->IntAttribute("width");
+							int height = image->IntAttribute("height");
+
+							tileSets.push_back(TileSet(firstgid, count, tileWidth, tileHeight, columns, texture));
+						}
+					}
+				}
+				else if (std::string(child->Name()) == "layer")
+				{
+					tmx::Layer layer;
+					layer.name = child->Attribute("name");
+					layer.id = child->IntAttribute("id");
+					layer.data.reserve(map->mapWidth * map->mapHeight);
+
+					XMLElement *data = child->FirstChildElement("data");
+					std::stringstream dataStream(data->GetText());
+					for (int i; dataStream >> i;)
+					{
+						layer.data.push_back(i);
+						if (dataStream.peek() == ',') dataStream.ignore();
+					}
+					map->layers.push_back(layer);
+				}
+				else if (std::string(child->Name()) == "objectgroup")
+				{
+					tmx::ObjectGroup layer;
+					layer.name = child->Attribute("name");
+					layer.id = child->IntAttribute("id");
+
+					for (XMLElement *elem = child->FirstChildElement("object");
+						elem != nullptr; elem = elem->NextSiblingElement())
+					{
+						tmx::LayerObject obj;
+						obj.id = elem->IntAttribute("id");
+						obj.x = elem->FloatAttribute("x");
+						obj.y = elem->FloatAttribute("y");
+
+						const char *attrName = elem->Attribute("name");
+						if (attrName)
+						{
+							obj.name = attrName;
+						}
+
+						const char *attrType = elem->Attribute("type");
+						if (attrType)
+						{
+							obj.type = attrType;
+						}
+						layer.objects.push_back(obj);
+					}
+					map->layers.push_back(layer);
+				}
+			}
+			this->map = std::unique_ptr<tmx::Map>(map);
+		}
 	}
 
 	void unload()
@@ -148,7 +264,7 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (Mix_Chunk* chunk : chunks)
+		for (Mix_Chunk *chunk : chunks)
 		{
 			Mix_FreeChunk(chunk);
 		}
@@ -476,72 +592,72 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 
 		const auto handleShooting = [&state, &gs, &res, &obj, &weaponTimer](
 			SDL_Texture *tex, SDL_Texture *shootTex, int animIndex, int shootAnimIndex)
-		{
-			if (state.keys[SDL_SCANCODE_J])
 			{
-				// set shooting tex/anim
-				obj.texture = shootTex;
-				obj.currentAnimation = shootAnimIndex;
-
-				if (weaponTimer.isTimeout())
+				if (state.keys[SDL_SCANCODE_J])
 				{
-					weaponTimer.reset();
-					// spawn some bullets
-					GameObject bullet;
-					bullet.data.bullet = BulletData();
-					bullet.type = ObjectType::bullet;
-					bullet.direction = gs.player().direction;
-					bullet.texture = res.texBullet;
-					bullet.currentAnimation = res.ANIM_BULLET_MOVING;
-					bullet.collider = SDL_FRect{
-						.x = 0, .y = 0,
-						.w = static_cast<float>(res.texBullet->h),
-						.h = static_cast<float>(res.texBullet->h)
-					};
-					const int yVariation = 40;
-					const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
-					bullet.velocity = glm::vec2(
-						obj.velocity.x + 600.0f * obj.direction,
-						yVelocity
-					);
-					bullet.maxSpeedX = 1000.0f;
-					bullet.animations = res.bulletAnims;
+					// set shooting tex/anim
+					obj.texture = shootTex;
+					obj.currentAnimation = shootAnimIndex;
 
-					// adjust bullet start position
-					const float left = 4;
-					const float right = 24;
-					const float t = (obj.direction + 1) / 2.0f; // results in a value of 0..1
-					const float xOffset = left + right * t; // LERP between left and right based on direction
-					bullet.position = glm::vec2(
-						obj.position.x + xOffset,
-						obj.position.y + TILE_SIZE / 2 + 1
-					);
-
-					// look for an inactive slot and overwrite the bullet
-					bool foundInactive = false;
-					for (int i = 0; i < gs.bullets.size() && !foundInactive; i++)
+					if (weaponTimer.isTimeout())
 					{
-						if (gs.bullets[i].data.bullet.state == BulletState::inactive)
+						weaponTimer.reset();
+						// spawn some bullets
+						GameObject bullet;
+						bullet.data.bullet = BulletData();
+						bullet.type = ObjectType::bullet;
+						bullet.direction = gs.player().direction;
+						bullet.texture = res.texBullet;
+						bullet.currentAnimation = res.ANIM_BULLET_MOVING;
+						bullet.collider = SDL_FRect{
+							.x = 0, .y = 0,
+							.w = static_cast<float>(res.texBullet->h),
+							.h = static_cast<float>(res.texBullet->h)
+						};
+						const int yVariation = 40;
+						const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
+						bullet.velocity = glm::vec2(
+							obj.velocity.x + 600.0f * obj.direction,
+							yVelocity
+						);
+						bullet.maxSpeedX = 1000.0f;
+						bullet.animations = res.bulletAnims;
+
+						// adjust bullet start position
+						const float left = 4;
+						const float right = 24;
+						const float t = (obj.direction + 1) / 2.0f; // results in a value of 0..1
+						const float xOffset = left + right * t; // LERP between left and right based on direction
+						bullet.position = glm::vec2(
+							obj.position.x + xOffset,
+							obj.position.y + TILE_SIZE / 2 + 1
+						);
+
+						// look for an inactive slot and overwrite the bullet
+						bool foundInactive = false;
+						for (int i = 0; i < gs.bullets.size() && !foundInactive; i++)
 						{
-							foundInactive = true;
-							gs.bullets[i] = bullet;
+							if (gs.bullets[i].data.bullet.state == BulletState::inactive)
+							{
+								foundInactive = true;
+								gs.bullets[i] = bullet;
+							}
 						}
-					}
-					// if no inactive slot was found, push a new bullet
-					if (!foundInactive)
-					{
-						gs.bullets.push_back(bullet);
-					}
+						// if no inactive slot was found, push a new bullet
+						if (!foundInactive)
+						{
+							gs.bullets.push_back(bullet);
+						}
 
-					Mix_PlayChannel(-1, res.chunkShoot, 0);
+						Mix_PlayChannel(-1, res.chunkShoot, 0);
+					}
 				}
-			}
-			else
-			{
-				obj.texture = tex;
-				obj.currentAnimation = animIndex;
-			}
-		};
+				else
+				{
+					obj.texture = tex;
+					obj.currentAnimation = animIndex;
+				}
+			};
 
 		switch (obj.data.player.state)
 		{
@@ -633,7 +749,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 				glm::vec2 playerDir = gs.player().position - obj.position;
 				if (glm::length(playerDir) < 100)
 				{
-					currentDirection = playerDir.x < 0 ? -1 : 1;
+					currentDirection = playerDir.x < 0 ? -1.0f : 1.0f;
 					obj.acceleration = glm::vec2(30, 0);
 				}
 				else
@@ -729,34 +845,34 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &objA, GameObject &objB, float deltaTime)
 {
 	const auto genericResponse = [&]()
-	{
-		if (rectC.w < rectC.h)
 		{
-			// horizontal collision
-			if (objA.velocity.x > 0) // going right
+			if (rectC.w < rectC.h)
 			{
-				objA.position.x -= rectC.w;
+				// horizontal collision
+				if (objA.velocity.x > 0) // going right
+				{
+					objA.position.x -= rectC.w;
+				}
+				else if (objA.velocity.x < 0)
+				{
+					objA.position.x += rectC.w;
+				}
+				objA.velocity.x = 0;
 			}
-			else if (objA.velocity.x < 0)
+			else
 			{
-				objA.position.x += rectC.w;
+				// vertical collision
+				if (objA.velocity.y > 0)
+				{
+					objA.position.y -= rectC.h; // going down
+				}
+				else if (objA.velocity.y < 0)
+				{
+					objA.position.y += rectC.h; // going up
+				}
+				objA.velocity.y = 0;
 			}
-			objA.velocity.x = 0;
-		}
-		else
-		{
-			// vertical collision
-			if (objA.velocity.y > 0)
-			{
-				objA.position.y -= rectC.h; // going down
-			}
-			else if (objA.velocity.y < 0)
-			{
-				objA.position.y += rectC.h; // going up
-			}
-			objA.velocity.y = 0;
-		}
-	};
+		};
 
 	// object we are checking
 	if (objA.type == ObjectType::player)
@@ -898,86 +1014,88 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	};
 
 	const auto loadMap = [&state, &gs, &res](short layer[MAP_ROWS][MAP_COLS])
-	{
-		const auto createObject = [&state](int r, int c, SDL_Texture *tex, ObjectType type)
 		{
-			GameObject o;
-			o.type = type;
-			o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
-			o.texture = tex;
-			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
-			return o;
-		};
-
-		for (int r = 0; r < MAP_ROWS; r++)
-		{
-			for (int c = 0; c < MAP_COLS; c++)
-			{
-				switch (layer[r][c])
+			const auto createObject = [&state](int r, int c, SDL_Texture *tex, ObjectType type)
 				{
-					case 1: // ground
+					GameObject o;
+					o.type = type;
+					o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
+					o.texture = tex;
+					o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
+					return o;
+				};
+
+			/*
+			for (int r = 0; r < MAP_ROWS; r++)
+			{
+				for (int c = 0; c < MAP_COLS; c++)
+				{
+					switch (layer[r][c])
 					{
-						GameObject o = createObject(r, c, res.texGround, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
-						break;
-					}
-					case 2: // panel
-					{
-						GameObject o = createObject(r, c, res.texPanel, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
-						break;
-					}
-					case 3: // enemy
-					{
-						GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
-						o.data.enemy = EnemyData();
-						o.currentAnimation = res.ANIM_ENEMY;
-						o.animations = res.enemyAnims;
-						o.collider = SDL_FRect{
-							.x = 10, .y = 4, .w = 12, .h = 28
-						};
-						o.maxSpeedX = 15;
-						o.dynamic = true;
-						gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
-						break;
-					}
-					case 4: // player
-					{
-						GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
-						player.data.player = PlayerData();
-						player.animations = res.playerAnims;
-						player.currentAnimation = res.ANIM_PLAYER_IDLE;
-						player.acceleration = glm::vec2(300, 0);
-						player.maxSpeedX = 100;
-						player.dynamic = true;
-						player.collider = {
-							.x = 11, .y = 6,
-							.w = 10, .h = 26
-						};
-						gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
-						gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
-						break;
-					}
-					case 5: // grass
-					{
-						GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
-						gs.foregroundTiles.push_back(o);
-						break;
-					}
-					case 6: // brick
-					{
-						GameObject o = createObject(r, c, res.texBrick, ObjectType::level);
-						gs.backgroundTiles.push_back(o);
-						break;
+						case 1: // ground
+						{
+							GameObject o = createObject(r, c, res.texGround, ObjectType::level);
+							gs.layers[LAYER_IDX_LEVEL].push_back(o);
+							break;
+						}
+						case 2: // panel
+						{
+							GameObject o = createObject(r, c, res.texPanel, ObjectType::level);
+							gs.layers[LAYER_IDX_LEVEL].push_back(o);
+							break;
+						}
+						case 3: // enemy
+						{
+							GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
+							o.data.enemy = EnemyData();
+							o.currentAnimation = res.ANIM_ENEMY;
+							o.animations = res.enemyAnims;
+							o.collider = SDL_FRect{
+								.x = 10, .y = 4, .w = 12, .h = 28
+							};
+							o.maxSpeedX = 15;
+							o.dynamic = true;
+							gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
+							break;
+						}
+						case 4: // player
+						{
+							GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
+							player.data.player = PlayerData();
+							player.animations = res.playerAnims;
+							player.currentAnimation = res.ANIM_PLAYER_IDLE;
+							player.acceleration = glm::vec2(300, 0);
+							player.maxSpeedX = 100;
+							player.dynamic = true;
+							player.collider = {
+								.x = 11, .y = 6,
+								.w = 10, .h = 26
+							};
+							gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
+							gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
+							break;
+						}
+						case 5: // grass
+						{
+							GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
+							gs.foregroundTiles.push_back(o);
+							break;
+						}
+						case 6: // brick
+						{
+							GameObject o = createObject(r, c, res.texBrick, ObjectType::level);
+							gs.backgroundTiles.push_back(o);
+							break;
+						}
 					}
 				}
 			}
-		}
-	};
-	loadMap(map);
-	loadMap(background);
-	loadMap(foreground);
-	assert(gs.playerIndex != -1);
+			*/
+		};
+	//loadMap(map);
+	//loadMap(background);
+	//loadMap(foreground);
+	//assert(gs.playerIndex != -1);
 }
 
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -985,13 +1103,13 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 {
 	const float JUMP_FORCE = -200.0f;
 	const auto jump = [&]()
-	{
-		if (key == SDL_SCANCODE_K && keyDown && obj.grounded)
 		{
-			obj.data.player.state = PlayerState::jumping;
-			obj.velocity.y += JUMP_FORCE;
-		}
-	};
+			if (key == SDL_SCANCODE_K && keyDown && obj.grounded)
+			{
+				obj.data.player.state = PlayerState::jumping;
+				obj.velocity.y += JUMP_FORCE;
+			}
+		};
 
 	if (obj.type == ObjectType::player)
 	{
