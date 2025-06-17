@@ -7,7 +7,7 @@
 #include <string>
 #include <array>
 #include <format>
-#include <filesystem>>
+#include <filesystem>
 
 #include "gameobject.h"
 #include "tmx.h"
@@ -999,10 +999,14 @@ assert(gs.playerIndex != -1);
 			std::vector<GameObject> newLayer;
 			for (tmx::LayerObject &obj : objectGroup.objects)
 			{
+				glm::vec2 objPos(
+					obj.x - res.map->tileWidth / 2,
+					obj.y - res.map->tileHeight / 2);
+
 				if (obj.type == "Player")
 				{
 					GameObject player = createObject(1, 1, res.texIdle, ObjectType::player);
-					player.position = glm::vec2(obj.x - res.map->tileWidth / 2, obj.y - res.map->tileHeight / 2);
+					player.position = objPos;
 					player.data.player = PlayerData();
 					player.animations = res.playerAnims;
 					player.currentAnimation = res.ANIM_PLAYER_IDLE;
@@ -1020,7 +1024,7 @@ assert(gs.playerIndex != -1);
 				else if (obj.type == "Enemy")
 				{
 					GameObject enemy = createObject(1, 1, res.texEnemy, ObjectType::enemy);
-					enemy.position = glm::vec2(obj.x - res.map->tileWidth / 2, obj.y - res.map->tileHeight / 2);
+					enemy.position = objPos;
 					enemy.data.enemy = EnemyData();
 					enemy.currentAnimation = res.ANIM_ENEMY;
 					enemy.animations = res.enemyAnims;
