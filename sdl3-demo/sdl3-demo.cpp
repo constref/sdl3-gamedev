@@ -185,7 +185,7 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 	SDL_Scancode key, bool keyDown);
-void drawParalaxBackground(SDL_Renderer *renderer, const GameState &gs, SDL_Texture *texture,
+void drawParalaxBackground(const SDLState &state, const GameState &gs, SDL_Texture *texture,
 	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime);
 
 int main(int argc, char *argv[])
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 
 		// calculate viewport position
 		gs.mapViewport.x = (gs.player().position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
-		gs.mapViewport.y = gs.player().position.y - gs.mapViewport.h + res.map->tileHeight * 3;
+		gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
 
 		// perform drawing commands
 		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
@@ -286,11 +286,11 @@ int main(int argc, char *argv[])
 
 		// draw background images
 		SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
-		drawParalaxBackground(state.renderer, gs, res.texBg4, gs.player().velocity.x,
+		drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
 			gs.bg4Scroll, 0.075f, deltaTime);
-		drawParalaxBackground(state.renderer, gs, res.texBg3, gs.player().velocity.x,
+		drawParalaxBackground(state, gs, res.texBg3, gs.player().velocity.x,
 			gs.bg3Scroll, 0.150f, deltaTime);
-		drawParalaxBackground(state.renderer, gs, res.texBg2, gs.player().velocity.x,
+		drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
 			gs.bg2Scroll, 0.3f, deltaTime);
 
 		// draw all objects
@@ -952,8 +952,8 @@ assert(gs.playerIndex != -1);
 			o.position = glm::vec2(
 				c * res.map->tileWidth,
 				r * res.map->tileHeight);
-				//c * res.map->tileWidth,
-				//state.logH - (res.map->mapHeight - r) * res.map->tileHeight);
+			//c * res.map->tileWidth,
+			//state.logH - (res.map->mapHeight - r) * res.map->tileHeight);
 			o.texture = tex;
 			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
 			return o;
@@ -1070,7 +1070,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 	}
 }
 
-void drawParalaxBackground(SDL_Renderer *renderer, const GameState &gs, SDL_Texture *texture,
+void drawParalaxBackground(const SDLState &state, const GameState &gs, SDL_Texture *texture,
 	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime)
 {
 	scrollPos -= xVelocity * scrollFactor * deltaTime;
@@ -1080,10 +1080,10 @@ void drawParalaxBackground(SDL_Renderer *renderer, const GameState &gs, SDL_Text
 	}
 
 	SDL_FRect dst{
-		.x = scrollPos, .y = 30,
+		.x = scrollPos, .y = static_cast<float>(state.logH - texture->h),
 		.w = texture->w * 2.0f,
 		.h = static_cast<float>(texture->h)
 	};
 
-	SDL_RenderTextureTiled(renderer, texture, nullptr, 1, &dst);
+	SDL_RenderTextureTiled(state.renderer, texture, nullptr, 1, &dst);
 }
