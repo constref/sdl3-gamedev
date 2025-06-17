@@ -684,47 +684,44 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	obj.position += obj.velocity * deltaTime;
 
 	// handle collision detection
-	if (obj.dynamic)
+	bool foundGround = false;
+	for (auto &layer : gs.layers)
 	{
-		bool foundGround = false;
-		for (auto &layer : gs.layers)
+		for (GameObject &objB : layer)
 		{
-			for (GameObject &objB : layer)
+			if (&obj != &objB)
 			{
-				if (&obj != &objB)
-				{
-					checkCollision(state, gs, res, obj, objB, deltaTime);
+				checkCollision(state, gs, res, obj, objB, deltaTime);
 
-					if (objB.type == ObjectType::level)
+				if (objB.type == ObjectType::level)
+				{
+					// grounded sensor
+					SDL_FRect sensor{
+						.x = obj.position.x + obj.collider.x,
+						.y = obj.position.y + obj.collider.y + obj.collider.h,
+						.w = obj.collider.w, .h = 1
+					};
+					SDL_FRect rectB{
+						.x = objB.position.x + objB.collider.x,
+						.y = objB.position.y + objB.collider.y,
+						.w = objB.collider.w, .h = objB.collider.h
+					};
+					SDL_FRect rectC{ 0 };
+					if (SDL_GetRectIntersectionFloat(&sensor, &rectB, &rectC))
 					{
-						// grounded sensor
-						SDL_FRect sensor{
-							.x = obj.position.x + obj.collider.x,
-							.y = obj.position.y + obj.collider.y + obj.collider.h,
-							.w = obj.collider.w, .h = 1
-						};
-						SDL_FRect rectB{
-							.x = objB.position.x + objB.collider.x,
-							.y = objB.position.y + objB.collider.y,
-							.w = objB.collider.w, .h = objB.collider.h
-						};
-						SDL_FRect rectC{ 0 };
-						if (SDL_GetRectIntersectionFloat(&sensor, &rectB, &rectC))
-						{
-							foundGround = true;
-						}
+						foundGround = true;
 					}
 				}
 			}
 		}
-		if (obj.grounded != foundGround)
+	}
+	if (obj.grounded != foundGround)
+	{
+		if (foundGround && obj.type == ObjectType::player)
 		{
-			if (foundGround && obj.type == ObjectType::player)
-			{
-				obj.data.player.state = PlayerState::running;
-			}
-			obj.grounded = foundGround;
+			obj.data.player.state = PlayerState::running;
 		}
+		obj.grounded = foundGround;
 	}
 }
 
