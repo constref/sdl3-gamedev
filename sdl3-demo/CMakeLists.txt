@@ -4,7 +4,7 @@ find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 
-add_executable (sdl3-demo "sdl3-demo.cpp" "timer.h" "animation.h" "tmx.h")
+add_executable (sdl3-demo "sdl3-demo.cpp" "timer.h" "animation.h" "tmx.h" "tmx.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

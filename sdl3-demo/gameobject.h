@@ -80,6 +80,7 @@ struct GameObject
 	Timer flashTimer;
 	bool shouldFlash;
 	int spriteFrame;
+	float gravityFactor;
 
 	GameObject() : data{ .level = LevelData() }, collider{ 0 }, flashTimer(0.05f)
 	{
@@ -93,5 +94,6 @@ struct GameObject
 		grounded = false;
 		shouldFlash = false;
 		spriteFrame = 1;
+		gravityFactor = 1;
 	}
 };
