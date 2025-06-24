@@ -2,6 +2,7 @@
 
 #include <tinyxml2.h>
 #include <filesystem>
+#include <sstream>
 
 using namespace tmx;
 
