@@ -7,6 +7,10 @@
 #include <array>
 #include <format>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "gameobject.h"
 
 using namespace std;
@@ -17,11 +21,12 @@ struct SDLState
 	SDL_Renderer *renderer;
 	int width, height, logW, logH;
 	const bool *keys;
-	bool fullscreen;
+	bool fullscreen, running;
 
 	SDLState() : keys(SDL_GetKeyboardState(nullptr))
 	{
 		fullscreen = true;
+		running = true;
 	}
 };
 
@@ -41,6 +46,7 @@ struct GameState
 	SDL_FRect mapViewport;
 	float bg2Scroll, bg3Scroll, bg4Scroll;
 	bool debugMode;
+	uint64_t prevTime, nowTime;
 
 	GameState(const SDLState &state)
 	{
@@ -78,7 +84,7 @@ struct Resources
 		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<Mix_Chunk*> chunks;
+	std::vector<Mix_Chunk *> chunks;
 	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
 	Mix_Music *musicMain;
 
@@ -90,9 +96,9 @@ struct Resources
 		return tex;
 	}
 
-	Mix_Chunk* loadChunk(const std::string& filepath)
+	Mix_Chunk *loadChunk(const std::string &filepath)
 	{
-		Mix_Chunk* chunk = Mix_LoadWAV(filepath.c_str());
+		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
 		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
 		chunks.push_back(chunk);
 		return chunk;
@@ -148,7 +154,7 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (Mix_Chunk* chunk : chunks)
+		for (Mix_Chunk *chunk : chunks)
 		{
 			Mix_FreeChunk(chunk);
 		}
@@ -170,6 +176,20 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
 	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime);
 
+struct ApplicationContext
+{
+	SDLState &state;
+	GameState &gs;
+	Resources &res;
+
+	ApplicationContext(SDLState &state, GameState &gs, Resources &res)
+		: state(state), gs(gs), res(res)
+	{
+	}
+};
+
+void iteration(void *arg);
+
 int main(int argc, char *argv[])
 {
 	SDLState state;
@@ -190,146 +210,163 @@ int main(int argc, char *argv[])
 	// setup game data
 	GameState gs(state);
 	createTiles(state, gs, res);
-	uint64_t prevTime = SDL_GetTicks();
+	gs.prevTime = SDL_GetTicks();
 
 	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
 	Mix_PlayMusic(res.musicMain, -1);
 
+	ApplicationContext ctx(state, gs, res);
+
+#ifdef __EMSCRIPTEN__
+	// Receives a function to call and some user data to provide it.
+	emscripten_set_main_loop_arg(iteration, &ctx, 0, true);
+#else
+
 	// start the game loop
-	bool running = true;
-	while (running)
+	while (state.running)
 	{
-		uint64_t nowTime = SDL_GetTicks();
-		float deltaTime = (nowTime - prevTime) / 1000.0f;
-
-		SDL_Event event{ 0 };
-		while (SDL_PollEvent(&event))
-		{
-			switch (event.type)
-			{
-				case SDL_EVENT_QUIT:
-				{
-					running = false;
-					break;
-				}
-				case SDL_EVENT_WINDOW_RESIZED:
-				{
-					state.width = event.window.data1;
-					state.height = event.window.data2;
-					break;
-				}
-				case SDL_EVENT_KEY_DOWN:
-				{
-					handleKeyInput(state, gs, gs.player(), event.key.scancode, true);
-					break;
-				}
-				case SDL_EVENT_KEY_UP:
-				{
-					handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
-					if (event.key.scancode == SDL_SCANCODE_F12)
-					{
-						gs.debugMode = !gs.debugMode;
-					}
-					else if (event.key.scancode == SDL_SCANCODE_F11)
-					{
-						state.fullscreen = !state.fullscreen;
-						SDL_SetWindowFullscreen(state.window, state.fullscreen);
-					}
-					break;
-				}
-			}
-		}
-
-		// update all objects
-		for (auto &layer : gs.layers)
-		{
-			for (GameObject &obj : layer)
-			{
-				update(state, gs, res, obj, deltaTime);
-			}
-		}
-
-		// update bullets
-		for (GameObject &bullet : gs.bullets)
-		{
-			update(state, gs, res, bullet, deltaTime);
-		}
-
-		// calculate viewport position
-		gs.mapViewport.x = (gs.player().position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
-
-		// perform drawing commands
-		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-		SDL_RenderClear(state.renderer);
-
-		// draw background images
-		SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
-		drawParalaxBackground(state.renderer, res.texBg4, gs.player().velocity.x,
-			gs.bg4Scroll, 0.075f, deltaTime);
-		drawParalaxBackground(state.renderer, res.texBg3, gs.player().velocity.x,
-			gs.bg3Scroll, 0.150f, deltaTime);
-		drawParalaxBackground(state.renderer, res.texBg2, gs.player().velocity.x,
-			gs.bg2Scroll, 0.3f, deltaTime);
-
-		// draw background tiles
-		for (GameObject &obj : gs.backgroundTiles)
-		{
-			SDL_FRect dst{
-				.x = obj.position.x - gs.mapViewport.x,
-				.y = obj.position.y,
-				.w = static_cast<float>(obj.texture->w),
-				.h = static_cast<float>(obj.texture->h)
-			};
-			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-		}
-
-		// draw all objects
-		for (auto &layer : gs.layers)
-		{
-			for (GameObject &obj : layer)
-			{
-				drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
-			}
-		}
-
-		// draw bullets
-		for (GameObject &bullet : gs.bullets)
-		{
-			if (bullet.data.bullet.state != BulletState::inactive)
-			{
-				drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
-			}
-		}
-
-		// draw foreground tiles
-		for (GameObject &obj : gs.foregroundTiles)
-		{
-			SDL_FRect dst{
-				.x = obj.position.x - gs.mapViewport.x,
-				.y = obj.position.y,
-				.w = static_cast<float>(obj.texture->w),
-				.h = static_cast<float>(obj.texture->h)
-			};
-			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-		}
-
-		if (gs.debugMode)
-		{
-			// display some debug info
-			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5,
-				std::format("S: {}, B: {}, G: {}",
-					static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
-		}
-
-		// swap buffers and present
-		SDL_RenderPresent(state.renderer);
-		prevTime = nowTime;
+		interation(&ctx);
 	}
+#endif
 
 	res.unload();
 	cleanup(state);
 	return 0;
+}
+
+void iteration(void *arg)
+{
+	ApplicationContext *ctx = static_cast<ApplicationContext *>(arg);
+	SDLState &state = ctx->state;
+	GameState &gs = ctx->gs;
+	Resources &res = ctx->res;
+
+	gs.nowTime = SDL_GetTicks();
+	float deltaTime = (gs.nowTime - gs.prevTime) / 1000.0f;
+
+	SDL_Event event{ 0 };
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+			case SDL_EVENT_QUIT:
+			{
+				state.running = false;
+				break;
+			}
+			case SDL_EVENT_WINDOW_RESIZED:
+			{
+				state.width = event.window.data1;
+				state.height = event.window.data2;
+				break;
+			}
+			case SDL_EVENT_KEY_DOWN:
+			{
+				handleKeyInput(state, gs, gs.player(), event.key.scancode, true);
+				break;
+			}
+			case SDL_EVENT_KEY_UP:
+			{
+				handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
+				if (event.key.scancode == SDL_SCANCODE_F12)
+				{
+					gs.debugMode = !gs.debugMode;
+				}
+				else if (event.key.scancode == SDL_SCANCODE_F11)
+				{
+					state.fullscreen = !state.fullscreen;
+					SDL_SetWindowFullscreen(state.window, state.fullscreen);
+				}
+				break;
+			}
+		}
+	}
+
+	// update all objects
+	for (auto &layer : gs.layers)
+	{
+		for (GameObject &obj : layer)
+		{
+			update(state, gs, res, obj, deltaTime);
+		}
+	}
+
+	// update bullets
+	for (GameObject &bullet : gs.bullets)
+	{
+		update(state, gs, res, bullet, deltaTime);
+	}
+
+	// calculate viewport position
+	gs.mapViewport.x = (gs.player().position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
+
+	// perform drawing commands
+	SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+	SDL_RenderClear(state.renderer);
+
+	// draw background images
+	SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
+	drawParalaxBackground(state.renderer, res.texBg4, gs.player().velocity.x,
+		gs.bg4Scroll, 0.075f, deltaTime);
+	drawParalaxBackground(state.renderer, res.texBg3, gs.player().velocity.x,
+		gs.bg3Scroll, 0.150f, deltaTime);
+	drawParalaxBackground(state.renderer, res.texBg2, gs.player().velocity.x,
+		gs.bg2Scroll, 0.3f, deltaTime);
+
+	// draw background tiles
+	for (GameObject &obj : gs.backgroundTiles)
+	{
+		SDL_FRect dst{
+			.x = obj.position.x - gs.mapViewport.x,
+			.y = obj.position.y,
+			.w = static_cast<float>(obj.texture->w),
+			.h = static_cast<float>(obj.texture->h)
+		};
+		SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+	}
+
+	// draw all objects
+	for (auto &layer : gs.layers)
+	{
+		for (GameObject &obj : layer)
+		{
+			drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
+		}
+	}
+
+	// draw bullets
+	for (GameObject &bullet : gs.bullets)
+	{
+		if (bullet.data.bullet.state != BulletState::inactive)
+		{
+			drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
+		}
+	}
+
+	// draw foreground tiles
+	for (GameObject &obj : gs.foregroundTiles)
+	{
+		SDL_FRect dst{
+			.x = obj.position.x - gs.mapViewport.x,
+			.y = obj.position.y,
+			.w = static_cast<float>(obj.texture->w),
+			.h = static_cast<float>(obj.texture->h)
+		};
+		SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+	}
+
+	if (gs.debugMode)
+	{
+		// display some debug info
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_RenderDebugText(state.renderer, 5, 5,
+			std::format("S: {}, B: {}, G: {}",
+				static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
+	}
+
+	// swap buffers and present
+	SDL_RenderPresent(state.renderer);
+	gs.prevTime = gs.nowTime;
 }
 
 bool initialize(SDLState &state)
