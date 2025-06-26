@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 	// start the game loop
 	while (state.running)
 	{
-		interation(&ctx);
+		iteration(&ctx);
 	}
 #endif
 
