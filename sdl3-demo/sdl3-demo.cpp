@@ -78,7 +78,7 @@ struct Resources
 		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<Mix_Chunk*> chunks;
+	std::vector<Mix_Chunk *> chunks;
 	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
 	Mix_Music *musicMain;
 
@@ -90,9 +90,9 @@ struct Resources
 		return tex;
 	}
 
-	Mix_Chunk* loadChunk(const std::string& filepath)
+	Mix_Chunk *loadChunk(const std::string &filepath)
 	{
-		Mix_Chunk* chunk = Mix_LoadWAV(filepath.c_str());
+		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
 		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
 		chunks.push_back(chunk);
 		return chunk;
@@ -148,7 +148,7 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (Mix_Chunk* chunk : chunks)
+		for (Mix_Chunk *chunk : chunks)
 		{
 			Mix_FreeChunk(chunk);
 		}
@@ -163,6 +163,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 	float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -705,10 +706,15 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						.y = objB.position.y + objB.collider.y,
 						.w = objB.collider.w, .h = objB.collider.h
 					};
+
 					SDL_FRect rectC{ 0 };
 					if (SDL_GetRectIntersectionFloat(&sensor, &rectB, &rectC))
 					{
-						foundGround = true;
+						// if we're colliding on the bottom
+						if (rectC.h < rectC.w)
+						{
+							foundGround = true;
+						}
 					}
 				}
 			}
@@ -773,11 +779,11 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			{
 				if (objB.data.enemy.state != EnemyState::dead)
 				{
-				genericResponse();
-			}
+					genericResponse();
+				}
 				break;
+			}
 		}
-	}
 	}
 	else if (objA.type == ObjectType::bullet)
 	{
@@ -838,6 +844,25 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	{
 		genericResponse();
 	}
+}
+
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b)
+{
+	const float minXA = a.x;
+	const float maxXA = a.x + a.w;
+	const float minYA = a.y;
+	const float maxYA = a.y + a.h;
+	const float minXB = b.x;
+	const float maxXB = b.x + b.w;
+	const float minYB = b.y;
+	const float maxYB = b.y + b.h;
+
+	if ((minXA <= maxXB && maxXA >= minXB) &&
+		(minYA <= maxYB && maxYA >= minYB))
+	{
+		return true;
+	}
+	return false;
 }
 
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
