@@ -143,7 +143,7 @@ struct Resources
 		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
-		map = tmx::loadMap("data/maps/smallmap.tmx");
+		map = tmx::loadMap("data/maps/largemap.tmx");
 		for (tmx::TileSet &tileSet : map->tileSets)
 		{
 			TileSetTextures tst;
@@ -177,8 +177,7 @@ struct Resources
 
 bool initialize(SDLState &state);
 void cleanup(SDLState &state);
-void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
-	const Resources &res, float width, float height, float deltaTime);
+void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
@@ -263,7 +262,10 @@ int main(int argc, char *argv[])
 		{
 			for (GameObject &obj : layer)
 			{
-				update(state, gs, res, obj, deltaTime);
+				if (obj.dynamic)
+				{
+					update(state, gs, res, obj, deltaTime);
+				}
 			}
 		}
 
@@ -298,7 +300,7 @@ int main(int argc, char *argv[])
 		{
 			for (GameObject &obj : layer)
 			{
-				drawObject(state, gs, obj, res, TILE_SIZE, TILE_SIZE, deltaTime);
+				drawObject(state, gs, obj, res.map->tileWidth, res.map->tileHeight, deltaTime);
 			}
 		}
 
@@ -307,7 +309,7 @@ int main(int argc, char *argv[])
 		{
 			if (bullet.data.bullet.state != BulletState::inactive)
 			{
-				drawObject(state, gs, bullet, res, bullet.collider.w, bullet.collider.h, deltaTime);
+				drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
 			}
 		}
 
@@ -382,8 +384,7 @@ void cleanup(SDLState &state)
 	SDL_Quit();
 }
 
-void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
-	const Resources &res, float width, float height, float deltaTime)
+void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float width, float height, float deltaTime)
 {
 	SDL_FRect src{
 		.x = 0,
@@ -689,7 +690,8 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	{
 		for (GameObject &objB : layer)
 		{
-			if (&obj != &objB)
+			if (&obj != &objB &&
+				objB.collider.w != 0 && objB.collider.h != 0)
 			{
 				checkCollision(state, gs, res, obj, objB, deltaTime);
 
@@ -952,8 +954,6 @@ assert(gs.playerIndex != -1);
 			o.position = glm::vec2(
 				c * res.map->tileWidth,
 				r * res.map->tileHeight);
-			//c * res.map->tileWidth,
-			//state.logH - (res.map->mapHeight - r) * res.map->tileHeight);
 			o.texture = tex;
 			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
 			return o;
@@ -962,34 +962,30 @@ assert(gs.playerIndex != -1);
 		void operator()(tmx::Layer &layer) // Tile layers
 		{
 			std::vector<GameObject> newLayer;
-			int i = 0;
-			for (int tGid : layer.data)
+			for (int r = 0; r < res.map->mapHeight; ++r)
 			{
-				if (tGid) // if not an empty slot
+				for (int c = 0; c < res.map->mapWidth; ++c)
 				{
-					const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
-						[tGid](const TileSetTextures &tst) {
-						return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
-					});
-
-					const TileSetTextures &tst = *itr;
-					SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
-
-					int r = i / res.map->mapWidth;
-					int c = i % res.map->mapWidth;
-
-					auto tile = createObject(r, c, tex, ObjectType::level);
-					tile.spriteFrame = 1;
-					if (layer.name != "Level")
+					const int tGid = layer.data[r * res.map->mapWidth + c];
+					if (tGid) // if not an empty slot
 					{
-						tile.collider.w = 0;
-						tile.collider.h = 0;
+						const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
+							[tGid](const TileSetTextures &tst) {
+								return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size();
+						});
+						const TileSetTextures &tst = *itr;
+						SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
+
+						auto tile = createObject(r, c, tex, ObjectType::level);
+						if (layer.name != "Level")
+						{
+							tile.collider.w = tile.collider.h = 0;
+						}
+						newLayer.push_back(tile);
 					}
-					newLayer.push_back(tile);
 				}
-				i++;
 			}
-			gs.layers.push_back(newLayer);
+			gs.layers.push_back(std::move(newLayer));
 		}
 		void operator()(tmx::ObjectGroup &objectGroup) // Object layers
 		{
@@ -1014,9 +1010,9 @@ assert(gs.playerIndex != -1);
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
 					};
-					newLayer.push_back(player);
-					gs.playerIndex = 0;
+					gs.playerIndex = newLayer.size();
 					gs.playerLayer = gs.layers.size();
+					newLayer.push_back(player);
 				}
 				else if (obj.type == "Enemy")
 				{
@@ -1037,9 +1033,10 @@ assert(gs.playerIndex != -1);
 		}
 	};
 
+	LayerVisitor visitor(state, gs, res);
 	for (auto &layer : res.map->layers)
 	{
-		std::visit(LayerVisitor(state, gs, res), layer);
+		std::visit(visitor, layer);
 	}
 }
 
