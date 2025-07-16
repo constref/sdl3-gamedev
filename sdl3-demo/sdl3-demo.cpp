@@ -169,6 +169,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 	float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -742,10 +743,15 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						.y = objB.position.y + objB.collider.y,
 						.w = objB.collider.w, .h = objB.collider.h
 					};
-					SDL_FRect rectC{ 0 };
-					if (SDL_GetRectIntersectionFloat(&sensor, &rectB, &rectC))
+
+					glm::vec2 resolution{ 0 };
+					if (intersectAABB(sensor, rectB, resolution))
 					{
-						foundGround = true;
+						// if we're colliding on the bottom
+						if (resolution.y < resolution.x)
+						{
+							foundGround = true;
+						}
 					}
 				}
 			}
@@ -762,34 +768,33 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 }
 
 void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
-	const SDL_FRect &rectA, const SDL_FRect &rectB, const SDL_FRect &rectC,
+	const SDL_FRect &rectA, const SDL_FRect &rectB, const glm::vec2 &overlap,
 	GameObject &objA, GameObject &objB, float deltaTime)
 {
 	const auto genericResponse = [&]()
 	{
-		if (rectC.w < rectC.h)
+		// colliding on the x-axis
+		if (overlap.x < overlap.y)
 		{
-			// horizontal collision
-			if (objA.velocity.x > 0) // going right
+			if (objA.position.x < objB.position.x) // from left
 			{
-				objA.position.x -= rectC.w;
+				objA.position.x -= overlap.x;
 			}
-			else if (objA.velocity.x < 0)
+			else // from right
 			{
-				objA.position.x += rectC.w;
+				objA.position.x += overlap.x;
 			}
 			objA.velocity.x = 0;
 		}
 		else
 		{
-			// vertical collision
-			if (objA.velocity.y > 0)
+			if (objA.position.y < objB.position.y) // from top
 			{
-				objA.position.y -= rectC.h; // going down
+				objA.position.y -= overlap.y;
 			}
-			else if (objA.velocity.y < 0)
+			else // from bottom
 			{
-				objA.position.y += rectC.h; // going up
+				objA.position.y += overlap.y;
 			}
 			objA.velocity.y = 0;
 		}
@@ -810,7 +815,9 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			{
 				if (objB.data.enemy.state != EnemyState::dead)
 				{
-					objA.velocity = glm::vec2(100, 0) * -objA.direction;
+					glm::vec2 prevVel = objA.velocity;
+					genericResponse();
+					objA.velocity = -prevVel;
 				}
 				break;
 			}
@@ -873,8 +880,32 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 	else if (objA.type == ObjectType::enemy)
 	{
-		genericResponse();
+		if (objA.data.enemy.state != EnemyState::dead)
+		{
+			genericResponse();
+		}
 	}
+}
+
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
+{
+	const float minXA = a.x;
+	const float maxXA = a.x + a.w;
+	const float minYA = a.y;
+	const float maxYA = a.y + a.h;
+	const float minXB = b.x;
+	const float maxXB = b.x + b.w;
+	const float minYB = b.y;
+	const float maxYB = b.y + b.h;
+
+	if ((minXA < maxXB && maxXA > minXB) &&
+		(minYA < maxYB && maxYA > minYB))
+	{
+		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
+		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
+		return true;
+	}
+	return false;
 }
 
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
@@ -892,12 +923,12 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 		.w = b.collider.w,
 		.h = b.collider.h
 	};
-	SDL_FRect rectC{ 0 };
 
-	if (SDL_GetRectIntersectionFloat(&rectA, &rectB, &rectC))
+	glm::vec2 resolution{ 0 };
+	if (intersectAABB(rectA, rectB, resolution))
 	{
 		// found intersection, respond accordingly
-		collisionResponse(state, gs, res, rectA, rectB, rectC, a, b, deltaTime);
+		collisionResponse(state, gs, res, rectA, rectB, resolution, a, b, deltaTime);
 	}
 }
 
