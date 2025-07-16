@@ -765,11 +765,19 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 		switch (objB.type)
 		{
 			case ObjectType::level:
-			case ObjectType::enemy:
 			{
 				genericResponse();
+				break;
 			}
+			case ObjectType::enemy:
+			{
+				if (objB.data.enemy.state != EnemyState::dead)
+				{
+				genericResponse();
+			}
+				break;
 		}
+	}
 	}
 	else if (objA.type == ObjectType::bullet)
 	{
