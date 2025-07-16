@@ -765,17 +765,9 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 		switch (objB.type)
 		{
 			case ObjectType::level:
-			{
-				genericResponse();
-				break;
-			}
 			case ObjectType::enemy:
 			{
-				if (objB.data.enemy.state != EnemyState::dead)
-				{
-					objA.velocity = glm::vec2(100, 0) * -objA.direction;
-				}
-				break;
+				genericResponse();
 			}
 		}
 	}
