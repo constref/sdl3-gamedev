@@ -7,6 +7,9 @@
 #include <array>
 #include <format>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 #include "gameobject.h"
 
 using namespace std;
@@ -82,11 +85,32 @@ struct Resources
 	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
 	Mix_Music *musicMain;
 
-	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
+	SDL_Texture *loadTextureOLD(SDL_Renderer *renderer, const std::string &filepath)
 	{
 		SDL_Texture *tex = IMG_LoadTexture(renderer, filepath.c_str());
 		SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
 		textures.push_back(tex);
+		return tex;
+	}
+
+	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
+	{
+		// get pixel data and image info
+		int width = 0;
+		int height = 0;
+		int channels = 0;
+		stbi_uc *pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
+
+		// create surface, copy copy into texture
+		SDL_Surface *surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, pixData, width * 4);
+		SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+		textures.push_back(tex);
+		SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
+
+		// free STB pixel data first, then destroy surface
+		stbi_image_free(pixData);
+		SDL_DestroySurface(surface);
+
 		return tex;
 	}
 
@@ -684,7 +708,6 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	obj.position += obj.velocity * deltaTime;
 
 	// handle collision detection
-	bool foundGround = false;
 	for (auto &layer : gs.layers)
 	{
 		for (GameObject &objB : layer)
@@ -692,41 +715,16 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 			if (&obj != &objB)
 			{
 				checkCollision(state, gs, res, obj, objB, deltaTime);
-
-				if (objB.type == ObjectType::level)
-				{
-					// grounded sensor
-					SDL_FRect sensor{
-						.x = obj.position.x + obj.collider.x,
-						.y = obj.position.y + obj.collider.y + obj.collider.h,
-						.w = obj.collider.w, .h = 1
-					};
-					SDL_FRect rectB{
-						.x = objB.position.x + objB.collider.x,
-						.y = objB.position.y + objB.collider.y,
-						.w = objB.collider.w, .h = objB.collider.h
-					};
-
-					glm::vec2 resolution{ 0 };
-					if (intersectAABB(sensor, rectB, resolution))
-					{
-						// if we're colliding on the bottom
-						if (resolution.y < resolution.x)
-						{
-							foundGround = true;
-						}
-					}
-				}
 			}
 		}
 	}
-	if (obj.grounded != foundGround)
+	// collision response updates obj.grounded to new state
+	if (obj.grounded)
 	{
-		if (foundGround && obj.type == ObjectType::player)
+		if (obj.grounded && obj.type == ObjectType::player)
 		{
 			obj.data.player.state = PlayerState::running;
 		}
-		obj.grounded = foundGround;
 	}
 }
 
@@ -754,6 +752,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			if (objA.position.y < objB.position.y) // from top
 			{
 				objA.position.y -= overlap.y;
+				objA.grounded = true;
 			}
 			else // from bottom
 			{
@@ -862,7 +861,7 @@ bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
 	const float maxYB = b.y + b.h;
 
 	if ((minXA < maxXB && maxXA > minXB) &&
-		(minYA < maxYB && maxYA > minYB))
+		(minYA <= maxYB && maxYA >= minYB))
 	{
 		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
 		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
