@@ -831,10 +831,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 	else if (objA.type == ObjectType::enemy)
 	{
-		if (objA.data.enemy.state != EnemyState::dead)
-		{
-			genericResponse();
-		}
+		genericResponse();
 	}
 }
 
