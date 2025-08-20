@@ -1,6 +1,5 @@
 ﻿#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <vector>
 #include <string>
@@ -81,17 +80,9 @@ struct Resources
 		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<Mix_Chunk *> chunks;
-	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
-	Mix_Music *musicMain;
-
-	SDL_Texture *loadTextureOLD(SDL_Renderer *renderer, const std::string &filepath)
-	{
-		SDL_Texture *tex = IMG_LoadTexture(renderer, filepath.c_str());
-		SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
-		textures.push_back(tex);
-		return tex;
-	}
+	std::vector<MIX_Audio *> audioBuffers;
+	MIX_Audio *audioShoot, *audioShootHit, *audioEnemyHit;
+	MIX_Audio *musicMain;
 
 	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
 	{
@@ -114,12 +105,12 @@ struct Resources
 		return tex;
 	}
 
-	Mix_Chunk *loadChunk(const std::string &filepath)
+	MIX_Audio *loadAudio(const std::string &filepath)
 	{
-		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
-		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
-		chunks.push_back(chunk);
-		return chunk;
+		MIX_Audio* audio = MIX_LoadAudio(nullptr, filepath.c_str(), true);
+		audioBuffers.push_back(audio);
+		//MIX_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
+		return audio;
 	}
 
 	void load(SDLState &state)
@@ -158,11 +149,10 @@ struct Resources
 		texEnemyHit = loadTexture(state.renderer, "data/enemy_hit.png");
 		texEnemyDie = loadTexture(state.renderer, "data/enemy_die.png");
 
-		chunkShoot = loadChunk("data/audio/shoot.wav");
-		chunkShootHit = loadChunk("data/audio/wall_hit.wav");
-		chunkEnemyHit = loadChunk("data/audio/shoot_hit.wav");
-
-		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+		audioShoot = loadAudio("data/audio/shoot.wav");
+		audioShootHit = loadAudio("data/audio/wall_hit.wav");
+		audioEnemyHit = loadAudio("data/audio/shoot_hit.wav");
+		musicMain = loadAudio("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 	}
 
 	void unload()
@@ -172,12 +162,10 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (Mix_Chunk *chunk : chunks)
+		for (MIX_Audio *audio : audioBuffers)
 		{
-			Mix_FreeChunk(chunk);
+			MIX_DestroyAudio(audio);
 		}
-
-		Mix_FreeMusic(musicMain);
 	}
 };
 
@@ -217,8 +205,7 @@ int main(int argc, char *argv[])
 	createTiles(state, gs, res);
 	uint64_t prevTime = SDL_GetTicks();
 
-	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
-	Mix_PlayMusic(res.musicMain, -1);
+	MIX_PlayAudio(nullptr, res.musicMain);
 
 	// start the game loop
 	bool running = true;
@@ -390,7 +377,7 @@ bool initialize(SDLState &state)
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	// initialize the SDL_mixer library
-	if (!Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr))
+	if (!MIX_Init())
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
 		cleanup(state);
@@ -558,7 +545,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						gs.bullets.push_back(bullet);
 					}
 
-					Mix_PlayChannel(-1, res.chunkShoot, 0);
+					MIX_PlayAudio(nullptr, res.audioShoot);
 				}
 			}
 			else
@@ -708,6 +695,8 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	obj.position += obj.velocity * deltaTime;
 
 	// handle collision detection
+	bool wasGrounded = obj.grounded;
+	obj.grounded = false;
 	for (auto &layer : gs.layers)
 	{
 		for (GameObject &objB : layer)
@@ -719,7 +708,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		}
 	}
 	// collision response updates obj.grounded to new state
-	if (obj.grounded)
+	if (obj.grounded && !wasGrounded)
 	{
 		if (obj.grounded && obj.type == ObjectType::player)
 		{
@@ -796,7 +785,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 				{
 					case ObjectType::level:
 					{
-						Mix_PlayChannel(-1, res.chunkShootHit, 0);
+						MIX_PlayAudio(nullptr, res.audioShootHit);
 						break;
 					}
 					case ObjectType::enemy:
@@ -818,7 +807,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 								objB.texture = res.texEnemyDie;
 								objB.currentAnimation = res.ANIM_ENEMY_DIE;
 							}
-							Mix_PlayChannel(-1, res.chunkEnemyHit, 0);
+							MIX_PlayAudio(nullptr, res.audioEnemyHit);
 						}
 						else
 						{
