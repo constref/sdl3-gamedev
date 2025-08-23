@@ -2,7 +2,20 @@
 find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 
-add_executable (sdl3-demo "sdl3-demo.cpp" "timer.h" "animation.h" "ext/stb/stb_image.h")
+add_executable (sdl3-demo
+	"sdl3-demo.cpp"
+	"timer.h"
+	"animation.h"
+	"components/component.h"
+	"ext/stb/stb_image.h" 
+	"components/rendercomponent.h"
+	"components/rendercomponent.cpp"
+	"sdlstate.h"
+	"resources.h"
+	"gamestate.h"
+	"resources.cpp"
+	"components/animationcomponent.h"
+	"components/animationcomponent.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)
