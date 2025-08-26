@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
 
 	//createTiles(state, gs, res);
 	GameObject player;
-	auto animComponent = std::make_shared<AnimationComponent>(res.playerAnims, player);
+	auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims, player);
 	animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
-	auto renderComponent = std::make_shared<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, player);
-	player.components.push_back(animComponent);
-	player.components.push_back(renderComponent);
+	auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), player);
+	player.components.push_back(std::move(animComponent));
+	player.components.push_back(std::move(renderComponent));
 	gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
 
 	uint64_t prevTime = SDL_GetTicks();

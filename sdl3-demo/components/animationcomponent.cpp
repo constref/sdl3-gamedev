@@ -14,7 +14,8 @@ void AnimationComponent::update(SDLState &state, GameState &gs, Resources &res, 
 	if (currentAnimation != NO_ANIMATION)
 	{
 		animations[currentAnimation].step(deltaTime);
-		owner.spriteFrame = animations[currentAnimation].currentFrame() + 1;
+		frameNumber = animations[currentAnimation].currentFrame() + 1;
+		currentFrameChanged.notify(frameNumber);
 	}
 }
 

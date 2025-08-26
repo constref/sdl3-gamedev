@@ -2,6 +2,7 @@
 
 #include <vector>
 #include  "component.h"
+#include "observer.h"
 
 class Animation;
 
@@ -11,9 +12,12 @@ class AnimationComponent : public Component
 
 	int currentAnimation = NO_ANIMATION;
 	std::vector<Animation> animations;
+	int frameNumber;
 
 public:
 	AnimationComponent(const std::vector<Animation> &animation, GameObject &owner);
 	void update(SDLState &state, GameState &gs, Resources &res, float deltaTime) override;
 	void setAnimation(int index);
+
+	Subject<int> currentFrameChanged;
 };

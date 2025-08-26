@@ -1,17 +1,34 @@
 #include "rendercomponent.h"
 #include <SDL3/SDL.h>
 
+#include "animationcomponent.h"
 #include "../gameobject.h"
 #include "../sdlstate.h"
 #include "../gamestate.h"
 #include "../resources.h"
+
+RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height, AnimationComponent *animComponent, GameObject &owner)
+	: Component(owner), flashTimer(0.05f)
+{
+	this->texture = texture;
+	shouldFlash = false;
+	this->width = width;
+	this->height = height;
+
+	if (animComponent)
+	{
+		animComponent->currentFrameChanged.addObserver([this](int frame) {
+			this->frameNumber = frame;
+		});
+	}
+}
 
 void RenderComponent::update(SDLState &state, GameState &gs, Resources &res, float deltaTime)
 {
 	//float srcX = owner.currentAnimation != -1
 	//	? owner.animations[owner.currentAnimation].currentFrame() * width
 	//	: (owner.spriteFrame - 1) * width;
-	float srcX = (owner.spriteFrame - 1) * width;
+	float srcX = (frameNumber - 1) * width;
 	SDL_FRect src{
 		.x = srcX,
 		.y = 0,

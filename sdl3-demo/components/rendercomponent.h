@@ -4,6 +4,7 @@
 #include "../timer.h"
 
 struct SDL_Texture;
+class AnimationComponent;
 
 class RenderComponent : public Component
 {
@@ -12,15 +13,10 @@ class RenderComponent : public Component
 	bool shouldFlash;
 	float width;
 	float height;
+	int frameNumber;
 
 public:
-	RenderComponent(SDL_Texture *texture, float width, float height, GameObject &owner) : Component(owner), flashTimer(0.05f)
-	{
-		this->texture = texture;
-		shouldFlash = false;
-		this->width = width;
-		this->height = height;
-	}
+	RenderComponent(SDL_Texture *texture, float width, float height, AnimationComponent *animComponent, GameObject &owner);
 	void update(SDLState &state, GameState &gs, Resources &res, float deltaTime) override;
 
 	void setTexture(SDL_Texture *texture);

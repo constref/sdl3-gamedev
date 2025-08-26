@@ -76,7 +76,6 @@ struct GameObject
 	bool dynamic;
 	bool grounded;
 	SDL_FRect collider;
-	int spriteFrame;
 
 	std::vector<std::shared_ptr<Component>> components;
 
@@ -88,7 +87,6 @@ struct GameObject
 		position = velocity = acceleration = glm::vec2(0);
 		dynamic = false;
 		grounded = false;
-		spriteFrame = 1;
 	}
 
 	void update(SDLState &state, GameState &gs, Resources &res, float deltaTime)
