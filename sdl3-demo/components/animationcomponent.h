@@ -16,7 +16,7 @@ class AnimationComponent : public Component
 
 public:
 	AnimationComponent(const std::vector<Animation> &animation, GameObject &owner);
-	void update(SDLState &state, GameState &gs, Resources &res, float deltaTime) override;
+	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
 
 	Subject<int> currentFrameChanged;

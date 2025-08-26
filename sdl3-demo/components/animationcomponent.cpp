@@ -1,6 +1,7 @@
 #include "animationcomponent.h"
 #include "../animation.h"
 #include "../gameobject.h"
+#include "../framecontext.h"
 
 #include <cassert>
 
@@ -9,11 +10,11 @@ AnimationComponent::AnimationComponent(const std::vector<Animation> &animations,
 	this->animations = animations;
 }
 
-void AnimationComponent::update(SDLState &state, GameState &gs, Resources &res, float deltaTime)
+void AnimationComponent::update(const FrameContext &ctx)
 {
 	if (currentAnimation != NO_ANIMATION)
 	{
-		animations[currentAnimation].step(deltaTime);
+		animations[currentAnimation].step(ctx.deltaTime);
 		frameNumber = animations[currentAnimation].currentFrame() + 1;
 		currentFrameChanged.notify(frameNumber);
 	}

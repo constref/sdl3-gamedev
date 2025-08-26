@@ -1,10 +1,7 @@
 #pragma once
 
 struct GameObject;
-
-struct SDLState;
-struct GameState;
-struct Resources;
+struct FrameContext;
 
 class Component
 {
@@ -14,5 +11,5 @@ protected:
 public:
 	Component(GameObject &owner) : owner(owner) {}
 	virtual ~Component() {}
-	virtual void update(SDLState &state, GameState &gs, Resources &res, float deltaTime) = 0;
+	virtual void update(const FrameContext &ctx) = 0;
 };

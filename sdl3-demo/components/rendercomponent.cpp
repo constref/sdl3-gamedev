@@ -6,6 +6,7 @@
 #include "../sdlstate.h"
 #include "../gamestate.h"
 #include "../resources.h"
+#include "../framecontext.h"
 
 RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height, AnimationComponent *animComponent, GameObject &owner)
 	: Component(owner), flashTimer(0.05f)
@@ -23,7 +24,7 @@ RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height
 	}
 }
 
-void RenderComponent::update(SDLState &state, GameState &gs, Resources &res, float deltaTime)
+void RenderComponent::update(const FrameContext &ctx)
 {
 	//float srcX = owner.currentAnimation != -1
 	//	? owner.animations[owner.currentAnimation].currentFrame() * width
@@ -37,7 +38,7 @@ void RenderComponent::update(SDLState &state, GameState &gs, Resources &res, flo
 	};
 
 	SDL_FRect dst{
-		.x = owner.position.x - gs.mapViewport.x,
+		.x = owner.position.x - ctx.gs.mapViewport.x,
 		.y = owner.position.y,
 		.w = width,
 		.h = height
@@ -46,42 +47,42 @@ void RenderComponent::update(SDLState &state, GameState &gs, Resources &res, flo
 	SDL_FlipMode flipMode = owner.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{
-		SDL_RenderTextureRotated(state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
+		SDL_RenderTextureRotated(ctx.state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
 	}
 	else
 	{
 		// flash object with a redish tint
 		SDL_SetTextureColorModFloat(texture, 2.5f, 1.0f, 1.0f);
-		SDL_RenderTextureRotated(state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
+		SDL_RenderTextureRotated(ctx.state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
 		SDL_SetTextureColorModFloat(texture, 1.0f, 1.0f, 1.0f);
 
-		if (flashTimer.step(deltaTime))
+		if (flashTimer.step(ctx.deltaTime))
 		{
 			shouldFlash = false;
 		}
 	}
 
-	if (gs.debugMode)
+	if (ctx.gs.debugMode)
 	{
 		SDL_FRect rectA{
-			.x = owner.position.x + owner.collider.x - gs.mapViewport.x,
+			.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
 			.y = owner.position.y + owner.collider.y,
 			.w = owner.collider.w,
 			.h = owner.collider.h
 		};
-		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
 
-		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 150);
-		SDL_RenderFillRect(state.renderer, &rectA);
+		SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
+		SDL_RenderFillRect(ctx.state.renderer, &rectA);
 		SDL_FRect sensor{
-			.x = owner.position.x + owner.collider.x - gs.mapViewport.x,
+			.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
 			.y = owner.position.y + owner.collider.y + owner.collider.h,
 			.w = owner.collider.w, .h = 1
 		};
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 150);
-		SDL_RenderFillRect(state.renderer, &sensor);
+		SDL_SetRenderDrawColor(ctx.state.renderer, 0, 0, 255, 150);
+		SDL_RenderFillRect(ctx.state.renderer, &sensor);
 
-		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_NONE);
+		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
 	}
 }
 

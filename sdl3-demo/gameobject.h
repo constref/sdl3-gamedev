@@ -89,11 +89,11 @@ struct GameObject
 		grounded = false;
 	}
 
-	void update(SDLState &state, GameState &gs, Resources &res, float deltaTime)
+	void update(const FrameContext &ctx)
 	{
 		for (auto &comp : components)
 		{
-			comp->update(state, gs, res, deltaTime);
+			comp->update(ctx);
 		}
 	}
 };

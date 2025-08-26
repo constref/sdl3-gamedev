@@ -11,6 +11,7 @@
 #include "gamestate.h"
 #include "components/animationcomponent.h"
 #include "components/rendercomponent.h"
+#include "framecontext.h"
 
 using namespace std;
 
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
 	{
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = (nowTime - prevTime) / 1000.0f;
+		FrameContext ctx(state, gs, res, deltaTime);
 
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
@@ -115,7 +117,7 @@ int main(int argc, char *argv[])
 		{
 			for (GameObject &obj : layer)
 			{
-				obj.update(state, gs, res, deltaTime);
+				obj.update(ctx);
 			}
 		}
 
