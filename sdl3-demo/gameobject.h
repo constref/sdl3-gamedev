@@ -71,18 +71,16 @@ struct GameObject
 	ObjectType type;
 	ObjectData data;
 	glm::vec2 position, velocity, acceleration;
-	float direction;
 	float maxSpeedX;
 	bool dynamic;
 	bool grounded;
 	SDL_FRect collider;
 
-	std::vector<std::shared_ptr<Component>> components;
+	std::vector<std::unique_ptr<Component>> components;
 
 	GameObject() : data{ .level = LevelData() }, collider{ 0 }
 	{
 		type = ObjectType::level;
-		direction = 1;
 		maxSpeedX = 0;
 		position = velocity = acceleration = glm::vec2(0);
 		dynamic = false;

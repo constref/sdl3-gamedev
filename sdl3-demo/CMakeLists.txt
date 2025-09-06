@@ -15,7 +15,14 @@ add_executable (sdl3-demo
 	"gamestate.h"
 	"resources.cpp"
 	"components/animationcomponent.h"
-	"components/animationcomponent.cpp" "components/observer.h" "components/inputcomponent.h" "components/inputcomponent.cpp" "framecontext.h")
+	"components/animationcomponent.cpp"
+	"components/observer.h"
+	"components/inputcomponent.h"
+	"components/inputcomponent.cpp"
+	"framecontext.h"
+	"inputstate.h"
+	"components/physicscomponent.h"
+	"components/physicscomponent.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

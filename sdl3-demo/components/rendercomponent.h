@@ -5,6 +5,7 @@
 
 struct SDL_Texture;
 class AnimationComponent;
+class InputComponent;
 
 class RenderComponent : public Component
 {
@@ -14,9 +15,11 @@ class RenderComponent : public Component
 	float width;
 	float height;
 	int frameNumber;
+	float direction;
 
 public:
-	RenderComponent(SDL_Texture *texture, float width, float height, AnimationComponent *animComponent, GameObject &owner);
+	RenderComponent(SDL_Texture *texture, float width, float height,
+		AnimationComponent *animComponent, InputComponent *inputComponent, GameObject &owner);
 	void update(const FrameContext &ctx) override;
 
 	void setTexture(SDL_Texture *texture);

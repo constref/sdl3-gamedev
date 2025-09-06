@@ -11,23 +11,15 @@
 #include "gamestate.h"
 #include "components/animationcomponent.h"
 #include "components/rendercomponent.h"
+#include "components/inputcomponent.h"
+#include "components/physicscomponent.h"
 #include "framecontext.h"
+#include "inputstate.h"
 
 using namespace std;
 
 bool initialize(SDLState &state);
 void cleanup(SDLState &state);
-void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
-	float width, float height, float deltaTime);
-void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
-void createTiles(const SDLState &state, GameState &gs, const Resources &res);
-bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
-void checkCollision(const SDLState &state, GameState &gs, Resources &res,
-	GameObject &a, GameObject &b, float deltaTime);
-void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
-	SDL_Scancode key, bool keyDown);
-void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
-	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime);
 
 int main(int argc, char *argv[])
 {
@@ -51,12 +43,21 @@ int main(int argc, char *argv[])
 
 	//createTiles(state, gs, res);
 	GameObject player;
+	player.acceleration = glm::vec2(300, 0);
+	player.maxSpeedX = 100;
+	player.dynamic = true;
+
+	auto inputComponent = std::make_unique<InputComponent>(player);
 	auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims, player);
 	animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
-	auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), player);
+	auto physicsComponent = std::make_unique<PhysicsComponent>(inputComponent.get(), player);
+	auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get(), player);
+	player.components.push_back(std::move(inputComponent));
+	player.components.push_back(std::move(physicsComponent));
 	player.components.push_back(std::move(animComponent));
 	player.components.push_back(std::move(renderComponent));
-	gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
+	gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(player));
+	gs.playerIndex = 0;
 
 	uint64_t prevTime = SDL_GetTicks();
 
@@ -64,47 +65,48 @@ int main(int argc, char *argv[])
 
 	// start the game loop
 	bool running = true;
+	InputState inputState;
 	while (running)
 	{
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = (nowTime - prevTime) / 1000.0f;
-		FrameContext ctx(state, gs, res, deltaTime);
+		FrameContext ctx(state, gs, res, inputState, deltaTime);
 
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
-				case SDL_EVENT_QUIT:
+			case SDL_EVENT_QUIT:
+			{
+				running = false;
+				break;
+			}
+			case SDL_EVENT_WINDOW_RESIZED:
+			{
+				state.width = event.window.data1;
+				state.height = event.window.data2;
+				break;
+			}
+			case SDL_EVENT_KEY_DOWN:
+			{
+				inputState.keys[event.key.scancode] = true;
+				break;
+			}
+			case SDL_EVENT_KEY_UP:
+			{
+				inputState.keys[event.key.scancode] = false;
+				if (event.key.scancode == SDL_SCANCODE_F12)
 				{
-					running = false;
-					break;
+					gs.debugMode = !gs.debugMode;
 				}
-				case SDL_EVENT_WINDOW_RESIZED:
+				else if (event.key.scancode == SDL_SCANCODE_F11)
 				{
-					state.width = event.window.data1;
-					state.height = event.window.data2;
-					break;
+					state.fullscreen = !state.fullscreen;
+					SDL_SetWindowFullscreen(state.window, state.fullscreen);
 				}
-				case SDL_EVENT_KEY_DOWN:
-				{
-					//handleKeyInput(state, gs, gs.player(), event.key.scancode, true);
-					break;
-				}
-				case SDL_EVENT_KEY_UP:
-				{
-					//handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
-					if (event.key.scancode == SDL_SCANCODE_F12)
-					{
-						gs.debugMode = !gs.debugMode;
-					}
-					else if (event.key.scancode == SDL_SCANCODE_F11)
-					{
-						state.fullscreen = !state.fullscreen;
-						SDL_SetWindowFullscreen(state.window, state.fullscreen);
-					}
-					break;
-				}
+				break;
+			}
 			}
 		}
 
@@ -182,15 +184,18 @@ int main(int argc, char *argv[])
 			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
 		}
 
+		*/
 		if (gs.debugMode)
 		{
 			// display some debug info
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			//SDL_RenderDebugText(state.renderer, 5, 5,
+			//	std::format("S: {}, B: {}, G: {}",
+			//		static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
 			SDL_RenderDebugText(state.renderer, 5, 5,
 				std::format("S: {}, B: {}, G: {}",
 					static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
 		}
-		*/
 
 		// swap buffers and present
 		SDL_RenderPresent(state.renderer);

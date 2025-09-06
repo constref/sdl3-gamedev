@@ -2,24 +2,38 @@
 #include <SDL3/SDL.h>
 
 #include "animationcomponent.h"
+#include "inputcomponent.h"
 #include "../gameobject.h"
 #include "../sdlstate.h"
 #include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
 
-RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height, AnimationComponent *animComponent, GameObject &owner)
+RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height,
+	AnimationComponent *animComponent, InputComponent *inputComponent, GameObject &owner)
 	: Component(owner), flashTimer(0.05f)
 {
 	this->texture = texture;
 	shouldFlash = false;
 	this->width = width;
 	this->height = height;
+	this->frameNumber = 1;
+	direction = 1;
 
+	// receive frame number updates from the animation component
 	if (animComponent)
 	{
 		animComponent->currentFrameChanged.addObserver([this](int frame) {
 			this->frameNumber = frame;
+		});
+	}
+	if (inputComponent)
+	{
+		inputComponent->directionUpdate.addObserver([this](float direction) {
+			if (direction)
+			{
+				this->direction = direction;
+			}
 		});
 	}
 }
@@ -44,7 +58,7 @@ void RenderComponent::update(const FrameContext &ctx)
 		.h = height
 	};
 
-	SDL_FlipMode flipMode = owner.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+	SDL_FlipMode flipMode = direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{
 		SDL_RenderTextureRotated(ctx.state.renderer, texture, &src, &dst, 0, nullptr, flipMode);

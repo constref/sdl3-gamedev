@@ -8,6 +8,7 @@
 AnimationComponent::AnimationComponent(const std::vector<Animation> &animations, GameObject &owner) : Component(owner)
 {
 	this->animations = animations;
+	this->frameNumber = 1;
 }
 
 void AnimationComponent::update(const FrameContext &ctx)
