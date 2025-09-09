@@ -19,7 +19,16 @@
 using namespace std;
 
 bool initialize(SDLState &state);
+void createTiles(const SDLState &state, GameState &gs, const Resources &res);
 void cleanup(SDLState &state);
+
+GameObject createObject(ObjectType type, Resources &res)
+{
+	if (type == ObjectType::player)
+	{
+	}
+	return GameObject();
+}
 
 int main(int argc, char *argv[])
 {
@@ -40,30 +49,12 @@ int main(int argc, char *argv[])
 
 	// setup game data
 	GameState gs(state.logW, state.logH);
-
-	//createTiles(state, gs, res);
-	GameObject player;
-	player.acceleration = glm::vec2(300, 0);
-	player.maxSpeedX = 100;
-	player.dynamic = true;
-
-	auto inputComponent = std::make_unique<InputComponent>(player);
-	auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims, player);
-	animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
-	auto physicsComponent = std::make_unique<PhysicsComponent>(inputComponent.get(), player);
-	auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get(), player);
-	player.components.push_back(std::move(inputComponent));
-	player.components.push_back(std::move(physicsComponent));
-	player.components.push_back(std::move(animComponent));
-	player.components.push_back(std::move(renderComponent));
-	gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(player));
-	gs.playerIndex = 0;
-
-	uint64_t prevTime = SDL_GetTicks();
+	createTiles(state, gs, res);
 
 	MIX_PlayAudio(nullptr, res.musicMain);
 
 	// start the game loop
+	uint64_t prevTime = SDL_GetTicks();
 	bool running = true;
 	InputState inputState;
 	while (running)
@@ -189,12 +180,8 @@ int main(int argc, char *argv[])
 		{
 			// display some debug info
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			//SDL_RenderDebugText(state.renderer, 5, 5,
-			//	std::format("S: {}, B: {}, G: {}",
-			//		static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
 			SDL_RenderDebugText(state.renderer, 5, 5,
-				std::format("S: {}, B: {}, G: {}",
-					static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded).c_str());
+				std::format("B: {}", gs.bullets.size()).c_str());
 		}
 
 		// swap buffers and present
@@ -682,6 +669,8 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	}
 }
 
+*/
+
 void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 {
 	//1 - Ground
@@ -691,9 +680,9 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	//5 - Grass
 	//6 - Brick
 	short map[MAP_ROWS][MAP_COLS] = {
-		4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 0, 3, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 4, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 0, 3, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 3, 0, 0, 3, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 3, 0, 0, 3, 0, 2, 3, 3, 3, 0, 2, 0, 3, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
@@ -714,87 +703,101 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	};
 
 	const auto loadMap = [&state, &gs, &res](short layer[MAP_ROWS][MAP_COLS])
-	{
-		const auto createObject = [&state](int r, int c, SDL_Texture *tex, ObjectType type)
 		{
-			GameObject o;
-			o.type = type;
-			o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
-			o.texture = tex;
-			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
-			return o;
-		};
-
-		for (int r = 0; r < MAP_ROWS; r++)
-		{
-			for (int c = 0; c < MAP_COLS; c++)
-			{
-				switch (layer[r][c])
+			const auto createObject = [&state](int r, int c)
 				{
+					GameObject o;
+					o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
+					o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
+					return o;
+				};
+
+			for (int r = 0; r < MAP_ROWS; r++)
+			{
+				for (int c = 0; c < MAP_COLS; c++)
+				{
+					switch (layer[r][c])
+					{
 					case 1: // ground
 					{
-						GameObject o = createObject(r, c, res.texGround, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
+						GameObject o = createObject(r, c);
+						gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
 						break;
 					}
 					case 2: // panel
 					{
-						GameObject o = createObject(r, c, res.texPanel, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
+						GameObject o = createObject(r, c);
+						gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
 						break;
 					}
 					case 3: // enemy
 					{
-						GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
-						o.data.enemy = EnemyData();
-						o.currentAnimation = res.ANIM_ENEMY;
-						o.animations = res.enemyAnims;
-						o.collider = SDL_FRect{
-							.x = 10, .y = 4, .w = 12, .h = 28
-						};
-						o.maxSpeedX = 15;
-						o.dynamic = true;
-						gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
+						//GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
+						//o.data.enemy = EnemyData();
+						//o.currentAnimation = res.ANIM_ENEMY;
+						//o.animations = res.enemyAnims;
+						//o.collider = SDL_FRect{
+						//	.x = 10, .y = 4, .w = 12, .h = 28
+						//};
+						//o.maxSpeedX = 15;
+						//o.dynamic = true;
+						//gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
 						break;
 					}
 					case 4: // player
 					{
-						GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
-						player.data.player = PlayerData();
-						player.animations = res.playerAnims;
-						player.currentAnimation = res.ANIM_PLAYER_IDLE;
-						player.acceleration = glm::vec2(300, 0);
-						player.maxSpeedX = 100;
-						player.dynamic = true;
-						player.collider = {
-							.x = 11, .y = 6,
-							.w = 10, .h = 26
-						};
-						gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
-						gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
+						GameObject player = createObject(r, c);
+						auto inputComponent = std::make_unique<InputComponent>();
+						auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims);
+						animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
+						auto physicsComponent = std::make_unique<PhysicsComponent>(inputComponent.get());
+						physicsComponent->setDynamic(true);
+						physicsComponent->setAcceleration(glm::vec2(300, 0));
+						physicsComponent->setMaxSpeed(100);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get());
+
+						player.components.push_back(std::move(inputComponent));
+						player.components.push_back(std::move(physicsComponent));
+						player.components.push_back(std::move(animComponent));
+						player.components.push_back(std::move(renderComponent));
+						gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(player));
+						gs.playerIndex = static_cast<int>(gs.layers[LAYER_IDX_CHARACTERS].size() - 1);
+						//GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
+						//player.data.player = PlayerData();
+						//player.animations = res.playerAnims;
+						//player.currentAnimation = res.ANIM_PLAYER_IDLE;
+						//player.acceleration = glm::vec2(300, 0);
+						//player.maxSpeedX = 100;
+						//player.dynamic = true;
+						//player.collider = {
+						//	.x = 11, .y = 6,
+						//	.w = 10, .h = 26
+						//};
 						break;
 					}
 					case 5: // grass
 					{
-						GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
-						gs.foregroundTiles.push_back(o);
+						GameObject o = createObject(r, c);
+						gs.foregroundTiles.push_back(std::move(o));
 						break;
 					}
 					case 6: // brick
 					{
-						GameObject o = createObject(r, c, res.texBrick, ObjectType::level);
-						gs.backgroundTiles.push_back(o);
+						GameObject o = createObject(r, c);
+						gs.backgroundTiles.push_back(std::move(o));
 						break;
+					}
 					}
 				}
 			}
-		}
-	};
+		};
 	loadMap(map);
 	loadMap(background);
 	loadMap(foreground);
 	assert(gs.playerIndex != -1);
 }
+
+/*
 
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 	SDL_Scancode key, bool keyDown)
@@ -826,7 +829,6 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 		}
 	}
 }
-
 
 void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
 	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime)

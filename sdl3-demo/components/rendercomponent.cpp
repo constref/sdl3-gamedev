@@ -10,8 +10,8 @@
 #include "../framecontext.h"
 
 RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height,
-	AnimationComponent *animComponent, InputComponent *inputComponent, GameObject &owner)
-	: Component(owner), flashTimer(0.05f)
+	AnimationComponent *animComponent, InputComponent *inputComponent)
+	: Component(), flashTimer(0.05f)
 {
 	this->texture = texture;
 	shouldFlash = false;
@@ -38,7 +38,7 @@ RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height
 	}
 }
 
-void RenderComponent::update(const FrameContext &ctx)
+void RenderComponent::update(GameObject &owner, const FrameContext &ctx)
 {
 	//float srcX = owner.currentAnimation != -1
 	//	? owner.animations[owner.currentAnimation].currentFrame() * width

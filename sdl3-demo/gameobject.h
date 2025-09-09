@@ -68,30 +68,21 @@ enum class ObjectType
 
 struct GameObject
 {
-	ObjectType type;
-	ObjectData data;
-	glm::vec2 position, velocity, acceleration;
-	float maxSpeedX;
-	bool dynamic;
-	bool grounded;
+	glm::vec2 position;
 	SDL_FRect collider;
 
 	std::vector<std::unique_ptr<Component>> components;
 
-	GameObject() : data{ .level = LevelData() }, collider{ 0 }
+	GameObject() : collider{ 0 }
 	{
-		type = ObjectType::level;
-		maxSpeedX = 0;
-		position = velocity = acceleration = glm::vec2(0);
-		dynamic = false;
-		grounded = false;
+		position = glm::vec2(0);
 	}
-
+	
 	void update(const FrameContext &ctx)
 	{
 		for (auto &comp : components)
 		{
-			comp->update(ctx);
+			comp->update(*this, ctx);
 		}
 	}
 };

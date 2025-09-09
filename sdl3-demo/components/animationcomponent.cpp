@@ -5,13 +5,13 @@
 
 #include <cassert>
 
-AnimationComponent::AnimationComponent(const std::vector<Animation> &animations, GameObject &owner) : Component(owner)
+AnimationComponent::AnimationComponent(const std::vector<Animation> &animations) : Component()
 {
 	this->animations = animations;
 	this->frameNumber = 1;
 }
 
-void AnimationComponent::update(const FrameContext &ctx)
+void AnimationComponent::update(GameObject &owner, const FrameContext &ctx)
 {
 	if (currentAnimation != NO_ANIMATION)
 	{

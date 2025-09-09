@@ -5,11 +5,8 @@ struct FrameContext;
 
 class Component
 {
-protected:
-	GameObject &owner;
-
 public:
-	Component(GameObject &owner) : owner(owner) {}
+	Component() {}
 	virtual ~Component() {}
-	virtual void update(const FrameContext &ctx) = 0;
+	virtual void update(GameObject &owner, const FrameContext &ctx) = 0;
 };

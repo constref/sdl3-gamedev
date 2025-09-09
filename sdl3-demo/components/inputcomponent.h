@@ -6,8 +6,8 @@
 class InputComponent : public Component
 {
 public:
-	InputComponent(GameObject &owner);
-	void update(const FrameContext &ctx) override;
+	InputComponent();
+	void update(GameObject &owner, const FrameContext &ctx) override;
 
 	Subject<float> directionUpdate;
 };

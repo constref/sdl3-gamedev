@@ -19,8 +19,8 @@ class RenderComponent : public Component
 
 public:
 	RenderComponent(SDL_Texture *texture, float width, float height,
-		AnimationComponent *animComponent, InputComponent *inputComponent, GameObject &owner);
-	void update(const FrameContext &ctx) override;
+		AnimationComponent *animComponent, InputComponent *inputComponent);
+	void update(GameObject &owner, const FrameContext &ctx) override;
 
 	void setTexture(SDL_Texture *texture);
 };
