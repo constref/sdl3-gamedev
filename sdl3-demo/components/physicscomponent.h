@@ -16,7 +16,7 @@ class PhysicsComponent : public Component
 	bool grounded;
 
 public:
-	PhysicsComponent(InputComponent *inputComponent);
+	PhysicsComponent(InputComponent *inputComponent = nullptr);
 	void update(GameObject &owner, const FrameContext &ctx);
 
 	glm::vec2 getVelocity() const { return velocity; }

@@ -705,12 +705,12 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	const auto loadMap = [&state, &gs, &res](short layer[MAP_ROWS][MAP_COLS])
 		{
 			const auto createObject = [&state](int r, int c)
-				{
-					GameObject o;
-					o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
-					o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
-					return o;
-				};
+			{
+				GameObject o;
+				o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
+				o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
+				return o;
+			};
 
 			for (int r = 0; r < MAP_ROWS; r++)
 			{
@@ -721,27 +721,37 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					case 1: // ground
 					{
 						GameObject o = createObject(r, c);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texGround, TILE_SIZE, TILE_SIZE);
+						o.components.push_back(std::move(renderComponent));
 						gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
 						break;
 					}
 					case 2: // panel
 					{
 						GameObject o = createObject(r, c);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texPanel, TILE_SIZE, TILE_SIZE);
+						o.components.push_back(std::move(renderComponent));
 						gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
 						break;
 					}
 					case 3: // enemy
 					{
-						//GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
-						//o.data.enemy = EnemyData();
-						//o.currentAnimation = res.ANIM_ENEMY;
-						//o.animations = res.enemyAnims;
-						//o.collider = SDL_FRect{
-						//	.x = 10, .y = 4, .w = 12, .h = 28
-						//};
-						//o.maxSpeedX = 15;
-						//o.dynamic = true;
-						//gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
+						GameObject enemy = createObject(r, c);
+						auto animComponent = std::make_unique<AnimationComponent>(res.enemyAnims);
+						animComponent->setAnimation(res.ANIM_ENEMY);
+						auto physicsComponent = std::make_unique<PhysicsComponent>();
+						physicsComponent->setDynamic(true);
+						physicsComponent->setAcceleration(glm::vec2(300, 0));
+						physicsComponent->setMaxSpeed(15);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
+
+						enemy.components.push_back(std::move(physicsComponent));
+						enemy.components.push_back(std::move(animComponent));
+						enemy.components.push_back(std::move(renderComponent));
+						enemy.collider = SDL_FRect{
+							.x = 10, .y = 4, .w = 12, .h = 28
+						};
+						gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(enemy));
 						break;
 					}
 					case 4: // player
@@ -762,28 +772,25 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 						player.components.push_back(std::move(renderComponent));
 						gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(player));
 						gs.playerIndex = static_cast<int>(gs.layers[LAYER_IDX_CHARACTERS].size() - 1);
-						//GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
-						//player.data.player = PlayerData();
-						//player.animations = res.playerAnims;
-						//player.currentAnimation = res.ANIM_PLAYER_IDLE;
-						//player.acceleration = glm::vec2(300, 0);
-						//player.maxSpeedX = 100;
-						//player.dynamic = true;
-						//player.collider = {
-						//	.x = 11, .y = 6,
-						//	.w = 10, .h = 26
-						//};
+						player.collider = {
+							.x = 11, .y = 6,
+							.w = 10, .h = 26
+						};
 						break;
 					}
 					case 5: // grass
 					{
 						GameObject o = createObject(r, c);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texGrass, TILE_SIZE, TILE_SIZE);
+						o.components.push_back(std::move(renderComponent));
 						gs.foregroundTiles.push_back(std::move(o));
 						break;
 					}
 					case 6: // brick
 					{
 						GameObject o = createObject(r, c);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texBrick, TILE_SIZE, TILE_SIZE);
+						o.components.push_back(std::move(renderComponent));
 						gs.backgroundTiles.push_back(std::move(o));
 						break;
 					}
