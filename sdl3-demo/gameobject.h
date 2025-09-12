@@ -1,8 +1,10 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
+#include <memory>
 #include <SDL3/SDL.h>
 #include "animation.h"
+#include "components/component.h"
 
 enum class PlayerState
 {
@@ -66,34 +68,21 @@ enum class ObjectType
 
 struct GameObject
 {
-	ObjectType type;
-	ObjectData data;
-	glm::vec2 position, velocity, acceleration;
-	float direction;
-	float maxSpeedX;
-	std::vector<Animation> animations;
-	int currentAnimation;
-	SDL_Texture *texture;
-	bool dynamic;
-	bool grounded;
+	glm::vec2 position;
 	SDL_FRect collider;
-	Timer flashTimer;
-	bool shouldFlash;
-	int spriteFrame;
-	float gravityFactor;
 
-	GameObject() : data{ .level = LevelData() }, collider{ 0 }, flashTimer(0.05f)
+	std::vector<std::unique_ptr<Component>> components;
+
+	GameObject() : collider{ 0 }
 	{
-		type = ObjectType::level;
-		direction = 1;
-		maxSpeedX = 0;
-		position = velocity = acceleration = glm::vec2(0);
-		currentAnimation = -1;
-		texture = nullptr;
-		dynamic = false;
-		grounded = false;
-		shouldFlash = false;
-		spriteFrame = 1;
-		gravityFactor = 1;
+		position = glm::vec2(0);
+	}
+	
+	void update(const FrameContext &ctx)
+	{
+		for (auto &comp : components)
+		{
+			comp->update(*this, ctx);
+		}
 	}
 };

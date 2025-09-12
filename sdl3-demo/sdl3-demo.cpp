@@ -1,7 +1,5 @@
 ﻿#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_image/SDL_image.h>
-#include <SDL3_mixer/SDL_mixer.h>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -9,27 +7,24 @@
 #include <format>
 #include <filesystem>
 
+#include "sdlstate.h"
+#include "resources.h"
 #include "gameobject.h"
-#include "tmx.h"
+#include "gamestate.h"
+#include "components/animationcomponent.h"
+#include "components/rendercomponent.h"
+#include "components/inputcomponent.h"
+#include "components/physicscomponent.h"
+#include "framecontext.h"
+#include "inputstate.h"
 
 using namespace std;
 
-struct SDLState
-{
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-	int width, height, logW, logH;
-	const bool *keys;
-	bool fullscreen;
+bool initialize(SDLState &state);
+void createTiles(const SDLState &state, GameState &gs, const Resources &res);
+void cleanup(SDLState &state);
 
-	SDLState() : keys(SDL_GetKeyboardState(nullptr))
-	{
-		fullscreen = true;
-	}
-};
-
-const int TILE_SIZE = 32;
-
+/*
 struct GameState
 {
 	std::vector<std::vector<GameObject>> layers;
@@ -55,12 +50,6 @@ struct GameState
 	GameObject &player() { return layers[playerLayer][playerIndex]; }
 };
 
-struct TileSetTextures
-{
-	int firstGid;
-	std::vector<SDL_Texture *> textures;
-};
-
 struct Resources
 {
 	const int ANIM_PLAYER_IDLE = 0;
@@ -84,9 +73,6 @@ struct Resources
 	std::vector<Mix_Chunk *> chunks;
 	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
 	Mix_Music *musicMain;
-
-	std::vector<TileSetTextures> tilesetTextures;
-	std::unique_ptr<tmx::Map> map;
 
 	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
 	{
@@ -142,21 +128,6 @@ struct Resources
 
 		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
-		// load the map XML and preload image(s)
-		map = tmx::loadMap("data/maps/largemap.tmx");
-		for (tmx::TileSet &tileSet : map->tileSets)
-		{
-			TileSetTextures tst;
-			tst.firstGid = tileSet.firstgid;
-			tst.textures.reserve(tileSet.tiles.size());
-
-			for (tmx::Tile &tile : tileSet.tiles)
-			{
-				const std::string imagePath = "data/tiles/" + std::filesystem::path(tile.image.source).filename().string();
-				tst.textures.push_back(loadTexture(state.renderer, imagePath));
-			}
-			tilesetTextures.push_back(std::move(tst));
-		}
 	}
 
 	void unload()
@@ -174,19 +145,7 @@ struct Resources
 		Mix_FreeMusic(musicMain);
 	}
 };
-
-bool initialize(SDLState &state);
-void cleanup(SDLState &state);
-void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float width, float height, float deltaTime);
-void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
-void createTiles(const SDLState &state, GameState &gs, const Resources &res);
-bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
-void checkCollision(const SDLState &state, GameState &gs, Resources &res,
-	GameObject &a, GameObject &b, float deltaTime);
-void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
-	SDL_Scancode key, bool keyDown);
-void drawParalaxBackground(const SDLState &state, const GameState &gs, SDL_Texture *texture,
-	float xVelocity, float &scrollPos, float scrollFactor, float deltaTime);
+*/
 
 int main(int argc, char *argv[])
 {
@@ -203,22 +162,23 @@ int main(int argc, char *argv[])
 
 	// load game assets
 	Resources res;
-	res.load(state);
+	res.load(state.renderer);
 
 	// setup game data
-	GameState gs(state);
+	GameState gs(state.logW, state.logH);
 	createTiles(state, gs, res);
-	uint64_t prevTime = SDL_GetTicks();
 
-	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
-	//Mix_PlayMusic(res.musicMain, -1);
+	MIX_PlayAudio(nullptr, res.musicMain);
 
 	// start the game loop
+	uint64_t prevTime = SDL_GetTicks();
 	bool running = true;
+	InputState inputState;
 	while (running)
 	{
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = (nowTime - prevTime) / 1000.0f;
+		FrameContext ctx(state, gs, res, inputState, deltaTime);
 
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
@@ -238,12 +198,12 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					handleKeyInput(state, gs, gs.player(), event.key.scancode, true);
+					inputState.keys[event.key.scancode] = true;
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
 				{
-					handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
+					inputState.keys[event.key.scancode] = false;
 					if (event.key.scancode == SDL_SCANCODE_F12)
 					{
 						gs.debugMode = !gs.debugMode;
@@ -258,35 +218,27 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		// update all objects
-		for (auto &layer : gs.layers)
-		{
-			for (GameObject &obj : layer)
-			{
-				if (obj.dynamic)
-				{
-					update(state, gs, res, obj, deltaTime);
-				}
-			}
-		}
-
-		// update bullets
-		for (GameObject &bullet : gs.bullets)
-		{
-			update(state, gs, res, bullet, deltaTime);
-		}
-
-		const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
-		const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
+		// perform drawing commands
+		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+		SDL_RenderClear(state.renderer);
 
 		// calculate viewport position
 		gs.mapViewport.x = (gs.player().position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
 		gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
 
-		// perform drawing commands
-		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-		SDL_RenderClear(state.renderer);
+		// update all objects
+		for (auto &layer : gs.layers)
+		{
+			for (GameObject &obj : layer)
+			{
+				obj.update(ctx);
+			}
+		}
 
+		const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
+		const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
+
+		/*
 		// draw background images
 		SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
 		drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
@@ -296,14 +248,26 @@ int main(int argc, char *argv[])
 		drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
 			gs.bg2Scroll, 0.3f, deltaTime);
 
+		// draw background tiles
+		//for (GameObject &obj : gs.backgroundTiles)
+		//{
+		//	SDL_FRect dst{
+		//		.x = obj.position.x - gs.mapViewport.x,
+		//		.y = obj.position.y,
+		//		.w = static_cast<float>(obj.texture->w),
+		//		.h = static_cast<float>(obj.texture->h)
+		//	};
+		//	SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+		//}
+
 		// draw all objects
-		for (auto &layer : gs.layers)
-		{
-			for (GameObject &obj : layer)
-			{
-				drawObject(state, gs, obj, res.map->tileWidth, res.map->tileHeight, deltaTime);
-			}
-		}
+		//for (auto &layer : gs.layers)
+		//{
+		//	for (GameObject &obj : layer)
+		//	{
+		//		drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
+		//	}
+		//}
 
 		// draw bullets
 		for (GameObject &bullet : gs.bullets)
@@ -314,13 +278,25 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		// draw foreground tiles
+		for (GameObject &obj : gs.foregroundTiles)
+		{
+			SDL_FRect dst{
+				.x = obj.position.x - gs.mapViewport.x,
+				.y = obj.position.y,
+				.w = static_cast<float>(obj.texture->w),
+				.h = static_cast<float>(obj.texture->h)
+			};
+			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+		}
+
+		*/
 		if (gs.debugMode)
 		{
 			// display some debug info
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
 			SDL_RenderDebugText(state.renderer, 5, 5,
-				std::format("S: {}, B: {}, G: {}, VP({:.1f}, {:.1f}), DT: {}",
-					static_cast<int>(gs.player().data.player.state), gs.bullets.size(), gs.player().grounded, gs.mapViewport.x, gs.mapViewport.y, deltaTime).c_str());
+				std::format("B: {}", gs.bullets.size()).c_str());
 		}
 
 		// swap buffers and present
@@ -366,7 +342,7 @@ bool initialize(SDLState &state)
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	// initialize the SDL_mixer library
-	if (!Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr))
+	if (!MIX_Init())
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
 		cleanup(state);
@@ -385,68 +361,7 @@ void cleanup(SDLState &state)
 	SDL_Quit();
 }
 
-void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float width, float height, float deltaTime)
-{
-	SDL_FRect src{
-		.x = 0,
-		.y = 0,
-		.w = width,
-		.h = height
-	};
-	src.x = obj.currentAnimation != -1
-		? obj.animations[obj.currentAnimation].currentFrame() * width
-		: (obj.spriteFrame - 1) * width;
-	src.y = 0;
-
-	SDL_FRect dst{
-		.x = obj.position.x - gs.mapViewport.x,
-		.y = obj.position.y - gs.mapViewport.y,
-		.w = width,
-		.h = height
-	};
-
-	SDL_FlipMode flipMode = obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-	if (!obj.shouldFlash)
-	{
-		SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr, flipMode);
-	}
-	else
-	{
-		// flash object with a redish tint
-		SDL_SetTextureColorModFloat(obj.texture, 2.5f, 1.0f, 1.0f);
-		SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr, flipMode);
-		SDL_SetTextureColorModFloat(obj.texture, 1.0f, 1.0f, 1.0f);
-
-		if (obj.flashTimer.step(deltaTime))
-		{
-			obj.shouldFlash = false;
-		}
-	}
-
-	if (gs.debugMode)
-	{
-		SDL_FRect rectA{
-			.x = obj.position.x + obj.collider.x - gs.mapViewport.x,
-			.y = obj.position.y + obj.collider.y - gs.mapViewport.y,
-			.w = obj.collider.w,
-			.h = obj.collider.h
-		};
-		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_BLEND);
-
-		SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 150);
-		SDL_RenderFillRect(state.renderer, &rectA);
-		SDL_FRect sensor{
-			.x = obj.position.x + obj.collider.x - gs.mapViewport.x,
-			.y = obj.position.y + obj.collider.y + obj.collider.h - gs.mapViewport.y,
-			.w = obj.collider.w, .h = 1
-		};
-		SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 150);
-		SDL_RenderFillRect(state.renderer, &sensor);
-
-		SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_NONE);
-	}
-}
-
+/*
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime)
 {
 	// update the animation
@@ -536,7 +451,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						gs.bullets.push_back(bullet);
 					}
 
-					Mix_PlayChannel(-1, res.chunkShoot, 0);
+					MIX_PlayAudio(nullptr, res.audioShoot);
 				}
 			}
 			else
@@ -686,7 +601,8 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	obj.position += obj.velocity * deltaTime;
 
 	// handle collision detection
-	bool foundGround = false;
+	bool wasGrounded = obj.grounded;
+	obj.grounded = false;
 	for (auto &layer : gs.layers)
 	{
 		for (GameObject &objB : layer)
@@ -695,41 +611,16 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 				objB.collider.w != 0 && objB.collider.h != 0)
 			{
 				checkCollision(state, gs, res, obj, objB, deltaTime);
-
-				if (objB.type == ObjectType::level)
-				{
-					// grounded sensor
-					SDL_FRect sensor{
-						.x = obj.position.x + obj.collider.x,
-						.y = obj.position.y + obj.collider.y + obj.collider.h,
-						.w = obj.collider.w, .h = 1
-					};
-					SDL_FRect rectB{
-						.x = objB.position.x + objB.collider.x,
-						.y = objB.position.y + objB.collider.y,
-						.w = objB.collider.w, .h = objB.collider.h
-					};
-
-					glm::vec2 resolution{ 0 };
-					if (intersectAABB(sensor, rectB, resolution))
-					{
-						// if we're colliding on the bottom
-						if (resolution.y < resolution.x)
-						{
-							foundGround = true;
-						}
-					}
-				}
 			}
 		}
 	}
-	if (obj.grounded != foundGround)
+	// collision response updates obj.grounded to new state
+	if (obj.grounded && !wasGrounded)
 	{
-		if (foundGround && obj.type == ObjectType::player)
+		if (obj.grounded && obj.type == ObjectType::player)
 		{
 			obj.data.player.state = PlayerState::running;
 		}
-		obj.grounded = foundGround;
 	}
 }
 
@@ -757,6 +648,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			if (objA.position.y < objB.position.y) // from top
 			{
 				objA.position.y -= overlap.y;
+				objA.grounded = true;
 			}
 			else // from bottom
 			{
@@ -800,7 +692,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 				{
 					case ObjectType::level:
 					{
-						Mix_PlayChannel(-1, res.chunkShootHit, 0);
+						MIX_PlayAudio(nullptr, res.audioShootHit);
 						break;
 					}
 					case ObjectType::enemy:
@@ -822,7 +714,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 								objB.texture = res.texEnemyDie;
 								objB.currentAnimation = res.ANIM_ENEMY_DIE;
 							}
-							Mix_PlayChannel(-1, res.chunkEnemyHit, 0);
+							MIX_PlayAudio(nullptr, res.audioEnemyHit);
 						}
 						else
 						{
@@ -846,10 +738,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 	else if (objA.type == ObjectType::enemy)
 	{
-		if (objA.data.enemy.state != EnemyState::dead)
-		{
-			genericResponse();
-		}
+		genericResponse();
 	}
 }
 
@@ -865,7 +754,7 @@ bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
 	const float maxYB = b.y + b.h;
 
 	if ((minXA < maxXB && maxXA > minXB) &&
-		(minYA < maxYB && maxYA > minYB))
+		(minYA <= maxYB && maxYA >= minYB))
 	{
 		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
 		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
@@ -898,6 +787,8 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	}
 }
 
+*/
+
 void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 {
 	struct LayerVisitor
@@ -908,14 +799,12 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 
 		LayerVisitor(const SDLState &state, GameState &gs, const Resources &res) : state(state), gs(gs), res(res) {}
 
-		auto createObject(int r, int c, SDL_Texture *tex, ObjectType type)
+		auto createObject(int r, int c)
 		{
 			GameObject o;
-			o.type = type;
 			o.position = glm::vec2(
 				c * res.map->tileWidth,
 				r * res.map->tileHeight);
-			o.texture = tex;
 			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
 			return o;
 		}
@@ -933,16 +822,19 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 						const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
 							[tGid](const TileSetTextures &tst) {
 								return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size();
-						});
+							});
 						const TileSetTextures &tst = *itr;
 						SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
 
-						auto tile = createObject(r, c, tex, ObjectType::level);
+						auto tile = createObject(r, c);
+						auto renderComponent = std::make_unique<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE);
+						renderComponent->setTexture(tex);
+						tile.components.push_back(std::move(renderComponent));
 						if (layer.name != "Level")
 						{
 							tile.collider.w = tile.collider.h = 0;
 						}
-						newLayer.push_back(tile);
+						newLayer.push_back(std::move(tile));
 					}
 				}
 			}
@@ -959,35 +851,48 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 
 				if (obj.type == "Player")
 				{
-					GameObject player = createObject(1, 1, res.texIdle, ObjectType::player);
+					GameObject player;
 					player.position = objPos;
-					player.data.player = PlayerData();
-					player.animations = res.playerAnims;
-					player.currentAnimation = res.ANIM_PLAYER_IDLE;
-					player.acceleration = glm::vec2(300, 0);
-					player.maxSpeedX = 100;
-					player.dynamic = true;
+					auto inputComponent = std::make_unique<InputComponent>();
+					auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims);
+					animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
+					auto physicsComponent = std::make_unique<PhysicsComponent>(inputComponent.get());
+					physicsComponent->setDynamic(true);
+					physicsComponent->setAcceleration(glm::vec2(300, 0));
+					physicsComponent->setMaxSpeed(100);
+					auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get());
+
+					player.components.push_back(std::move(inputComponent));
+					player.components.push_back(std::move(physicsComponent));
+					player.components.push_back(std::move(animComponent));
+					player.components.push_back(std::move(renderComponent));
 					player.collider = {
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
 					};
-					gs.playerIndex = newLayer.size();
-					gs.playerLayer = gs.layers.size();
-					newLayer.push_back(player);
+					gs.playerIndex = static_cast<int>(newLayer.size());
+					gs.playerLayer = static_cast<int>(gs.layers.size());
+					newLayer.push_back(std::move(player));
 				}
 				else if (obj.type == "Enemy")
 				{
-					GameObject enemy = createObject(1, 1, res.texEnemy, ObjectType::enemy);
+					GameObject enemy;
 					enemy.position = objPos;
-					enemy.data.enemy = EnemyData();
-					enemy.currentAnimation = res.ANIM_ENEMY;
-					enemy.animations = res.enemyAnims;
+					auto animComponent = std::make_unique<AnimationComponent>(res.enemyAnims);
+					animComponent->setAnimation(res.ANIM_ENEMY);
+					auto physicsComponent = std::make_unique<PhysicsComponent>();
+					physicsComponent->setDynamic(true);
+					physicsComponent->setAcceleration(glm::vec2(300, 0));
+					physicsComponent->setMaxSpeed(15);
+					auto renderComponent = std::make_unique<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
+
+					enemy.components.push_back(std::move(physicsComponent));
+					enemy.components.push_back(std::move(animComponent));
+					enemy.components.push_back(std::move(renderComponent));
 					enemy.collider = SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = 28
 					};
-					enemy.maxSpeedX = 15;
-					enemy.dynamic = true;
-					newLayer.push_back(enemy);
+					newLayer.push_back(std::move(enemy));
 				}
 			}
 			gs.layers.push_back(std::move(newLayer));
@@ -999,7 +904,60 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	{
 		std::visit(visitor, layer);
 	}
+
+	//for (int r = 0; r < MAP_ROWS; r++)
+	//{
+	//	for (int c = 0; c < MAP_COLS; c++)
+	//	{
+	//		switch (layer[r][c])
+	//		{
+	//		case 1: // ground
+	//		{
+	//			GameObject o = createObject(r, c);
+	//			auto renderComponent = std::make_unique<RenderComponent>(res.texGround, TILE_SIZE, TILE_SIZE);
+	//			o.components.push_back(std::move(renderComponent));
+	//			gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
+	//			break;
+	//		}
+	//		case 2: // panel
+	//		{
+	//			GameObject o = createObject(r, c);
+	//			auto renderComponent = std::make_unique<RenderComponent>(res.texPanel, TILE_SIZE, TILE_SIZE);
+	//			o.components.push_back(std::move(renderComponent));
+	//			gs.layers[LAYER_IDX_LEVEL].push_back(std::move(o));
+	//			break;
+	//		}
+	//		case 3: // enemy
+	//		{
+	//			gs.layers[LAYER_IDX_CHARACTERS].push_back(std::move(enemy));
+	//			break;
+	//		}
+	//		case 4: // player
+	//		{
+	//			break;
+	//		}
+	//		case 5: // grass
+	//		{
+	//			GameObject o = createObject(r, c);
+	//			auto renderComponent = std::make_unique<RenderComponent>(res.texGrass, TILE_SIZE, TILE_SIZE);
+	//			o.components.push_back(std::move(renderComponent));
+	//			gs.foregroundTiles.push_back(std::move(o));
+	//			break;
+	//		}
+	//		case 6: // brick
+	//		{
+	//			GameObject o = createObject(r, c);
+	//			auto renderComponent = std::make_unique<RenderComponent>(res.texBrick, TILE_SIZE, TILE_SIZE);
+	//			o.components.push_back(std::move(renderComponent));
+	//			gs.backgroundTiles.push_back(std::move(o));
+	//			break;
+	//		}
+	//		}
+	//	}
+	//}
 }
+
+/*
 
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 	SDL_Scancode key, bool keyDown)
@@ -1045,3 +1003,5 @@ void drawParalaxBackground(const SDLState &state, const GameState &gs, SDL_Textu
 
 	SDL_RenderTextureTiled(state.renderer, texture, nullptr, 1, &dst);
 }
+
+*/
