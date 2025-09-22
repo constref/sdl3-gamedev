@@ -10,6 +10,10 @@ class Subject
 	std::vector<Observer> observers;
 
 public:
+	void operator+=(const Observer &observer)
+	{
+		addObserver(observer);
+	}
 	void addObserver(const Observer &observer)
 	{
 		observers.push_back(observer);

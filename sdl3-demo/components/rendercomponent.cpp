@@ -9,9 +9,9 @@
 #include "../resources.h"
 #include "../framecontext.h"
 
-RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height,
-	AnimationComponent *animComponent, InputComponent *inputComponent)
-	: Component(), flashTimer(0.05f)
+RenderComponent::RenderComponent(std::shared_ptr<GameObject> owner, SDL_Texture *texture,
+	float width, float height, AnimationComponent *animComponent, InputComponent *inputComponent)
+	: Component(owner), flashTimer(0.05f)
 {
 	this->texture = texture;
 	shouldFlash = false;
@@ -25,7 +25,7 @@ RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height
 	{
 		animComponent->currentFrameChanged.addObserver([this](int frame) {
 			this->frameNumber = frame;
-		});
+			});
 	}
 	if (inputComponent)
 	{
@@ -34,11 +34,11 @@ RenderComponent::RenderComponent(SDL_Texture *texture, float width, float height
 			{
 				this->direction = direction;
 			}
-		});
+			});
 	}
 }
 
-void RenderComponent::update(GameObject &owner, const FrameContext &ctx)
+void RenderComponent::update(const FrameContext &ctx)
 {
 	//float srcX = owner.currentAnimation != -1
 	//	? owner.animations[owner.currentAnimation].currentFrame() * width
@@ -51,13 +51,17 @@ void RenderComponent::update(GameObject &owner, const FrameContext &ctx)
 		.h = height
 	};
 
-	SDL_FRect dst{
-		.x = owner.position.x - ctx.gs.mapViewport.x,
-		.y = owner.position.y - ctx.gs.mapViewport.y,
-		.w = width,
-		.h = height
-	};
+	SDL_FRect dst{ 0 };
+	if (auto o = owner.lock())
+	{
+		dst = SDL_FRect{
+			.x = o->position.x - ctx.gs.mapViewport.x,
+			.y = o->position.y - ctx.gs.mapViewport.y,
+			.w = width,
+			.h = height
+		};
 
+	}
 	SDL_FlipMode flipMode = direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{
@@ -76,6 +80,7 @@ void RenderComponent::update(GameObject &owner, const FrameContext &ctx)
 		}
 	}
 
+	/*
 	if (ctx.gs.debugMode)
 	{
 		SDL_FRect rectA{
@@ -98,6 +103,7 @@ void RenderComponent::update(GameObject &owner, const FrameContext &ctx)
 
 		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
 	}
+	*/
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

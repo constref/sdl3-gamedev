@@ -6,8 +6,8 @@
 class InputComponent : public Component
 {
 public:
-	InputComponent();
-	void update(GameObject &owner, const FrameContext &ctx) override;
+	InputComponent(std::shared_ptr<GameObject> owner);
+	void update(const FrameContext &ctx) override;
 
 	Subject<float> directionUpdate;
 };

@@ -15,8 +15,8 @@ class AnimationComponent : public Component
 	int frameNumber;
 
 public:
-	AnimationComponent(const std::vector<Animation> &animation);
-	void update(GameObject &owner, const FrameContext &ctx) override;
+	AnimationComponent(std::shared_ptr<GameObject> owner, const std::vector<Animation> &animation);
+	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
 
 	Subject<int> currentFrameChanged;

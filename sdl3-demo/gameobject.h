@@ -69,11 +69,10 @@ enum class ObjectType
 struct GameObject
 {
 	glm::vec2 position;
-	SDL_FRect collider;
 
 	std::vector<std::unique_ptr<Component>> components;
 
-	GameObject() : collider{ 0 }
+	GameObject()
 	{
 		position = glm::vec2(0);
 	}
@@ -82,7 +81,7 @@ struct GameObject
 	{
 		for (auto &comp : components)
 		{
-			comp->update(*this, ctx);
+			comp->update(ctx);
 		}
 	}
 };

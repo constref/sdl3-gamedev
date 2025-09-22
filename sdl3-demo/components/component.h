@@ -1,12 +1,17 @@
 #pragma once
 
+#include <memory>
+
 struct GameObject;
 struct FrameContext;
 
 class Component
 {
+protected:
+	std::weak_ptr<GameObject> owner;
+
 public:
-	Component() {}
+	Component(std::shared_ptr<GameObject> owner) : owner(owner) {}
 	virtual ~Component() {}
-	virtual void update(GameObject &owner, const FrameContext &ctx) = 0;
+	virtual void update(const FrameContext &ctx) = 0;
 };

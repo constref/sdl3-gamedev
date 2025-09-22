@@ -16,8 +16,8 @@ class PhysicsComponent : public Component
 	bool grounded;
 
 public:
-	PhysicsComponent(InputComponent *inputComponent = nullptr);
-	void update(GameObject &owner, const FrameContext &ctx);
+	PhysicsComponent(std::shared_ptr<GameObject> owner, InputComponent *inputComponent = nullptr);
+	void update(const FrameContext &ctx);
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel)

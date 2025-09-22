@@ -3,7 +3,7 @@
 #include "../framecontext.h"
 #include "../gameobject.h"
 
-PhysicsComponent::PhysicsComponent(InputComponent *inputComponent) : Component()
+PhysicsComponent::PhysicsComponent(std::shared_ptr<GameObject> owner, InputComponent *inputComponent) : Component(owner)
 {
 	direction = 1;
 	maxSpeedX = 0;
@@ -19,8 +19,15 @@ PhysicsComponent::PhysicsComponent(InputComponent *inputComponent) : Component()
 	}
 }
 
-void PhysicsComponent::update(GameObject &owner, const FrameContext &ctx)
+void PhysicsComponent::update(const FrameContext &ctx)
 {
+	// apply some gravity
+	if (dynamic && !grounded)
+	{
+		velocity += glm::vec2(0, 500) * ctx.deltaTime;
+	}
+
+	// horizontal movement
 	if (direction)
 	{
 		velocity += direction * acceleration * ctx.deltaTime;
@@ -47,6 +54,9 @@ void PhysicsComponent::update(GameObject &owner, const FrameContext &ctx)
 		}
 
 	}
-	owner.position += velocity * ctx.deltaTime;
+	if (auto o = owner.lock())
+	{
+		o->position += velocity * ctx.deltaTime;
+	}
 }
 

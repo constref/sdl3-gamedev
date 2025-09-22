@@ -15,6 +15,7 @@
 #include "components/rendercomponent.h"
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
+#include "components/collisioncomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
 
@@ -223,15 +224,15 @@ int main(int argc, char *argv[])
 		SDL_RenderClear(state.renderer);
 
 		// calculate viewport position
-		gs.mapViewport.x = (gs.player().position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
+		gs.mapViewport.x = (gs.player()->position.x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
 		gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
 
 		// update all objects
 		for (auto &layer : gs.layers)
 		{
-			for (GameObject &obj : layer)
+			for (auto obj : layer)
 			{
-				obj.update(ctx);
+				obj->update(ctx);
 			}
 		}
 
@@ -742,26 +743,6 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 }
 
-bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
-{
-	const float minXA = a.x;
-	const float maxXA = a.x + a.w;
-	const float minYA = a.y;
-	const float maxYA = a.y + a.h;
-	const float minXB = b.x;
-	const float maxXB = b.x + b.w;
-	const float minYB = b.y;
-	const float maxYB = b.y + b.h;
-
-	if ((minXA < maxXB && maxXA > minXB) &&
-		(minYA <= maxYB && maxYA >= minYB))
-	{
-		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
-		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
-		return true;
-	}
-	return false;
-}
 
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime)
@@ -801,17 +782,16 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 
 		auto createObject(int r, int c)
 		{
-			GameObject o;
-			o.position = glm::vec2(
+			std::shared_ptr<GameObject> obj = std::make_shared<GameObject>();
+			obj->position = glm::vec2(
 				c * res.map->tileWidth,
 				r * res.map->tileHeight);
-			o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
-			return o;
+			return obj;
 		}
 
 		void operator()(tmx::Layer &layer) // Tile layers
 		{
-			std::vector<GameObject> newLayer;
+			std::vector<std::shared_ptr<GameObject>> newLayer;
 			for (int r = 0; r < res.map->mapHeight; ++r)
 			{
 				for (int c = 0; c < res.map->mapWidth; ++c)
@@ -827,22 +807,29 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 						SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
 
 						auto tile = createObject(r, c);
-						auto renderComponent = std::make_unique<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE);
+						auto renderComponent = std::make_unique<RenderComponent>(tile, res.texEnemy, TILE_SIZE, TILE_SIZE);
 						renderComponent->setTexture(tex);
-						tile.components.push_back(std::move(renderComponent));
-						if (layer.name != "Level")
+						tile->components.push_back(std::move(renderComponent));
+						// only level tiles get a collision component
+						if (layer.name == "Level")
 						{
-							tile.collider.w = tile.collider.h = 0;
+							auto collisionComponent = std::make_unique<CollisionComponent>(tile);
+							collisionComponent->setCollider(SDL_FRect{
+								.x = 0, .y = 0,
+								.w = static_cast<float>(res.map->tileWidth),
+								.h = static_cast<float>(res.map->tileHeight)
+							});
+							tile->components.push_back(std::move(collisionComponent));
 						}
-						newLayer.push_back(std::move(tile));
+						newLayer.push_back(tile);
 					}
 				}
 			}
-			gs.layers.push_back(std::move(newLayer));
+			gs.layers.push_back(newLayer);
 		}
 		void operator()(tmx::ObjectGroup &objectGroup) // Object layers
 		{
-			std::vector<GameObject> newLayer;
+			std::vector<std::shared_ptr<GameObject>> newLayer;
 			for (tmx::LayerObject &obj : objectGroup.objects)
 			{
 				glm::vec2 objPos(
@@ -851,48 +838,66 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 
 				if (obj.type == "Player")
 				{
-					GameObject player;
-					player.position = objPos;
-					auto inputComponent = std::make_unique<InputComponent>();
-					auto animComponent = std::make_unique<AnimationComponent>(res.playerAnims);
+					auto player = std::make_shared<GameObject>();
+					player->position = objPos;
+					auto inputComponent = std::make_unique<InputComponent>(player);
+					auto animComponent = std::make_unique<AnimationComponent>(player, res.playerAnims);
 					animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
-					auto physicsComponent = std::make_unique<PhysicsComponent>(inputComponent.get());
+					auto physicsComponent = std::make_unique<PhysicsComponent>(player, inputComponent.get());
 					physicsComponent->setDynamic(true);
 					physicsComponent->setAcceleration(glm::vec2(300, 0));
 					physicsComponent->setMaxSpeed(100);
-					auto renderComponent = std::make_unique<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get());
-
-					player.components.push_back(std::move(inputComponent));
-					player.components.push_back(std::move(physicsComponent));
-					player.components.push_back(std::move(animComponent));
-					player.components.push_back(std::move(renderComponent));
-					player.collider = {
+					auto renderComponent = std::make_unique<RenderComponent>(player, res.texIdle, TILE_SIZE, TILE_SIZE, animComponent.get(), inputComponent.get());
+					auto collisionComponent = std::make_unique<CollisionComponent>(player);
+					collisionComponent->setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
-					};
+					});
+
+					auto *physicsComponentPtr = physicsComponent.get();
+					collisionComponent->setOnCollision([player, physicsComponentPtr](std::shared_ptr<GameObject> other, glm::vec2 overlap) {
+						glm::vec2 vel = physicsComponentPtr->getVelocity();
+						if (overlap.x < overlap.y)
+						{
+							vel.x = 0;
+						}
+						else
+						{
+							vel.y = 0;
+						}
+						physicsComponentPtr->setVelocity(vel);
+					});
+
+					player->components.push_back(std::move(inputComponent));
+					player->components.push_back(std::move(physicsComponent));
+					player->components.push_back(std::move(collisionComponent));
+					player->components.push_back(std::move(animComponent));
+					player->components.push_back(std::move(renderComponent));
 					gs.playerIndex = static_cast<int>(newLayer.size());
 					gs.playerLayer = static_cast<int>(gs.layers.size());
-					newLayer.push_back(std::move(player));
+					newLayer.push_back(player);
 				}
 				else if (obj.type == "Enemy")
 				{
-					GameObject enemy;
-					enemy.position = objPos;
-					auto animComponent = std::make_unique<AnimationComponent>(res.enemyAnims);
+					auto enemy = std::make_shared<GameObject>();
+					enemy->position = objPos;
+					auto animComponent = std::make_unique<AnimationComponent>(enemy, res.enemyAnims);
 					animComponent->setAnimation(res.ANIM_ENEMY);
-					auto physicsComponent = std::make_unique<PhysicsComponent>();
+					auto physicsComponent = std::make_unique<PhysicsComponent>(enemy);
 					physicsComponent->setDynamic(true);
 					physicsComponent->setAcceleration(glm::vec2(300, 0));
 					physicsComponent->setMaxSpeed(15);
-					auto renderComponent = std::make_unique<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
-
-					enemy.components.push_back(std::move(physicsComponent));
-					enemy.components.push_back(std::move(animComponent));
-					enemy.components.push_back(std::move(renderComponent));
-					enemy.collider = SDL_FRect{
+					auto renderComponent = std::make_unique<RenderComponent>(enemy, res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
+					auto collisionComponent = std::make_unique<CollisionComponent>(enemy);
+					collisionComponent->setCollider(SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = 28
-					};
-					newLayer.push_back(std::move(enemy));
+					});
+
+					enemy->components.push_back(std::move(physicsComponent));
+					enemy->components.push_back(std::move(animComponent));
+					enemy->components.push_back(std::move(renderComponent));
+					enemy->components.push_back(std::move(collisionComponent));
+					newLayer.push_back(enemy);
 				}
 			}
 			gs.layers.push_back(std::move(newLayer));

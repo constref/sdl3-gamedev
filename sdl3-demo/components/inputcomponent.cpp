@@ -5,11 +5,11 @@
 #include "../framecontext.h"
 #include "../inputstate.h"
 
-InputComponent::InputComponent() : Component()
+InputComponent::InputComponent(std::shared_ptr<GameObject> owner) : Component(owner)
 {
 }
 
-void InputComponent::update(GameObject &owner, const FrameContext &ctx)
+void InputComponent::update(const FrameContext &ctx)
 {
 	float direction = 0;
 	if (ctx.input.keys[SDL_SCANCODE_A])

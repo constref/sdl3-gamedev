@@ -9,7 +9,7 @@ const float TILE_SIZE = 32;
 
 struct GameState
 {
-	std::vector<std::vector<GameObject>> layers;
+	std::vector<std::vector<std::shared_ptr<GameObject>>> layers;
 	std::vector<GameObject> backgroundTiles;
 	std::vector<GameObject> foregroundTiles;
 	std::vector<GameObject> bullets;
@@ -32,6 +32,6 @@ struct GameState
 		debugMode = false;
 	}
 
-	GameObject &player() { return layers[playerLayer][playerIndex]; }
+	std::shared_ptr<GameObject> &player() { return layers[playerLayer][playerIndex]; }
 };
 
