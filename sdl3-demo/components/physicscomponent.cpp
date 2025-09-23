@@ -2,6 +2,7 @@
 #include "inputcomponent.h"
 #include "../framecontext.h"
 #include "../gameobject.h"
+#include "../events.h"
 
 PhysicsComponent::PhysicsComponent(std::shared_ptr<GameObject> owner, InputComponent *inputComponent) : Component(owner)
 {
@@ -15,7 +16,7 @@ PhysicsComponent::PhysicsComponent(std::shared_ptr<GameObject> owner, InputCompo
 	{
 		inputComponent->directionUpdate.addObserver([this](float direction) {
 			this->direction = direction;
-			});
+		});
 	}
 }
 
@@ -57,6 +58,28 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	if (auto o = owner.lock())
 	{
 		o->position += velocity * ctx.deltaTime;
+	}
+}
+
+void PhysicsComponent::eventHandler(int eventId)
+{
+	switch (eventId)
+	{
+		case static_cast<int>(Events::landed):
+		{
+			grounded = true;
+			velocity.y = 0;
+			break;
+		}
+		case static_cast<int>(Events::jump):
+		{
+			if (grounded)
+			{
+				grounded = false;
+				velocity.y = -200;
+			}
+			break;
+		}
 	}
 }
 

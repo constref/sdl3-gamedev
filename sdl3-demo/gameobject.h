@@ -61,11 +61,6 @@ union ObjectData
 	BulletData bullet;
 };
 
-enum class ObjectType
-{
-	player, level, enemy, bullet
-};
-
 struct GameObject
 {
 	glm::vec2 position;
@@ -75,6 +70,14 @@ struct GameObject
 	GameObject()
 	{
 		position = glm::vec2(0);
+	}
+
+	void notify(int eventId)
+	{
+		for (auto &comp : components)
+		{
+			comp->eventHandler(eventId);
+		}
 	}
 	
 	void update(const FrameContext &ctx)

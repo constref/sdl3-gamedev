@@ -3,12 +3,13 @@ find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 
+set(CMAKE_CXX_STANDARD 23)
+
 add_executable (sdl3-demo
 	"sdl3-demo.cpp"
 	"tmx.cpp"
 	"timer.h"
 	"animation.h"
-	"components/component.h"
 	"ext/stb/stb_image.h" 
 	"components/rendercomponent.h"
 	"components/rendercomponent.cpp"
@@ -16,19 +17,20 @@ add_executable (sdl3-demo
 	"resources.h"
 	"gamestate.h"
 	"resources.cpp"
+	"framecontext.h"
+	"inputstate.h"
+	"components/component.h"
+	"components/component.cpp"
 	"components/animationcomponent.h"
 	"components/animationcomponent.cpp"
 	"components/observer.h"
 	"components/inputcomponent.h"
 	"components/inputcomponent.cpp"
-	"framecontext.h"
-	"inputstate.h"
 	"components/physicscomponent.h"
 	"components/physicscomponent.cpp"
 	"components/collisioncomponent.h"
 	"components/collisioncomponent.cpp"
-	"collisionsystem.h"
-	"collisionsystem.cpp")
+ "events.h" "components/playeranimationcomponent.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

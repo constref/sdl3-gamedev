@@ -25,7 +25,7 @@ RenderComponent::RenderComponent(std::shared_ptr<GameObject> owner, SDL_Texture 
 	{
 		animComponent->currentFrameChanged.addObserver([this](int frame) {
 			this->frameNumber = frame;
-			});
+		});
 	}
 	if (inputComponent)
 	{

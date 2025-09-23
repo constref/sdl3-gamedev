@@ -34,5 +34,7 @@ public:
 	bool isDynamic() const { return dynamic; }
 	void setDynamic(bool dyn) { dynamic = dyn; }
 
+	void eventHandler(int eventId) override;
+
 	Subject<glm::vec2> velocityUpdate;
 };

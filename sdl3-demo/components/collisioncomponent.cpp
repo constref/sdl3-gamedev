@@ -4,6 +4,7 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../gamestate.h"
+#include "../events.h"
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -74,20 +75,18 @@ void CollisionComponent::genericResponse(GameObject &objA, GameObject &objB, glm
 		{
 			objA.position.x += overlap.x;
 		}
-		//objA.velocity.x = 0;
 	}
 	else
 	{
 		if (objA.position.y < objB.position.y) // from top
 		{
 			objA.position.y -= overlap.y;
-			//objA.grounded = true;
+			emit(static_cast<int>(Events::landed));
 		}
 		else // from bottom
 		{
 			objA.position.y += overlap.y;
 		}
-		//objA.velocity.y = 0;
 	}
 }
 

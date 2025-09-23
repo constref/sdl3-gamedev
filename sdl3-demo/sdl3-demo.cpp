@@ -16,6 +16,7 @@
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
 #include "components/collisioncomponent.h"
+#include "components/playeranimationcomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
 
@@ -841,8 +842,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					auto player = std::make_shared<GameObject>();
 					player->position = objPos;
 					auto inputComponent = std::make_unique<InputComponent>(player);
-					auto animComponent = std::make_unique<AnimationComponent>(player, res.playerAnims);
-					animComponent->setAnimation(res.ANIM_PLAYER_IDLE);
+					auto animComponent = std::make_unique<PlayerAnimationComponent>(player, res.playerAnims);
 					auto physicsComponent = std::make_unique<PhysicsComponent>(player, inputComponent.get());
 					physicsComponent->setDynamic(true);
 					physicsComponent->setAcceleration(glm::vec2(300, 0));
