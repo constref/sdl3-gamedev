@@ -37,22 +37,22 @@ struct Resources
 		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<MIX_Audio *> audioBuffers;
-	MIX_Audio *audioShoot, *audioShootHit, *audioEnemyHit;
-	MIX_Audio *musicMain;
+	//std::vector<MIX_Audio *> audioBuffers;
+	//MIX_Audio *audioShoot, *audioShootHit, *audioEnemyHit;
+	//MIX_Audio *musicMain;
 
 	std::vector<TileSetTextures> tilesetTextures;
 	std::unique_ptr<tmx::Map> map;
 
 	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath);
 
-	MIX_Audio *loadAudio(const std::string &filepath)
-	{
-		MIX_Audio* audio = MIX_LoadAudio(nullptr, filepath.c_str(), true);
-		audioBuffers.push_back(audio);
-		//MIX_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
-		return audio;
-	}
+	//MIX_Audio *loadAudio(const std::string &filepath)
+	//{
+	//	MIX_Audio* audio = MIX_LoadAudio(nullptr, filepath.c_str(), true);
+	//	audioBuffers.push_back(audio);
+	//	//MIX_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
+	//	return audio;
+	//}
 
 	void load(SDL_Renderer *renderer)
 	{
@@ -90,10 +90,10 @@ struct Resources
 		texEnemyHit = loadTexture(renderer, "data/enemy_hit.png");
 		texEnemyDie = loadTexture(renderer, "data/enemy_die.png");
 
-		audioShoot = loadAudio("data/audio/shoot.wav");
-		audioShootHit = loadAudio("data/audio/wall_hit.wav");
-		audioEnemyHit = loadAudio("data/audio/shoot_hit.wav");
-		musicMain = loadAudio("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+		//audioShoot = loadAudio("data/audio/shoot.wav");
+		//audioShootHit = loadAudio("data/audio/wall_hit.wav");
+		//audioEnemyHit = loadAudio("data/audio/shoot_hit.wav");
+		//musicMain = loadAudio("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
 		map = tmx::loadMap("data/maps/smallmap.tmx");
@@ -119,10 +119,10 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (MIX_Audio *audio : audioBuffers)
-		{
-			MIX_DestroyAudio(audio);
-		}
+		//for (MIX_Audio *audio : audioBuffers)
+		//{
+		//	MIX_DestroyAudio(audio);
+		//}
 	}
 };
 

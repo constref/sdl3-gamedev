@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 	GameState gs(state.logW, state.logH);
 	createTiles(state, gs, res);
 
-	MIX_PlayAudio(nullptr, res.musicMain);
+	//MIX_PlayAudio(nullptr, res.musicMain);
 
 	// start the game loop
 	uint64_t prevTime = SDL_GetTicks();
@@ -344,12 +344,12 @@ bool initialize(SDLState &state)
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	// initialize the SDL_mixer library
-	if (!MIX_Init())
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
-		cleanup(state);
-		initSuccess = false;
-	}
+	//if (!MIX_Init())
+	//{
+	//	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
+	//	cleanup(state);
+	//	initSuccess = false;
+	//}
 
 	SDL_SetWindowFullscreen(state.window, state.fullscreen);
 
