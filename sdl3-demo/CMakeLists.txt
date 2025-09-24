@@ -30,7 +30,10 @@ add_executable (sdl3-demo
 	"components/physicscomponent.cpp"
 	"components/collisioncomponent.h"
 	"components/collisioncomponent.cpp"
- "events.h" "components/playeranimationcomponent.h")
+	"events.h"
+	"components/playeranimationcomponent.h"
+	"behaviors/playerbehavior.h"
+ "behaviors/behavior.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

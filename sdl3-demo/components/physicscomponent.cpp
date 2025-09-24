@@ -4,7 +4,7 @@
 #include "../gameobject.h"
 #include "../events.h"
 
-PhysicsComponent::PhysicsComponent(std::shared_ptr<GameObject> owner, InputComponent *inputComponent) : Component(owner)
+PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputComponent) : Component(owner)
 {
 	direction = 1;
 	maxSpeedX = 0;
@@ -55,31 +55,10 @@ void PhysicsComponent::update(const FrameContext &ctx)
 		}
 
 	}
-	if (auto o = owner.lock())
-	{
-		o->position += velocity * ctx.deltaTime;
-	}
+	owner.setPosition(owner.getPosition() + velocity * ctx.deltaTime);
 }
 
-void PhysicsComponent::eventHandler(int eventId)
-{
-	switch (eventId)
-	{
-		case static_cast<int>(Events::landed):
-		{
-			grounded = true;
-			velocity.y = 0;
-			break;
-		}
-		case static_cast<int>(Events::jump):
-		{
-			if (grounded)
-			{
-				grounded = false;
-				velocity.y = -200;
-			}
-			break;
-		}
-	}
-}
+//void PhysicsComponent::eventHandler(int eventId)
+//{
+//}
 

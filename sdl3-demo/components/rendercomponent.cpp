@@ -9,7 +9,7 @@
 #include "../resources.h"
 #include "../framecontext.h"
 
-RenderComponent::RenderComponent(std::shared_ptr<GameObject> owner, SDL_Texture *texture,
+RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture,
 	float width, float height, AnimationComponent *animComponent, InputComponent *inputComponent)
 	: Component(owner), flashTimer(0.05f)
 {
@@ -51,17 +51,12 @@ void RenderComponent::update(const FrameContext &ctx)
 		.h = height
 	};
 
-	SDL_FRect dst{ 0 };
-	if (auto o = owner.lock())
-	{
-		dst = SDL_FRect{
-			.x = o->position.x - ctx.gs.mapViewport.x,
-			.y = o->position.y - ctx.gs.mapViewport.y,
-			.w = width,
-			.h = height
-		};
-
-	}
+	SDL_FRect dst {
+		.x = owner.getPosition().x - ctx.gs.mapViewport.x,
+		.y = owner.getPosition().y - ctx.gs.mapViewport.y,
+		.w = width,
+		.h = height
+	};
 	SDL_FlipMode flipMode = direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{

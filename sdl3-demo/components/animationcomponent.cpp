@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-AnimationComponent::AnimationComponent(std::shared_ptr<GameObject> owner, const std::vector<Animation> &animations) : Component(owner)
+AnimationComponent::AnimationComponent(GameObject &owner, const std::vector<Animation> &animations) : Component(owner)
 {
 	this->animations = animations;
 	this->frameNumber = 1;

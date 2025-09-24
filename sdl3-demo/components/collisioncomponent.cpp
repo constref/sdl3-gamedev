@@ -8,7 +8,7 @@
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
-CollisionComponent::CollisionComponent(std::shared_ptr<GameObject> owner) : Component(owner), collider{0}
+CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner), collider{0}
 {
 	// keep track of all collision components
 	allComponents.push_back(this);
@@ -26,10 +26,9 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
-	auto o = owner.lock();
 	SDL_FRect rectA{
-		.x = o->position.x + collider.x,
-		.y = o->position.y + collider.y,
+		.x = owner.getPosition().x + collider.x,
+		.y = owner.getPosition().y + collider.y,
 		.w = collider.w,
 		.h = collider.h
 	};
@@ -38,10 +37,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 	{
 		if (comp != this)
 		{
-			auto otherOwner = comp->owner.lock();
+			auto &otherOwner = comp->owner;
 			SDL_FRect rectB{
-				.x = otherOwner->position.x + comp->collider.x,
-				.y = otherOwner->position.y + comp->collider.y,
+				.x = otherOwner.getPosition().x + comp->collider.x,
+				.y = otherOwner.getPosition().y + comp->collider.y,
 				.w = comp->collider.w,
 				.h = comp->collider.h
 			};
@@ -51,7 +50,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 				if (intersectAABB(rectA, rectB, overlap))
 				{
 					// found intersection, respond accordingly
-					genericResponse(*o, *otherOwner, overlap);
+					genericResponse(owner, otherOwner, overlap);
 					if (onCollision)
 					{
 						onCollision(otherOwner, overlap);
@@ -67,25 +66,25 @@ void CollisionComponent::genericResponse(GameObject &objA, GameObject &objB, glm
 	// colliding on the x-axis
 	if (overlap.x < overlap.y)
 	{
-		if (objA.position.x < objB.position.x) // from left
+		if (objA.getPosition().x < objB.getPosition().x) // from left
 		{
-			objA.position.x -= overlap.x;
+			objA.setPosition(objA.getPosition() - glm::vec2(overlap.x, 0));
 		}
 		else // from right
 		{
-			objA.position.x += overlap.x;
+			objA.setPosition(objA.getPosition() + glm::vec2(overlap.x, 0));
 		}
 	}
 	else
 	{
-		if (objA.position.y < objB.position.y) // from top
+		if (objA.getPosition().y < objB.getPosition().y) // from top
 		{
-			objA.position.y -= overlap.y;
+			objA.setPosition(objA.getPosition() - glm::vec2(0, overlap.y));
 			emit(static_cast<int>(Events::landed));
 		}
 		else // from bottom
 		{
-			objA.position.y += overlap.y;
+			objA.setPosition(objA.getPosition() + glm::vec2(0, overlap.y));
 		}
 	}
 }

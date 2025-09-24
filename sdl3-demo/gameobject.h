@@ -61,22 +61,46 @@ union ObjectData
 	BulletData bullet;
 };
 
-struct GameObject
+class GameObject
 {
 	glm::vec2 position;
+	std::vector<Component *> components;
 
-	std::vector<std::unique_ptr<Component>> components;
-
+public:
 	GameObject()
 	{
 		position = glm::vec2(0);
+	}
+
+	~GameObject()
+	{
+		for (auto *comp : components)
+		{
+			delete comp;
+		}
+		components.clear();
+	}
+
+	glm::vec2 getPosition() const { return position; }
+	void setPosition(const glm::vec2 position) { this->position = position; }
+
+	template<typename T, typename... Args>
+	T &addComponent(Args... args)
+	{
+		T *comp = new T(*this, args...);
+		components.push_back(comp);
+		return *comp;
 	}
 
 	void notify(int eventId)
 	{
 		for (auto &comp : components)
 		{
-			comp->eventHandler(eventId);
+			auto eventHandler = comp->getEventHandler();
+			if (eventHandler)
+			{
+				eventHandler(eventId);
+			}
 		}
 	}
 	

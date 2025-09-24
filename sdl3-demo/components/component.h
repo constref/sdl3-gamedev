@@ -1,20 +1,26 @@
 #pragma once
 
-#include <memory>
+#include <functional>
 
-struct GameObject;
+class GameObject;
 struct FrameContext;
 
 class Component
 {
+	using EventHandler = std::function<void(int)>;
+	EventHandler eventHandler;
+
 protected:
-	std::weak_ptr<GameObject> owner;
+	GameObject &owner;
 
 public:
-	Component(std::shared_ptr<GameObject> owner) : owner(owner) {}
+	Component(GameObject &owner) : owner(owner) {}
 	virtual ~Component() {}
 	virtual void update(const FrameContext &ctx) = 0;
 
 	void emit(int eventId);
-	virtual void eventHandler(int eventId) {}
+	virtual void eventHandler2(int eventId) {}
+
+	EventHandler getEventHandler() const { return eventHandler; }
+	void setEventHandler(EventHandler handler) { this->eventHandler = handler; }
 };

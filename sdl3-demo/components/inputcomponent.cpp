@@ -6,7 +6,7 @@
 #include "../inputstate.h"
 #include "../events.h"
 
-InputComponent::InputComponent(std::shared_ptr<GameObject> owner) : Component(owner)
+InputComponent::InputComponent(GameObject &owner) : Component(owner)
 {
 	direction = 0;
 }

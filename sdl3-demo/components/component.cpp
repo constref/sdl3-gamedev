@@ -3,9 +3,5 @@
 
 void Component::emit(int eventId)
 {
-	auto o = owner.lock();
-	if (o)
-	{
-		o->notify(eventId);
-	}
+	owner.notify(eventId);
 }

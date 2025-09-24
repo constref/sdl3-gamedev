@@ -16,7 +16,7 @@ class PhysicsComponent : public Component
 	bool grounded;
 
 public:
-	PhysicsComponent(std::shared_ptr<GameObject> owner, InputComponent *inputComponent = nullptr);
+	PhysicsComponent(GameObject &owner, InputComponent *inputComponent = nullptr);
 	void update(const FrameContext &ctx);
 
 	glm::vec2 getVelocity() const { return velocity; }
@@ -34,7 +34,8 @@ public:
 	bool isDynamic() const { return dynamic; }
 	void setDynamic(bool dyn) { dynamic = dyn; }
 
-	void eventHandler(int eventId) override;
+	bool isGrounded() const { return grounded; }
+	void setGrounded(bool grounded) { this->grounded = grounded; }
 
 	Subject<glm::vec2> velocityUpdate;
 };

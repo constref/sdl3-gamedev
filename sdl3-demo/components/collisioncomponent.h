@@ -12,13 +12,13 @@ class CollisionComponent : public Component
 	// TODO: Will remove static vector in favor of a spatial partitioning structure
 	static std::vector<CollisionComponent *> allComponents;
 
-	using CollisionCallback = std::function<void(std::shared_ptr<GameObject>, glm::vec2 overlap)>;
+	using CollisionCallback = std::function<void(GameObject &other, glm::vec2 overlap)>;
 
 	CollisionCallback onCollision;
 	SDL_FRect collider;
 
 public:
-	CollisionComponent(std::shared_ptr<GameObject> owner);
+	CollisionComponent(GameObject &owner);
 	~CollisionComponent();
 	virtual void update(const FrameContext &ctx) override;
 

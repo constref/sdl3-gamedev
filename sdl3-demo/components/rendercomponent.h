@@ -18,7 +18,7 @@ class RenderComponent : public Component
 	float direction;
 
 public:
-	RenderComponent(std::shared_ptr<GameObject> owner, SDL_Texture *texture, float width, float height,
+	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height,
 		AnimationComponent *animComponent = nullptr, InputComponent *inputComponent = nullptr);
 	void update(const FrameContext &ctx) override;
 
