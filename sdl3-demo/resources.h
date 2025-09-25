@@ -18,6 +18,12 @@ struct TileSetTextures
 
 struct Resources
 {
+	static Resources &getInstance()
+	{
+		static Resources instance;
+		return instance;
+	}
+
 	const int ANIM_PLAYER_IDLE = 0;
 	const int ANIM_PLAYER_RUN = 1;
 	const int ANIM_PLAYER_SLIDE = 2;

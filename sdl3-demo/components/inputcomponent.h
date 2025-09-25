@@ -1,7 +1,7 @@
 #pragma once
 
-#include "component.h"
-#include "observer.h"
+#include "../component.h"
+#include "../observer.h"
 
 class InputComponent : public Component
 {

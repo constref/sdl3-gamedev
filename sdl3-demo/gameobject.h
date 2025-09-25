@@ -4,7 +4,9 @@
 #include <memory>
 #include <SDL3/SDL.h>
 #include "animation.h"
-#include "components/component.h"
+#include "component.h"
+#include "controller.h"
+#include "commanddispatch.h"
 
 enum class PlayerState
 {
@@ -65,15 +67,22 @@ class GameObject
 {
 	glm::vec2 position;
 	std::vector<Component *> components;
+	Controller *controller;
+	CommandDispatch commandDispatch;
 
 public:
 	GameObject()
 	{
+		controller = nullptr;
 		position = glm::vec2(0);
 	}
 
 	~GameObject()
 	{
+		if (controller)
+		{
+			delete controller;
+		}
 		for (auto *comp : components)
 		{
 			delete comp;
@@ -85,22 +94,42 @@ public:
 	void setPosition(const glm::vec2 position) { this->position = position; }
 
 	template<typename T, typename... Args>
+	void createController(Args... args)
+	{
+		assert(controller == nullptr);
+		this->controller = new T(*this, args...); 
+	}
+	Controller *getController() const { return controller; }
+	CommandDispatch &getCommandDispatch() { return commandDispatch; }
+
+	template<typename T, typename... Args>
 	T &addComponent(Args... args)
 	{
 		T *comp = new T(*this, args...);
 		components.push_back(comp);
+		comp->onAttached();
 		return *comp;
 	}
 
-	void notify(int eventId)
+	template<typename T>
+	T *getComponent()
 	{
-		for (auto &comp : components)
+		for (auto *comp : components)
 		{
-			auto eventHandler = comp->getEventHandler();
-			if (eventHandler)
+			T *specific = dynamic_cast<T*>(comp);
+			if (specific)
 			{
-				eventHandler(eventId);
+				return specific;
 			}
+		}
+		return nullptr;
+	}
+
+	void notify(const FrameContext &ctx, int eventId)
+	{
+		if (controller)
+		{
+			controller->eventHandler(ctx, eventId);
 		}
 	}
 	

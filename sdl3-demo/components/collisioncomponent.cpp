@@ -50,10 +50,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 				if (intersectAABB(rectA, rectB, overlap))
 				{
 					// found intersection, respond accordingly
-					genericResponse(owner, otherOwner, overlap);
-					if (onCollision)
+					genericResponse(ctx, owner, otherOwner, overlap);
+					if (owner.getController())
 					{
-						onCollision(otherOwner, overlap);
+						owner.getController()->collisionHandler(otherOwner, overlap);
 					}
 				}
 			}
@@ -61,7 +61,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 	}
 }
 
-void CollisionComponent::genericResponse(GameObject &objA, GameObject &objB, glm::vec2 &overlap)
+void CollisionComponent::genericResponse(const FrameContext &ctx, GameObject &objA, GameObject &objB, glm::vec2 &overlap)
 {
 	// colliding on the x-axis
 	if (overlap.x < overlap.y)
@@ -80,7 +80,7 @@ void CollisionComponent::genericResponse(GameObject &objA, GameObject &objB, glm
 		if (objA.getPosition().y < objB.getPosition().y) // from top
 		{
 			objA.setPosition(objA.getPosition() - glm::vec2(0, overlap.y));
-			emit(static_cast<int>(Events::landed));
+			emit(ctx, static_cast<int>(Events::landed));
 		}
 		else // from bottom
 		{
@@ -101,16 +101,11 @@ bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, g
 	const float maxYB = b.y + b.h;
 
 	if ((minXA < maxXB && maxXA > minXB) &&
-		(minYA <= maxYB && maxYA >= minYB))
+		(minYA < maxYB && maxYA > minYB))
 	{
 		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
 		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
 		return true;
 	}
 	return false;
-}
-
-void CollisionComponent::setOnCollision(CollisionCallback callback)
-{
-	this->onCollision = callback;
 }

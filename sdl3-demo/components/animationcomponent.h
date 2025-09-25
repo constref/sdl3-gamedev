@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include  "component.h"
-#include "observer.h"
+#include "../component.h"
+#include "../observer.h"
 
 class Animation;
 
@@ -18,6 +18,8 @@ public:
 	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
+	void onAttached() override;
+	void onCommand(const Command &command) override;
 
 	Subject<int> currentFrameChanged;
 };

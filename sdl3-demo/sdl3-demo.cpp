@@ -16,140 +16,16 @@
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
 #include "components/collisioncomponent.h"
-#include "components/playeranimationcomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
 
-#include "behaviors/playerbehavior.h"
+#include "controllers/playercontroller.h"
 
 using namespace std;
 
 bool initialize(SDLState &state);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
 void cleanup(SDLState &state);
-
-/*
-struct GameState
-{
-	std::vector<std::vector<GameObject>> layers;
-	std::vector<GameObject> bullets;
-	int playerLayer, playerIndex;
-	SDL_FRect mapViewport;
-	float bg2Scroll, bg3Scroll, bg4Scroll;
-	bool debugMode;
-
-	GameState(const SDLState &state)
-	{
-		playerLayer = -1;
-		playerIndex = -1;
-		mapViewport = SDL_FRect{
-			.x = 0, .y = 0,
-			.w = static_cast<float>(state.logW),
-			.h = static_cast<float>(state.logH)
-		};
-		bg2Scroll = bg3Scroll = bg4Scroll = 0;
-		debugMode = false;
-	}
-
-	GameObject &player() { return layers[playerLayer][playerIndex]; }
-};
-
-struct Resources
-{
-	const int ANIM_PLAYER_IDLE = 0;
-	const int ANIM_PLAYER_RUN = 1;
-	const int ANIM_PLAYER_SLIDE = 2;
-	const int ANIM_PLAYER_SHOOT = 3;
-	const int ANIM_PLAYER_SLIDE_SHOOT = 4;
-	std::vector<Animation> playerAnims;
-	const int ANIM_BULLET_MOVING = 0;
-	const int ANIM_BULLET_HIT = 1;
-	std::vector<Animation> bulletAnims;
-	const int ANIM_ENEMY = 0;
-	const int ANIM_ENEMY_HIT = 1;
-	const int ANIM_ENEMY_DIE = 2;
-	std::vector<Animation> enemyAnims;
-
-	std::vector<SDL_Texture *> textures;
-	SDL_Texture *texIdle, *texRun, *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
-		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
-
-	std::vector<Mix_Chunk *> chunks;
-	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
-	Mix_Music *musicMain;
-
-	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath)
-	{
-		SDL_Texture *tex = IMG_LoadTexture(renderer, filepath.c_str());
-		SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
-		textures.push_back(tex);
-		return tex;
-	}
-
-	Mix_Chunk *loadChunk(const std::string &filepath)
-	{
-		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
-		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
-		chunks.push_back(chunk);
-		return chunk;
-	}
-
-	void load(SDLState &state)
-	{
-		playerAnims.resize(5);
-		playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
-		playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
-		playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
-		playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
-		playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
-		bulletAnims.resize(2);
-		bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.05f);
-		bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
-		enemyAnims.resize(3);
-		enemyAnims[ANIM_ENEMY] = Animation(8, 1.0f);
-		enemyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
-		enemyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
-
-		texIdle = loadTexture(state.renderer, "data/idle.png");
-		texRun = loadTexture(state.renderer, "data/run.png");
-		texSlide = loadTexture(state.renderer, "data/slide.png");
-		texBg1 = loadTexture(state.renderer, "data/bg/bg_layer1.png");
-		texBg2 = loadTexture(state.renderer, "data/bg/bg_layer2.png");
-		texBg3 = loadTexture(state.renderer, "data/bg/bg_layer3.png");
-		texBg4 = loadTexture(state.renderer, "data/bg/bg_layer4.png");
-		texBullet = loadTexture(state.renderer, "data/bullet.png");
-		texBulletHit = loadTexture(state.renderer, "data/bullet_hit.png");
-		texShoot = loadTexture(state.renderer, "data/shoot.png");
-		texRunShoot = loadTexture(state.renderer, "data/shoot_run.png");
-		texSlideShoot = loadTexture(state.renderer, "data/slide_shoot.png");
-		texEnemy = loadTexture(state.renderer, "data/enemy.png");
-		texEnemyHit = loadTexture(state.renderer, "data/enemy_hit.png");
-		texEnemyDie = loadTexture(state.renderer, "data/enemy_die.png");
-
-		chunkShoot = loadChunk("data/audio/shoot.wav");
-		chunkShootHit = loadChunk("data/audio/wall_hit.wav");
-		chunkEnemyHit = loadChunk("data/audio/shoot_hit.wav");
-
-		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
-
-	}
-
-	void unload()
-	{
-		for (SDL_Texture *tex : textures)
-		{
-			SDL_DestroyTexture(tex);
-		}
-
-		for (Mix_Chunk *chunk : chunks)
-		{
-			Mix_FreeChunk(chunk);
-		}
-
-		Mix_FreeMusic(musicMain);
-	}
-};
-*/
 
 int main(int argc, char *argv[])
 {
@@ -165,7 +41,7 @@ int main(int argc, char *argv[])
 	}
 
 	// load game assets
-	Resources res;
+	Resources &res = Resources::getInstance();
 	res.load(state.renderer);
 
 	// setup game data
@@ -300,7 +176,7 @@ int main(int argc, char *argv[])
 			// display some debug info
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
 			SDL_RenderDebugText(state.renderer, 5, 5,
-				std::format("B: {}", gs.bullets.size()).c_str());
+				std::format("G: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded()).c_str());
 		}
 
 		// swap buffers and present
@@ -840,62 +716,19 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				if (obj.type == "Player")
 				{
 					auto player = std::make_shared<GameObject>();
+					player->createController<PlayerController>();
 					player->setPosition(objPos);
 					auto &inputComponent = player->addComponent<InputComponent>();
 					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
-					animComponent.setEventHandler([this, &animComponent](int eventId) {
-						switch (eventId)
-						{
-							case static_cast<int>(Events::run):
-							{
-								//animComponent.setAnimation(res.ANIM_PLAYER_RUN);
-								break;
-							}
-						}
-					});
 					auto &physicsComponent = player->addComponent<PhysicsComponent>(&inputComponent);
 					physicsComponent.setDynamic(true);
 					physicsComponent.setAcceleration(glm::vec2(300, 0));
 					physicsComponent.setMaxSpeed(100);
-					physicsComponent.setEventHandler([&physicsComponent](int eventId) {
-						//switch (eventId)
-						//{
-						//	case static_cast<int>(Events::landed):
-						//	{
-						//		grounded = true;
-						//		velocity.y = 0;
-						//		break;
-						//	}
-						//	case static_cast<int>(Events::jump):
-						//	{
-						//		if (grounded)
-						//		{
-						//			grounded = false;
-						//			velocity.y = -200;
-						//		}
-						//		break;
-						//	}
-						//}
-					});
-
 					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, &animComponent, &inputComponent);
 					auto &collisionComponent = player->addComponent<CollisionComponent>();
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
-					});
-
-					collisionComponent.setOnCollision([&player, &physicsComponent](GameObject &other, glm::vec2 overlap) {
-						glm::vec2 vel = physicsComponent.getVelocity();
-						if (overlap.x < overlap.y)
-						{
-							vel.x = 0;
-						}
-						else
-						{
-							vel.y = 0;
-						}
-						physicsComponent.setVelocity(vel);
 					});
 
 					gs.playerIndex = static_cast<int>(newLayer.size());

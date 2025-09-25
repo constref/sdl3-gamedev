@@ -8,6 +8,7 @@
 #include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
+#include "../commands.h"
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture,
 	float width, float height, AnimationComponent *animComponent, InputComponent *inputComponent)
@@ -99,6 +100,20 @@ void RenderComponent::update(const FrameContext &ctx)
 		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
 	}
 	*/
+}
+
+void RenderComponent::onAttached()
+{
+	owner.getCommandDispatch().registerCommand(Commands::SetTexture, this);
+}
+
+void RenderComponent::onCommand(const Command &command)
+{
+	if (command.id == Commands::SetTexture)
+	{
+		SDL_Texture *texture = static_cast<SDL_Texture *>(command.param.asPtr);
+		setTexture(texture);
+	}
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

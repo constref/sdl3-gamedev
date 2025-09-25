@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "component.h"
-#include "observer.h"
+#include "../component.h"
+#include "../observer.h"
 
 struct FrameContext;
 class InputComponent;

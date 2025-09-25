@@ -36,6 +36,11 @@ void PhysicsComponent::update(const FrameContext &ctx)
 		{
 			velocity.x = direction * maxSpeedX;
 		}
+		if (velocity.x * direction < 0)
+		{
+			// sliding
+			emit(ctx, static_cast<int>(Events::slide));
+		}
 	}
 	else
 	{
@@ -47,6 +52,7 @@ void PhysicsComponent::update(const FrameContext &ctx)
 			if (std::abs(velocity.x) < std::abs(amount))
 			{
 				velocity.x = 0;
+				emit(ctx, static_cast<int>(Events::idle));
 			}
 			else
 			{
@@ -57,8 +63,4 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	}
 	owner.setPosition(owner.getPosition() + velocity * ctx.deltaTime);
 }
-
-//void PhysicsComponent::eventHandler(int eventId)
-//{
-//}
 

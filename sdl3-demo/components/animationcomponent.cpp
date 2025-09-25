@@ -2,6 +2,7 @@
 #include "../animation.h"
 #include "../gameobject.h"
 #include "../framecontext.h"
+#include "../commands.h"
 
 #include <cassert>
 
@@ -25,4 +26,17 @@ void AnimationComponent::setAnimation(int index)
 {
 	assert(index >= 0 && index < animations.size());
 	currentAnimation = index;
+}
+
+void AnimationComponent::onAttached()
+{
+	owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
+}
+
+void AnimationComponent::onCommand(const Command &command)
+{
+	if (command.id == Commands::SetAnimation)
+	{
+		setAnimation(command.param.asInt);
+	}
 }

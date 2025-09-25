@@ -19,21 +19,23 @@ add_executable (sdl3-demo
 	"resources.cpp"
 	"framecontext.h"
 	"inputstate.h"
-	"components/component.h"
-	"components/component.cpp"
+	"component.h"
+	"component.cpp"
 	"components/animationcomponent.h"
 	"components/animationcomponent.cpp"
-	"components/observer.h"
+	"observer.h"
 	"components/inputcomponent.h"
 	"components/inputcomponent.cpp"
 	"components/physicscomponent.h"
 	"components/physicscomponent.cpp"
 	"components/collisioncomponent.h"
 	"components/collisioncomponent.cpp"
+	"components/playermovecomponent.h"
 	"events.h"
-	"components/playeranimationcomponent.h"
-	"behaviors/playerbehavior.h"
- "behaviors/behavior.h")
+	"controller.h" 
+	"controllers/playercontroller.h"
+	"controllers/playercontroller.cpp"
+	"state.h"  "commanddispatch.h" "commands.h"  "controllers/states/runningstate.h" "controllers/states/idlestate.h" "controllers/states/idlestate.cpp" "controllers/states/runningstate.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)
