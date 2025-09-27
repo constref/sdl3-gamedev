@@ -26,7 +26,7 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture,
 	{
 		animComponent->currentFrameChanged.addObserver([this](int frame) {
 			this->frameNumber = frame;
-		});
+			});
 	}
 	if (inputComponent)
 	{
@@ -52,7 +52,7 @@ void RenderComponent::update(const FrameContext &ctx)
 		.h = height
 	};
 
-	SDL_FRect dst {
+	SDL_FRect dst{
 		.x = owner.getPosition().x - ctx.gs.mapViewport.x,
 		.y = owner.getPosition().y - ctx.gs.mapViewport.y,
 		.w = width,
@@ -76,30 +76,40 @@ void RenderComponent::update(const FrameContext &ctx)
 		}
 	}
 
-	/*
 	if (ctx.gs.debugMode)
 	{
-		SDL_FRect rectA{
-			.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
-			.y = owner.position.y + owner.collider.y,
-			.w = owner.collider.w,
-			.h = owner.collider.h
-		};
-		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
+		if (owner.isDebugHighlight())
+		{
+			owner.setDebugHighlight(false);
+			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
 
-		SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
-		SDL_RenderFillRect(ctx.state.renderer, &rectA);
-		SDL_FRect sensor{
-			.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
-			.y = owner.position.y + owner.collider.y + owner.collider.h,
-			.w = owner.collider.w, .h = 1
-		};
-		SDL_SetRenderDrawColor(ctx.state.renderer, 0, 0, 255, 150);
-		SDL_RenderFillRect(ctx.state.renderer, &sensor);
+			SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
+			SDL_RenderFillRect(ctx.state.renderer, &dst);
 
-		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
+			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
+		}
+		/*
+			SDL_FRect rectA{
+				.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
+				.y = owner.position.y + owner.collider.y,
+				.w = owner.collider.w,
+				.h = owner.collider.h
+			};
+			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
+
+			SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
+			SDL_RenderFillRect(ctx.state.renderer, &rectA);
+			SDL_FRect sensor{
+				.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
+				.y = owner.position.y + owner.collider.y + owner.collider.h,
+				.w = owner.collider.w, .h = 1
+			};
+			SDL_SetRenderDrawColor(ctx.state.renderer, 0, 0, 255, 150);
+			SDL_RenderFillRect(ctx.state.renderer, &sensor);
+
+			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
+		*/
 	}
-	*/
 }
 
 void RenderComponent::onAttached()

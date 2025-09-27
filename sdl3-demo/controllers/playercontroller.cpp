@@ -23,15 +23,15 @@ void PlayerController::collisionHandler(GameObject &other, glm::vec2 overlap)
 	auto *physicsComponent = owner.getComponent<PhysicsComponent>();
 	if (physicsComponent)
 	{
-		glm::vec2 vel = physicsComponent->getVelocity();
-		if (overlap.x < overlap.y)
-		{
-			vel.x = 0;
-		}
-		else
-		{
-			vel.y = 0;
-		}
-		physicsComponent->setVelocity(vel);
+		//glm::vec2 vel = physicsComponent->getVelocity();
+		//if (overlap.x < overlap.y)
+		//{
+		//	vel.x = 0;
+		//}
+		//else
+		//{
+		//	vel.y = 0;
+		//}
+		//physicsComponent->setVelocity(vel);
 	}
 }

@@ -7,17 +7,28 @@
 
 PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputComponent) : Component(owner)
 {
-	direction = 1;
+	direction = 0;
 	maxSpeedX = 0;
 	velocity = acceleration = glm::vec2(0);
 	grounded = false;
 
 	if (inputComponent)
 	{
+		// request direction updates from input component
 		inputComponent->directionUpdate.addObserver([this](float direction) {
 			this->direction = direction;
 		});
 	}
+}
+
+void PhysicsComponent::onAttached()
+{
+	owner.getCommandDispatch().registerCommand(Commands::Jump, this);
+	owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
+	owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityX, this);
+	owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityY, this);
+	owner.getCommandDispatch().registerCommand(Commands::ZeroVelocityX, this);
+	owner.getCommandDispatch().registerCommand(Commands::ZeroVelocityY, this);
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -27,7 +38,6 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	vel+= glm::vec2(0, 500) * ctx.deltaTime;
 
 	// horizontal movement
-	printf("dir: %f\n", direction);
 	if (direction)
 	{
 		vel+= direction * acceleration * ctx.deltaTime;
@@ -58,13 +68,6 @@ void PhysicsComponent::update(const FrameContext &ctx)
 		}
 	}
 	setVelocity(vel);
-	owner.setPosition(owner.getPosition() + vel * ctx.deltaTime);
-}
-
-void PhysicsComponent::onAttached()
-{
-	owner.getCommandDispatch().registerCommand(Commands::Jump, this);
-	owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
 }
 
 void PhysicsComponent::onCommand(const Command &command)
@@ -81,6 +84,26 @@ void PhysicsComponent::onCommand(const Command &command)
 	else if (command.id == Commands::SetGrounded)
 	{
 		setGrounded(command.param.asBool);
+	}
+	else if (command.id == Commands::IntegrateVelocityX)
+	{
+		owner.setPosition(owner.getPosition() + glm::vec2(getVelocity().x * command.param.asFloat, 0));
+	}
+	else if (command.id == Commands::IntegrateVelocityY)
+	{
+		owner.setPosition(owner.getPosition() + glm::vec2(0, getVelocity().y * command.param.asFloat));
+	}
+	else if (command.id == Commands::ZeroVelocityX)
+	{
+		glm::vec2 vel = getVelocity();
+		vel.x = 0;
+		setVelocity(vel);
+	}
+	else if (command.id == Commands::ZeroVelocityY)
+	{
+		glm::vec2 vel = getVelocity();
+		vel.y = 0;
+		setVelocity(vel);
 	}
 }
 

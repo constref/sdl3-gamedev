@@ -6,6 +6,7 @@
 #include "../framecontext.h"
 #include "../gamestate.h"
 #include "../events.h"
+#include "../commands.h"
 
 #include "physicscomponent.h"
 
@@ -38,41 +39,96 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
-	bool foundGround = false;
-	for (auto comp : allComponents)
-	{
-		if (isDynamic())
+	const auto checkCollisions = [this, &ctx](int axis) {
+		bool foundGround = false;
+		for (auto comp : allComponents)
 		{
-			SDL_FRect rectA{
-				.x = owner.getPosition().x + collider.x,
-				.y = owner.getPosition().y + collider.y,
-				.w = collider.w,
-				.h = collider.h
-			};
-
-			if (comp != this)
+			if (isDynamic())
 			{
-				auto &otherOwner = comp->owner;
-				SDL_FRect rectB{
-					.x = otherOwner.getPosition().x + comp->collider.x,
-					.y = otherOwner.getPosition().y + comp->collider.y,
-					.w = comp->collider.w,
-					.h = comp->collider.h
+				SDL_FRect rectA{
+					.x = owner.getPosition().x + collider.x,
+					.y = owner.getPosition().y + collider.y,
+					.w = collider.w,
+					.h = collider.h
 				};
 
-				glm::vec2 overlap{ 0 };
-				if (intersectAABB(rectA, rectB, overlap))
+				if (comp != this)
 				{
-					// found intersection, respond accordingly
-					genericResponse(ctx, owner, otherOwner, overlap, foundGround);
-					if (owner.getController())
+					auto &otherOwner = comp->owner;
+					SDL_FRect rectB{
+						.x = otherOwner.getPosition().x + comp->collider.x,
+						.y = otherOwner.getPosition().y + comp->collider.y,
+						.w = comp->collider.w,
+						.h = comp->collider.h
+					};
+
+					glm::vec2 overlap{ 0 };
+					if (intersectAABB(rectA, rectB, overlap))
 					{
-						owner.getController()->collisionHandler(otherOwner, overlap);
+						if (ctx.gs.debugMode)
+						{
+							otherOwner.setDebugHighlight(true);
+						}
+
+						// found intersection, respond accordingly
+						//genericResponse(ctx, owner, otherOwner, overlap, foundGround);
+
+						if (axis == 1 && overlap.x)
+						{
+							if (velocity.x > 0) // from left
+							{
+								owner.setPosition(owner.getPosition() - glm::vec2(overlap.x, 0));
+							}
+							else if (velocity.x < 0) // from right
+							{
+								owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
+							}
+							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityX });
+
+							if (owner.getController())
+							{
+								owner.getController()->collisionHandler(otherOwner, overlap);
+							}
+						}
+						else if (axis == 2 && overlap.y)
+						{
+							if (velocity.y > 0) // from top
+							{
+								owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
+								emit(ctx, static_cast<int>(Events::landed));
+							}
+							else if (velocity.y < 0) // from bottom
+							{
+								owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
+							}
+							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityY });
+
+							if (owner.getController())
+							{
+								owner.getController()->collisionHandler(otherOwner, overlap);
+							}
+						}
 					}
 				}
 			}
 		}
-	}
+		};
+
+	// integrate X velocity first and check for collisions
+	Command cmdVelX;
+	cmdVelX.id = Commands::IntegrateVelocityX;
+	cmdVelX.param.asFloat = ctx.deltaTime;
+	owner.getCommandDispatch().submit(cmdVelX);
+
+	checkCollisions(1);
+
+	Command cmdVelY;
+	cmdVelY.id = Commands::IntegrateVelocityY;
+	cmdVelY.param.asFloat = ctx.deltaTime;
+	owner.getCommandDispatch().submit(cmdVelY);
+
+	checkCollisions(2);
+
 	if (velocity.y > 0)
 	{
 		emit(ctx, static_cast<int>(Events::falling));
@@ -83,6 +139,35 @@ void CollisionComponent::genericResponse(const FrameContext &ctx, GameObject &ob
 {
 	//printf(std::format("{}, {}\n", overlap.x, overlap.y).c_str());
 	// colliding on the x-axis
+	PhysicsComponent *physCmp = owner.getComponent<PhysicsComponent>();
+	if (physCmp)
+	{
+		if (velocity.y > 0 && overlap.y <= overlap.x)
+		{
+			// collision below
+			objA.setPosition(objA.getPosition() - glm::vec2(0, overlap.y));
+			physCmp->setVelocity(glm::vec2(physCmp->getVelocity().x, 0));
+			emit(ctx, static_cast<int>(Events::landed));
+		}
+		else if (velocity.y < 0 && overlap.y < overlap.x)
+		{
+			objA.setPosition(objA.getPosition() + glm::vec2(0, overlap.y));
+			physCmp->setVelocity(glm::vec2(physCmp->getVelocity().x, 0));
+		}
+		else
+		{
+			if (velocity.x > 0)
+			{
+				objA.setPosition(objA.getPosition() - glm::vec2(overlap.x, 0));
+			}
+			else if (velocity.x < 0)
+			{
+				objA.setPosition(objA.getPosition() + glm::vec2(overlap.x, 0));
+			}
+			physCmp->setVelocity(glm::vec2(0, physCmp->getVelocity().y));
+		}
+	}
+	/*
 	if (overlap.x < overlap.y)
 	{
 		if (objA.getPosition().x < objB.getPosition().x) // from left
@@ -106,6 +191,7 @@ void CollisionComponent::genericResponse(const FrameContext &ctx, GameObject &ob
 			objA.setPosition(objA.getPosition() + glm::vec2(0, overlap.y));
 		}
 	}
+	*/
 }
 
 bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)

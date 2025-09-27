@@ -69,12 +69,14 @@ class GameObject
 	std::vector<Component *> components;
 	Controller *controller;
 	CommandDispatch commandDispatch;
+	bool debugHighlight;
 
 public:
 	GameObject()
 	{
 		controller = nullptr;
 		position = glm::vec2(0);
+		debugHighlight = false;
 	}
 
 	~GameObject()
@@ -101,6 +103,9 @@ public:
 	}
 	Controller *getController() const { return controller; }
 	CommandDispatch &getCommandDispatch() { return commandDispatch; }
+
+	bool isDebugHighlight() const { return debugHighlight; }
+	void setDebugHighlight(bool highlight) { debugHighlight = highlight; }
 
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)

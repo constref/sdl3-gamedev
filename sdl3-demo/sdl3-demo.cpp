@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 				case SDL_EVENT_KEY_UP:
 				{
 					inputState.keys[event.key.scancode] = false;
-					if (event.key.scancode == SDL_SCANCODE_F12)
+					if (event.key.scancode == SDL_SCANCODE_F2)
 					{
 						gs.debugMode = !gs.debugMode;
 					}
