@@ -6,5 +6,6 @@ enum class Events : int
 	run = 2,
 	idle = 3,
 	jump = 4,
-	slide = 5
+	slide = 5,
+	falling = 6
 };

@@ -1,17 +1,29 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
+#include <format>
 #include "collisioncomponent.h"
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../gamestate.h"
 #include "../events.h"
 
+#include "physicscomponent.h"
+
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
-CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner), collider{0}
+CollisionComponent::CollisionComponent(GameObject &owner, PhysicsComponent *physicsComp) : Component(owner), collider{ 0 }
 {
+	dynamic = false;
 	// keep track of all collision components
 	allComponents.push_back(this);
+
+	velocity = glm::vec2(0);
+	if (physicsComp)
+	{
+		physicsComp->velocityUpdate.addObserver([this](glm::vec2 velocity) {
+			this->velocity = velocity;
+			});
+	}
 }
 
 CollisionComponent::~CollisionComponent()
@@ -26,31 +38,33 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
-	SDL_FRect rectA{
-		.x = owner.getPosition().x + collider.x,
-		.y = owner.getPosition().y + collider.y,
-		.w = collider.w,
-		.h = collider.h
-	};
-
+	bool foundGround = false;
 	for (auto comp : allComponents)
 	{
-		if (comp != this)
+		if (isDynamic())
 		{
-			auto &otherOwner = comp->owner;
-			SDL_FRect rectB{
-				.x = otherOwner.getPosition().x + comp->collider.x,
-				.y = otherOwner.getPosition().y + comp->collider.y,
-				.w = comp->collider.w,
-				.h = comp->collider.h
+			SDL_FRect rectA{
+				.x = owner.getPosition().x + collider.x,
+				.y = owner.getPosition().y + collider.y,
+				.w = collider.w,
+				.h = collider.h
 			};
-			if (collider.w != 0 && collider.h != 0)
+
+			if (comp != this)
 			{
+				auto &otherOwner = comp->owner;
+				SDL_FRect rectB{
+					.x = otherOwner.getPosition().x + comp->collider.x,
+					.y = otherOwner.getPosition().y + comp->collider.y,
+					.w = comp->collider.w,
+					.h = comp->collider.h
+				};
+
 				glm::vec2 overlap{ 0 };
 				if (intersectAABB(rectA, rectB, overlap))
 				{
 					// found intersection, respond accordingly
-					genericResponse(ctx, owner, otherOwner, overlap);
+					genericResponse(ctx, owner, otherOwner, overlap, foundGround);
 					if (owner.getController())
 					{
 						owner.getController()->collisionHandler(otherOwner, overlap);
@@ -59,10 +73,15 @@ void CollisionComponent::update(const FrameContext &ctx)
 			}
 		}
 	}
+	if (velocity.y > 0)
+	{
+		emit(ctx, static_cast<int>(Events::falling));
+	}
 }
 
-void CollisionComponent::genericResponse(const FrameContext &ctx, GameObject &objA, GameObject &objB, glm::vec2 &overlap)
+void CollisionComponent::genericResponse(const FrameContext &ctx, GameObject &objA, GameObject &objB, glm::vec2 &overlap, bool &foundGround)
 {
+	//printf(std::format("{}, {}\n", overlap.x, overlap.y).c_str());
 	// colliding on the x-axis
 	if (overlap.x < overlap.y)
 	{

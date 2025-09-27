@@ -12,6 +12,7 @@ struct Command
 	{
 		int asInt;
 		float asFloat;
+		bool asBool;
 		void *asPtr;
 	} param;
 };

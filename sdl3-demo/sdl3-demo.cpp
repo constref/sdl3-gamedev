@@ -719,17 +719,17 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					player->createController<PlayerController>();
 					player->setPosition(objPos);
 					auto &inputComponent = player->addComponent<InputComponent>();
-					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
 					auto &physicsComponent = player->addComponent<PhysicsComponent>(&inputComponent);
-					physicsComponent.setDynamic(true);
-					physicsComponent.setAcceleration(glm::vec2(300, 0));
+					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(100);
-					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, &animComponent, &inputComponent);
-					auto &collisionComponent = player->addComponent<CollisionComponent>();
+					auto &collisionComponent = player->addComponent<CollisionComponent>(&physicsComponent);
+					collisionComponent.setDynamic(true);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
 					});
+					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
+					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE, &animComponent, &inputComponent);
 
 					gs.playerIndex = static_cast<int>(newLayer.size());
 					gs.playerLayer = static_cast<int>(gs.layers.size());

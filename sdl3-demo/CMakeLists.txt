@@ -35,7 +35,7 @@ add_executable (sdl3-demo
 	"controller.h" 
 	"controllers/playercontroller.h"
 	"controllers/playercontroller.cpp"
-	"state.h"  "commanddispatch.h" "commands.h"  "controllers/states/runningstate.h" "controllers/states/idlestate.h" "controllers/states/idlestate.cpp" "controllers/states/runningstate.cpp")
+	"state.h"  "commanddispatch.h" "commands.h"  "controllers/states/runningstate.h" "controllers/states/idlestate.h" "controllers/states/idlestate.cpp" "controllers/states/runningstate.cpp" "controllers/states/airbornestate.h" "controllers/states/airbornestate.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

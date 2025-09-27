@@ -5,6 +5,7 @@
 
 #include "idlestate.h"
 #include "runningstate.h"
+#include "airbornestate.h"
 
 void IdleState::onEnter(GameObject &owner)
 {
@@ -27,5 +28,14 @@ void IdleState::onEvent(GameObject &owner, int eventId)
 	if (eventId == static_cast<int>(Events::run))
 	{
 		owner.getController()->changeState(RunningState::instance());
+	}
+	else if (eventId == static_cast<int>(Events::jump))
+	{
+		owner.getCommandDispatch().submit(Command{ .id = Commands::Jump });
+		owner.getController()->changeState(AirborneState::instance());
+	}
+	else if (eventId == static_cast<int>(Events::falling))
+	{
+		owner.getController()->changeState(AirborneState::instance());
 	}
 }
