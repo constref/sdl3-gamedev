@@ -49,6 +49,10 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="5" name="Characters">
+  <object id="1" name="Player" type="Player" x="46.6217" y="559.461"/>
+  <object id="2" name="Enemy" type="Enemy" x="623.566" y="591.513"/>
+ </objectgroup>
  <layer id="1" name="Level" width="30" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -73,10 +77,6 @@
 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
 </data>
  </layer>
- <objectgroup id="5" name="Characters">
-  <object id="1" name="Player" type="Player" x="46.6217" y="559.461"/>
-  <object id="2" name="Enemy" type="Enemy" x="623.566" y="591.513"/>
- </objectgroup>
  <layer id="3" name="Foreground" width="30" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
