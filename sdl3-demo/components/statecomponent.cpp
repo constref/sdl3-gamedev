@@ -46,16 +46,17 @@ void StateComponent::update(const FrameContext &ctx)
 
 void StateComponent::onEvent(int eventId)
 {
+	glm::vec2 jumpImpulse(0, -200.0f);
+
 	if (currentState == PState::idle)
 	{
-
 		if (eventId == static_cast<int>(Events::run))
 		{
 			transitionState(PState::running);
 		}
 		else if (eventId == static_cast<int>(Events::jump))
 		{
-			owner.getCommandDispatch().submit(Command{ .id = Commands::Jump });
+			owner.getCommandDispatch().submit(Command{ .id = Commands::AddImpulse, .param { .asPtr = &jumpImpulse } });
 			transitionState(PState::airborne);
 		}
 		else if (eventId == static_cast<int>(Events::falling))
@@ -71,7 +72,7 @@ void StateComponent::onEvent(int eventId)
 		}
 		else if (eventId == static_cast<int>(Events::jump))
 		{
-			owner.getCommandDispatch().submit(Command{ .id = Commands::Jump });
+			owner.getCommandDispatch().submit(Command{ .id = Commands::AddImpulse, .param { .asPtr = &jumpImpulse } });
 			transitionState(PState::airborne);
 		}
 		else if (eventId == static_cast<int>(Events::falling))

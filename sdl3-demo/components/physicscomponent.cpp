@@ -23,7 +23,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputCompo
 
 void PhysicsComponent::onAttached()
 {
-	owner.getCommandDispatch().registerCommand(Commands::Jump, this);
+	owner.getCommandDispatch().registerCommand(Commands::AddImpulse, this);
 	owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
 	owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityX, this);
 	owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityY, this);
@@ -72,13 +72,13 @@ void PhysicsComponent::update(const FrameContext &ctx)
 
 void PhysicsComponent::onCommand(const Command &command)
 {
-	if (command.id == Commands::Jump)
+	if (command.id == Commands::AddImpulse)
 	{
-		const glm::vec2 JUMP_FORCE(0, -200.0f);
 		if (isGrounded())
 		{
 			setGrounded(false);
-			setVelocity(getVelocity() + JUMP_FORCE);
+			const glm::vec2 *JUMP_IMPULSE = static_cast<const glm::vec2 *>(command.param.asPtr);
+			setVelocity(getVelocity() + *JUMP_IMPULSE);
 		}
 	}
 	else if (command.id == Commands::SetGrounded)
