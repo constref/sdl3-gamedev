@@ -27,7 +27,7 @@ public:
 		registrations[commandId].push_back(component);
 	}
 
-	void submit(const Command &command)
+	void dispatch(const Command &command)
 	{
 		auto &regs = registrations[command.id];
 		for (Component *component : regs)

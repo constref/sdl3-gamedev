@@ -215,7 +215,7 @@ bool initialize(SDLState &state)
 		cleanup(state);
 		initSuccess = false;
 	}
-	SDL_SetRenderVSync(state.renderer, 1);
+	//SDL_SetRenderVSync(state.renderer, 1);
 
 	// configure presentation
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -718,6 +718,12 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					player->setPosition(objPos);
 					auto &inputComponent = player->addComponent<InputComponent>();
 					auto &stateComponent = player->addComponent<StateComponent>();
+					stateComponent.setIdleAnimation(res.ANIM_PLAYER_IDLE);
+					stateComponent.setIdleTexture(res.texIdle);
+					stateComponent.setRunAnimation(res.ANIM_PLAYER_RUN);
+					stateComponent.setRunTexture(res.texRun);
+					stateComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
+					stateComponent.setSlideTexture(res.texSlide);
 					auto &physicsComponent = player->addComponent<PhysicsComponent>(&inputComponent);
 					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(100);

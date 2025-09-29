@@ -17,7 +17,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputCompo
 		// request direction updates from input component
 		inputComponent->directionUpdate.addObserver([this](float direction) {
 			this->direction = direction;
-		});
+			});
 	}
 }
 
@@ -35,12 +35,12 @@ void PhysicsComponent::update(const FrameContext &ctx)
 {
 	// apply some gravity
 	glm::vec2 vel = getVelocity();
-	vel+= glm::vec2(0, 500) * ctx.deltaTime;
+	vel += glm::vec2(0, 500) * ctx.deltaTime;
 
 	// horizontal movement
 	if (direction)
 	{
-		vel+= direction * acceleration * ctx.deltaTime;
+		vel += direction * acceleration * ctx.deltaTime;
 		if (std::abs(vel.x) > maxSpeedX)
 		{
 			vel.x = direction * maxSpeedX;
@@ -50,6 +50,10 @@ void PhysicsComponent::update(const FrameContext &ctx)
 		if (vel.x * direction < 0)
 		{
 			emit(ctx, static_cast<int>(Events::slide));
+		}
+		else
+		{
+			emit(ctx, static_cast<int>(Events::run));
 		}
 	}
 	else
@@ -77,8 +81,8 @@ void PhysicsComponent::onCommand(const Command &command)
 		if (isGrounded())
 		{
 			setGrounded(false);
-			const glm::vec2 *JUMP_IMPULSE = static_cast<const glm::vec2 *>(command.param.asPtr);
-			setVelocity(getVelocity() + *JUMP_IMPULSE);
+			const glm::vec2 *impulse = static_cast<const glm::vec2 *>(command.param.asPtr);
+			setVelocity(getVelocity() + *impulse);
 		}
 	}
 	else if (command.id == Commands::SetGrounded)

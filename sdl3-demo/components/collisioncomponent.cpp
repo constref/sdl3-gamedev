@@ -81,7 +81,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
 							}
-							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityX });
+							owner.getCommandDispatch().dispatch(Command { .id = Commands::ZeroVelocityX });
 						}
 						else if (axis == 2 && overlap.y)
 						{
@@ -94,18 +94,18 @@ void CollisionComponent::update(const FrameContext &ctx)
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
 							}
-							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityY });
+							owner.getCommandDispatch().dispatch(Command { .id = Commands::ZeroVelocityY });
 						}
 					}
 				}
 			}
 		}
-		};
+	};
 
 	// integrate X velocity first and check for collisions
-	owner.getCommandDispatch().submit(Command{ .id = Commands::IntegrateVelocityX, .param { .asFloat = ctx.deltaTime }});
+	owner.getCommandDispatch().dispatch(Command{ .id = Commands::IntegrateVelocityX, .param { .asFloat = ctx.deltaTime }});
 	checkCollisions(1);
-	owner.getCommandDispatch().submit(Command { .id = Commands::IntegrateVelocityY, .param { .asFloat = ctx.deltaTime }});
+	owner.getCommandDispatch().dispatch(Command { .id = Commands::IntegrateVelocityY, .param { .asFloat = ctx.deltaTime }});
 	checkCollisions(2);
 
 	if (velocity.y > 0)

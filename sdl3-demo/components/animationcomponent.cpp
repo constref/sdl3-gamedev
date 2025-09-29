@@ -37,6 +37,10 @@ void AnimationComponent::onCommand(const Command &command)
 {
 	if (command.id == Commands::SetAnimation)
 	{
-		setAnimation(command.param.asInt);
+		if (currentAnimation != command.param.asInt)
+		{
+			setAnimation(command.param.asInt);
+			animations[currentAnimation].reset();
+		}
 	}
 }

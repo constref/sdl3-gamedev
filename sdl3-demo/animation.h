@@ -23,5 +23,10 @@ public:
 		timer.step(deltaTime);
 	}
 
+	void reset()
+	{
+		timer.reset();
+	}
+
 	bool isDone() const { return timer.isTimeout(); }
 };
