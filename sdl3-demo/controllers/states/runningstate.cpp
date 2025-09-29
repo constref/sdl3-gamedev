@@ -6,6 +6,7 @@
 #include "runningstate.h"
 #include "idlestate.h"
 #include "airbornestate.h"
+#include "slidingstate.h"
 
 void RunningState::onEnter(GameObject &owner)
 {
@@ -37,5 +38,9 @@ void RunningState::onEvent(GameObject &owner, int eventId)
 	else if (eventId == static_cast<int>(Events::falling))
 	{
 		owner.getController()->changeState(AirborneState::instance());
+	}
+	else if (eventId == static_cast<int>(Events::slide))
+	{
+		owner.getController()->changeState(SlidingState::instance());
 	}
 }

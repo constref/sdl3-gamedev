@@ -5,13 +5,7 @@
 #include <SDL3/SDL.h>
 #include "animation.h"
 #include "component.h"
-#include "controller.h"
 #include "commanddispatch.h"
-
-enum class PlayerState
-{
-	idle, running, jumping
-};
 
 enum class BulletState
 {
@@ -21,17 +15,6 @@ enum class BulletState
 enum class EnemyState
 {
 	shambling, damaged, dead
-};
-
-struct PlayerData
-{
-	PlayerState state;
-	Timer weaponTimer;
-
-	PlayerData() : weaponTimer(0.1f)
-	{
-		state = PlayerState::idle;
-	}
 };
 
 struct LevelData {};
@@ -55,36 +38,22 @@ struct BulletData
 	}
 };
 
-union ObjectData
-{
-	PlayerData player;
-	LevelData level;
-	EnemyData enemy;
-	BulletData bullet;
-};
-
 class GameObject
 {
 	glm::vec2 position;
 	std::vector<Component *> components;
-	Controller *controller;
 	CommandDispatch commandDispatch;
 	bool debugHighlight;
 
 public:
 	GameObject()
 	{
-		controller = nullptr;
 		position = glm::vec2(0);
 		debugHighlight = false;
 	}
 
 	~GameObject()
 	{
-		if (controller)
-		{
-			delete controller;
-		}
 		for (auto *comp : components)
 		{
 			delete comp;
@@ -92,18 +61,10 @@ public:
 		components.clear();
 	}
 
-	glm::vec2 getPosition() const { return position; }
-	void setPosition(const glm::vec2 position) { this->position = position; }
-
-	template<typename T, typename... Args>
-	void createController(Args... args)
-	{
-		assert(controller == nullptr);
-		this->controller = new T(*this, args...); 
-	}
-	Controller *getController() const { return controller; }
 	CommandDispatch &getCommandDispatch() { return commandDispatch; }
 
+	glm::vec2 getPosition() const { return position; }
+	void setPosition(const glm::vec2 position) { this->position = position; }
 	bool isDebugHighlight() const { return debugHighlight; }
 	void setDebugHighlight(bool highlight) { debugHighlight = highlight; }
 
@@ -132,9 +93,9 @@ public:
 
 	void notify(const FrameContext &ctx, int eventId)
 	{
-		if (controller)
+		for (auto &comp : components)
 		{
-			controller->eventHandler(ctx, eventId);
+			comp->onEvent(eventId);
 		}
 	}
 	

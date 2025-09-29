@@ -16,10 +16,9 @@
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
 #include "components/collisioncomponent.h"
+#include "components/statecomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
-
-#include "controllers/playercontroller.h"
 
 using namespace std;
 
@@ -716,9 +715,9 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				if (obj.type == "Player")
 				{
 					auto player = std::make_shared<GameObject>();
-					player->createController<PlayerController>();
 					player->setPosition(objPos);
 					auto &inputComponent = player->addComponent<InputComponent>();
+					auto &stateComponent = player->addComponent<StateComponent>();
 					auto &physicsComponent = player->addComponent<PhysicsComponent>(&inputComponent);
 					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(100);
@@ -737,25 +736,20 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				}
 				else if (obj.type == "Enemy")
 				{
-	/*				auto enemy = std::make_shared<GameObject>();
-					enemy->position = objPos;
-					auto animComponent = std::make_unique<AnimationComponent>(enemy, res.enemyAnims);
-					animComponent->setAnimation(res.ANIM_ENEMY);
-					auto physicsComponent = std::make_unique<PhysicsComponent>(enemy);
-					physicsComponent->setDynamic(true);
-					physicsComponent->setAcceleration(glm::vec2(300, 0));
-					physicsComponent->setMaxSpeed(10);
-					auto renderComponent = std::make_unique<RenderComponent>(enemy, res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
-					auto collisionComponent = std::make_unique<CollisionComponent>(enemy);
-					collisionComponent->setCollider(SDL_FRect{
-						.x = 10, .y = 4, .w = 12, .h = 28
-					});
+					//auto enemy = std::make_shared<GameObject>();
+					//enemy->setPosition(objPos);
+					//auto animComponent = enemy->addComponent<AnimationComponent>(res.enemyAnims);
+					//auto physicsComponent = std::make_unique<PhysicsComponent>(enemy);
+					//physicsComponent->setDynamic(true);
+					//physicsComponent->setAcceleration(glm::vec2(300, 0));
+					//physicsComponent->setMaxSpeed(10);
+					//auto renderComponent = std::make_unique<RenderComponent>(enemy, res.texEnemy, TILE_SIZE, TILE_SIZE, animComponent.get());
+					//auto collisionComponent = std::make_unique<CollisionComponent>(enemy);
+					//collisionComponent->setCollider(SDL_FRect{
+					//	.x = 10, .y = 4, .w = 12, .h = 28
+					//});
 
-					enemy->components.push_back(std::move(physicsComponent));
-					enemy->components.push_back(std::move(animComponent));
-					enemy->components.push_back(std::move(renderComponent));
-					enemy->components.push_back(std::move(collisionComponent));
-					newLayer.push_back(enemy);*/
+					//newLayer.push_back(enemy);
 				}
 			}
 			gs.layers.push_back(std::move(newLayer));

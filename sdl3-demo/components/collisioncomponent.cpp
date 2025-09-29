@@ -85,10 +85,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 							}
 							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityX });
 
-							if (owner.getController())
-							{
-								owner.getController()->collisionHandler(otherOwner, overlap);
-							}
+							//if (owner.getController())
+							//{
+							//	owner.getController()->collisionHandler(otherOwner, overlap);
+							//}
 						}
 						else if (axis == 2 && overlap.y)
 						{
@@ -103,10 +103,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 							}
 							owner.getCommandDispatch().submit(Command { .id = Commands::ZeroVelocityY });
 
-							if (owner.getController())
-							{
-								owner.getController()->collisionHandler(otherOwner, overlap);
-							}
+							//if (owner.getController())
+							//{
+							//	owner.getController()->collisionHandler(otherOwner, overlap);
+							//}
 						}
 					}
 				}
