@@ -41,7 +41,9 @@ struct BulletData
 class GameObject
 {
 	glm::vec2 position;
+	std::vector<std::shared_ptr<GameObject>> children;
 	std::vector<Component *> components;
+	std::vector<Component *> updateList;
 	CommandDispatch commandDispatch;
 	bool debugHighlight;
 
@@ -54,6 +56,7 @@ public:
 
 	~GameObject()
 	{
+		updateList.clear();
 		for (auto *comp : components)
 		{
 			delete comp;
@@ -64,6 +67,7 @@ public:
 	CommandDispatch &getCommandDispatch() { return commandDispatch; }
 
 	glm::vec2 getPosition() const { return position; }
+
 	void setPosition(const glm::vec2 position) { this->position = position; }
 	bool isDebugHighlight() const { return debugHighlight; }
 	void setDebugHighlight(bool highlight) { debugHighlight = highlight; }
@@ -73,8 +77,11 @@ public:
 	{
 		T *comp = new T(*this, args...);
 		components.push_back(comp);
-		comp->onAttached();
 		return *comp;
+	}
+	void attachComponent(Component *comp)
+	{
+		comp->onAttached();
 	}
 
 	template<typename T>

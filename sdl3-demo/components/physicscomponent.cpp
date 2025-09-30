@@ -17,7 +17,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputCompo
 		// request direction updates from input component
 		inputComponent->directionUpdate.addObserver([this](float direction) {
 			this->direction = direction;
-			});
+		});
 	}
 }
 

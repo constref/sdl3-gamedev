@@ -16,7 +16,8 @@
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
 #include "components/collisioncomponent.h"
-#include "components/statecomponent.h"
+#include "components/player/statecomponent.h"
+#include "components/player/playermovecomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
 
