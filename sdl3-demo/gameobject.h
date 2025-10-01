@@ -7,6 +7,10 @@
 #include "component.h"
 #include "commanddispatch.h"
 
+#include <string>
+#include <unordered_map>
+#include "../observer.h"
+
 enum class BulletState
 {
 	moving, colliding, inactive
@@ -43,8 +47,8 @@ class GameObject
 	glm::vec2 position;
 	std::vector<std::shared_ptr<GameObject>> children;
 	std::vector<Component *> components;
-	std::vector<Component *> updateList;
 	CommandDispatch commandDispatch;
+	SubjectRegistry subjectRegistry;
 	bool debugHighlight;
 
 public:
@@ -56,7 +60,6 @@ public:
 
 	~GameObject()
 	{
-		updateList.clear();
 		for (auto *comp : components)
 		{
 			delete comp;
@@ -79,9 +82,20 @@ public:
 		components.push_back(comp);
 		return *comp;
 	}
-	void attachComponent(Component *comp)
+
+	void initializeComponents()
 	{
-		comp->onAttached();
+		// register subjects
+		for (Component *cmp : components)
+		{
+			cmp->onAttached(subjectRegistry);
+		}
+
+		// register observers
+		for (Component *cmp : components)
+		{
+			cmp->registerObservers(subjectRegistry);
+		}
 	}
 
 	template<typename T>

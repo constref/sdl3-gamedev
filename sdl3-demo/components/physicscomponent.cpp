@@ -1,27 +1,20 @@
 #include "physicscomponent.h"
-#include "inputcomponent.h"
+
 #include "../framecontext.h"
 #include "../gameobject.h"
 #include "../events.h"
 #include "../commands.h"
+#include "../coresubjects.h"
 
-PhysicsComponent::PhysicsComponent(GameObject &owner, InputComponent *inputComponent) : Component(owner)
+PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 {
 	direction = 0;
 	maxSpeedX = 0;
 	velocity = acceleration = glm::vec2(0);
 	grounded = false;
-
-	if (inputComponent)
-	{
-		// request direction updates from input component
-		inputComponent->directionUpdate.addObserver([this](float direction) {
-			this->direction = direction;
-		});
-	}
 }
 
-void PhysicsComponent::onAttached()
+void PhysicsComponent::onAttached(SubjectRegistry &registry)
 {
 	owner.getCommandDispatch().registerCommand(Commands::AddImpulse, this);
 	owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
@@ -29,6 +22,15 @@ void PhysicsComponent::onAttached()
 	owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityY, this);
 	owner.getCommandDispatch().registerCommand(Commands::ZeroVelocityX, this);
 	owner.getCommandDispatch().registerCommand(Commands::ZeroVelocityY, this);
+
+	registry.registerSubject(CoreSubjects::VELOCITY, &velocitySubject);
+}
+
+void PhysicsComponent::registerObservers(SubjectRegistry &registry)
+{
+	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
+		this->direction = direction;
+	});
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)

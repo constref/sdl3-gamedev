@@ -5,6 +5,7 @@
 #include "../framecontext.h"
 #include "../inputstate.h"
 #include "../events.h"
+#include "../coresubjects.h"
 
 InputComponent::InputComponent(GameObject &owner) : Component(owner)
 {
@@ -32,18 +33,10 @@ void InputComponent::update(const FrameContext &ctx)
 		emit(ctx, static_cast<int>(Events::run));
 	}
 
-	//if (direction != this->direction)
-	//{
-	//	this->direction = direction;
-	//	if (direction)
-	//	{
-	//		emit(ctx, static_cast<int>(Events::run));
-	//	}
-	//	else
-	//	{
-	//		emit(ctx, static_cast<int>(Events::idle));
-	//	}
-	//}
+	directionSubject.notify(direction);
+}
 
-	directionUpdate.notify(direction);
+void InputComponent::onAttached(SubjectRegistry &registry)
+{
+	registry.registerSubject(CoreSubjects::DIRECTION, &directionSubject);
 }

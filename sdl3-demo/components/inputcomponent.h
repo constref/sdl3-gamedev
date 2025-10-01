@@ -10,6 +10,7 @@ class InputComponent : public Component
 public:
 	InputComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
+	void onAttached(SubjectRegistry &registry) override;
 
-	Subject<float> directionUpdate;
+	Subject<float> directionSubject;
 };

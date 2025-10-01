@@ -1,17 +1,15 @@
 #include "rendercomponent.h"
 #include <SDL3/SDL.h>
 
-#include "animationcomponent.h"
-#include "inputcomponent.h"
 #include "../gameobject.h"
 #include "../sdlstate.h"
 #include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
 #include "../commands.h"
+#include "../coresubjects.h"
 
-RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture,
-	float width, float height, AnimationComponent *animComponent, InputComponent *inputComponent)
+RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner), flashTimer(0.05f)
 {
 	this->texture = texture;
@@ -22,21 +20,21 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture,
 	direction = 1;
 
 	// receive frame number updates from the animation component
-	if (animComponent)
-	{
-		animComponent->currentFrameChanged.addObserver([this](int frame) {
-			this->frameNumber = frame;
-			});
-	}
-	if (inputComponent)
-	{
-		inputComponent->directionUpdate.addObserver([this](float direction) {
-			if (direction)
-			{
-				this->direction = direction;
-			}
-			});
-	}
+	//if (animComponent)
+	//{
+	//	animComponent->currentFrameChanged.addObserver([this](int frame) {
+	//		this->frameNumber = frame;
+	//		});
+	//}
+	//if (inputComponent)
+	//{
+	//	inputComponent->directionUpdate.addObserver([this](float direction) {
+	//		if (direction)
+	//		{
+	//			this->direction = direction;
+	//		}
+	//		});
+	//}
 }
 
 void RenderComponent::update(const FrameContext &ctx)
@@ -112,7 +110,7 @@ void RenderComponent::update(const FrameContext &ctx)
 	}
 }
 
-void RenderComponent::onAttached()
+void RenderComponent::onAttached(SubjectRegistry &registry)
 {
 	owner.getCommandDispatch().registerCommand(Commands::SetTexture, this);
 }
@@ -124,6 +122,20 @@ void RenderComponent::onCommand(const Command &command)
 		SDL_Texture *texture = static_cast<SDL_Texture *>(command.param.asPtr);
 		setTexture(texture);
 	}
+}
+
+void RenderComponent::registerObservers(SubjectRegistry &registry)
+{
+	registry.addObserver<int>(CoreSubjects::CURRENT_ANIMATION_FRAME, [this](const int &currentFrame) {
+		this->frameNumber = currentFrame;
+	});
+
+	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
+		if (direction)
+		{
+			this->direction = direction;
+		}
+	});
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

@@ -3,6 +3,7 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../commands.h"
+#include "../coresubjects.h"
 
 #include <cassert>
 
@@ -18,7 +19,7 @@ void AnimationComponent::update(const FrameContext &ctx)
 	{
 		animations[currentAnimation].step(ctx.deltaTime);
 		frameNumber = animations[currentAnimation].currentFrame() + 1;
-		currentFrameChanged.notify(frameNumber);
+		currentFrameSubject.notify(frameNumber);
 	}
 }
 
@@ -28,9 +29,10 @@ void AnimationComponent::setAnimation(int index)
 	currentAnimation = index;
 }
 
-void AnimationComponent::onAttached()
+void AnimationComponent::onAttached(SubjectRegistry &registry)
 {
 	owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
+	registry.registerSubject(CoreSubjects::CURRENT_ANIMATION_FRAME, &currentFrameSubject);
 }
 
 void AnimationComponent::onCommand(const Command &command)

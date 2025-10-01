@@ -4,8 +4,6 @@
 #include "../timer.h"
 
 struct SDL_Texture;
-class AnimationComponent;
-class InputComponent;
 
 class RenderComponent : public Component
 {
@@ -18,11 +16,11 @@ class RenderComponent : public Component
 	float direction;
 
 public:
-	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height,
-		AnimationComponent *animComponent = nullptr, InputComponent *inputComponent = nullptr);
+	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
-	void onAttached() override;
+	void onAttached(SubjectRegistry &registry) override;
 	void onCommand(const Command &command) override;
+	void registerObservers(SubjectRegistry &registry) override;
 
 	void setTexture(SDL_Texture *texture);
 };

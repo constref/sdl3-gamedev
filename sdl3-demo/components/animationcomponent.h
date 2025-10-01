@@ -14,12 +14,12 @@ class AnimationComponent : public Component
 	std::vector<Animation> animations;
 	int frameNumber;
 
+	Subject<int> currentFrameSubject;
+
 public:
 	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
-	void onAttached() override;
+	void onAttached(SubjectRegistry &registry) override;
 	void onCommand(const Command &command) override;
-
-	Subject<int> currentFrameChanged;
 };

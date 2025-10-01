@@ -1,30 +1,25 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <format>
+
 #include "collisioncomponent.h"
+
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../gamestate.h"
 #include "../events.h"
 #include "../commands.h"
-
-#include "physicscomponent.h"
+#include "../coresubjects.h"
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
-CollisionComponent::CollisionComponent(GameObject &owner, PhysicsComponent *physicsComp) : Component(owner), collider{ 0 }
+CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner), collider{ 0 }
 {
 	dynamic = false;
 	// keep track of all collision components
 	allComponents.push_back(this);
 
 	velocity = glm::vec2(0);
-	if (physicsComp)
-	{
-		physicsComp->velocityUpdate.addObserver([this](glm::vec2 velocity) {
-			this->velocity = velocity;
-		});
-	}
 }
 
 CollisionComponent::~CollisionComponent()
@@ -112,6 +107,13 @@ void CollisionComponent::update(const FrameContext &ctx)
 	{
 		emit(ctx, static_cast<int>(Events::falling));
 	}
+}
+
+void CollisionComponent::registerObservers(SubjectRegistry &registry)
+{
+	registry.addObserver<glm::vec2>(CoreSubjects::VELOCITY, [this](glm::vec2 velocity) {
+		this->velocity = velocity;
+	});
 }
 
 bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)

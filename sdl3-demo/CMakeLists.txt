@@ -37,7 +37,7 @@ add_executable (sdl3-demo
 	"events.h"
 	"state.h" 
 	"commanddispatch.h"
-	"commands.h")
+	"commands.h" "coresubjects.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sdl3-demo PROPERTY CXX_STANDARD 20)

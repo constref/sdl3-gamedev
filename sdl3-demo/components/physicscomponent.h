@@ -5,7 +5,6 @@
 #include "../observer.h"
 
 struct FrameContext;
-class InputComponent;
 
 class PhysicsComponent : public Component
 {
@@ -14,17 +13,20 @@ class PhysicsComponent : public Component
 	float maxSpeedX;
 	bool grounded;
 
+	Subject<glm::vec2> velocitySubject;
+
 public:
-	PhysicsComponent(GameObject &owner, InputComponent *inputComponent = nullptr);
+	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached() override;
+	void onAttached(SubjectRegistry &registry) override;
+	void registerObservers(SubjectRegistry &registry) override;
 	void onCommand(const Command &command) override;
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel)
 	{
 		velocity = vel;
-		velocityUpdate.notify(velocity);
+		velocitySubject.notify(velocity);
 	}
 	glm::vec2 getAcceleration() const { return acceleration; }
 	void setAcceleration(const glm::vec2 &acc)
@@ -34,6 +36,4 @@ public:
 	void setMaxSpeed(float maxSpeed) { maxSpeedX = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
-
-	Subject<glm::vec2> velocityUpdate;
 };

@@ -6,7 +6,6 @@
 #include "../component.h"
 
 struct SDL_FRect;
-class PhysicsComponent;
 
 class CollisionComponent : public Component
 {
@@ -17,13 +16,12 @@ class CollisionComponent : public Component
 	bool dynamic;
 
 public:
-	CollisionComponent(GameObject &owner, PhysicsComponent *physicsComp = nullptr);
+	CollisionComponent(GameObject &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
+	void registerObservers(SubjectRegistry &registry) override;
 
-	void genericResponse(const FrameContext &ctx, GameObject &objA, GameObject &objB, glm::vec2 &overlap, bool &foundGround);
 	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
-
 	bool isDynamic() const { return dynamic; }
 	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }
