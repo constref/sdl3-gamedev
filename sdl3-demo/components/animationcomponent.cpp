@@ -31,6 +31,7 @@ void AnimationComponent::setAnimation(int index)
 
 void AnimationComponent::onAttached(SubjectRegistry &registry)
 {
+	owner.getCommandDispatch().registerHandler<SetAnimationCommand>(this);
 	//owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
 	registry.registerSubject(CoreSubjects::CURRENT_ANIMATION_FRAME, &currentFrameSubject);
 }

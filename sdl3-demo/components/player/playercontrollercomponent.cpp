@@ -18,6 +18,7 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	runTexture = nullptr;
 	slideAnimationIndex = 0;
 	slideTexture = nullptr;
+	transitionState(PState::idle);
 }
 
 
