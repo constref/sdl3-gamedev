@@ -16,8 +16,7 @@
 #include "components/inputcomponent.h"
 #include "components/physicscomponent.h"
 #include "components/collisioncomponent.h"
-#include "components/player/statecomponent.h"
-#include "components/player/playermovecomponent.h"
+#include "components/player/playercontrollercomponent.h"
 #include "framecontext.h"
 #include "inputstate.h"
 
@@ -52,14 +51,12 @@ int main(int argc, char *argv[])
 
 	// start the game loop
 	uint64_t prevTime = SDL_GetTicks();
+	float timeAccum = 0;
 	bool running = true;
 	InputState inputState;
+
 	while (running)
 	{
-		uint64_t nowTime = SDL_GetTicks();
-		float deltaTime = (nowTime - prevTime) / 1000.0f;
-		FrameContext ctx(state, gs, res, inputState, deltaTime);
-
 		SDL_Event event{ 0 };
 		while (SDL_PollEvent(&event))
 		{
@@ -78,12 +75,12 @@ int main(int argc, char *argv[])
 				}
 				case SDL_EVENT_KEY_DOWN:
 				{
-					inputState.keys[event.key.scancode] = true;
+					inputState.setKeyState(event.key.scancode, true);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
 				{
-					inputState.keys[event.key.scancode] = false;
+					inputState.setKeyState(event.key.scancode, false);
 					if (event.key.scancode == SDL_SCANCODE_F2)
 					{
 						gs.debugMode = !gs.debugMode;
@@ -98,90 +95,102 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		// perform drawing commands
-		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-		SDL_RenderClear(state.renderer);
-
-		// calculate viewport position
-		gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
-		gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
-
-		// update all objects
-		for (auto &layer : gs.layers)
-		{
-			for (auto obj : layer)
-			{
-				obj->update(ctx);
-			}
-		}
-
-		const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
-		const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
-
-		/*
-		// draw background images
-		SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
-		drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
-			gs.bg4Scroll, 0.075f, deltaTime);
-		drawParalaxBackground(state, gs, res.texBg3, gs.player().velocity.x,
-			gs.bg3Scroll, 0.150f, deltaTime);
-		drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
-			gs.bg2Scroll, 0.3f, deltaTime);
-
-		// draw background tiles
-		//for (GameObject &obj : gs.backgroundTiles)
-		//{
-		//	SDL_FRect dst{
-		//		.x = obj.position.x - gs.mapViewport.x,
-		//		.y = obj.position.y,
-		//		.w = static_cast<float>(obj.texture->w),
-		//		.h = static_cast<float>(obj.texture->h)
-		//	};
-		//	SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-		//}
-
-		// draw all objects
-		//for (auto &layer : gs.layers)
-		//{
-		//	for (GameObject &obj : layer)
-		//	{
-		//		drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
-		//	}
-		//}
-
-		// draw bullets
-		for (GameObject &bullet : gs.bullets)
-		{
-			if (bullet.data.bullet.state != BulletState::inactive)
-			{
-				drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
-			}
-		}
-
-		// draw foreground tiles
-		for (GameObject &obj : gs.foregroundTiles)
-		{
-			SDL_FRect dst{
-				.x = obj.position.x - gs.mapViewport.x,
-				.y = obj.position.y,
-				.w = static_cast<float>(obj.texture->w),
-				.h = static_cast<float>(obj.texture->h)
-			};
-			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-		}
-
-		*/
-		if (gs.debugMode)
-		{
-			// display some debug info
-			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5,
-				std::format("G: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded()).c_str());
-		}
-
-		// swap buffers and present
-		SDL_RenderPresent(state.renderer);
+		const float targetFps = 60.0f;
+		const float interval = 1.0f / targetFps;
+		uint64_t nowTime = SDL_GetTicks();
+		float deltaTime = (nowTime - prevTime) / 1000.0f;
 		prevTime = nowTime;
+		timeAccum += deltaTime;
+
+		FrameContext ctx(state, gs, res, inputState, interval);
+		// simple time accumulator for consistent dt interval
+		while (timeAccum >= interval)
+		{
+			timeAccum -= interval;
+			// perform drawing commands
+			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+			SDL_RenderClear(state.renderer);
+
+			// calculate viewport position
+			gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
+			gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
+
+			// update all objects
+			for (auto &layer : gs.layers)
+			{
+				for (auto obj : layer)
+				{
+					obj->update(ctx);
+				}
+			}
+
+			const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
+			const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
+
+			/*
+			// draw background images
+			SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
+			drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
+				gs.bg4Scroll, 0.075f, deltaTime);
+			drawParalaxBackground(state, gs, res.texBg3, gs.player().velocity.x,
+				gs.bg3Scroll, 0.150f, deltaTime);
+			drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
+				gs.bg2Scroll, 0.3f, deltaTime);
+
+			// draw background tiles
+			//for (GameObject &obj : gs.backgroundTiles)
+			//{
+			//	SDL_FRect dst{
+			//		.x = obj.position.x - gs.mapViewport.x,
+			//		.y = obj.position.y,
+			//		.w = static_cast<float>(obj.texture->w),
+			//		.h = static_cast<float>(obj.texture->h)
+			//	};
+			//	SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+			//}
+
+			// draw all objects
+			//for (auto &layer : gs.layers)
+			//{
+			//	for (GameObject &obj : layer)
+			//	{
+			//		drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
+			//	}
+			//}
+
+			// draw bullets
+			for (GameObject &bullet : gs.bullets)
+			{
+				if (bullet.data.bullet.state != BulletState::inactive)
+				{
+					drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
+				}
+			}
+
+			// draw foreground tiles
+			for (GameObject &obj : gs.foregroundTiles)
+			{
+				SDL_FRect dst{
+					.x = obj.position.x - gs.mapViewport.x,
+					.y = obj.position.y,
+					.w = static_cast<float>(obj.texture->w),
+					.h = static_cast<float>(obj.texture->h)
+				};
+				SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+			}
+
+			*/
+			if (gs.debugMode)
+			{
+				// display some debug info
+				SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+				SDL_RenderDebugText(state.renderer, 5, 5,
+					std::format("G: {} - dt: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded(), ctx.deltaTime).c_str());
+			}
+
+			// swap buffers and present
+			SDL_RenderPresent(state.renderer);
+		}
 	}
 
 	res.unload();
@@ -696,7 +705,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 								.x = 0, .y = 0,
 								.w = static_cast<float>(res.map->tileWidth),
 								.h = static_cast<float>(res.map->tileHeight)
-							});
+								});
 						}
 						newLayer.push_back(tile);
 					}
@@ -718,22 +727,23 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					auto player = std::make_shared<GameObject>();
 					player->setPosition(objPos);
 					auto &inputComponent = player->addComponent<InputComponent>();
-					auto &stateComponent = player->addComponent<StateComponent>();
-					stateComponent.setIdleAnimation(res.ANIM_PLAYER_IDLE);
-					stateComponent.setIdleTexture(res.texIdle);
-					stateComponent.setRunAnimation(res.ANIM_PLAYER_RUN);
-					stateComponent.setRunTexture(res.texRun);
-					stateComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
-					stateComponent.setSlideTexture(res.texSlide);
+					auto &playerCtrlComponent = player->addComponent<PlayerControllerComponent>();
+					playerCtrlComponent.setIdleAnimation(res.ANIM_PLAYER_IDLE);
+					playerCtrlComponent.setIdleTexture(res.texIdle);
+					playerCtrlComponent.setRunAnimation(res.ANIM_PLAYER_RUN);
+					playerCtrlComponent.setRunTexture(res.texRun);
+					playerCtrlComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
+					playerCtrlComponent.setSlideTexture(res.texSlide);
 					auto &physicsComponent = player->addComponent<PhysicsComponent>();
-					physicsComponent.setAcceleration(glm::vec2(400, 0));
+					physicsComponent.setAcceleration(glm::vec2(5, 0));
+					physicsComponent.setMass(80); //kg
 					physicsComponent.setMaxSpeed(100);
 					auto &collisionComponent = player->addComponent<CollisionComponent>();
 					collisionComponent.setDynamic(true);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
-					});
+						});
 					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
 					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE);
 					player->initializeComponents();

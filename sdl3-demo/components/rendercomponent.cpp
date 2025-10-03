@@ -18,23 +18,6 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float 
 	this->height = height;
 	this->frameNumber = 1;
 	direction = 1;
-
-	// receive frame number updates from the animation component
-	//if (animComponent)
-	//{
-	//	animComponent->currentFrameChanged.addObserver([this](int frame) {
-	//		this->frameNumber = frame;
-	//		});
-	//}
-	//if (inputComponent)
-	//{
-	//	inputComponent->directionUpdate.addObserver([this](float direction) {
-	//		if (direction)
-	//		{
-	//			this->direction = direction;
-	//		}
-	//		});
-	//}
 }
 
 void RenderComponent::update(const FrameContext &ctx)
@@ -86,43 +69,22 @@ void RenderComponent::update(const FrameContext &ctx)
 
 			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
 		}
-		/*
-			SDL_FRect rectA{
-				.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
-				.y = owner.position.y + owner.collider.y,
-				.w = owner.collider.w,
-				.h = owner.collider.h
-			};
-			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
-
-			SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
-			SDL_RenderFillRect(ctx.state.renderer, &rectA);
-			SDL_FRect sensor{
-				.x = owner.position.x + owner.collider.x - ctx.gs.mapViewport.x,
-				.y = owner.position.y + owner.collider.y + owner.collider.h,
-				.w = owner.collider.w, .h = 1
-			};
-			SDL_SetRenderDrawColor(ctx.state.renderer, 0, 0, 255, 150);
-			SDL_RenderFillRect(ctx.state.renderer, &sensor);
-
-			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
-		*/
 	}
 }
 
 void RenderComponent::onAttached(SubjectRegistry &registry)
 {
-	owner.getCommandDispatch().registerCommand(Commands::SetTexture, this);
+	//owner.getCommandDispatch().registerCommand(Commands::SetTexture, this);
 }
 
-void RenderComponent::onCommand(const Command &command)
-{
-	if (command.id == Commands::SetTexture)
-	{
-		SDL_Texture *texture = static_cast<SDL_Texture *>(command.param.asPtr);
-		setTexture(texture);
-	}
-}
+//void RenderComponent::onCommand(const Command &command)
+//{
+//	if (command.id == Commands::SetTexture)
+//	{
+//		SDL_Texture *texture = static_cast<SDL_Texture *>(command.param.asPtr);
+//		setTexture(texture);
+//	}
+//}
 
 void RenderComponent::registerObservers(SubjectRegistry &registry)
 {

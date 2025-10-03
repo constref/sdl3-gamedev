@@ -19,7 +19,6 @@ public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
 	void onAttached(SubjectRegistry &registry) override;
-	void onCommand(const Command &command) override;
 	void registerObservers(SubjectRegistry &registry) override;
 
 	void setTexture(SDL_Texture *texture);

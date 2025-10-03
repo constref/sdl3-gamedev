@@ -1,38 +1,29 @@
 #pragma once
 
-#include <unordered_map>
-#include <vector>
+#include <array>
+#include "commands.h"
 
 class Component;
 
-struct Command
-{
-	int id;
-	union
-	{
-		int asInt;
-		float asFloat;
-		bool asBool;
-		void *asPtr;
-	} param;
-};
-
 class CommandDispatch
 {
-	std::unordered_map<int, std::vector<Component *>> registrations;
+	std::array<std::vector<Component *>, MAX_COMMANDS> registrations;
 
 public:
-	void registerCommand(int commandId, Component *component)
+	template<typename T>
+	void registerHandler(Component *component)
 	{
-		registrations[commandId].push_back(component);
+		registrations[T::index()].push_back(component);
 	}
 
-	void dispatch(const Command &command)
+	template<typename T>
+	void dispatch(const T &command)
 	{
-		auto &regs = registrations[command.id];
+		auto &regs = registrations[T::index()];
 		for (Component *component : regs)
 		{
-			component->onCommand(command);
+			//command.visit(*component);
+		//	component->onCommand(command);
 		}
 	}
 };

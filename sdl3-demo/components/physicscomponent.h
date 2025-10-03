@@ -8,7 +8,10 @@ struct FrameContext;
 
 class PhysicsComponent : public Component
 {
-	glm::vec2 velocity, acceleration;
+	glm::vec2 velocity;
+	glm::vec2 acceleration;
+	glm::vec2 netForce;
+	float mass;
 	float direction;
 	float maxSpeedX;
 	bool grounded;
@@ -20,8 +23,9 @@ public:
 	void update(const FrameContext &ctx);
 	void onAttached(SubjectRegistry &registry) override;
 	void registerObservers(SubjectRegistry &registry) override;
-	void onCommand(const Command &command) override;
 
+	float getMass() const { return mass; }
+	void setMass(float mass) { this->mass = mass; }
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel)
 	{

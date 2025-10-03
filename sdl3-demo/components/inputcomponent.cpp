@@ -6,6 +6,7 @@
 #include "../inputstate.h"
 #include "../events.h"
 #include "../coresubjects.h"
+#include "../commands.h"
 
 InputComponent::InputComponent(GameObject &owner) : Component(owner)
 {
@@ -15,22 +16,29 @@ InputComponent::InputComponent(GameObject &owner) : Component(owner)
 void InputComponent::update(const FrameContext &ctx)
 {
 	float direction = 0;
-	if (ctx.input.keys[SDL_SCANCODE_A])
+	if (ctx.input.isKeyPressed(SDL_SCANCODE_A))
 	{
 		direction += -1;
 	}
-	if (ctx.input.keys[SDL_SCANCODE_D])
+	if (ctx.input.isKeyPressed(SDL_SCANCODE_D))
 	{
 		direction += 1;
 	}
-	if (ctx.input.keys[SDL_SCANCODE_K])
-	{
-		emit(ctx, static_cast<int>(Events::jump));
-	}
 
-	if (direction)
+	KeyEvent keyEvent;
+	while (ctx.input.popEvent(keyEvent))
 	{
-		emit(ctx, static_cast<int>(Events::run));
+		switch (keyEvent.scancode)
+		{
+			case SDL_SCANCODE_K:
+			{
+				if (keyEvent.pressed)
+				{
+					//owner.getCommandDispatch().dispatch(Command{ .id = Commands::Jump });
+				}
+				break;
+			}
+		}
 	}
 
 	directionSubject.notify(direction);

@@ -3,7 +3,7 @@
 struct SDLState;
 struct GameState;
 struct Resources;
-struct InputState;
+class InputState;
 
 struct FrameContext
 {

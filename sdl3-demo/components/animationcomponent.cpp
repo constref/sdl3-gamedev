@@ -31,18 +31,19 @@ void AnimationComponent::setAnimation(int index)
 
 void AnimationComponent::onAttached(SubjectRegistry &registry)
 {
-	owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
+	//owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
 	registry.registerSubject(CoreSubjects::CURRENT_ANIMATION_FRAME, &currentFrameSubject);
 }
 
-void AnimationComponent::onCommand(const Command &command)
+void AnimationComponent::onCommand(const SetAnimationCommand &cmd)
 {
-	if (command.id == Commands::SetAnimation)
-	{
-		if (currentAnimation != command.param.asInt)
-		{
-			setAnimation(command.param.asInt);
-			animations[currentAnimation].reset();
-		}
-	}
+	printf("AnimationComponent::onCommand SetAnimationCommand %d\n", cmd.getAnimationIndex());
+	//if (command.id == Commands::SetAnimation)
+	//{
+	//	if (currentAnimation != command.param.asInt)
+	//	{
+	//		setAnimation(command.param.asInt);
+	//		animations[currentAnimation].reset();
+	//	}
+	//}
 }

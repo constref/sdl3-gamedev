@@ -5,16 +5,34 @@
 
 struct SDL_Texture;
 
-class StateComponent : public Component
+enum class PState
 {
+	idle,
+	running,
+	airborne,
+	falling,
+	sliding
+};
+
+class PlayerControllerComponent : public Component
+{
+	float direction;
+	glm::vec2 velocity;
+
+	PState currentState;
+	int idleAnimationIndex;
+	SDL_Texture *idleTexture;
+	int runAnimationIndex;
+	SDL_Texture *runTexture;
+	int slideAnimationIndex;
+	SDL_Texture *slideTexture;
 
 public:
-	StateComponent(GameObject &owner);
-	~StateComponent() override {}
-
-	void transitionState(PState newState);
+	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
+	void onAttached(SubjectRegistry &registry) override;
 	void registerObservers(SubjectRegistry &registry) override;
+	void transitionState(PState newState);
 	void onEvent(int eventId) override;
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
