@@ -2,7 +2,7 @@
 #include "../animation.h"
 #include "../gameobject.h"
 #include "../framecontext.h"
-#include "../commands.h"
+#include "../messages.h"
 #include "../coresubjects.h"
 
 #include <cassert>
@@ -31,20 +31,12 @@ void AnimationComponent::setAnimation(int index)
 
 void AnimationComponent::onAttached(SubjectRegistry &registry)
 {
-	owner.getCommandDispatch().registerHandler<SetAnimationCommand>(this);
-	//owner.getCommandDispatch().registerCommand(Commands::SetAnimation, this);
+	owner.getMessageDispatch().registerHandler<AnimationComponent, SetAnimationMessage>(this);
 	registry.registerSubject(CoreSubjects::CURRENT_ANIMATION_FRAME, &currentFrameSubject);
 }
 
-void AnimationComponent::onCommand(const SetAnimationCommand &cmd)
+void AnimationComponent::onMessage(const SetAnimationMessage &msg)
 {
-	printf("AnimationComponent::onCommand SetAnimationCommand %d\n", cmd.getAnimationIndex());
-	//if (command.id == Commands::SetAnimation)
-	//{
-	//	if (currentAnimation != command.param.asInt)
-	//	{
-	//		setAnimation(command.param.asInt);
-	//		animations[currentAnimation].reset();
-	//	}
-	//}
+	setAnimation(msg.getAnimationIndex());
+	animations[currentAnimation].reset();
 }

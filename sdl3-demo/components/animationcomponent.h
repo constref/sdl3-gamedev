@@ -5,7 +5,7 @@
 #include "../observer.h"
 
 class Animation;
-class SetAnimationCommand;
+class SetAnimationMessage;
 
 class AnimationComponent : public Component
 {
@@ -22,5 +22,6 @@ public:
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
 	void onAttached(SubjectRegistry &registry) override;
-	void onCommand(const SetAnimationCommand &cmd);
+
+	void onMessage(const SetAnimationMessage &msg);
 };

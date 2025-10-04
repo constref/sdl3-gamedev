@@ -6,7 +6,7 @@
 #include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
-#include "../commands.h"
+#include "../messages.h"
 #include "../coresubjects.h"
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
@@ -74,17 +74,8 @@ void RenderComponent::update(const FrameContext &ctx)
 
 void RenderComponent::onAttached(SubjectRegistry &registry)
 {
-	//owner.getCommandDispatch().registerCommand(Commands::SetTexture, this);
+	owner.getMessageDispatch().registerHandler<RenderComponent, SetAnimationMessage>(this);
 }
-
-//void RenderComponent::onCommand(const Command &command)
-//{
-//	if (command.id == Commands::SetTexture)
-//	{
-//		SDL_Texture *texture = static_cast<SDL_Texture *>(command.param.asPtr);
-//		setTexture(texture);
-//	}
-//}
 
 void RenderComponent::registerObservers(SubjectRegistry &registry)
 {
@@ -98,6 +89,11 @@ void RenderComponent::registerObservers(SubjectRegistry &registry)
 			this->direction = direction;
 		}
 	});
+}
+
+void RenderComponent::onMessage(const SetAnimationMessage &msg)
+{
+	setTexture(msg.getTexture());
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

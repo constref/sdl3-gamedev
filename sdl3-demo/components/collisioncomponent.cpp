@@ -1,7 +1,6 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <format>
-#include <print>
 
 #include "collisioncomponent.h"
 
@@ -9,7 +8,7 @@
 #include "../framecontext.h"
 #include "../gamestate.h"
 #include "../events.h"
-#include "../commands.h"
+#include "../messages.h"
 #include "../coresubjects.h"
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;

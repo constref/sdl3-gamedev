@@ -4,7 +4,7 @@
 #include "../../coresubjects.h"
 #include "../../events.h"
 #include "../../gameobject.h"
-#include "../../commands.h"
+#include "../../messages.h"
 
 PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner)
 {
@@ -18,7 +18,6 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	runTexture = nullptr;
 	slideAnimationIndex = 0;
 	slideTexture = nullptr;
-	transitionState(PState::idle);
 }
 
 
@@ -29,33 +28,27 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.getCommandDispatch().dispatch(SetAnimationCommand{ idleAnimationIndex, idleTexture });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetAnimation, .param = idleAnimationIndex });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetTexture, .param {.asPtr = idleTexture } });
+			owner.getMessageDispatch().dispatch(SetAnimationMessage { idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetAnimation, .param = runAnimationIndex });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetTexture, .param {.asPtr = runTexture } });
+			owner.getMessageDispatch().dispatch(SetAnimationMessage { runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetAnimation, .param = slideAnimationIndex });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetTexture, .param {.asPtr = slideTexture } });
+			owner.getMessageDispatch().dispatch(SetAnimationMessage { slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetAnimation, .param = runAnimationIndex });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetTexture, .param {.asPtr = runTexture } });
+			owner.getMessageDispatch().dispatch(SetAnimationMessage { runAnimationIndex, runTexture });
 			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetGrounded, .param {.asBool = false } });
 			break;
 		}
 	}
 	currentState = newState;
-	printf("Transitioned to state: %d\n", static_cast<int>(currentState));
 }
 void PlayerControllerComponent::update(const FrameContext &ctx)
 {

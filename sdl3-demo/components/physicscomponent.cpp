@@ -3,7 +3,7 @@
 #include "../framecontext.h"
 #include "../gameobject.h"
 #include "../events.h"
-#include "../commands.h"
+#include "../messages.h"
 #include "../coresubjects.h"
 
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
@@ -13,6 +13,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 	velocity = acceleration = glm::vec2(0);
 	grounded = false;
 	netForce = glm::vec2(0);
+	mass = 0;
 
 	// add gravity by default
 }

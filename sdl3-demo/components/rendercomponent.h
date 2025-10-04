@@ -4,6 +4,7 @@
 #include "../timer.h"
 
 struct SDL_Texture;
+class SetAnimationMessage;
 
 class RenderComponent : public Component
 {
@@ -21,5 +22,6 @@ public:
 	void onAttached(SubjectRegistry &registry) override;
 	void registerObservers(SubjectRegistry &registry) override;
 
+	void onMessage(const SetAnimationMessage &msg);
 	void setTexture(SDL_Texture *texture);
 };

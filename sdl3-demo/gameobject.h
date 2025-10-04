@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 #include "animation.h"
 #include "component.h"
-#include "commanddispatch.h"
+#include "messagedispatch.h"
 
 #include <string>
 #include <unordered_map>
@@ -47,7 +47,7 @@ class GameObject
 	glm::vec2 position;
 	std::vector<std::shared_ptr<GameObject>> children;
 	std::vector<Component *> components;
-	CommandDispatch commandDispatch;
+	MessageDispatch msgDispatch;
 	SubjectRegistry subjectRegistry;
 	bool debugHighlight;
 
@@ -67,7 +67,7 @@ public:
 		components.clear();
 	}
 
-	CommandDispatch &getCommandDispatch() { return commandDispatch; }
+	MessageDispatch &getMessageDispatch() { return msgDispatch; }
 
 	glm::vec2 getPosition() const { return position; }
 
