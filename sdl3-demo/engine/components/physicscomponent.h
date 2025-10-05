@@ -1,8 +1,9 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "../component.h"
-#include "../observer.h"
+#include <components/component.h>
+#include <messaging/observer.h>
+#include <messaging/messages.h>
 
 struct FrameContext;
 
@@ -21,7 +22,7 @@ class PhysicsComponent : public Component
 public:
 	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached(SubjectRegistry &registry) override;
+	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 	void registerObservers(SubjectRegistry &registry) override;
 
 	float getMass() const { return mass; }
@@ -40,4 +41,6 @@ public:
 	void setMaxSpeed(float maxSpeed) { maxSpeedX = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
+
+	void onMessage(const IntegrateVelocityMessage &msg);
 };

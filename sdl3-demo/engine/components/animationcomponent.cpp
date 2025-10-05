@@ -2,8 +2,8 @@
 #include "../animation.h"
 #include "../gameobject.h"
 #include "../framecontext.h"
-#include "../messages.h"
-#include "../coresubjects.h"
+#include "../messaging/messages.h"
+#include "../messaging/coresubjects.h"
 
 #include <cassert>
 
@@ -29,9 +29,9 @@ void AnimationComponent::setAnimation(int index)
 	currentAnimation = index;
 }
 
-void AnimationComponent::onAttached(SubjectRegistry &registry)
+void AnimationComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
-	owner.getMessageDispatch().registerHandler<AnimationComponent, SetAnimationMessage>(this);
+	msgDispatch.registerHandler<AnimationComponent, SetAnimationMessage>(this);
 	registry.registerSubject(CoreSubjects::CURRENT_ANIMATION_FRAME, &currentFrameSubject);
 }
 

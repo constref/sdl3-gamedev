@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include <vector>
-#include "../component.h"
+#include "component.h"
 
 struct SDL_FRect;
 

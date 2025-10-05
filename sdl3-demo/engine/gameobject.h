@@ -2,14 +2,13 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
-#include <SDL3/SDL.h>
 #include "animation.h"
-#include "component.h"
-#include "messagedispatch.h"
+#include "components/component.h"
+#include "messaging/messagedispatch.h"
 
 #include <string>
 #include <unordered_map>
-#include "../observer.h"
+#include <messaging/observer.h>
 
 enum class BulletState
 {
@@ -51,6 +50,8 @@ class GameObject
 	SubjectRegistry subjectRegistry;
 	bool debugHighlight;
 
+	MessageDispatch &getMessageDispatch() { return msgDispatch; }
+
 public:
 	GameObject()
 	{
@@ -66,8 +67,6 @@ public:
 		}
 		components.clear();
 	}
-
-	MessageDispatch &getMessageDispatch() { return msgDispatch; }
 
 	glm::vec2 getPosition() const { return position; }
 
@@ -88,7 +87,7 @@ public:
 		// register subjects
 		for (Component *cmp : components)
 		{
-			cmp->onAttached(subjectRegistry);
+			cmp->onAttached(subjectRegistry, getMessageDispatch());
 		}
 
 		// register observers
@@ -110,6 +109,12 @@ public:
 			}
 		}
 		return nullptr;
+	}
+
+	template<typename MessageType>
+	void sendMessage(const MessageType &message)
+	{
+		msgDispatch.send(message);
 	}
 
 	void notify(const FrameContext &ctx, int eventId)

@@ -50,20 +50,22 @@ public:
 	bool isGrounded() const { return grounded; }
 };
 
-class IntegrateVelocityXMessage : public Message<IntegrateVelocityXMessage>
+class IntegrateVelocityMessage : public Message<IntegrateVelocityMessage>
 {
-	float deltaTime;
 public:
-	IntegrateVelocityXMessage(float deltaTime) : deltaTime(deltaTime) {}
+	enum class Axis : int
+	{
+		X = 0,
+		Y = 1,
+	};
+public:
+	IntegrateVelocityMessage(Axis axis, float deltaTime) : axis(axis), deltaTime(deltaTime) {}
 	float getDeltaTime() const { return deltaTime; }
-};
+	Axis getAxis() const { return axis; }
 
-class IntegrateVelocityYMessage : public Message<IntegrateVelocityYMessage>
-{
+private:
+	Axis axis;
 	float deltaTime;
-public:
-	IntegrateVelocityYMessage(float deltaTime) : deltaTime(deltaTime) {}
-	float getDeltaTime() const { return deltaTime; }
 };
 
 enum class Commands : int

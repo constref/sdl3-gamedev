@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../component.h"
-#include "../observer.h"
+#include "component.h"
+#include <messaging/observer.h>
 
 class InputComponent : public Component
 {
@@ -10,7 +10,7 @@ class InputComponent : public Component
 public:
 	InputComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(SubjectRegistry &registry) override;
+	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 
 	Subject<float> directionSubject;
 };

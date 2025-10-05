@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "../component.h"
-#include "../observer.h"
+#include "component.h"
+#include "../messaging/observer.h"
 
 class Animation;
 class SetAnimationMessage;
@@ -21,7 +21,7 @@ public:
 	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
-	void onAttached(SubjectRegistry &registry) override;
+	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 
 	void onMessage(const SetAnimationMessage &msg);
 };

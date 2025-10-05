@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include "message.h"
+#include <messaging/message.h>
 
 class Component;
 
@@ -10,7 +10,7 @@ class MessageDispatch
 	using MessageHandlerFn = void(*)(Component *, const MessageBase &);
 	using MessageHandler = std::pair<Component *, MessageHandlerFn>;
 
-	std::array<std::vector<MessageHandler>, MAX_MESSAGES> registrations;
+	std::array<std::vector<MessageHandler>, MAX_MESSAGES_TYPES> registrations;
 
 public:
 	template<typename ComponentType, typename MessageType>
@@ -24,7 +24,7 @@ public:
 
 
 	template<typename MessageType>
-	void dispatch(const MessageType &message)
+	void send(const MessageType &message)
 	{
 		auto &regs = registrations[MessageType::index()];
 		for (auto &reg : regs)

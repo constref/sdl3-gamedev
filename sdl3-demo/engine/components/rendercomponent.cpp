@@ -6,8 +6,8 @@
 #include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
-#include "../messages.h"
-#include "../coresubjects.h"
+#include "../messaging/messages.h"
+#include "../messaging/coresubjects.h"
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner), flashTimer(0.05f)
@@ -72,9 +72,9 @@ void RenderComponent::update(const FrameContext &ctx)
 	}
 }
 
-void RenderComponent::onAttached(SubjectRegistry &registry)
+void RenderComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
-	owner.getMessageDispatch().registerHandler<RenderComponent, SetAnimationMessage>(this);
+	msgDispatch.registerHandler<RenderComponent, SetAnimationMessage>(this);
 }
 
 void RenderComponent::registerObservers(SubjectRegistry &registry)

@@ -1,10 +1,10 @@
 #include "playercontrollercomponent.h"
 
-#include "../../observer.h"
-#include "../../coresubjects.h"
-#include "../../events.h"
+#include "../messaging/observer.h"
+#include "../messaging/coresubjects.h"
+#include "../messaging/events.h"
+#include "../messaging/messages.h"
 #include "../../gameobject.h"
-#include "../../messages.h"
 
 PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner)
 {
@@ -28,22 +28,22 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.getMessageDispatch().dispatch(SetAnimationMessage { idleAnimationIndex, idleTexture });
+			owner.sendMessage(SetAnimationMessage { idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.getMessageDispatch().dispatch(SetAnimationMessage { runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationMessage { runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.getMessageDispatch().dispatch(SetAnimationMessage { slideAnimationIndex, slideTexture });
+			owner.sendMessage(SetAnimationMessage { slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.getMessageDispatch().dispatch(SetAnimationMessage { runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationMessage { runAnimationIndex, runTexture });
 			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetGrounded, .param {.asBool = false } });
 			break;
 		}
@@ -162,7 +162,7 @@ void PlayerControllerComponent::onEvent(int eventId)
 	}
 }
 
-void PlayerControllerComponent::onAttached(SubjectRegistry &registry)
+void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
 	//owner.getCommandDispatch().registerCommand(Commands::Jump, this);
 }

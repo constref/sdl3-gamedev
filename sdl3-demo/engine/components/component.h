@@ -3,6 +3,7 @@
 class GameObject;
 struct FrameContext;
 class SubjectRegistry;
+class MessageDispatch;
 
 class Component
 {
@@ -12,7 +13,7 @@ protected:
 public:
 	Component(GameObject &owner) : owner(owner) {}
 	virtual ~Component() {}
-	virtual void onAttached(SubjectRegistry &registry) {}
+	virtual void onAttached(SubjectRegistry &registry, MessageDispatch &dispatch) {}
 	virtual void registerObservers(SubjectRegistry &registry) {}
 	virtual void onEvent(int eventId) {}
 	virtual void update(const FrameContext &ctx) = 0;

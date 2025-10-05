@@ -7,9 +7,9 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../gamestate.h"
-#include "../events.h"
-#include "../messages.h"
-#include "../coresubjects.h"
+#include "../messaging/events.h"
+#include "../messaging/messages.h"
+#include "../messaging/coresubjects.h"
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -98,9 +98,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 	};
 
 	// integrate X velocity first and check for collisions
-	//owner.getCommandDispatch().dispatch(Command{ .id = Commands::IntegrateVelocityX, .param { .asFloat = ctx.deltaTime }});
+	owner.sendMessage(IntegrateVelocityMessage{ IntegrateVelocityMessage::Axis::X, ctx.deltaTime });
 	checkCollisions(1);
-	//owner.getCommandDispatch().dispatch(Command { .id = Commands::IntegrateVelocityY, .param { .asFloat = ctx.deltaTime }});
+	// integrate X velocity first and check for collisions
+	owner.sendMessage(IntegrateVelocityMessage{ IntegrateVelocityMessage::Axis::Y, ctx.deltaTime });
 	checkCollisions(2);
 
 	if (velocity.y > 0)

@@ -2,9 +2,9 @@
 
 #include "../framecontext.h"
 #include "../gameobject.h"
-#include "../events.h"
-#include "../messages.h"
-#include "../coresubjects.h"
+#include "../messaging/events.h"
+#include "../messaging/messages.h"
+#include "../messaging/coresubjects.h"
 
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 {
@@ -14,11 +14,9 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 	grounded = false;
 	netForce = glm::vec2(0);
 	mass = 0;
-
-	// add gravity by default
 }
 
-void PhysicsComponent::onAttached(SubjectRegistry &registry)
+void PhysicsComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
 	//owner.getCommandDispatch().registerCommand(Commands::AddImpulse, this);
 	//owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
@@ -34,7 +32,7 @@ void PhysicsComponent::registerObservers(SubjectRegistry &registry)
 {
 	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
 		this->direction = direction;
-	});
+		});
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -43,11 +41,13 @@ void PhysicsComponent::update(const FrameContext &ctx)
 
 	netForce += direction * acceleration * mass;
 
+	// gravity
+	const glm::vec2 gravity(0, 9.81f);
+	netForce += gravity * mass;
+
 	// apply forces
 	vel += netForce * ctx.deltaTime;
 
-	// apply some gravity
-	//vel += direction * acceleration * ctx.deltaTime;
 
 	//if (std::abs(vel.x) > maxSpeedX)
 	//{
@@ -71,6 +71,11 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	//}
 	setVelocity(vel);
 	netForce = glm::vec2(0);
+}
+
+void PhysicsComponent::onMessage(const IntegrateVelocityMessage &msg)
+{
+	owner.getPosition()[static_cast<int>(msg.getAxis())] += velocity[static_cast<int>(msg.getAxis())] * msg.getDeltaTime();
 }
 
 //void PhysicsComponent::onCommand(const Command &command)

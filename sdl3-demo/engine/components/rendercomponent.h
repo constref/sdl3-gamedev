@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../component.h"
+#include "component.h"
 #include "../timer.h"
 
 struct SDL_Texture;
@@ -19,7 +19,7 @@ class RenderComponent : public Component
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
-	void onAttached(SubjectRegistry &registry) override;
+	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 	void registerObservers(SubjectRegistry &registry) override;
 
 	void onMessage(const SetAnimationMessage &msg);

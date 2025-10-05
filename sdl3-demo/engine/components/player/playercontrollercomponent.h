@@ -30,7 +30,7 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(SubjectRegistry &registry) override;
+	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 	void registerObservers(SubjectRegistry &registry) override;
 	void transitionState(PState newState);
 	void onEvent(int eventId) override;
