@@ -34,7 +34,7 @@ void InputComponent::update(const FrameContext &ctx)
 			{
 				if (keyEvent.pressed)
 				{
-					//owner.getCommandDispatch().dispatch(Command{ .id = Commands::Jump });
+					owner.sendMessage(JumpMessage{});
 				}
 				break;
 			}

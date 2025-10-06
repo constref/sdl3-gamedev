@@ -13,11 +13,13 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 	velocity = acceleration = glm::vec2(0);
 	grounded = false;
 	netForce = glm::vec2(0);
-	mass = 0;
 }
 
 void PhysicsComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
+	msgDispatch.registerHandler<PhysicsComponent, IntegrateVelocityMessage>(this);
+	msgDispatch.registerHandler<PhysicsComponent, ScaleVelocityAxisMessage>(this);
+	msgDispatch.registerHandler<PhysicsComponent, AddImpulseMessage>(this);
 	//owner.getCommandDispatch().registerCommand(Commands::AddImpulse, this);
 	//owner.getCommandDispatch().registerCommand(Commands::SetGrounded, this);
 	//owner.getCommandDispatch().registerCommand(Commands::IntegrateVelocityX, this);
@@ -32,27 +34,27 @@ void PhysicsComponent::registerObservers(SubjectRegistry &registry)
 {
 	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
 		this->direction = direction;
-		});
+	});
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
 {
 	glm::vec2 vel = getVelocity();
 
-	netForce += direction * acceleration * mass;
+	netForce += direction * acceleration;
+	printf("netForce: %.2f, %.2f\n", netForce.x, netForce.y);
 
 	// gravity
-	const glm::vec2 gravity(0, 9.81f);
-	netForce += gravity * mass;
+	const glm::vec2 gravity(0, 600);
+	netForce += gravity;
 
 	// apply forces
 	vel += netForce * ctx.deltaTime;
 
-
-	//if (std::abs(vel.x) > maxSpeedX)
-	//{
-	//	vel.x = direction * maxSpeedX;
-	//}
+	if (std::abs(vel.x) > maxSpeedX)
+	{
+		vel.x = direction * maxSpeedX;
+	}
 
 	//if (!direction)
 	//{
@@ -75,7 +77,23 @@ void PhysicsComponent::update(const FrameContext &ctx)
 
 void PhysicsComponent::onMessage(const IntegrateVelocityMessage &msg)
 {
-	owner.getPosition()[static_cast<int>(msg.getAxis())] += velocity[static_cast<int>(msg.getAxis())] * msg.getDeltaTime();
+	glm::vec2 pos = owner.getPosition();
+	pos[static_cast<int>(msg.getAxis())] += velocity[static_cast<int>(msg.getAxis())] * msg.getDeltaTime();
+	owner.setPosition(pos);
+}
+
+void PhysicsComponent::onMessage(const ScaleVelocityAxisMessage &msg)
+{
+	glm::vec2 vel = getVelocity();
+	vel[static_cast<int>(msg.getAxis())] *= msg.getFactor();
+	setVelocity(vel);
+}
+
+void PhysicsComponent::onMessage(const AddImpulseMessage &msg)
+{
+	glm::vec2 vel = getVelocity();
+	vel += msg.getImpulse();
+	setVelocity(vel);
 }
 
 //void PhysicsComponent::onCommand(const Command &command)

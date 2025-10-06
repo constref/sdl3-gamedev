@@ -1,6 +1,6 @@
 #pragma once
 
-#include "component.h"
+#include <components/component.h>
 #include <messaging/observer.h>
 
 class InputComponent : public Component

@@ -1,4 +1,5 @@
 #include "playercontrollercomponent.h"
+#include "playercontrollercomponent.h"
 
 #include "../messaging/observer.h"
 #include "../messaging/coresubjects.h"
@@ -28,22 +29,22 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.sendMessage(SetAnimationMessage { idleAnimationIndex, idleTexture });
+			owner.sendMessage(SetAnimationMessage{ idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.sendMessage(SetAnimationMessage { runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.sendMessage(SetAnimationMessage { slideAnimationIndex, slideTexture });
+			owner.sendMessage(SetAnimationMessage{ slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.sendMessage(SetAnimationMessage { runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
 			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetGrounded, .param {.asBool = false } });
 			break;
 		}
@@ -52,22 +53,51 @@ void PlayerControllerComponent::transitionState(PState newState)
 }
 void PlayerControllerComponent::update(const FrameContext &ctx)
 {
-	if (!direction)
+	switch (currentState)
 	{
-		// decelerate
-		const float factor = velocity.x > 0 ? -1.5f : 1.5f;
-		//float amount = factor * acceleration.x * ctx.deltaTime;
-		float amount = 0;
-		if (std::abs(velocity.x) < std::abs(amount) && velocity.x != 0)
+		case PState::idle:
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::ZeroVelocityX });
-			emit(ctx, static_cast<int>(Events::idle));
+			if (direction)
+			{
+				transitionState(PState::running);
+			}
+			else
+			{
+				if (velocity.x)
+				{
+					owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.9f });
+					if (std::abs(velocity.x) < 0.1f)
+					{
+						owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
+					}
+				}
+			}
+			break;
 		}
-		else
+		case PState::running:
 		{
-			//vel.x += amount;
+			if (direction == 0)
+			{
+				transitionState(PState::idle);
+			}
+			else if (direction * velocity.x < 0)
+			{
+				transitionState(PState::sliding);
+			}
+			break;
 		}
-		//	emit(ctx, static_cast<int>(Events::idle));
+		case PState::sliding:
+		{
+			if (direction == 0)
+			{
+				transitionState(PState::idle);
+			}
+			else if (direction * velocity.x > 0)
+			{
+				transitionState(PState::running);
+			}
+			break;
+		}
 	}
 	// check if sliding (direction and velocity signs are different)
 	//if (direction)
@@ -104,7 +134,7 @@ void PlayerControllerComponent::onEvent(int eventId)
 		}
 		else if (eventId == static_cast<int>(Events::jump))
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::AddImpulse, .param {.asPtr = &jumpImpulse } });
+			owner.sendMessage(AddImpulseMessage{ jumpImpulse });
 			transitionState(PState::airborne);
 		}
 		else if (eventId == static_cast<int>(Events::falling))
@@ -120,7 +150,6 @@ void PlayerControllerComponent::onEvent(int eventId)
 		}
 		else if (eventId == static_cast<int>(Events::jump))
 		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::AddImpulse, .param {.asPtr = &jumpImpulse } });
 			transitionState(PState::airborne);
 		}
 		else if (eventId == static_cast<int>(Events::falling))
@@ -164,7 +193,17 @@ void PlayerControllerComponent::onEvent(int eventId)
 
 void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
-	//owner.getCommandDispatch().registerCommand(Commands::Jump, this);
+	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
+}
+
+void PlayerControllerComponent::onMessage(const JumpMessage &msg)
+{
+	if (currentState != PState::airborne)
+	{
+		transitionState(PState::airborne);
+		glm::vec2 jumpImpulse(0, -250.0f);
+		owner.sendMessage(AddImpulseMessage{ jumpImpulse });
+	}
 }
 
 void PlayerControllerComponent::registerObservers(SubjectRegistry &registry)

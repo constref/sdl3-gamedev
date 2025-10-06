@@ -50,14 +50,14 @@ public:
 	bool isGrounded() const { return grounded; }
 };
 
+enum class Axis : int
+{
+	X = 0,
+	Y = 1,
+};
+
 class IntegrateVelocityMessage : public Message<IntegrateVelocityMessage>
 {
-public:
-	enum class Axis : int
-	{
-		X = 0,
-		Y = 1,
-	};
 public:
 	IntegrateVelocityMessage(Axis axis, float deltaTime) : axis(axis), deltaTime(deltaTime) {}
 	float getDeltaTime() const { return deltaTime; }
@@ -68,10 +68,22 @@ private:
 	float deltaTime;
 };
 
+class ScaleVelocityAxisMessage : public Message<ScaleVelocityAxisMessage>
+{
+	Axis axis;
+	float factor;
+public:
+	ScaleVelocityAxisMessage(Axis axis, float factor) : axis(axis), factor(factor) {}
+	Axis getAxis() const { return axis; }
+	float getFactor() const { return factor; }
+};
+
+class JumpMessage : public Message<JumpMessage>
+{
+};
+
+
 enum class Commands : int
 {
 	LandOnGround,
-	ZeroVelocityX,
-	ZeroVelocityY,
-	Jump
 };

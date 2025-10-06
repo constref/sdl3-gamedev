@@ -66,7 +66,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 						}
 
 						// found intersection, respond accordingly
-						if (axis == 1 && overlap.x)
+						if (axis == 0 && overlap.x)
 						{
 							if (velocity.x > 0) // from left
 							{
@@ -76,9 +76,9 @@ void CollisionComponent::update(const FrameContext &ctx)
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
 							}
-							//owner.getCommandDispatch().dispatch(Command { .id = Commands::ZeroVelocityX });
+							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
 						}
-						else if (axis == 2 && overlap.y)
+						else if (axis == 1 && overlap.y)
 						{
 							if (velocity.y > 0) // from top
 							{
@@ -89,7 +89,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
 							}
-							//owner.getCommandDispatch().dispatch(Command { .id = Commands::ZeroVelocityY });
+							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
 						}
 					}
 				}
@@ -98,11 +98,11 @@ void CollisionComponent::update(const FrameContext &ctx)
 	};
 
 	// integrate X velocity first and check for collisions
-	owner.sendMessage(IntegrateVelocityMessage{ IntegrateVelocityMessage::Axis::X, ctx.deltaTime });
-	checkCollisions(1);
+	owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
+	checkCollisions(0);
 	// integrate X velocity first and check for collisions
-	owner.sendMessage(IntegrateVelocityMessage{ IntegrateVelocityMessage::Axis::Y, ctx.deltaTime });
-	checkCollisions(2);
+	owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
+	checkCollisions(1);
 
 	if (velocity.y > 0)
 	{

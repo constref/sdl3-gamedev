@@ -4,6 +4,7 @@
 #include "../component.h"
 
 struct SDL_Texture;
+class JumpMessage;
 
 enum class PState
 {
@@ -34,6 +35,7 @@ public:
 	void registerObservers(SubjectRegistry &registry) override;
 	void transitionState(PState newState);
 	void onEvent(int eventId) override;
+	void onMessage(const JumpMessage &msg);
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }

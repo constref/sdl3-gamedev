@@ -3,16 +3,17 @@
 #include <glm/glm.hpp>
 #include <components/component.h>
 #include <messaging/observer.h>
-#include <messaging/messages.h>
 
 struct FrameContext;
+class IntegrateVelocityMessage;
+class ScaleVelocityAxisMessage;
+class AddImpulseMessage;
 
 class PhysicsComponent : public Component
 {
 	glm::vec2 velocity;
 	glm::vec2 acceleration;
 	glm::vec2 netForce;
-	float mass;
 	float direction;
 	float maxSpeedX;
 	bool grounded;
@@ -25,8 +26,6 @@ public:
 	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
 	void registerObservers(SubjectRegistry &registry) override;
 
-	float getMass() const { return mass; }
-	void setMass(float mass) { this->mass = mass; }
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel)
 	{
@@ -43,4 +42,6 @@ public:
 	void setGrounded(bool grounded) { this->grounded = grounded; }
 
 	void onMessage(const IntegrateVelocityMessage &msg);
+	void onMessage(const ScaleVelocityAxisMessage &msg);
+	void onMessage(const AddImpulseMessage &msg);
 };

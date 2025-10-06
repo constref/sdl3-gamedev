@@ -76,11 +76,13 @@ int main(int argc, char *argv[])
 				case SDL_EVENT_KEY_DOWN:
 				{
 					inputState.setKeyState(event.key.scancode, true);
+					inputState.addEvent(event.key.scancode, true);
 					break;
 				}
 				case SDL_EVENT_KEY_UP:
 				{
 					inputState.setKeyState(event.key.scancode, false);
+					inputState.addEvent(event.key.scancode, true);
 					if (event.key.scancode == SDL_SCANCODE_F2)
 					{
 						gs.debugMode = !gs.debugMode;
@@ -735,8 +737,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					playerCtrlComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
 					playerCtrlComponent.setSlideTexture(res.texSlide);
 					auto &physicsComponent = player->addComponent<PhysicsComponent>();
-					physicsComponent.setAcceleration(glm::vec2(5, 0));
-					physicsComponent.setMass(80); //kg
+					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(100);
 					auto &collisionComponent = player->addComponent<CollisionComponent>();
 					collisionComponent.setDynamic(true);
