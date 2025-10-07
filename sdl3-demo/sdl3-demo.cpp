@@ -738,13 +738,13 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					playerCtrlComponent.setSlideTexture(res.texSlide);
 					auto &physicsComponent = player->addComponent<PhysicsComponent>();
 					physicsComponent.setAcceleration(glm::vec2(400, 0));
-					physicsComponent.setMaxSpeed(100);
+					physicsComponent.setMaxSpeed(glm::vec2(100, 300));
 					auto &collisionComponent = player->addComponent<CollisionComponent>();
 					collisionComponent.setDynamic(true);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
-						});
+					});
 					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
 					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE);
 					player->initializeComponents();

@@ -32,6 +32,7 @@ public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
 	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
+	void onStart() override;
 	void registerObservers(SubjectRegistry &registry) override;
 	void transitionState(PState newState);
 	void onEvent(int eventId) override;

@@ -14,8 +14,8 @@ class PhysicsComponent : public Component
 	glm::vec2 velocity;
 	glm::vec2 acceleration;
 	glm::vec2 netForce;
+	glm::vec2 maxSpeed;
 	float direction;
-	float maxSpeedX;
 	bool grounded;
 
 	Subject<glm::vec2> velocitySubject;
@@ -37,7 +37,7 @@ public:
 	{
 		acceleration = acc;
 	}
-	void setMaxSpeed(float maxSpeed) { maxSpeedX = maxSpeed; }
+	void setMaxSpeed(const glm::vec2 &maxSpeed) { this->maxSpeed = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
 

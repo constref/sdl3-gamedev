@@ -1,5 +1,6 @@
 #include "playercontrollercomponent.h"
 #include "playercontrollercomponent.h"
+#include "playercontrollercomponent.h"
 
 #include "../messaging/observer.h"
 #include "../messaging/coresubjects.h"
@@ -11,7 +12,6 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 {
 	direction = 0;
 	velocity = glm::vec2(0);
-
 	currentState = PState::idle;
 	idleAnimationIndex = 0;
 	idleTexture = nullptr;
@@ -21,6 +21,15 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	slideTexture = nullptr;
 }
 
+void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
+{
+	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
+}
+
+void PlayerControllerComponent::onStart()
+{
+	transitionState(PState::idle);
+}
 
 void PlayerControllerComponent::transitionState(PState newState)
 {
@@ -45,12 +54,12 @@ void PlayerControllerComponent::transitionState(PState newState)
 		case PState::airborne:
 		{
 			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetGrounded, .param {.asBool = false } });
 			break;
 		}
 	}
 	currentState = newState;
 }
+
 void PlayerControllerComponent::update(const FrameContext &ctx)
 {
 	switch (currentState)
@@ -99,28 +108,6 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 			break;
 		}
 	}
-	// check if sliding (direction and velocity signs are different)
-	//if (direction)
-	//{
-	//	if (!isRunning)
-	//	{
-	//		isRunning = true;
-	//		emit(ctx, static_cast<int>(Events::run));
-	//	}
-
-	//	bool wasSliding = isSliding;
-	//	isSliding = direction * velocity.x < 0;
-	//	if (isSliding)
-	//	{
-	//		if (isSliding != wasSliding)
-	//		{
-	//			emit(ctx, static_cast<int>(Events::slide));
-	//		}
-	//	}
-	//}
-	//else
-	//{
-	//}
 }
 
 void PlayerControllerComponent::onEvent(int eventId)
@@ -189,11 +176,6 @@ void PlayerControllerComponent::onEvent(int eventId)
 			transitionState(PState::airborne);
 		}
 	}
-}
-
-void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
-{
-	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
 }
 
 void PlayerControllerComponent::onMessage(const JumpMessage &msg)
