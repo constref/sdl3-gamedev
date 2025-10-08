@@ -75,10 +75,10 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 				// direction is zero, decelerate to stop
 				if (velocity.x)
 				{
-					const float damping = 1.0f;
+					const float damping = 10.0f;
 					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
 					owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, factor });
-					if (std::abs(velocity.x) < 0.1f)
+					if (std::abs(velocity.x) < 0.01f)
 					{
 						owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
 					}
