@@ -97,102 +97,95 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		const float targetFps = 60.0f;
-		const float interval = 1.0f / targetFps;
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = (nowTime - prevTime) / 1000.0f;
 		prevTime = nowTime;
 		timeAccum += deltaTime;
 
-		FrameContext ctx(state, gs, res, inputState, interval);
-		// simple time accumulator for consistent dt interval
-		while (timeAccum >= interval)
+		FrameContext ctx(state, gs, res, inputState, deltaTime);
+		// perform drawing commands
+		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+		SDL_RenderClear(state.renderer);
+
+		// calculate viewport position
+		gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
+		gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
+
+		// update all objects
+		for (auto &layer : gs.layers)
 		{
-			timeAccum -= interval;
-			// perform drawing commands
-			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-			SDL_RenderClear(state.renderer);
-
-			// calculate viewport position
-			gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
-			gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
-
-			// update all objects
-			for (auto &layer : gs.layers)
+			for (auto obj : layer)
 			{
-				for (auto obj : layer)
-				{
-					obj->update(ctx);
-				}
+				obj->update(ctx);
 			}
-
-			const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
-			const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
-
-			/*
-			// draw background images
-			SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
-			drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
-				gs.bg4Scroll, 0.075f, deltaTime);
-			drawParalaxBackground(state, gs, res.texBg3, gs.player().velocity.x,
-				gs.bg3Scroll, 0.150f, deltaTime);
-			drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
-				gs.bg2Scroll, 0.3f, deltaTime);
-
-			// draw background tiles
-			//for (GameObject &obj : gs.backgroundTiles)
-			//{
-			//	SDL_FRect dst{
-			//		.x = obj.position.x - gs.mapViewport.x,
-			//		.y = obj.position.y,
-			//		.w = static_cast<float>(obj.texture->w),
-			//		.h = static_cast<float>(obj.texture->h)
-			//	};
-			//	SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-			//}
-
-			// draw all objects
-			//for (auto &layer : gs.layers)
-			//{
-			//	for (GameObject &obj : layer)
-			//	{
-			//		drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
-			//	}
-			//}
-
-			// draw bullets
-			for (GameObject &bullet : gs.bullets)
-			{
-				if (bullet.data.bullet.state != BulletState::inactive)
-				{
-					drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
-				}
-			}
-
-			// draw foreground tiles
-			for (GameObject &obj : gs.foregroundTiles)
-			{
-				SDL_FRect dst{
-					.x = obj.position.x - gs.mapViewport.x,
-					.y = obj.position.y,
-					.w = static_cast<float>(obj.texture->w),
-					.h = static_cast<float>(obj.texture->h)
-				};
-				SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
-			}
-
-			*/
-			if (gs.debugMode)
-			{
-				// display some debug info
-				SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-				SDL_RenderDebugText(state.renderer, 5, 5,
-					std::format("G: {} - dt: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded(), ctx.deltaTime).c_str());
-			}
-
-			// swap buffers and present
-			SDL_RenderPresent(state.renderer);
 		}
+
+		const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
+		const int mapHPixels = res.map->mapHeight * res.map->tileHeight;
+
+		/*
+		// draw background images
+		SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
+		drawParalaxBackground(state, gs, res.texBg4, gs.player().velocity.x,
+			gs.bg4Scroll, 0.075f, deltaTime);
+		drawParalaxBackground(state, gs, res.texBg3, gs.player().velocity.x,
+			gs.bg3Scroll, 0.150f, deltaTime);
+		drawParalaxBackground(state, gs, res.texBg2, gs.player().velocity.x,
+			gs.bg2Scroll, 0.3f, deltaTime);
+
+		// draw background tiles
+		//for (GameObject &obj : gs.backgroundTiles)
+		//{
+		//	SDL_FRect dst{
+		//		.x = obj.position.x - gs.mapViewport.x,
+		//		.y = obj.position.y,
+		//		.w = static_cast<float>(obj.texture->w),
+		//		.h = static_cast<float>(obj.texture->h)
+		//	};
+		//	SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+		//}
+
+		// draw all objects
+		//for (auto &layer : gs.layers)
+		//{
+		//	for (GameObject &obj : layer)
+		//	{
+		//		drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
+		//	}
+		//}
+
+		// draw bullets
+		for (GameObject &bullet : gs.bullets)
+		{
+			if (bullet.data.bullet.state != BulletState::inactive)
+			{
+				drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h, deltaTime);
+			}
+		}
+
+		// draw foreground tiles
+		for (GameObject &obj : gs.foregroundTiles)
+		{
+			SDL_FRect dst{
+				.x = obj.position.x - gs.mapViewport.x,
+				.y = obj.position.y,
+				.w = static_cast<float>(obj.texture->w),
+				.h = static_cast<float>(obj.texture->h)
+			};
+			SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
+		}
+
+		*/
+		if (gs.debugMode)
+		{
+			// display some debug info
+			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			SDL_RenderDebugText(state.renderer, 5, 5,
+				std::format("G: {} - dt: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded(), ctx.deltaTime).c_str());
+		}
+
+		// swap buffers and present
+		SDL_RenderPresent(state.renderer);
 	}
 
 	res.unload();
@@ -227,7 +220,7 @@ bool initialize(SDLState &state)
 		cleanup(state);
 		initSuccess = false;
 	}
-	//SDL_SetRenderVSync(state.renderer, 1);
+	SDL_SetRenderVSync(state.renderer, 1);
 
 	// configure presentation
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -744,7 +737,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
-					});
+						});
 					auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
 					auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE);
 					player->initializeComponents();

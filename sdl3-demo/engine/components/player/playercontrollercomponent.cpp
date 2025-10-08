@@ -1,7 +1,5 @@
 #include "playercontrollercomponent.h"
-#include "playercontrollercomponent.h"
-#include "playercontrollercomponent.h"
-
+#include <framecontext.h>
 #include "../messaging/observer.h"
 #include "../messaging/coresubjects.h"
 #include "../messaging/events.h"
@@ -24,6 +22,7 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
 {
 	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
+	msgDispatch.registerHandler<PlayerControllerComponent, CollisionMessage>(this);
 }
 
 void PlayerControllerComponent::onStart()
@@ -66,15 +65,19 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 	{
 		case PState::idle:
 		{
+			// holding a direction, start running
 			if (direction)
 			{
 				transitionState(PState::running);
 			}
 			else
 			{
+				// direction is zero, decelerate to stop
 				if (velocity.x)
 				{
-					owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.9f });
+					const float damping = 1.0f;
+					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
+					owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, factor });
 					if (std::abs(velocity.x) < 0.1f)
 					{
 						owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
@@ -87,10 +90,12 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 		{
 			if (direction == 0)
 			{
+			// no longer holding direction, go to idle
 				transitionState(PState::idle);
 			}
 			else if (direction * velocity.x < 0)
 			{
+				// if direction we're holding is opposite to velocity, use sliding state
 				transitionState(PState::sliding);
 			}
 			break;
@@ -99,10 +104,12 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 		{
 			if (direction == 0)
 			{
+				// if no longer holding direction, go to idle
 				transitionState(PState::idle);
 			}
 			else if (direction * velocity.x > 0)
 			{
+				// if direction and velocity directions match, go to running
 				transitionState(PState::running);
 			}
 			break;
@@ -188,13 +195,18 @@ void PlayerControllerComponent::onMessage(const JumpMessage &msg)
 	}
 }
 
+void PlayerControllerComponent::onMessage(const CollisionMessage &msg)
+{
+	printf("Collision normal: (%.1f, %.1f)\n", msg.getNormal().x, msg.getNormal().y);
+}
+
 void PlayerControllerComponent::registerObservers(SubjectRegistry &registry)
 {
 	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
 		this->direction = direction;
-		});
+	});
 
 	registry.addObserver<glm::vec2>(CoreSubjects::VELOCITY, [this](const glm::vec2 &velocity) {
 		this->velocity = velocity;
-		});
+	});
 }

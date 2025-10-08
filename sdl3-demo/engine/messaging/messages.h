@@ -82,8 +82,18 @@ class JumpMessage : public Message<JumpMessage>
 {
 };
 
-
-enum class Commands : int
+class CollisionMessage : public Message<CollisionMessage>
 {
-	LandOnGround,
+	GameObject &other;
+	glm::vec2 overlap;
+	glm::vec2 normal;
+public:
+	CollisionMessage(GameObject &other, const glm::vec2 &overlap, const glm::vec2 &normal) :
+		other(other), overlap(overlap), normal(normal)
+	{
+	}
+
+	const GameObject &getOther() const { return other; }
+	const glm::vec2 &getOverlap() const { return overlap; }
+	const glm::vec2 &getNormal() const { return normal; }
 };

@@ -71,10 +71,12 @@ void CollisionComponent::update(const FrameContext &ctx)
 							if (velocity.x > 0) // from left
 							{
 								owner.setPosition(owner.getPosition() - glm::vec2(overlap.x, 0));
+								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(-1, 0) });
 							}
 							else if (velocity.x < 0) // from right
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
+								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(1, 0) });
 							}
 							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
 						}
@@ -83,11 +85,13 @@ void CollisionComponent::update(const FrameContext &ctx)
 							if (velocity.y > 0) // from top
 							{
 								owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
+								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(0, 1) });
 								emit(ctx, static_cast<int>(Events::landed));
 							}
 							else if (velocity.y < 0) // from bottom
 							{
 								owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
+								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(0, -1) });
 							}
 							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
 						}
