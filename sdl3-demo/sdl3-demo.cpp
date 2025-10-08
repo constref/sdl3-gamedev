@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
 
 	// start the game loop
 	uint64_t prevTime = SDL_GetTicks();
-	float timeAccum = 0;
 	bool running = true;
 	InputState inputState;
 
@@ -100,7 +99,6 @@ int main(int argc, char *argv[])
 		uint64_t nowTime = SDL_GetTicks();
 		float deltaTime = (nowTime - prevTime) / 1000.0f;
 		prevTime = nowTime;
-		timeAccum += deltaTime;
 
 		FrameContext ctx(state, gs, res, inputState, deltaTime);
 		// perform drawing commands
