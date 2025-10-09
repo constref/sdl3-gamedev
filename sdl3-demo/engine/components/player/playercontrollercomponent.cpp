@@ -10,6 +10,7 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 {
 	direction = 0;
 	velocity = glm::vec2(0);
+	grounded = false;
 	currentState = PState::idle;
 	idleAnimationIndex = 0;
 	idleTexture = nullptr;
@@ -23,6 +24,7 @@ void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDis
 {
 	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
 	msgDispatch.registerHandler<PlayerControllerComponent, CollisionMessage>(this);
+	msgDispatch.registerHandler<PlayerControllerComponent, FallingMessage>(this);
 }
 
 void PlayerControllerComponent::onStart()
@@ -117,74 +119,6 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 	}
 }
 
-void PlayerControllerComponent::onEvent(int eventId)
-{
-	glm::vec2 jumpImpulse(0, -200.0f);
-	if (currentState == PState::idle)
-	{
-		if (eventId == static_cast<int>(Events::run))
-		{
-			transitionState(PState::running);
-		}
-		else if (eventId == static_cast<int>(Events::jump))
-		{
-			owner.sendMessage(AddImpulseMessage{ jumpImpulse });
-			transitionState(PState::airborne);
-		}
-		else if (eventId == static_cast<int>(Events::falling))
-		{
-			transitionState(PState::airborne);
-		}
-	}
-	else if (currentState == PState::running)
-	{
-		if (eventId == static_cast<int>(Events::idle))
-		{
-			transitionState(PState::idle);
-		}
-		else if (eventId == static_cast<int>(Events::jump))
-		{
-			transitionState(PState::airborne);
-		}
-		else if (eventId == static_cast<int>(Events::falling))
-		{
-			transitionState(PState::airborne);
-		}
-		else if (eventId == static_cast<int>(Events::slide))
-		{
-			transitionState(PState::sliding);
-		}
-	}
-	else if (currentState == PState::airborne)
-	{
-		if (eventId == static_cast<int>(Events::landed))
-		{
-			transitionState(velocity.x != 0 ? PState::running : PState::idle);
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::SetGrounded, .param = true });
-		}
-	}
-	else if (currentState == PState::sliding)
-	{
-		if (eventId == static_cast<int>(Events::idle))
-		{
-			transitionState(PState::idle);
-		}
-		if (eventId == static_cast<int>(Events::run))
-		{
-			transitionState(PState::running);
-		}
-		else if (eventId == static_cast<int>(Events::jump))
-		{
-			//owner.getCommandDispatch().dispatch(Command{ .id = Commands::AddImpulse, .param {.asPtr = &jumpImpulse } });
-			transitionState(PState::airborne);
-		}
-		else if (eventId == static_cast<int>(Events::falling))
-		{
-			transitionState(PState::airborne);
-		}
-	}
-}
-
 void PlayerControllerComponent::onMessage(const JumpMessage &msg)
 {
 	if (currentState != PState::airborne)
@@ -197,7 +131,21 @@ void PlayerControllerComponent::onMessage(const JumpMessage &msg)
 
 void PlayerControllerComponent::onMessage(const CollisionMessage &msg)
 {
-	printf("Collision normal: (%.1f, %.1f)\n", msg.getNormal().x, msg.getNormal().y);
+	if (glm::dot(msg.getNormal(), glm::vec2(0, 1)) == 1.0f) // landed on something
+	{
+		if (currentState == PState::airborne)
+		{
+			transitionState(velocity.x != 0 ? PState::running : PState::idle);
+		}
+	}
+}
+
+void PlayerControllerComponent::onMessage(const FallingMessage &msg)
+{
+	if (currentState != PState::airborne)
+	{
+		transitionState(PState::airborne);
+	}
 }
 
 void PlayerControllerComponent::registerObservers(SubjectRegistry &registry)

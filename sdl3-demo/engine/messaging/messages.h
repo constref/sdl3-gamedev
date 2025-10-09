@@ -78,6 +78,10 @@ public:
 	float getFactor() const { return factor; }
 };
 
+class FallingMessage : public Message<FallingMessage>
+{
+};
+
 class JumpMessage : public Message<JumpMessage>
 {
 };

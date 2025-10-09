@@ -86,7 +86,6 @@ void CollisionComponent::update(const FrameContext &ctx)
 							{
 								owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
 								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(0, 1) });
-								emit(ctx, static_cast<int>(Events::landed));
 							}
 							else if (velocity.y < 0) // from bottom
 							{
@@ -110,7 +109,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 
 	if (velocity.y > 0)
 	{
-		emit(ctx, static_cast<int>(Events::falling));
+		owner.sendMessage(FallingMessage{});
 	}
 }
 

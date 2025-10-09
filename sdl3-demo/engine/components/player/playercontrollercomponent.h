@@ -6,6 +6,7 @@
 struct SDL_Texture;
 class JumpMessage;
 class CollisionMessage;
+class FallingMessage;
 
 enum class PState
 {
@@ -20,6 +21,7 @@ class PlayerControllerComponent : public Component
 {
 	float direction;
 	glm::vec2 velocity;
+	bool grounded;
 
 	PState currentState;
 	int idleAnimationIndex;
@@ -36,9 +38,9 @@ public:
 	void onStart() override;
 	void registerObservers(SubjectRegistry &registry) override;
 	void transitionState(PState newState);
-	void onEvent(int eventId) override;
 	void onMessage(const JumpMessage &msg);
 	void onMessage(const CollisionMessage &msg);
+	void onMessage(const FallingMessage &msg);
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }
