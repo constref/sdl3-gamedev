@@ -18,6 +18,7 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float 
 	this->height = height;
 	this->frameNumber = 1;
 	direction = 1;
+	followViewport = 1;
 }
 
 void RenderComponent::update(const FrameContext &ctx)
@@ -34,8 +35,8 @@ void RenderComponent::update(const FrameContext &ctx)
 	};
 
 	SDL_FRect dst{
-		.x = owner.getPosition().x - ctx.gs.mapViewport.x,
-		.y = owner.getPosition().y - ctx.gs.mapViewport.y,
+		.x = owner.getPosition().x - ctx.gs.mapViewport.x * followViewport,
+		.y = owner.getPosition().y - ctx.gs.mapViewport.y * followViewport,
 		.w = width,
 		.h = height
 	};

@@ -15,6 +15,7 @@ class RenderComponent : public Component
 	float height;
 	int frameNumber;
 	float direction;
+	float followViewport;
 
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
@@ -24,4 +25,5 @@ public:
 
 	void onMessage(const SetAnimationMessage &msg);
 	void setTexture(SDL_Texture *texture);
+	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
 };
