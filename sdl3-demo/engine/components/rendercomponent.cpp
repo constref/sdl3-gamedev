@@ -7,7 +7,6 @@
 #include "../resources.h"
 #include "../framecontext.h"
 #include "../messaging/messages.h"
-#include "../messaging/coresubjects.h"
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner), flashTimer(0.05f)
@@ -73,28 +72,29 @@ void RenderComponent::update(const FrameContext &ctx)
 	}
 }
 
-void RenderComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
+void RenderComponent::onAttached(MessageDispatch &msgDispatch)
 {
 	msgDispatch.registerHandler<RenderComponent, SetAnimationMessage>(this);
-}
-
-void RenderComponent::registerObservers(SubjectRegistry &registry)
-{
-	registry.addObserver<int>(CoreSubjects::CURRENT_ANIMATION_FRAME, [this](const int &currentFrame) {
-		this->frameNumber = currentFrame;
-	});
-
-	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
-		if (direction)
-		{
-			this->direction = direction;
-		}
-	});
+	msgDispatch.registerHandler<RenderComponent, DirectionMessage>(this);
+	msgDispatch.registerHandler<RenderComponent, FrameChangeMessage>(this);
 }
 
 void RenderComponent::onMessage(const SetAnimationMessage &msg)
 {
 	setTexture(msg.getTexture());
+}
+
+void RenderComponent::onMessage(const DirectionMessage &msg)
+{
+	if (msg.getDirection() != 0)
+	{
+		direction = msg.getDirection();
+	}
+}
+
+void RenderComponent::onMessage(const FrameChangeMessage &msg)
+{
+	frameNumber = msg.getFrameNumber();
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

@@ -2,12 +2,12 @@
 
 #include <glm/glm.hpp>
 #include <components/component.h>
-#include <messaging/observer.h>
 
 struct FrameContext;
 class IntegrateVelocityMessage;
 class ScaleVelocityAxisMessage;
 class AddImpulseMessage;
+class DirectionMessage;
 
 class PhysicsComponent : public Component
 {
@@ -18,20 +18,13 @@ class PhysicsComponent : public Component
 	float direction;
 	bool grounded;
 
-	Subject<glm::vec2> velocitySubject;
-
 public:
 	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
-	void registerObservers(SubjectRegistry &registry) override;
+	void onAttached(MessageDispatch &msgDispatch) override;
 
 	glm::vec2 getVelocity() const { return velocity; }
-	void setVelocity(const glm::vec2 &vel)
-	{
-		velocity = vel;
-		velocitySubject.notify(velocity);
-	}
+	void setVelocity(const glm::vec2 &vel);
 	glm::vec2 getAcceleration() const { return acceleration; }
 	void setAcceleration(const glm::vec2 &acc)
 	{
@@ -44,4 +37,5 @@ public:
 	void onMessage(const IntegrateVelocityMessage &msg);
 	void onMessage(const ScaleVelocityAxisMessage &msg);
 	void onMessage(const AddImpulseMessage &msg);
+	void onMessage(const DirectionMessage &msg);
 };

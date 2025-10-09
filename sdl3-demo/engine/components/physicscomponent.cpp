@@ -1,10 +1,10 @@
 #include "physicscomponent.h"
+#include "physicscomponent.h"
 
 #include "../framecontext.h"
 #include "../gameobject.h"
 #include "../messaging/events.h"
 #include "../messaging/messages.h"
-#include "../messaging/coresubjects.h"
 
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 {
@@ -15,20 +15,18 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 	netForce = glm::vec2(0);
 }
 
-void PhysicsComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
+void PhysicsComponent::onAttached(MessageDispatch &msgDispatch)
 {
 	msgDispatch.registerHandler<PhysicsComponent, IntegrateVelocityMessage>(this);
 	msgDispatch.registerHandler<PhysicsComponent, ScaleVelocityAxisMessage>(this);
 	msgDispatch.registerHandler<PhysicsComponent, AddImpulseMessage>(this);
-
-	registry.registerSubject(CoreSubjects::VELOCITY, &velocitySubject);
+	msgDispatch.registerHandler<PhysicsComponent, DirectionMessage>(this);
 }
 
-void PhysicsComponent::registerObservers(SubjectRegistry &registry)
+void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 {
-	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
-		this->direction = direction;
-	});
+	this->velocity = vel;
+	owner.sendMessage(VelocityMessage{ vel });
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -83,16 +81,7 @@ void PhysicsComponent::onMessage(const AddImpulseMessage &msg)
 	setVelocity(vel);
 }
 
-//void PhysicsComponent::onCommand(const Command &command)
-//{
-	//else if (command.id == Commands::AddForce)
-	//{
-	//	const glm::vec2 *force = static_cast<const glm::vec2 *>(command.param.asPtr);
-	//	netForce += *force;
-	//}
-	//else if (command.id == Commands::SetGrounded)
-	//{
-	//	setGrounded(command.param.asBool);
-	//}
-//}
-
+void PhysicsComponent::onMessage(const DirectionMessage &msg)
+{
+	this->direction = msg.getDirection();
+}

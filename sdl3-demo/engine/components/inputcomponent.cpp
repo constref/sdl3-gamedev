@@ -5,7 +5,6 @@
 #include "../framecontext.h"
 #include "../inputstate.h"
 #include "../messaging/events.h"
-#include "../messaging/coresubjects.h"
 #include "../messaging/messages.h"
 
 InputComponent::InputComponent(GameObject &owner) : Component(owner)
@@ -41,10 +40,5 @@ void InputComponent::update(const FrameContext &ctx)
 		}
 	}
 
-	directionSubject.notify(direction);
-}
-
-void InputComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
-{
-	registry.registerSubject(CoreSubjects::DIRECTION, &directionSubject);
+	owner.sendMessage(DirectionMessage{ direction });
 }

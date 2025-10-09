@@ -7,6 +7,8 @@ struct SDL_Texture;
 class JumpMessage;
 class CollisionMessage;
 class FallingMessage;
+class VelocityMessage;
+class DirectionMessage;
 
 enum class PState
 {
@@ -34,13 +36,14 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch) override;
+	void onAttached(MessageDispatch &msgDispatch) override;
 	void onStart() override;
-	void registerObservers(SubjectRegistry &registry) override;
 	void transitionState(PState newState);
 	void onMessage(const JumpMessage &msg);
 	void onMessage(const CollisionMessage &msg);
 	void onMessage(const FallingMessage &msg);
+	void onMessage(const VelocityMessage &msg);
+	void onMessage(const DirectionMessage &msg);
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }

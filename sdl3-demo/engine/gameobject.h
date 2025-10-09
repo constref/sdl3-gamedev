@@ -87,13 +87,7 @@ public:
 		// register subjects
 		for (Component *cmp : components)
 		{
-			cmp->onAttached(subjectRegistry, getMessageDispatch());
-		}
-
-		// register observers
-		for (Component *cmp : components)
-		{
-			cmp->registerObservers(subjectRegistry);
+			cmp->onAttached(getMessageDispatch());
 		}
 	}
 

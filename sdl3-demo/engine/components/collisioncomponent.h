@@ -1,11 +1,13 @@
 #pragma once
 
+#include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 #include <functional>
 #include <vector>
 #include "component.h"
 
 struct SDL_FRect;
+class VelocityMessage;
 
 class CollisionComponent : public Component
 {
@@ -19,7 +21,8 @@ public:
 	CollisionComponent(GameObject &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
-	void registerObservers(SubjectRegistry &registry) override;
+	void onAttached(MessageDispatch &msgDispatch) override;
+	void onMessage(const VelocityMessage &msg);
 
 	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 	bool isDynamic() const { return dynamic; }

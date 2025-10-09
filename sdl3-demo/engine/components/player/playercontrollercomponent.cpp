@@ -1,7 +1,5 @@
 #include "playercontrollercomponent.h"
 #include <framecontext.h>
-#include "../messaging/observer.h"
-#include "../messaging/coresubjects.h"
 #include "../messaging/events.h"
 #include "../messaging/messages.h"
 #include "../../gameobject.h"
@@ -20,11 +18,13 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	slideTexture = nullptr;
 }
 
-void PlayerControllerComponent::onAttached(SubjectRegistry &registry, MessageDispatch &msgDispatch)
+void PlayerControllerComponent::onAttached(MessageDispatch &msgDispatch)
 {
 	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
 	msgDispatch.registerHandler<PlayerControllerComponent, CollisionMessage>(this);
 	msgDispatch.registerHandler<PlayerControllerComponent, FallingMessage>(this);
+	msgDispatch.registerHandler<PlayerControllerComponent, VelocityMessage>(this);
+	msgDispatch.registerHandler<PlayerControllerComponent, DirectionMessage>(this);
 }
 
 void PlayerControllerComponent::onStart()
@@ -92,7 +92,7 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 		{
 			if (direction == 0)
 			{
-			// no longer holding direction, go to idle
+				// no longer holding direction, go to idle
 				transitionState(PState::idle);
 			}
 			else if (direction * velocity.x < 0)
@@ -148,13 +148,12 @@ void PlayerControllerComponent::onMessage(const FallingMessage &msg)
 	}
 }
 
-void PlayerControllerComponent::registerObservers(SubjectRegistry &registry)
+void PlayerControllerComponent::onMessage(const VelocityMessage &msg)
 {
-	registry.addObserver<float>(CoreSubjects::DIRECTION, [this](const float &direction) {
-		this->direction = direction;
-	});
+	this->velocity = msg.getVelocity();
+}
 
-	registry.addObserver<glm::vec2>(CoreSubjects::VELOCITY, [this](const glm::vec2 &velocity) {
-		this->velocity = velocity;
-	});
+void PlayerControllerComponent::onMessage(const DirectionMessage &msg)
+{
+	this->direction = msg.getDirection();
 }

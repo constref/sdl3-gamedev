@@ -18,6 +18,15 @@ public:
 	SDL_Texture *getTexture() const { return texture; }
 };
 
+class FrameChangeMessage : public Message<FrameChangeMessage>
+{
+	int frameNumber;
+
+public:
+	FrameChangeMessage(int frameNumber) : frameNumber(frameNumber) {}
+	int getFrameNumber() const { return frameNumber; }
+};
+
 class SetTextureMessage : public Message<SetTextureMessage>
 {
 	SDL_Texture *texture;
@@ -91,6 +100,7 @@ class CollisionMessage : public Message<CollisionMessage>
 	GameObject &other;
 	glm::vec2 overlap;
 	glm::vec2 normal;
+
 public:
 	CollisionMessage(GameObject &other, const glm::vec2 &overlap, const glm::vec2 &normal) :
 		other(other), overlap(overlap), normal(normal)
@@ -100,4 +110,20 @@ public:
 	const GameObject &getOther() const { return other; }
 	const glm::vec2 &getOverlap() const { return overlap; }
 	const glm::vec2 &getNormal() const { return normal; }
+};
+
+class VelocityMessage : public Message<VelocityMessage>
+{
+	glm::vec2 velocity;
+public:
+	VelocityMessage(const glm::vec2 &velocity) : velocity(velocity) {}
+	const glm::vec2 &getVelocity() const { return velocity; }
+};
+
+class DirectionMessage : public Message<DirectionMessage>
+{
+	float direction;
+public:
+	DirectionMessage(float direction) : direction(direction) {}
+	float getDirection() const { return direction; }
 };

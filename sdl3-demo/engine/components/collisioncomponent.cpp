@@ -1,3 +1,4 @@
+#include "collisioncomponent.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <format>
@@ -9,7 +10,6 @@
 #include "../gamestate.h"
 #include "../messaging/events.h"
 #include "../messaging/messages.h"
-#include "../messaging/coresubjects.h"
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -113,11 +113,14 @@ void CollisionComponent::update(const FrameContext &ctx)
 	}
 }
 
-void CollisionComponent::registerObservers(SubjectRegistry &registry)
+void CollisionComponent::onAttached(MessageDispatch &msgDispatch)
 {
-	registry.addObserver<glm::vec2>(CoreSubjects::VELOCITY, [this](const glm::vec2 &velocity) {
-		this->velocity = velocity;
-	});
+	msgDispatch.registerHandler<CollisionComponent, VelocityMessage>(this);
+}
+
+void CollisionComponent::onMessage(const VelocityMessage &msg)
+{
+	this->velocity = msg.getVelocity();
 }
 
 bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
