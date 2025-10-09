@@ -102,7 +102,7 @@ struct Resources
 		//musicMain = loadAudio("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
-		map = tmx::loadMap("data/maps/smallmap.tmx");
+		map = tmx::loadMap("data/maps/largemap.tmx");
 		for (tmx::TileSet &tileSet : map->tileSets)
 		{
 			TileSetTextures tst;
