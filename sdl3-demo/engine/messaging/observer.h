@@ -48,9 +48,10 @@ public:
 	void addObserver(const std::string &name, Subject<const T&>::Observer observer)
 	{
 		auto itr = subjects.find(name);
-		assert(itr != subjects.end());
-
-		Subject<const T&> *subject = static_cast<Subject<const T&> *>(itr->second);
-		subject->addObserver(observer);
+		if (itr != subjects.end())
+		{
+			Subject<const T&> *subject = static_cast<Subject<const T&> *>(itr->second);
+			subject->addObserver(observer);
+		}
 	}
 };
