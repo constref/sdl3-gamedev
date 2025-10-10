@@ -165,7 +165,7 @@ bool initialize(SDLState &state)
 		cleanup(state);
 		initSuccess = false;
 	}
-	SDL_SetRenderVSync(state.renderer, 1);
+	SDL_SetRenderVSync(state.renderer, 0);
 
 	// configure presentation
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -307,6 +307,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 	};
 
 
+	// add the background elements
 	std::vector<std::shared_ptr<GameObject>> bgLayer;
 
 	std::shared_ptr<GameObject> bg1 = std::make_shared<GameObject>();
@@ -335,6 +336,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 
 	gs.layers.push_back(std::move(bgLayer));
 
+	// load the map layers
 	LayerVisitor visitor(state, gs, res);
 	for (auto &layer : res.map->layers)
 	{
