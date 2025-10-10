@@ -131,12 +131,26 @@ void PlayerControllerComponent::onMessage(const JumpMessage &msg)
 
 void PlayerControllerComponent::onMessage(const CollisionMessage &msg)
 {
-	if (glm::dot(msg.getNormal(), glm::vec2(0, 1)) == 1.0f) // landed on something
+	float dotY = glm::dot(msg.getNormal(), glm::vec2(0, 1));
+	float dotX = glm::dot(msg.getNormal(), glm::vec2(1, 0));
+
+	if (dotY == 1.0f)
 	{
+		// landed on something
 		if (currentState == PState::airborne)
 		{
 			transitionState(velocity.x != 0 ? PState::running : PState::idle);
 		}
+		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
+	}
+	else if (dotY == -1.0f)
+	{
+		// hit something above
+		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
+	}
+	else if (dotX == 1.0f || dotX == -1.0f)
+	{
+		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
 	}
 }
 

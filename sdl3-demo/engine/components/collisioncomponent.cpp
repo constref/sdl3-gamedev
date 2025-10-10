@@ -34,82 +34,83 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
-	const auto checkCollisions = [this, &ctx](int axis) {
-		bool foundGround = false;
+	const auto checkCollisions = [this, &ctx](Axis axis) {
 		for (auto comp : allComponents)
 		{
-			if (isDynamic())
+			SDL_FRect rectA{
+				.x = owner.getPosition().x + collider.x,
+				.y = owner.getPosition().y + collider.y,
+				.w = collider.w,
+				.h = collider.h
+			};
+
+			if (comp != this)
 			{
-				SDL_FRect rectA{
-					.x = owner.getPosition().x + collider.x,
-					.y = owner.getPosition().y + collider.y,
-					.w = collider.w,
-					.h = collider.h
+				auto &otherOwner = comp->owner;
+				SDL_FRect rectB{
+					.x = otherOwner.getPosition().x + comp->collider.x,
+					.y = otherOwner.getPosition().y + comp->collider.y,
+					.w = comp->collider.w,
+					.h = comp->collider.h
 				};
 
-				if (comp != this)
+				glm::vec2 overlap{ 0 };
+				if (intersectAABB(rectA, rectB, overlap))
 				{
-					auto &otherOwner = comp->owner;
-					SDL_FRect rectB{
-						.x = otherOwner.getPosition().x + comp->collider.x,
-						.y = otherOwner.getPosition().y + comp->collider.y,
-						.w = comp->collider.w,
-						.h = comp->collider.h
-					};
-
-					glm::vec2 overlap{ 0 };
-					if (intersectAABB(rectA, rectB, overlap))
+					if (ctx.gs.debugMode)
 					{
-						if (ctx.gs.debugMode)
-						{
-							otherOwner.setDebugHighlight(true);
-						}
+						otherOwner.setDebugHighlight(true);
+					}
 
-						// found intersection, respond accordingly
-						if (axis == 0 && overlap.x)
+					// found intersection, respond accordingly
+					if (axis == Axis::X && overlap.x)
+					{
+						if (velocity.x > 0) // from left
 						{
-							if (velocity.x > 0) // from left
-							{
-								owner.setPosition(owner.getPosition() - glm::vec2(overlap.x, 0));
-								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(-1, 0) });
-							}
-							else if (velocity.x < 0) // from right
-							{
-								owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
-								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(1, 0) });
-							}
-							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
+							owner.setPosition(owner.getPosition() - glm::vec2(overlap.x, 0));
+							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(-1, 0) });
 						}
-						else if (axis == 1 && overlap.y)
+						else if (velocity.x < 0) // from right
 						{
-							if (velocity.y > 0) // from top
-							{
-								owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
-								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(0, 1) });
-							}
-							else if (velocity.y < 0) // from bottom
-							{
-								owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
-								owner.sendMessage(CollisionMessage { otherOwner, overlap, glm::vec2(0, -1) });
-							}
-							owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
+							owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
+							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(1, 0) });
+						}
+					}
+					else if (axis == Axis::Y && overlap.y)
+					{
+						if (velocity.y > 0) // from top
+						{
+							owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
+							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, 1) });
+						}
+						else if (velocity.y < 0) // from bottom
+						{
+							owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
+							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, -1) });
 						}
 					}
 				}
 			}
 		}
-	};
+		};
 
 	// integrate X velocity first and check for collisions
-	owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
-	checkCollisions(0);
-	// integrate X velocity first and check for collisions
-	owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
-	checkCollisions(1);
-
-	if (velocity.y > 0)
+	if (isDynamic())
 	{
-		owner.sendMessage(FallingMessage{});
+		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
+		checkCollisions(Axis::X);
+		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
+		checkCollisions(Axis::Y);
+
+		if (velocity.y > 0)
+		{
+			owner.sendMessage(FallingMessage{});
+		}
+	}
+	else
+	{
+		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
+		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
 	}
 }
 
