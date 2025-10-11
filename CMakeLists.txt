@@ -12,4 +12,5 @@ endif()
 project ("sdl3-demo" LANGUAGES C CXX)
 
 # Include sub-projects.
-add_subdirectory ("sdl3-demo")
+add_subdirectory("sdl3-demo/engine")
+add_subdirectory ("sdl3-demo/demos/platformer")

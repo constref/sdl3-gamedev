@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <deque>
+#include <cassert>
 
 struct KeyEvent
 {

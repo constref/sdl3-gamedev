@@ -10,8 +10,15 @@ struct SDLState
 	const bool *keys;
 	bool fullscreen;
 
-	SDLState() : keys(SDL_GetKeyboardState(nullptr))
+	SDLState(int width, int height, int logW, int logH) : keys(SDL_GetKeyboardState(nullptr))
 	{
+		window = nullptr;
+		renderer = nullptr;
+		this->width = width;
+		this->height = height;
+		this->logW = logW;
+		this->logH = logH;
+
 		fullscreen = false;
 	}
 };
