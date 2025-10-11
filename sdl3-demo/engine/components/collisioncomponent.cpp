@@ -94,7 +94,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 		}
 		};
 
-	// integrate X velocity first and check for collisions
+	// dynamic objects are checked for collisions
 	if (isDynamic())
 	{
 		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
@@ -109,6 +109,7 @@ void CollisionComponent::update(const FrameContext &ctx)
 	}
 	else
 	{
+		// non dynamic objects only have their physics integrated
 		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
 		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
 	}

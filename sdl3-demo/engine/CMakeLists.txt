@@ -36,7 +36,8 @@ add_library(engine STATIC
 	"messaging/message.h"
 	"messaging/messagedispatch.h"
 	"messaging/messages.h"
-	"messaging/coresubjects.h" "engine.h" "engine.cpp")
+	"engine.h"
+	"engine.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
