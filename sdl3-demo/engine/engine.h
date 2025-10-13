@@ -18,7 +18,7 @@ class Engine
 	bool running;
 
 public:
-	Engine(int logW, int logH) : state(1600, 900, logW, logH)
+	Engine(int logW, int logH): state(1600, 900, logW, logH)
 	{
 		debugMode = false;
 		running = true;
