@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "../component.h"
+#include <components/component.h>
 
 struct SDL_Texture;
 class JumpMessage;

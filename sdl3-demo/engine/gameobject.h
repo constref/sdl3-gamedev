@@ -10,37 +10,6 @@
 #include <unordered_map>
 #include <messaging/observer.h>
 
-enum class BulletState
-{
-	moving, colliding, inactive
-};
-
-enum class EnemyState
-{
-	shambling, damaged, dead
-};
-
-struct LevelData {};
-struct EnemyData
-{
-	EnemyState state;
-	Timer damageTimer;
-	int healthPoints;
-
-	EnemyData() : state(EnemyState::shambling), damageTimer(0.5f)
-	{
-		healthPoints = 100;
-	}
-};
-
-struct BulletData
-{
-	BulletState state;
-	BulletData() : state(BulletState::moving)
-	{
-	}
-};
-
 class GameObject
 {
 	glm::vec2 position;

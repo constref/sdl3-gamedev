@@ -57,10 +57,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 				glm::vec2 overlap{ 0 };
 				if (intersectAABB(rectA, rectB, overlap))
 				{
-					if (ctx.gs.debugMode)
-					{
-						otherOwner.setDebugHighlight(true);
-					}
+					//if (ctx.gs.debugMode)
+					//{
+					//	otherOwner.setDebugHighlight(true);
+					//}
 
 					// found intersection, respond accordingly
 					if (axis == Axis::X && overlap.x)
@@ -101,11 +101,6 @@ void CollisionComponent::update(const FrameContext &ctx)
 		checkCollisions(Axis::X);
 		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
 		checkCollisions(Axis::Y);
-
-		if (velocity.y > 0)
-		{
-			owner.sendMessage(FallingMessage{});
-		}
 	}
 	else
 	{

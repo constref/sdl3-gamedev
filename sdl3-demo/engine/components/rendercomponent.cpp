@@ -34,8 +34,8 @@ void RenderComponent::update(const FrameContext &ctx)
 	};
 
 	SDL_FRect dst{
-		.x = owner.getPosition().x - ctx.gs.mapViewport.x * followViewport,
-		.y = owner.getPosition().y - ctx.gs.mapViewport.y * followViewport,
+		.x = owner.getPosition().x - mapViewport.x * followViewport,
+		.y = owner.getPosition().y - mapViewport.y * followViewport,
 		.w = width,
 		.h = height
 	};
@@ -57,19 +57,19 @@ void RenderComponent::update(const FrameContext &ctx)
 		}
 	}
 
-	if (ctx.gs.debugMode)
-	{
-		if (owner.isDebugHighlight())
-		{
-			owner.setDebugHighlight(false);
-			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
+	//if (ctx.gs.debugMode)
+	//{
+	//	if (owner.isDebugHighlight())
+	//	{
+	//		owner.setDebugHighlight(false);
+	//		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
 
-			SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
-			SDL_RenderFillRect(ctx.state.renderer, &dst);
+	//		SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
+	//		SDL_RenderFillRect(ctx.state.renderer, &dst);
 
-			SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
-		}
-	}
+	//		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
+	//	}
+	//}
 }
 
 void RenderComponent::onAttached(MessageDispatch &msgDispatch)

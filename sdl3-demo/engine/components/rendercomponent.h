@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component.h"
+#include <SDL3/SDL.h>
 #include "../timer.h"
 
 struct SDL_Texture;
@@ -18,6 +19,7 @@ class RenderComponent : public Component
 	int frameNumber;
 	float direction;
 	float followViewport;
+	SDL_FRect mapViewport;
 
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);

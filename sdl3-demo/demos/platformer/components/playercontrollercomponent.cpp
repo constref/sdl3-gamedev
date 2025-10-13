@@ -1,8 +1,9 @@
 #include "playercontrollercomponent.h"
+
 #include <framecontext.h>
-#include "../messaging/events.h"
-#include "../messaging/messages.h"
-#include "../../gameobject.h"
+#include <messaging/events.h>
+#include <messaging/messages.h>
+#include <gameobject.h>
 
 PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner)
 {
@@ -63,6 +64,11 @@ void PlayerControllerComponent::transitionState(PState newState)
 
 void PlayerControllerComponent::update(const FrameContext &ctx)
 {
+	if (velocity.y > 0 && currentState != PState::airborne)
+	{
+		transitionState(PState::airborne);
+	}
+
 	switch (currentState)
 	{
 		case PState::idle:

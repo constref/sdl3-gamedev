@@ -9,6 +9,7 @@ const float TILE_SIZE = 32;
 
 struct GameState
 {
+	std::shared_ptr<GameObject> root;
 	std::vector<std::vector<std::shared_ptr<GameObject>>> layers;
 	std::vector<GameObject> backgroundTiles;
 	std::vector<GameObject> foregroundTiles;

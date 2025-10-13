@@ -21,5 +21,55 @@ struct SDLState
 
 		fullscreen = false;
 	}
+
+	bool initialize()
+	{
+		if (!SDL_Init(SDL_INIT_VIDEO))
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
+			return false;
+		}
+
+		// create the window
+		window = SDL_CreateWindow("SDL3 Demo", width, height, SDL_WINDOW_RESIZABLE);
+		if (!window)
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
+			cleanup();
+			return false;
+		}
+
+		// create the renderer
+		renderer = SDL_CreateRenderer(window, nullptr);
+		if (!renderer)
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating renderer", window);
+			cleanup();
+			return false;
+		}
+		SDL_SetRenderVSync(renderer, 0);
+
+		// configure presentation
+		SDL_SetRenderLogicalPresentation(renderer, logW, logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+		// initialize the SDL_mixer library
+		//if (!MIX_Init())
+		//{
+		//	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", window);
+		//	cleanup();
+		//	initSuccess = false;
+		//}
+
+		SDL_SetWindowFullscreen(window, fullscreen);
+
+		return true;
+	}
+
+	void cleanup()
+	{
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		SDL_Quit();
+	}
 };
 

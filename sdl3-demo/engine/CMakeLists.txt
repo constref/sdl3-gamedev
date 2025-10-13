@@ -29,15 +29,12 @@ add_library(engine STATIC
 	"components/physicscomponent.cpp"
 	"components/collisioncomponent.h"
 	"components/collisioncomponent.cpp"
-	"components/player/playercontrollercomponent.h"
-	"components/player/playercontrollercomponent.cpp"
 	"messaging/events.h"
-	"state.h" 
 	"messaging/message.h"
 	"messaging/messagedispatch.h"
 	"messaging/messages.h"
 	"engine.h"
-	"engine.cpp")
+	"engine.cpp" "application.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
