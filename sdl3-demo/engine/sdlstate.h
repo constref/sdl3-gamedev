@@ -47,7 +47,7 @@ struct SDLState
 			cleanup();
 			return false;
 		}
-		SDL_SetRenderVSync(renderer, 0);
+		SDL_SetRenderVSync(renderer, 1);
 
 		// configure presentation
 		SDL_SetRenderLogicalPresentation(renderer, logW, logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);

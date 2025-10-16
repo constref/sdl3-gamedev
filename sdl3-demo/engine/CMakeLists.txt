@@ -34,7 +34,9 @@ add_library(engine STATIC
 	"messaging/messagedispatch.h"
 	"messaging/messages.h"
 	"engine.h"
-	 "application.h")
+	"application.h"
+	"components/basiccameracomponent.h"
+	"components/basiccameracomponent.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "platformer.exe (sdl3-demo\\platformer.exe)",
+      "name": "platformer.exe (sdl3-demo\\platformer.exe)",
+      "env": {
+        "PATH": "S:/SDKs/SDL3-3.2.18/lib/x64;S:\\SDKs\\SDL3_image-3.2.4\\lib\\x64;S:\\SDKs\\SDL_mixer_VC\\bin;%PATH%"
+      },
+      "currentDir": "S:\\projects\\constref\\sdl3-demo"
+    }
+  ]
+}

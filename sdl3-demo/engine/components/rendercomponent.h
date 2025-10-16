@@ -8,6 +8,7 @@ struct SDL_Texture;
 class SetAnimationMessage;
 class DirectionMessage;
 class FrameChangeMessage;
+class ViewportMessage;
 
 class RenderComponent : public Component
 {
@@ -19,7 +20,7 @@ class RenderComponent : public Component
 	int frameNumber;
 	float direction;
 	float followViewport;
-	SDL_FRect mapViewport;
+	static SDL_FRect mapViewport;
 
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
@@ -29,6 +30,8 @@ public:
 	void onMessage(const SetAnimationMessage &msg);
 	void onMessage(const DirectionMessage &msg);
 	void onMessage(const FrameChangeMessage &msg);
+	void onMessage(const ViewportMessage &msg);
+
 	void setTexture(SDL_Texture *texture);
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
 };

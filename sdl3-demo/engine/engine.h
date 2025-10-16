@@ -18,7 +18,7 @@ class Engine
 	bool running;
 
 public:
-	Engine(int logW, int logH): state(1600, 900, logW, logH)
+	Engine(int logW, int logH) : state(1600, 900, logW, logH)
 	{
 		debugMode = false;
 		running = true;
@@ -94,7 +94,7 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			update(ctx);
+			update(app.getRoot(), ctx);
 
 			// calculate viewport position
 			//gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
@@ -113,14 +113,14 @@ public:
 		}
 	}
 
-	void update(const FrameContext &ctx)
+	void update(std::shared_ptr<GameObject> &obj, const FrameContext &ctx)
 	{
-		//for (auto &layer : gs.layers)
-		//{
-		//	for (auto &obj : layer)
-		//	{
-		//		obj->update(ctx);
-		//	}
-		//}
+		obj->update(ctx);
+
+		auto &children = obj->getChildren();
+		for (auto &child : children)
+		{
+			update(child, ctx);
+		}
 	}
 };

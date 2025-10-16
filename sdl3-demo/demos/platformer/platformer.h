@@ -5,17 +5,26 @@
 #include <components/inputcomponent.h>
 #include <components/physicscomponent.h>
 #include <components/collisioncomponent.h>
+#include <components/basiccameracomponent.h>
 
 #include "components/playercontrollercomponent.h"
 
 class Platformer
 {
-	GameState gs;
+	std::shared_ptr<GameObject> root;
+	std::shared_ptr<GameObject> playerObj;
+	float bg2Scroll, bg3Scroll, bg4Scroll;
+	bool debugMode;
 
 public:
-	Platformer() : gs(512, 288)
+	Platformer()
 	{
+		root = std::make_shared<GameObject>();
+		bg2Scroll = bg3Scroll = bg4Scroll = 0;
+		debugMode = false;
 	}
+
+	std::shared_ptr<GameObject> &player() { return playerObj; }
 
 	bool initialize(SDLState &state)
 	{
@@ -35,6 +44,11 @@ public:
 	{
 	}
 
+	auto &getRoot()
+	{
+		return root;
+	}
+
 	void createTiles(const SDLState &state)
 	{
 		Resources &res = Resources::getInstance();
@@ -43,10 +57,12 @@ public:
 		struct LayerVisitor
 		{
 			const SDLState &state;
-			GameState &gs;
 			const Resources &res;
+			std::shared_ptr<GameObject> root;
 
-			LayerVisitor(const SDLState &state, GameState &gs, const Resources &res) : state(state), gs(gs), res(res) {}
+			LayerVisitor(const SDLState &state, std::shared_ptr<GameObject> root) : state(state), root(root), res(Resources::getInstance())
+			{
+			}
 
 			auto createObject(int r, int c)
 			{
@@ -59,7 +75,7 @@ public:
 
 			void operator()(tmx::Layer &layer) // Tile layers
 			{
-				std::vector<std::shared_ptr<GameObject>> newLayer;
+				std::shared_ptr<GameObject> layerObject = std::make_shared<GameObject>();
 				for (int r = 0; r < res.map->mapHeight; ++r)
 				{
 					for (int c = 0; c < res.map->mapWidth; ++c)
@@ -87,15 +103,15 @@ public:
 									.h = static_cast<float>(res.map->tileHeight)
 									});
 							}
-							newLayer.push_back(tile);
+							layerObject->addChild(tile);
 						}
 					}
 				}
-				gs.layers.push_back(newLayer);
+				root->addChild(layerObject);
 			}
 			void operator()(tmx::ObjectGroup &objectGroup) // Object layers
 			{
-				std::vector<std::shared_ptr<GameObject>> newLayer;
+				std::shared_ptr<GameObject> layerObject = std::make_shared<GameObject>();
 				for (tmx::LayerObject &obj : objectGroup.objects)
 				{
 					glm::vec2 objPos(
@@ -122,14 +138,13 @@ public:
 						collisionComponent.setCollider(SDL_FRect{
 							.x = 11, .y = 6,
 							.w = 10, .h = 26
-							});
+						});
 						auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
+						auto &camComponent = player->addComponent<BasicCameraComponent>(static_cast<float>(state.logW), static_cast<float>(state.logH));
 						auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE);
 						player->initializeComponents();
 
-						gs.playerIndex = static_cast<int>(newLayer.size());
-						gs.playerLayer = static_cast<int>(gs.layers.size());
-						newLayer.push_back(player);
+						layerObject->addChild(player);
 					}
 					else if (obj.type == "Enemy")
 					{
@@ -142,49 +157,49 @@ public:
 						collisionComponent.setDynamic(true);
 						collisionComponent.setCollider(SDL_FRect{
 							.x = 10, .y = 4, .w = 12, .h = 28
-							});
+						});
 						auto &animComponent = enemy->addComponent<AnimationComponent>(res.enemyAnims);
 						animComponent.setAnimation(res.ANIM_ENEMY);
 						auto &renderComponent = enemy->addComponent<RenderComponent>(res.texEnemy, TILE_SIZE, TILE_SIZE);
 						enemy->initializeComponents();
-						newLayer.push_back(enemy);
+						layerObject->addChild(enemy);
 					}
 				}
-				gs.layers.push_back(std::move(newLayer));
+				root->addChild(layerObject);
 			}
 		};
 
 		// add the background elements
-		std::vector<std::shared_ptr<GameObject>> bgLayer;
+		auto bgLayer = std::make_shared<GameObject>();
 
 		std::shared_ptr<GameObject> bg1 = std::make_shared<GameObject>();
-		bg1->addComponent<RenderComponent>(res.texBg1, static_cast<float>(gs.mapViewport.w), static_cast<float>(gs.mapViewport.h))
+		bg1->addComponent<RenderComponent>(res.texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH))
 			.setFollowViewport(false);
 		bg1->initializeComponents();
-		bgLayer.push_back(bg1);
+		bgLayer->addChild(bg1);
 
 		std::shared_ptr<GameObject> bg4 = std::make_shared<GameObject>();
-		bg4->addComponent<RenderComponent>(res.texBg4, static_cast<float>(gs.mapViewport.w), static_cast<float>(gs.mapViewport.h))
+		bg4->addComponent<RenderComponent>(res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
 			.setFollowViewport(false);
 		bg4->initializeComponents();
-		bgLayer.push_back(bg4);
+		bgLayer->addChild(bg4);
 
 		std::shared_ptr<GameObject> bg3 = std::make_shared<GameObject>();
-		bg3->addComponent<RenderComponent>(res.texBg3, static_cast<float>(gs.mapViewport.w), static_cast<float>(gs.mapViewport.h))
+		bg3->addComponent<RenderComponent>(res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
 			.setFollowViewport(false);
 		bg3->initializeComponents();
-		bgLayer.push_back(bg3);
+		bgLayer->addChild(bg3);
 
 		std::shared_ptr<GameObject> bg2 = std::make_shared<GameObject>();
-		bg2->addComponent<RenderComponent>(res.texBg2, static_cast<float>(gs.mapViewport.w), static_cast<float>(gs.mapViewport.h))
+		bg2->addComponent<RenderComponent>(res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
 			.setFollowViewport(false);
 		bg2->initializeComponents();
-		bgLayer.push_back(bg2);
+		bgLayer->addChild(bg2);
 
-		gs.layers.push_back(std::move(bgLayer));
+		root->addChild(bgLayer);
 
 		// load the map layers
-		LayerVisitor visitor(state, gs, res);
+		LayerVisitor visitor(state, root);
 		for (auto &layer : res.map->layers)
 		{
 			std::visit(visitor, layer);

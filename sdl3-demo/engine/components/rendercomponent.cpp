@@ -8,6 +8,8 @@
 #include "../framecontext.h"
 #include "../messaging/messages.h"
 
+SDL_FRect RenderComponent::mapViewport = { 0, 0, 0, 0 };
+
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner), flashTimer(0.05f)
 {
@@ -77,6 +79,7 @@ void RenderComponent::onAttached(MessageDispatch &msgDispatch)
 	msgDispatch.registerHandler<RenderComponent, SetAnimationMessage>(this);
 	msgDispatch.registerHandler<RenderComponent, DirectionMessage>(this);
 	msgDispatch.registerHandler<RenderComponent, FrameChangeMessage>(this);
+	msgDispatch.registerHandler<RenderComponent, ViewportMessage>(this);
 }
 
 void RenderComponent::onMessage(const SetAnimationMessage &msg)
@@ -95,6 +98,14 @@ void RenderComponent::onMessage(const DirectionMessage &msg)
 void RenderComponent::onMessage(const FrameChangeMessage &msg)
 {
 	frameNumber = msg.getFrameNumber();
+}
+
+void RenderComponent::onMessage(const ViewportMessage &msg)
+{
+	mapViewport.x = msg.getPosition().x;
+	mapViewport.y = msg.getPosition().y;
+	mapViewport.w = msg.getSize().x;
+	mapViewport.h = msg.getSize().y;
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

@@ -8,7 +8,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <messaging/observer.h>
 
 class GameObject
 {
@@ -16,7 +15,6 @@ class GameObject
 	std::vector<std::shared_ptr<GameObject>> children;
 	std::vector<Component *> components;
 	MessageDispatch msgDispatch;
-	SubjectRegistry subjectRegistry;
 	bool debugHighlight;
 
 	MessageDispatch &getMessageDispatch() { return msgDispatch; }
@@ -38,10 +36,13 @@ public:
 	}
 
 	glm::vec2 getPosition() const { return position; }
-
 	void setPosition(const glm::vec2 position) { this->position = position; }
-	bool isDebugHighlight() const { return debugHighlight; }
-	void setDebugHighlight(bool highlight) { debugHighlight = highlight; }
+
+	auto &getChildren() { return children; }
+	void addChild(std::shared_ptr<GameObject> child)
+	{
+		children.push_back(child);
+	}
 
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)

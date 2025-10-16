@@ -127,3 +127,14 @@ public:
 	DirectionMessage(float direction) : direction(direction) {}
 	float getDirection() const { return direction; }
 };
+
+class ViewportMessage : public Message<ViewportMessage>
+{
+	glm::vec2 position;
+	glm::vec2 size;
+
+public:
+	ViewportMessage(const glm::vec2 &position, const glm::vec2 &size) : position(position), size(size) {}
+	glm::vec2 getPosition() const { return position; }
+	glm::vec2 getSize() const { return size; }
+};
