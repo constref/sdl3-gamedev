@@ -2,12 +2,14 @@
 
 #include <gameobject.h>
 #include <framecontext.h>
+#include <resources.h>
 #include <messaging/messages.h>
 #include <messaging/messagedispatch.h>
 
-BasicCameraComponent::BasicCameraComponent(GameObject &owner, float viewportWidth, float viewportHeight) : Component(owner)
+BasicCameraComponent::BasicCameraComponent(GameObject &owner, std::shared_ptr<GameObject> target, float viewportWidth, float viewportHeight) : Component(owner)
 {
-	targetPosition = glm::vec2(0);
+	this->target = target;
+	camPosition = glm::vec2(0);
 	viewportSize = glm::vec2(viewportWidth, viewportHeight);
 	velocity = glm::vec2(0);
 }
@@ -19,10 +21,10 @@ void BasicCameraComponent::onAttached(MessageDispatch &msgDispatch)
 
 void BasicCameraComponent::update(const FrameContext &ctx)
 {
-	targetPosition.x = (owner.getPosition().x + 32 / 2) - viewportSize.x / 2;
-	targetPosition.y = 1300;
-	//targetPosition.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
-	owner.sendMessage(ViewportMessage(targetPosition, viewportSize));
+	const Resources &res = Resources::getInstance();
+	camPosition.x = (target->getPosition().x + 32 / 2) - viewportSize.x / 2;
+	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;
+	owner.sendMessage(ViewportMessage(camPosition, viewportSize));
 }
 
 void BasicCameraComponent::onMessage(const VelocityMessage &msg)

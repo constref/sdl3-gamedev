@@ -13,6 +13,7 @@ class Platformer
 {
 	std::shared_ptr<GameObject> root;
 	std::shared_ptr<GameObject> playerObj;
+
 	float bg2Scroll, bg3Scroll, bg4Scroll;
 	bool debugMode;
 
@@ -140,9 +141,11 @@ public:
 							.w = 10, .h = 26
 						});
 						auto &animComponent = player->addComponent<AnimationComponent>(res.playerAnims);
-						auto &camComponent = player->addComponent<BasicCameraComponent>(static_cast<float>(state.logW), static_cast<float>(state.logH));
 						auto &renderComponent = player->addComponent<RenderComponent>(res.texIdle, TILE_SIZE, TILE_SIZE);
 						player->initializeComponents();
+
+						// we have our player, we can create the camera and set it as a target
+						auto &camComponent = root->addComponent<BasicCameraComponent>(player, static_cast<float>(state.logW), static_cast<float>(state.logH));
 
 						layerObject->addChild(player);
 					}

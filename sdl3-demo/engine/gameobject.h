@@ -79,6 +79,10 @@ public:
 	void sendMessage(const MessageType &message)
 	{
 		msgDispatch.send(message);
+		for (auto &child : children)
+		{
+			child->sendMessage(message);
+		}
 	}
 
 	void notify(const FrameContext &ctx, int eventId)
