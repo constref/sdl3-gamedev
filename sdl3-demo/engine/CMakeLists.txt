@@ -9,16 +9,15 @@ add_library(engine STATIC
 	"tmx.cpp"
 	"timer.h"
 	"animation.h"
-	"ext/stb/stb_image.h" 
-	"components/rendercomponent.h"
-	"components/rendercomponent.cpp"
+	"engine.h"
+	"application.h"
 	"sdlstate.h"
 	"resources.h"
-	"gamestate.h"
+	
 	"resources.cpp"
 	"framecontext.h"
 	"inputstate.h"
-	"messaging/observer.h"
+	"ext/stb/stb_image.h" 
 	"components/component.h"
 	"components/component.cpp"
 	"components/animationcomponent.h"
@@ -29,14 +28,15 @@ add_library(engine STATIC
 	"components/physicscomponent.cpp"
 	"components/collisioncomponent.h"
 	"components/collisioncomponent.cpp"
+	"components/basiccameracomponent.h"
+	"components/basiccameracomponent.cpp"
+	"components/rendercomponent.h"
+	"components/rendercomponent.cpp"
+	"messaging/observer.h"
 	"messaging/events.h"
 	"messaging/message.h"
 	"messaging/messagedispatch.h"
-	"messaging/messages.h"
-	"engine.h"
-	"application.h"
-	"components/basiccameracomponent.h"
-	"components/basiccameracomponent.cpp")
+	"messaging/messages.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

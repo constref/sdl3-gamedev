@@ -7,7 +7,6 @@
 
 #include "../gameobject.h"
 #include "../framecontext.h"
-#include "../gamestate.h"
 #include "../messaging/events.h"
 #include "../messaging/messages.h"
 

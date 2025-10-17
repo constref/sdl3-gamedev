@@ -2,10 +2,10 @@
 
 #include <sdlstate.h>
 #include <inputstate.h>
-#include <gamestate.h>
 #include <resources.h>
 #include <framecontext.h>
 #include <application.h>
+#include <gameobject.h>
 
 template<Application AppType>
 class Engine
@@ -21,7 +21,7 @@ public:
 	Engine(int logW, int logH) : state(1600, 900, logW, logH)
 	{
 		debugMode = false;
-		running = true;
+		running = false;
 	}
 
 	bool initialize()
@@ -41,6 +41,7 @@ public:
 
 	void run()
 	{
+		running = true;
 		while (running)
 		{
 			SDL_Event event{ 0 };

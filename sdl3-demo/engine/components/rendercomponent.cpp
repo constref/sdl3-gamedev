@@ -3,7 +3,6 @@
 
 #include "../gameobject.h"
 #include "../sdlstate.h"
-#include "../gamestate.h"
 #include "../resources.h"
 #include "../framecontext.h"
 #include "../messaging/messages.h"

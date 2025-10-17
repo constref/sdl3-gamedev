@@ -14,16 +14,13 @@ class GameObject
 	glm::vec2 position;
 	std::vector<std::shared_ptr<GameObject>> children;
 	std::vector<Component *> components;
-	MessageDispatch msgDispatch;
-	bool debugHighlight;
 
-	MessageDispatch &getMessageDispatch() { return msgDispatch; }
+	MessageDispatch msgDispatch;
 
 public:
 	GameObject()
 	{
 		position = glm::vec2(0);
-		debugHighlight = false;
 	}
 
 	~GameObject()
@@ -49,16 +46,8 @@ public:
 	{
 		T *comp = new T(*this, args...);
 		components.push_back(comp);
+		comp->onAttached(msgDispatch);
 		return *comp;
-	}
-
-	void initializeComponents()
-	{
-		// register subjects
-		for (Component *cmp : components)
-		{
-			cmp->onAttached(getMessageDispatch());
-		}
 	}
 
 	template<typename T>
@@ -75,10 +64,13 @@ public:
 		return nullptr;
 	}
 
+	// TODO: This will be replace with a central message queue
 	template<typename MessageType>
 	void sendMessage(const MessageType &message)
 	{
 		msgDispatch.send(message);
+
+		// propagate to children
 		for (auto &child : children)
 		{
 			child->sendMessage(message);
