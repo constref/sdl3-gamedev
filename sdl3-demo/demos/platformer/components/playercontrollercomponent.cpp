@@ -58,6 +58,11 @@ void PlayerControllerComponent::transitionState(PState newState)
 			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
 			break;
 		}
+		case PState::falling:
+		{
+			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
+			break;
+		}
 	}
 	currentState = newState;
 }

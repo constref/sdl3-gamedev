@@ -4,7 +4,6 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../inputstate.h"
-#include "../messaging/events.h"
 #include "../messaging/messages.h"
 
 InputComponent::InputComponent(GameObject &owner) : Component(owner)

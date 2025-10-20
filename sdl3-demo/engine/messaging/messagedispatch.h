@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 #include <messaging/message.h>
 
 class Component;
@@ -21,7 +22,6 @@ public:
 			static_cast<ComponentType *>(comp)->onMessage(static_cast<const MessageType &>(msgBase));
 		});
 	}
-
 
 	template<typename MessageType>
 	void send(const MessageType &message)

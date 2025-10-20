@@ -1,13 +1,10 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
-#include "animation.h"
-#include "components/component.h"
-#include "messaging/messagedispatch.h"
-
-#include <string>
-#include <unordered_map>
+#include <components/component.h>
+#include <messaging/messagedispatch.h>
 
 class GameObject
 {
@@ -32,6 +29,14 @@ public:
 		components.clear();
 	}
 
+	void update(const FrameContext &ctx)
+	{
+		for (auto &comp : components)
+		{
+			comp->update(ctx);
+		}
+	}
+
 	glm::vec2 getPosition() const { return position; }
 	void setPosition(const glm::vec2 position) { this->position = position; }
 
@@ -44,8 +49,11 @@ public:
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)
 	{
+		// create and store component
 		T *comp = new T(*this, args...);
 		components.push_back(comp);
+
+		// allow component to initialize itself
 		comp->onAttached(msgDispatch);
 		return *comp;
 	}
@@ -74,22 +82,6 @@ public:
 		for (auto &child : children)
 		{
 			child->sendMessage(message);
-		}
-	}
-
-	void notify(const FrameContext &ctx, int eventId)
-	{
-		for (auto &comp : components)
-		{
-			comp->onEvent(eventId);
-		}
-	}
-	
-	void update(const FrameContext &ctx)
-	{
-		for (auto &comp : components)
-		{
-			comp->update(ctx);
 		}
 	}
 };

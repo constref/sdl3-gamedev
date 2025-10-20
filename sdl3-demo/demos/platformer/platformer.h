@@ -1,6 +1,8 @@
 #pragma once
 
 #include <gameobject.h>
+#include <resources.h>
+#include <sdlstate.h>
 #include <components/animationcomponent.h>
 #include <components/rendercomponent.h>
 #include <components/inputcomponent.h>
@@ -64,7 +66,7 @@ public:
 			float tileWidth;
 			float tileHeight;
 
-			LayerVisitor(const SDLState &state, std::shared_ptr<GameObject> root) : state(state), root(root), res(Resources::getInstance())
+			LayerVisitor(const SDLState &state, std::shared_ptr<GameObject> root) : state(state), res(Resources::getInstance()), root(root)
 			{
 				tileWidth = static_cast<float>(res.map->tileWidth);
 				tileHeight = static_cast<float>(res.map->tileHeight);
