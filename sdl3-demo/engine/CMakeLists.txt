@@ -36,7 +36,8 @@ add_library(engine STATIC
 	"messaging/events.h"
 	"messaging/message.h"
 	"messaging/messagedispatch.h"
-	"messaging/messages.h")
+	"messaging/messages.h"
+	"world.h" "world.cpp" "objectholder.h" "gameobject.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

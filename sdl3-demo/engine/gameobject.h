@@ -5,11 +5,12 @@
 #include <memory>
 #include <components/component.h>
 #include <messaging/messagedispatch.h>
+#include <ghandle.h>
 
 class GameObject
 {
 	glm::vec2 position;
-	std::vector<std::shared_ptr<GameObject>> children;
+	std::vector<GHandle> children;
 	std::vector<Component *> components;
 
 	MessageDispatch msgDispatch;
@@ -41,9 +42,9 @@ public:
 	void setPosition(const glm::vec2 position) { this->position = position; }
 
 	auto &getChildren() { return children; }
-	void addChild(std::shared_ptr<GameObject> child)
+	void addChild(GHandle childHandle)
 	{
-		children.push_back(child);
+		children.push_back(childHandle);
 	}
 
 	template<typename T, typename... Args>
@@ -72,6 +73,8 @@ public:
 		return nullptr;
 	}
 
+	GameObject &getObject(const GHandle &handle);
+
 	// TODO: This will be replace with a central message queue
 	template<typename MessageType>
 	void sendMessage(const MessageType &message)
@@ -81,7 +84,8 @@ public:
 		// propagate to children
 		for (auto &child : children)
 		{
-			child->sendMessage(message);
+			GameObject &childObj = getObject(child);
+			childObj.sendMessage(message);
 		}
 	}
 };

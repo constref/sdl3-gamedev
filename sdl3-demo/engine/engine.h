@@ -6,6 +6,7 @@
 #include <framecontext.h>
 #include <application.h>
 #include <gameobject.h>
+#include <world.h>
 
 template<Application AppType>
 class Engine
@@ -95,7 +96,9 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			update(app.getRoot(), ctx);
+			World &world = World::getInstance();
+			GameObject &root = world.getObject(app.getRoot());
+			update(root, world, ctx);
 
 			// calculate viewport position
 			//gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
@@ -114,14 +117,15 @@ public:
 		}
 	}
 
-	void update(std::shared_ptr<GameObject> &obj, const FrameContext &ctx)
+	void update(GameObject &obj, World &world, const FrameContext &ctx)
 	{
-		obj->update(ctx);
+		obj.update(ctx);
 
-		auto &children = obj->getChildren();
-		for (auto &child : children)
+		auto &children = obj.getChildren();
+		for (GHandle &hChild : children)
 		{
-			update(child, ctx);
+			GameObject &child = world.getObject(hChild);
+			update(child, world, ctx);
 		}
 	}
 };
