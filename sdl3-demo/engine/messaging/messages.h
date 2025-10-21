@@ -144,6 +144,6 @@ class ShootStartMessage : public Message<ShootStartMessage>
 {
 };
 
-class ShootEndMessage : public Message<ShootStartMessage>
+class ShootEndMessage : public Message<ShootEndMessage>
 {
 };

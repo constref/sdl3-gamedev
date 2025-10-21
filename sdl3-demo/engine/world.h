@@ -51,6 +51,19 @@ public:
 		return GHandle(idx, holder.generation);
 	}
 
+	void freeObject(GHandle handle)
+	{
+		assert(handle.index < objects.size() - 1 && "Object handle index out-of-bounds!");
+		GHolder &holder = objects[handle.index];
+		if (handle.generation == 0 || holder.free ||
+			holder.generation != handle.generation)
+		{
+			holder.free = true;
+			assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
+			freeList.push_back(handle.index);
+		}
+	}
+
 	GameObject &getObject(const GHandle handle)
 	{
 		GHolder &holder = objects[handle.index];
@@ -62,5 +75,10 @@ public:
 	auto &getObjects()
 	{
 		return objects;
+	}
+
+	size_t getFreeCount() const
+	{
+		return freeList.size();
 	}
 };

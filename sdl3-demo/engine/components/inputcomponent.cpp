@@ -46,6 +46,7 @@ void InputComponent::update(const FrameContext &ctx)
 				{
 					owner.sendMessage(ShootEndMessage{});
 				}
+				break;
 			}
 		}
 	}

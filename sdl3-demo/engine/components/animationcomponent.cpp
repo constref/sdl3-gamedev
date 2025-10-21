@@ -24,7 +24,7 @@ void AnimationComponent::update(const FrameContext &ctx)
 
 void AnimationComponent::setAnimation(int index)
 {
-	assert(index >= 0 && index < animations.size());
+	assert(index >= -1 && index < (int)animations.size());
 	currentAnimation = index;
 }
 

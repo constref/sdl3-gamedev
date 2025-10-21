@@ -70,7 +70,7 @@ public:
 					case SDL_EVENT_KEY_UP:
 					{
 						inputState.setKeyState(event.key.scancode, false);
-						inputState.addEvent(event.key.scancode, true);
+						inputState.addEvent(event.key.scancode, false);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
