@@ -36,6 +36,17 @@ void InputComponent::update(const FrameContext &ctx)
 				}
 				break;
 			}
+			case SDL_SCANCODE_J:
+			{
+				if (keyEvent.pressed)
+				{
+					owner.sendMessage(ShootStartMessage{});
+				}
+				else
+				{
+					owner.sendMessage(ShootEndMessage{});
+				}
+			}
 		}
 	}
 

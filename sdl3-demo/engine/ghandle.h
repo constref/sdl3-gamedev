@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 struct GHandle
 {
 	size_t index;

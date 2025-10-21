@@ -1,5 +1,18 @@
 #include "platformer.h"
+
+#include <gameobject.h>
+#include <resources.h>
+#include <sdlstate.h>
 #include <world.h>
+#include <components/animationcomponent.h>
+#include <components/rendercomponent.h>
+#include <components/inputcomponent.h>
+#include <components/physicscomponent.h>
+#include <components/collisioncomponent.h>
+#include <components/basiccameracomponent.h>
+
+#include "components/playercontrollercomponent.h"
+#include "components/weaponcomponent.h"
 
 Platformer::Platformer()
 {
@@ -105,6 +118,7 @@ bool Platformer::initialize(SDLState &state)
 					playerCtrlComponent.setRunTexture(res.texRun);
 					playerCtrlComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
 					playerCtrlComponent.setSlideTexture(res.texSlide);
+					player.addComponent<WeaponComponent>();
 					auto &physicsComponent = player.addComponent<PhysicsComponent>();
 					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(100, 300));

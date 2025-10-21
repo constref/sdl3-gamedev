@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include "message.h"
 
 struct SDL_Texture;
@@ -137,4 +138,12 @@ public:
 	ViewportMessage(const glm::vec2 &position, const glm::vec2 &size) : position(position), size(size) {}
 	glm::vec2 getPosition() const { return position; }
 	glm::vec2 getSize() const { return size; }
+};
+
+class ShootStartMessage : public Message<ShootStartMessage>
+{
+};
+
+class ShootEndMessage : public Message<ShootStartMessage>
+{
 };

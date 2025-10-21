@@ -82,7 +82,7 @@ public:
 		msgDispatch.send(message);
 
 		// propagate to children
-		for (auto &child : children)
+		for (GHandle child : children)
 		{
 			GameObject &childObj = getObject(child);
 			childObj.sendMessage(message);

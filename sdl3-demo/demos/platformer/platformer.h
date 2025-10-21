@@ -1,17 +1,9 @@
 #pragma once
 
-#include <gameobject.h>
-#include <resources.h>
-#include <sdlstate.h>
-#include <components/animationcomponent.h>
-#include <components/rendercomponent.h>
-#include <components/inputcomponent.h>
-#include <components/physicscomponent.h>
-#include <components/collisioncomponent.h>
-#include <components/basiccameracomponent.h>
+#include <ghandle.h>
 
-#include "components/playercontrollercomponent.h"
-
+struct SDLState;
+struct FrameContext;
 class World;
 
 class Platformer

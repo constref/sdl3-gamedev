@@ -5,6 +5,6 @@ add_executable(platformer WIN32
 	"components/playercontrollercomponent.cpp"
 	"components/playercontrollercomponent.h"
 	"platformer.h"
-	"platformer.cpp")
+	"platformer.cpp" "components/weaponcomponent.h" "components/weaponcomponent.cpp")
 
 target_link_libraries(platformer PRIVATE engine)
