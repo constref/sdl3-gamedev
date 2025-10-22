@@ -122,8 +122,8 @@ bool Platformer::initialize(SDLState &state)
 					auto &physicsComponent = player.addComponent<PhysicsComponent>();
 					physicsComponent.setAcceleration(glm::vec2(400, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(100, 300));
+					physicsComponent.setDynamic(true);
 					auto &collisionComponent = player.addComponent<CollisionComponent>();
-					collisionComponent.setDynamic(true);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
 						.w = 10, .h = 26
@@ -145,8 +145,8 @@ bool Platformer::initialize(SDLState &state)
 					auto &physicsComponent = enemy.addComponent<PhysicsComponent>();
 					physicsComponent.setAcceleration(glm::vec2(200, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(50, 300));
+					physicsComponent.setDynamic(true);
 					auto &collisionComponent = enemy.addComponent<CollisionComponent>();
-					collisionComponent.setDynamic(true);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = 28
 						});

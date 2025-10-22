@@ -40,7 +40,8 @@ public:
 
 	GHandle createObject()
 	{
-		assert(freeList.empty() != true && "Out of object slots in World");
+		assert(!freeList.empty() && "Out of object slots in World");
+
 		size_t idx = freeList.back();
 		freeList.pop_back();
 

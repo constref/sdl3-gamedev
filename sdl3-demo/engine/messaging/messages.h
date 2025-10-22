@@ -66,18 +66,6 @@ enum class Axis : int
 	Y = 1,
 };
 
-class IntegrateVelocityMessage : public Message<IntegrateVelocityMessage>
-{
-public:
-	IntegrateVelocityMessage(Axis axis, float deltaTime) : axis(axis), deltaTime(deltaTime) {}
-	float getDeltaTime() const { return deltaTime; }
-	Axis getAxis() const { return axis; }
-
-private:
-	Axis axis;
-	float deltaTime;
-};
-
 class ScaleVelocityAxisMessage : public Message<ScaleVelocityAxisMessage>
 {
 	Axis axis;
@@ -94,6 +82,21 @@ class FallingMessage : public Message<FallingMessage>
 
 class JumpMessage : public Message<JumpMessage>
 {
+};
+
+class TentativeVelocityMessage : public Message<TentativeVelocityMessage>
+{
+	float delta;
+	Axis axis;
+
+public:
+	TentativeVelocityMessage(float delta, Axis axis)
+	{
+		this->delta = delta;
+		this->axis = axis;
+	}
+	float getDelta() const { return delta; }
+	Axis getAxis() const { return axis; }
 };
 
 class CollisionMessage : public Message<CollisionMessage>

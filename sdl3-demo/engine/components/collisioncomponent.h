@@ -8,6 +8,7 @@
 
 struct SDL_FRect;
 class VelocityMessage;
+class TentativeVelocityMessage;
 
 class CollisionComponent : public Component
 {
@@ -15,7 +16,6 @@ class CollisionComponent : public Component
 	static std::vector<CollisionComponent *> allComponents;
 	SDL_FRect collider;
 	glm::vec2 velocity;
-	bool dynamic;
 
 public:
 	CollisionComponent(GameObject &owner);
@@ -23,9 +23,8 @@ public:
 	void update(const FrameContext &ctx) override;
 	void onAttached(MessageDispatch &msgDispatch) override;
 	void onMessage(const VelocityMessage &msg);
+	void onMessage(const TentativeVelocityMessage &msg);
 
 	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
-	bool isDynamic() const { return dynamic; }
-	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }
 };

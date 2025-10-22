@@ -4,7 +4,6 @@
 #include <components/component.h>
 
 struct FrameContext;
-class IntegrateVelocityMessage;
 class ScaleVelocityAxisMessage;
 class AddImpulseMessage;
 class DirectionMessage;
@@ -17,6 +16,8 @@ class PhysicsComponent : public Component
 	glm::vec2 maxSpeed;
 	float direction;
 	bool grounded;
+	bool dynamic;
+	bool hasCollider;
 
 public:
 	PhysicsComponent(GameObject &owner);
@@ -33,8 +34,9 @@ public:
 	void setMaxSpeed(const glm::vec2 &maxSpeed) { this->maxSpeed = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
+	bool isDynamic() const { return dynamic; }
+	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 
-	void onMessage(const IntegrateVelocityMessage &msg);
 	void onMessage(const ScaleVelocityAxisMessage &msg);
 	void onMessage(const AddImpulseMessage &msg);
 	void onMessage(const DirectionMessage &msg);

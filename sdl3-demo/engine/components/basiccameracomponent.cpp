@@ -24,9 +24,10 @@ void BasicCameraComponent::update(const FrameContext &ctx)
 {
 	GameObject &obj = World::getInstance().getObject(target);
 	const Resources &res = Resources::getInstance();
-	camPosition.x = (obj.getPosition().x + 32 / 2) - viewportSize.x / 2;
+	camPosition.x = (obj.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2;
 	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;
-	owner.sendMessage(ViewportMessage(camPosition, viewportSize));
+
+	owner.broadcastMessage(ViewportMessage(camPosition, viewportSize));
 }
 
 void BasicCameraComponent::onMessage(const VelocityMessage &msg)

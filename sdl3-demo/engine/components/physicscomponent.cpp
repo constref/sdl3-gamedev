@@ -6,6 +6,10 @@
 #include "../messaging/events.h"
 #include "../messaging/messages.h"
 
+
+// TODO: Want to remove this CollisionComponent include
+#include <components/collisioncomponent.h>
+
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 {
 	direction = 0;
@@ -13,11 +17,12 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
 	velocity = acceleration = glm::vec2(0);
 	grounded = false;
 	netForce = glm::vec2(0);
+	dynamic = false;
+	hasCollider = false;
 }
 
 void PhysicsComponent::onAttached(MessageDispatch &msgDispatch)
 {
-	msgDispatch.registerHandler<PhysicsComponent, IntegrateVelocityMessage>(this);
 	msgDispatch.registerHandler<PhysicsComponent, ScaleVelocityAxisMessage>(this);
 	msgDispatch.registerHandler<PhysicsComponent, AddImpulseMessage>(this);
 	msgDispatch.registerHandler<PhysicsComponent, DirectionMessage>(this);
@@ -31,6 +36,11 @@ void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 
 void PhysicsComponent::update(const FrameContext &ctx)
 {
+	if (owner.getComponent<CollisionComponent>())
+	{
+		hasCollider = true;
+	}
+
 	glm::vec2 vel = getVelocity();
 
 	netForce += direction * acceleration;
@@ -58,13 +68,21 @@ void PhysicsComponent::update(const FrameContext &ctx)
 
 	setVelocity(vel);
 	netForce = glm::vec2(0);
-}
 
-void PhysicsComponent::onMessage(const IntegrateVelocityMessage &msg)
-{
-	glm::vec2 pos = owner.getPosition();
-	pos[static_cast<int>(msg.getAxis())] += velocity[static_cast<int>(msg.getAxis())] * msg.getDeltaTime();
-	owner.setPosition(pos);
+	if (isDynamic())
+	{
+		const glm::vec2 tentative = vel * ctx.deltaTime;
+		if (hasCollider)
+		{
+			// collision component can check per-axis and apply resolution
+			owner.sendMessage(TentativeVelocityMessage{ tentative.x, Axis::X });
+			owner.sendMessage(TentativeVelocityMessage{ tentative.y, Axis::Y });
+		}
+		else
+		{
+			owner.setPosition(owner.getPosition() + tentative);
+		}
+	}
 }
 
 void PhysicsComponent::onMessage(const ScaleVelocityAxisMessage &msg)

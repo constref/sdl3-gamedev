@@ -80,12 +80,19 @@ public:
 	void sendMessage(const MessageType &message)
 	{
 		msgDispatch.send(message);
+	}
+
+	// TODO: This will be replace with a central message queue
+	template<typename MessageType>
+	void broadcastMessage(const MessageType &message)
+	{
+		msgDispatch.send(message);
 
 		// propagate to children
 		for (GHandle child : children)
 		{
 			GameObject &childObj = getObject(child);
-			childObj.sendMessage(message);
+			childObj.broadcastMessage(message);
 		}
 	}
 };

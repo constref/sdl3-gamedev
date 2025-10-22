@@ -75,7 +75,7 @@ void WeaponComponent::update(const FrameContext &ctx)
 			const int yVariation = 40;
 			const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
 			physCmp.setVelocity(glm::vec2(playerVelocity.x + 600.0f * playerDirection, yVelocity));
-			physCmp.setMaxSpeed(glm::vec2(1000.0f, 0));
+			physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
 
 			auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
 			animCmp.setAnimation(AnimationComponent::NO_ANIMATION);

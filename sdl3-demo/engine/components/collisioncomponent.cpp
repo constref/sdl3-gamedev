@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <format>
 
-#include "collisioncomponent.h"
-
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../messaging/events.h"
@@ -14,7 +12,6 @@ std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
 CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner), collider{ 0 }
 {
-	dynamic = false;
 	// keep track of all collision components
 	allComponents.push_back(this);
 
@@ -31,14 +28,29 @@ CollisionComponent::~CollisionComponent()
 	}
 }
 
+void CollisionComponent::onAttached(MessageDispatch &msgDispatch)
+{
+	msgDispatch.registerHandler<CollisionComponent, VelocityMessage>(this);
+	msgDispatch.registerHandler<CollisionComponent, TentativeVelocityMessage>(this);
+}
+
 void CollisionComponent::update(const FrameContext &ctx)
 {
-	const auto checkCollisions = [this, &ctx](Axis axis) {
+}
+
+void CollisionComponent::onMessage(const VelocityMessage &msg)
+{
+	this->velocity = msg.getVelocity();
+}
+
+void CollisionComponent::onMessage(const TentativeVelocityMessage &msg)
+{
+	const auto checkCollisions = [this](glm::vec2 &position, Axis axis) {
 		for (auto comp : allComponents)
 		{
 			SDL_FRect rectA{
-				.x = owner.getPosition().x + collider.x,
-				.y = owner.getPosition().y + collider.y,
+				.x = position.x + collider.x,
+				.y = position.y + collider.y,
 				.w = collider.w,
 				.h = collider.h
 			};
@@ -61,12 +73,12 @@ void CollisionComponent::update(const FrameContext &ctx)
 					{
 						if (velocity.x > 0) // from left
 						{
-							owner.setPosition(owner.getPosition() - glm::vec2(overlap.x, 0));
+							position.x -= overlap.x;
 							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(-1, 0) });
 						}
 						else if (velocity.x < 0) // from right
 						{
-							owner.setPosition(owner.getPosition() + glm::vec2(overlap.x, 0));
+							position.x += overlap.x;
 							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(1, 0) });
 						}
 					}
@@ -74,12 +86,12 @@ void CollisionComponent::update(const FrameContext &ctx)
 					{
 						if (velocity.y > 0) // from top
 						{
-							owner.setPosition(owner.getPosition() - glm::vec2(0, overlap.y));
+							position.y -= overlap.y;
 							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, 1) });
 						}
 						else if (velocity.y < 0) // from bottom
 						{
-							owner.setPosition(owner.getPosition() + glm::vec2(0, overlap.y));
+							position.y += overlap.y;
 							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, -1) });
 						}
 					}
@@ -88,30 +100,10 @@ void CollisionComponent::update(const FrameContext &ctx)
 		}
 		};
 
-	// dynamic objects are checked for collisions
-	if (isDynamic())
-	{
-		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
-		checkCollisions(Axis::X);
-		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
-		checkCollisions(Axis::Y);
-	}
-	else
-	{
-		// non dynamic objects only have their physics integrated
-		owner.sendMessage(IntegrateVelocityMessage{ Axis::X, ctx.deltaTime });
-		owner.sendMessage(IntegrateVelocityMessage{ Axis::Y, ctx.deltaTime });
-	}
-}
-
-void CollisionComponent::onAttached(MessageDispatch &msgDispatch)
-{
-	msgDispatch.registerHandler<CollisionComponent, VelocityMessage>(this);
-}
-
-void CollisionComponent::onMessage(const VelocityMessage &msg)
-{
-	this->velocity = msg.getVelocity();
+	glm::vec2 tentativePos = owner.getPosition();
+	tentativePos[static_cast<int>(msg.getAxis())] += msg.getDelta();
+	checkCollisions(tentativePos, msg.getAxis());
+	owner.setPosition(tentativePos);
 }
 
 bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
