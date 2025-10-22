@@ -12,7 +12,7 @@
 #include <components/animationcomponent.h>
 #include <components/physicscomponent.h>
 
-WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner), timer(0.1f)
+WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, ComponentStage::Gameplay), timer(0.1f)
 {
 	shooting = false;
 	playerDirection = 1;

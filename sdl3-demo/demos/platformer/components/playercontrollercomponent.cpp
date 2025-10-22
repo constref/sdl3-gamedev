@@ -5,7 +5,7 @@
 #include <messaging/messages.h>
 #include <gameobject.h>
 
-PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner)
+PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner, ComponentStage::Input)
 {
 	direction = 0;
 	velocity = glm::vec2(0);

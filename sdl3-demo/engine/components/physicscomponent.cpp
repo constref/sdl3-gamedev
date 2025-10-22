@@ -10,7 +10,7 @@
 // TODO: Want to remove this CollisionComponent include
 #include <components/collisioncomponent.h>
 
-PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner)
+PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, ComponentStage::Physics)
 {
 	direction = 0;
 	maxSpeed = glm::vec2(0, 0);

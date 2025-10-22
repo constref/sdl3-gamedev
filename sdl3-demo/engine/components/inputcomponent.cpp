@@ -6,7 +6,7 @@
 #include "../inputstate.h"
 #include "../messaging/messages.h"
 
-InputComponent::InputComponent(GameObject &owner) : Component(owner)
+InputComponent::InputComponent(GameObject &owner) : Component(owner, ComponentStage::Input)
 {
 	direction = 0;
 }

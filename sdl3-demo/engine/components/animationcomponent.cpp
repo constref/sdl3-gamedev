@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-AnimationComponent::AnimationComponent(GameObject &owner, const std::vector<Animation> &animations) : Component(owner)
+AnimationComponent::AnimationComponent(GameObject &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
 {
 	this->animations = animations;
 	this->frameNumber = 1;

@@ -10,7 +10,7 @@
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
-CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner), collider{ 0 }
+CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner, ComponentStage::Physics), collider{ 0 }
 {
 	// keep track of all collision components
 	allComponents.push_back(this);

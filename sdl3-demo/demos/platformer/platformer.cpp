@@ -153,6 +153,7 @@ bool Platformer::initialize(SDLState &state)
 					auto &animComponent = enemy.addComponent<AnimationComponent>(res.enemyAnims);
 					animComponent.setAnimation(res.ANIM_ENEMY);
 					auto &renderComponent = enemy.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);
+
 					layerObject.addChild(hEnemy);
 				}
 			}

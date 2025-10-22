@@ -10,7 +10,7 @@
 SDL_FRect RenderComponent::mapViewport = { 0, 0, 0, 0 };
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
-	: Component(owner), flashTimer(0.05f)
+	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;
 	shouldFlash = false;

@@ -95,8 +95,10 @@ public:
 		this->delta = delta;
 		this->axis = axis;
 	}
+
 	float getDelta() const { return delta; }
 	Axis getAxis() const { return axis; }
+
 };
 
 class CollisionMessage : public Message<CollisionMessage>

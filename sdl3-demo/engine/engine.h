@@ -12,7 +12,7 @@ template<Application AppType>
 class Engine
 {
 	SDLState state;
-	uint64_t prevTime = SDL_GetTicks();
+	uint64_t prevTime;
 	InputState inputState;
 	AppType app;
 	bool debugMode;
@@ -23,6 +23,7 @@ public:
 	{
 		debugMode = false;
 		running = false;
+		prevTime = 0;
 	}
 
 	bool initialize()
@@ -42,9 +43,18 @@ public:
 
 	void run()
 	{
+		const float fixedStep = 1.0f / 60.0f;
+		float accumulator = 0;
+		prevTime = SDL_GetTicks();
+
 		running = true;
 		while (running)
 		{
+			// calculate deltaTime
+			uint64_t nowTime = SDL_GetTicks();
+			float deltaTime = (nowTime - prevTime) / 1000.0f;
+			prevTime = nowTime;
+
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
 			{
@@ -85,20 +95,31 @@ public:
 				}
 			}
 
-			// calculate deltaTime
-			uint64_t nowTime = SDL_GetTicks();
-			float deltaTime = (nowTime - prevTime) / 1000.0f;
-			prevTime = nowTime;
-
 			Resources &res = Resources::getInstance();
-			FrameContext ctx(state, inputState, deltaTime);
+			FrameContext ctx(state, inputState, fixedStep);
+
+			World &world = World::getInstance();
+			GameObject &root = world.getObject(app.getRoot());
+
+			accumulator += deltaTime;
+			if (accumulator >= fixedStep)
+			{
+				update(ComponentStage::Input, root, world, ctx);
+				update(ComponentStage::Physics, root, world, ctx);
+				update(ComponentStage::Gameplay, root, world, ctx);
+				update(ComponentStage::Animation, root, world, ctx);
+
+				accumulator -= fixedStep;
+			}
 
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			World &world = World::getInstance();
-			GameObject &root = world.getObject(app.getRoot());
-			update(root, world, ctx);
+			update(ComponentStage::Render, root, world, ctx);
+
+			SDL_RenderPresent(state.renderer);
+
+			update(ComponentStage::PostRender, root, world, ctx);
 
 			// calculate viewport position
 			//gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
@@ -113,19 +134,18 @@ public:
 			//}
 
 			// swap buffers and present
-			SDL_RenderPresent(state.renderer);
 		}
 	}
 
-	void update(GameObject &obj, World &world, const FrameContext &ctx)
+	void update(ComponentStage stage, GameObject &obj, World &world, const FrameContext &ctx)
 	{
-		obj.update(ctx);
+		obj.update(stage, ctx);
 
 		auto &children = obj.getChildren();
 		for (GHandle &hChild : children)
 		{
 			GameObject &child = world.getObject(hChild);
-			update(child, world, ctx);
+			update(stage, child, world, ctx);
 		}
 	}
 };

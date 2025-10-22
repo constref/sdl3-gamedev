@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <array>
 #include <vector>
 #include <memory>
 #include <components/component.h>
@@ -11,7 +12,8 @@ class GameObject
 {
 	glm::vec2 position;
 	std::vector<GHandle> children;
-	std::vector<Component *> components;
+	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
+	bool isInitialized;
 
 	MessageDispatch msgDispatch;
 
@@ -19,20 +21,25 @@ public:
 	GameObject()
 	{
 		position = glm::vec2(0);
+		isInitialized = false;
 	}
 
 	~GameObject()
 	{
-		for (auto *comp : components)
+		for (auto &stageVec : componentStages)
 		{
-			delete comp;
+			for (auto *comp : stageVec)
+			{
+				delete comp;
+			}
+			stageVec.clear();
 		}
-		components.clear();
 	}
 
-	void update(const FrameContext &ctx)
+	void update(ComponentStage stage, const FrameContext &ctx)
 	{
-		for (auto &comp : components)
+		auto &stageVec = componentStages[static_cast<size_t>(stage)];
+		for (auto &comp : stageVec)
 		{
 			comp->update(ctx);
 		}
@@ -44,6 +51,9 @@ public:
 	auto &getChildren() { return children; }
 	void addChild(GHandle childHandle)
 	{
+		GameObject &child = getObject(childHandle);
+		child.initialize();
+
 		children.push_back(childHandle);
 	}
 
@@ -52,25 +62,42 @@ public:
 	{
 		// create and store component
 		T *comp = new T(*this, args...);
-		components.push_back(comp);
 
-		// allow component to initialize itself
-		comp->onAttached(msgDispatch);
+		auto &stageVec = componentStages[static_cast<size_t>(comp->getStage())];
+		stageVec.push_back(comp);
+
 		return *comp;
 	}
 
 	template<typename T>
 	T *getComponent()
 	{
-		for (auto *comp : components)
+		for (auto &stageVec : componentStages)
 		{
-			T *specific = dynamic_cast<T*>(comp);
-			if (specific)
+			for (auto *comp : stageVec)
 			{
-				return specific;
+				T *specific = dynamic_cast<T *>(comp);
+				if (specific)
+				{
+					return specific;
+				}
 			}
 		}
 		return nullptr;
+	}
+
+	void initialize()
+	{
+		// notify all components of their syblings
+		for (auto &stageVec : componentStages)
+		{
+			for (auto *comp : stageVec)
+			{
+				// allow component to initialize itself
+				comp->onAttached(msgDispatch);
+			}
+		}
+		isInitialized = true;
 	}
 
 	GameObject &getObject(const GHandle &handle);
