@@ -8,7 +8,8 @@
 #include <messaging/datapumps.h>
 #include <messaging/datadispatcher.h>
 
-SDL_FRect RenderComponent::mapViewport = { 0, 0, 0, 0 };
+glm::vec2 RenderComponent::mapViewportPos = { 0, 0 };
+glm::vec2 RenderComponent::mapViewportSize = { 0, 0 };
 
 RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
@@ -22,11 +23,16 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float 
 	followViewport = 1;
 }
 
+void RenderComponent::onAttached(DataDispatcher &dataDispatcher)
+{
+	dataDispatcher.registerHandler<RenderComponent, SetAnimationDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, FrameChangeDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, ViewportDPump>(this);
+}
+
 void RenderComponent::update(const FrameContext &ctx)
 {
-	//float srcX = owner.currentAnimation != -1
-	//	? owner.animations[owner.currentAnimation].currentFrame() * width
-	//	: (owner.spriteFrame - 1) * width;
 	float srcX = (frameNumber - 1) * width;
 	SDL_FRect src{
 		.x = srcX,
@@ -36,8 +42,8 @@ void RenderComponent::update(const FrameContext &ctx)
 	};
 
 	SDL_FRect dst{
-		.x = owner.getPosition().x - mapViewport.x * followViewport,
-		.y = owner.getPosition().y - mapViewport.y * followViewport,
+		.x = owner.getPosition().x - mapViewportPos.x * followViewport,
+		.y = owner.getPosition().y - mapViewportPos.y * followViewport,
 		.w = width,
 		.h = height
 	};
@@ -58,28 +64,6 @@ void RenderComponent::update(const FrameContext &ctx)
 			shouldFlash = false;
 		}
 	}
-
-	//if (ctx.gs.debugMode)
-	//{
-	//	if (owner.isDebugHighlight())
-	//	{
-	//		owner.setDebugHighlight(false);
-	//		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_BLEND);
-
-	//		SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 150);
-	//		SDL_RenderFillRect(ctx.state.renderer, &dst);
-
-	//		SDL_SetRenderDrawBlendMode(ctx.state.renderer, SDL_BLENDMODE_NONE);
-	//	}
-	//}
-}
-
-void RenderComponent::onAttached(DataDispatcher &dataDispatcher)
-{
-	dataDispatcher.registerHandler<RenderComponent, SetAnimationDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, DirectionDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, FrameChangeDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, ViewportDPump>(this);
 }
 
 void RenderComponent::onData(const SetAnimationDPump &dp)
@@ -102,13 +86,8 @@ void RenderComponent::onData(const FrameChangeDPump &dp)
 
 void RenderComponent::onData(const ViewportDPump &dp)
 {
-	mapViewport.x = dp.getPosition().x;
-	mapViewport.y = dp.getPosition().y;
-	mapViewport.w = dp.getSize().x;
-	mapViewport.h = dp.getSize().y;
-}
-
-void RenderComponent::setTexture(SDL_Texture *texture)
-{
-	this->texture = texture;
+	mapViewportPos.x = dp.getPosition().x;
+	mapViewportPos.y = dp.getPosition().y;
+	mapViewportSize.x = dp.getSize().x;
+	mapViewportSize.y = dp.getSize().y;
 }

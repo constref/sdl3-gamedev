@@ -1,7 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include "component.h"
-#include <SDL3/SDL.h>
 #include "../timer.h"
 
 struct SDL_Texture;
@@ -20,7 +20,8 @@ class RenderComponent : public Component
 	int frameNumber;
 	float direction;
 	float followViewport;
-	static SDL_FRect mapViewport;
+	static glm::vec2 mapViewportPos;
+	static glm::vec2 mapViewportSize;
 
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
@@ -32,6 +33,6 @@ public:
 	void onData(const FrameChangeDPump &dp);
 	void onData(const ViewportDPump &dp);
 
-	void setTexture(SDL_Texture *texture);
+	void setTexture(SDL_Texture *texture) { this->texture = texture; }
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
 };
