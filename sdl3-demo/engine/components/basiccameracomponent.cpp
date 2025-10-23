@@ -3,8 +3,8 @@
 #include <gameobject.h>
 #include <framecontext.h>
 #include <resources.h>
-#include <messaging/messages.h>
-#include <messaging/messagedispatch.h>
+#include <messaging/datapumps.h>
+#include <messaging/datadispatcher.h>
 #include <world.h>
 
 BasicCameraComponent::BasicCameraComponent(GameObject &owner, GHandle target, float viewportWidth, float viewportHeight) : Component(owner, ComponentStage::Gameplay)
@@ -15,9 +15,9 @@ BasicCameraComponent::BasicCameraComponent(GameObject &owner, GHandle target, fl
 	velocity = glm::vec2(0);
 }
 
-void BasicCameraComponent::onAttached(MessageDispatch &msgDispatch)
+void BasicCameraComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<BasicCameraComponent, VelocityMessage>(this);
+	dataDispatcher.registerHandler<BasicCameraComponent, VelocityDPump>(this);
 }
 
 void BasicCameraComponent::update(const FrameContext &ctx)
@@ -27,10 +27,10 @@ void BasicCameraComponent::update(const FrameContext &ctx)
 	camPosition.x = (obj.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2;
 	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;
 
-	owner.broadcastMessage(ViewportMessage(camPosition, viewportSize));
+	owner.broadcastMessage(ViewportDPump(camPosition, viewportSize));
 }
 
-void BasicCameraComponent::onMessage(const VelocityMessage &msg)
+void BasicCameraComponent::onData(const VelocityDPump &msg)
 {
 	velocity = msg.getVelocity();
 }

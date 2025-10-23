@@ -5,10 +5,10 @@
 #include "../timer.h"
 
 struct SDL_Texture;
-class SetAnimationMessage;
-class DirectionMessage;
-class FrameChangeMessage;
-class ViewportMessage;
+class SetAnimationDPump;
+class DirectionDPump;
+class FrameChangeDPump;
+class ViewportDPump;
 
 class RenderComponent : public Component
 {
@@ -25,12 +25,12 @@ class RenderComponent : public Component
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 
-	void onMessage(const SetAnimationMessage &msg);
-	void onMessage(const DirectionMessage &msg);
-	void onMessage(const FrameChangeMessage &msg);
-	void onMessage(const ViewportMessage &msg);
+	void onData(const SetAnimationDPump &dp);
+	void onData(const DirectionDPump &dp);
+	void onData(const FrameChangeDPump &dp);
+	void onData(const ViewportDPump &dp);
 
 	void setTexture(SDL_Texture *texture);
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }

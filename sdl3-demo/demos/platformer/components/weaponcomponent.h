@@ -4,10 +4,10 @@
 #include <timer.h>
 #include <glm/glm.hpp>
 
-class VelocityMessage;
-class DirectionMessage;
-class ShootStartMessage;
-class ShootEndMessage;
+class VelocityDPump;
+class DirectionDPump;
+class ShootStartDPump;
+class ShootEndDPump;
 
 class WeaponComponent : public Component
 {
@@ -20,10 +20,10 @@ public:
 	WeaponComponent(GameObject &owner);
 
 	void update(const FrameContext &ctx) override;
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 
-	void onMessage(const VelocityMessage &msg);
-	void onMessage(const DirectionMessage &msg);
-	void onMessage(const ShootStartMessage &msg);
-	void onMessage(const ShootEndMessage &msg);
+	void onData(const VelocityDPump &dp);
+	void onData(const DirectionDPump &dp);
+	void onData(const ShootStartDPump &dp);
+	void onData(const ShootEndDPump &dp);
 };

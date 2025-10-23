@@ -33,10 +33,10 @@ add_library(engine STATIC
 	"components/rendercomponent.h"
 	"components/rendercomponent.cpp"
 	"messaging/observer.h"
-	"messaging/events.h"
-	"messaging/message.h"
-	"messaging/messagedispatch.h"
-	"messaging/messages.h"
+	
+	"messaging/datapump.h"
+	"messaging/datadispatcher.h"
+	"messaging/datapumps.h"
 	"world.h" "world.cpp" "objectholder.h" "gameobject.cpp" "messaging/messagequeue.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

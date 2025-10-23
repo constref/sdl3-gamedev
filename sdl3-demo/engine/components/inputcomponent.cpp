@@ -4,7 +4,7 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../inputstate.h"
-#include "../messaging/messages.h"
+#include "../messaging/datapumps.h"
 
 InputComponent::InputComponent(GameObject &owner) : Component(owner, ComponentStage::Input)
 {
@@ -32,7 +32,7 @@ void InputComponent::update(const FrameContext &ctx)
 			{
 				if (keyEvent.pressed)
 				{
-					owner.sendMessage(JumpMessage{});
+					owner.sendMessage(JumpDPump{});
 				}
 				break;
 			}
@@ -40,16 +40,16 @@ void InputComponent::update(const FrameContext &ctx)
 			{
 				if (keyEvent.pressed)
 				{
-					owner.sendMessage(ShootStartMessage{});
+					owner.sendMessage(ShootStartDPump{});
 				}
 				else
 				{
-					owner.sendMessage(ShootEndMessage{});
+					owner.sendMessage(ShootEndDPump{});
 				}
 				break;
 			}
 		}
 	}
 
-	owner.sendMessage(DirectionMessage{ direction });
+	owner.sendMessage(DirectionDPump{ direction });
 }

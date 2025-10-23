@@ -1,8 +1,7 @@
 #include "playercontrollercomponent.h"
 
 #include <framecontext.h>
-#include <messaging/events.h>
-#include <messaging/messages.h>
+#include <messaging/datapumps.h>
 #include <gameobject.h>
 
 PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner, ComponentStage::Input)
@@ -19,13 +18,13 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	slideTexture = nullptr;
 }
 
-void PlayerControllerComponent::onAttached(MessageDispatch &msgDispatch)
+void PlayerControllerComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<PlayerControllerComponent, JumpMessage>(this);
-	msgDispatch.registerHandler<PlayerControllerComponent, CollisionMessage>(this);
-	msgDispatch.registerHandler<PlayerControllerComponent, FallingMessage>(this);
-	msgDispatch.registerHandler<PlayerControllerComponent, VelocityMessage>(this);
-	msgDispatch.registerHandler<PlayerControllerComponent, DirectionMessage>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, JumpDPump>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, CollisionDPump>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, FallingDPump>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, VelocityDPump>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, DirectionDPump>(this);
 }
 
 void PlayerControllerComponent::onStart()
@@ -40,27 +39,27 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.sendMessage(SetAnimationMessage{ idleAnimationIndex, idleTexture });
+			owner.sendMessage(SetAnimationDPump{ idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.sendMessage(SetAnimationMessage{ slideAnimationIndex, slideTexture });
+			owner.sendMessage(SetAnimationDPump{ slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::falling:
 		{
-			owner.sendMessage(SetAnimationMessage{ runAnimationIndex, runTexture });
+			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 	}
@@ -90,10 +89,10 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 				{
 					const float damping = 10.0f;
 					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-					owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, factor });
+					owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, factor });
 					if (std::abs(velocity.x) < 0.01f)
 					{
-						owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
+						owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
 					}
 				}
 			}
@@ -130,17 +129,17 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 	}
 }
 
-void PlayerControllerComponent::onMessage(const JumpMessage &msg)
+void PlayerControllerComponent::onData(const JumpDPump &msg)
 {
 	if (currentState != PState::airborne)
 	{
 		transitionState(PState::airborne);
 		glm::vec2 jumpImpulse(0, -250.0f);
-		owner.sendMessage(AddImpulseMessage{ jumpImpulse });
+		owner.sendMessage(AddImpulseDPump{ jumpImpulse });
 	}
 }
 
-void PlayerControllerComponent::onMessage(const CollisionMessage &msg)
+void PlayerControllerComponent::onData(const CollisionDPump &msg)
 {
 	float dotY = glm::dot(msg.getNormal(), glm::vec2(0, 1));
 	float dotX = glm::dot(msg.getNormal(), glm::vec2(1, 0));
@@ -152,20 +151,20 @@ void PlayerControllerComponent::onMessage(const CollisionMessage &msg)
 		{
 			transitionState(velocity.x != 0 ? PState::running : PState::idle);
 		}
-		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
+		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
 	}
 	else if (dotY == -1.0f)
 	{
 		// hit something above
-		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::Y, 0.0f });
+		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
 	}
 	else if (dotX == 1.0f || dotX == -1.0f)
 	{
-		owner.sendMessage(ScaleVelocityAxisMessage{ Axis::X, 0.0f });
+		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
 	}
 }
 
-void PlayerControllerComponent::onMessage(const FallingMessage &msg)
+void PlayerControllerComponent::onData(const FallingDPump &msg)
 {
 	if (currentState != PState::airborne)
 	{
@@ -173,12 +172,12 @@ void PlayerControllerComponent::onMessage(const FallingMessage &msg)
 	}
 }
 
-void PlayerControllerComponent::onMessage(const VelocityMessage &msg)
+void PlayerControllerComponent::onData(const VelocityDPump &msg)
 {
 	this->velocity = msg.getVelocity();
 }
 
-void PlayerControllerComponent::onMessage(const DirectionMessage &msg)
+void PlayerControllerComponent::onData(const DirectionDPump &msg)
 {
 	this->direction = msg.getDirection();
 }

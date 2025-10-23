@@ -4,8 +4,8 @@
 #include <framecontext.h>
 #include <sdlstate.h>
 #include <resources.h>
-#include <messaging/messagedispatch.h>
-#include <messaging/messages.h>
+#include <messaging/datadispatcher.h>
+#include <messaging/datapumps.h>
 #include <world.h>
 
 #include <components/rendercomponent.h>
@@ -19,28 +19,28 @@ WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, Component
 	playerVelocity = glm::vec2(0);
 }
 
-void WeaponComponent::onAttached(MessageDispatch &msgDispatch)
+void WeaponComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<WeaponComponent, VelocityMessage>(this);
-	msgDispatch.registerHandler<WeaponComponent, DirectionMessage>(this);
-	msgDispatch.registerHandler<WeaponComponent, ShootStartMessage>(this);
-	msgDispatch.registerHandler<WeaponComponent, ShootEndMessage>(this);
+	dataDispatcher.registerHandler<WeaponComponent, VelocityDPump>(this);
+	dataDispatcher.registerHandler<WeaponComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<WeaponComponent, ShootStartDPump>(this);
+	dataDispatcher.registerHandler<WeaponComponent, ShootEndDPump>(this);
 }
 
-void WeaponComponent::onMessage(const VelocityMessage &msg)
+void WeaponComponent::onData(const VelocityDPump &dp)
 {
-	playerVelocity = msg.getVelocity();
+	playerVelocity = dp.getVelocity();
 }
 
-void WeaponComponent::onMessage(const DirectionMessage &msg)
+void WeaponComponent::onData(const DirectionDPump &dp)
 {
-	if (msg.getDirection())
+	if (dp.getDirection())
 	{
-		playerDirection = msg.getDirection();
+		playerDirection = dp.getDirection();
 	}
 }
 
-void WeaponComponent::onMessage(const ShootStartMessage &msg)
+void WeaponComponent::onData(const ShootStartDPump &dp)
 {
 	if (!shooting)
 	{
@@ -48,7 +48,7 @@ void WeaponComponent::onMessage(const ShootStartMessage &msg)
 	}
 }
 
-void WeaponComponent::onMessage(const ShootEndMessage &msg)
+void WeaponComponent::onData(const ShootEndDPump &dp)
 {
 	if (shooting)
 	{

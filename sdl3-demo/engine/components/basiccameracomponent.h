@@ -5,7 +5,7 @@
 #include <memory>
 #include <ghandle.h>
 
-class VelocityMessage;
+class VelocityDPump;
 
 class BasicCameraComponent : public Component
 {
@@ -17,7 +17,7 @@ class BasicCameraComponent : public Component
 public:
 	BasicCameraComponent(GameObject &owner, GHandle target, float viewportWidth, float viewportHeight);
 
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 	void update(const FrameContext &ctx) override;
-	void onMessage(const VelocityMessage &msg);
+	void onData(const VelocityDPump &msg);
 };

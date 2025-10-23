@@ -4,7 +4,7 @@
 #include "component.h"
 
 class Animation;
-class SetAnimationMessage;
+class SetAnimationDPump;
 
 class AnimationComponent : public Component
 {
@@ -14,9 +14,9 @@ public:
 	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 
-	void onMessage(const SetAnimationMessage &msg);
+	void onData(const SetAnimationDPump &dp);
 private:
 	int currentAnimation = NO_ANIMATION;
 	std::vector<Animation> animations;

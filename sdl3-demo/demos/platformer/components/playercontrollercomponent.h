@@ -4,11 +4,11 @@
 #include <components/component.h>
 
 struct SDL_Texture;
-class JumpMessage;
-class CollisionMessage;
-class FallingMessage;
-class VelocityMessage;
-class DirectionMessage;
+class JumpDPump;
+class CollisionDPump;
+class FallingDPump;
+class VelocityDPump;
+class DirectionDPump;
 
 enum class PState
 {
@@ -36,14 +36,14 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 	void onStart() override;
 	void transitionState(PState newState);
-	void onMessage(const JumpMessage &msg);
-	void onMessage(const CollisionMessage &msg);
-	void onMessage(const FallingMessage &msg);
-	void onMessage(const VelocityMessage &msg);
-	void onMessage(const DirectionMessage &msg);
+	void onData(const JumpDPump &msg);
+	void onData(const CollisionDPump &msg);
+	void onData(const FallingDPump &msg);
+	void onData(const VelocityDPump &msg);
+	void onData(const DirectionDPump &msg);
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }

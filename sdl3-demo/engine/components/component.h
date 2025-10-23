@@ -3,7 +3,7 @@
 struct FrameContext;
 class GameObject;
 class SubjectRegistry;
-class MessageDispatch;
+class DataDispatcher;
 
 enum class ComponentStage
 {
@@ -27,7 +27,7 @@ public:
 	Component(GameObject &owner, ComponentStage stage) : owner(owner), stage(stage) {}
 	ComponentStage getStage() const { return stage; }
 	virtual ~Component() {}
-	virtual void onAttached(MessageDispatch &dispatch) {}
+	virtual void onAttached(DataDispatcher &dispatch) {}
 	virtual void onStart() {}
 	virtual void update(const FrameContext &ctx) = 0;
 	void emit(const FrameContext &ctx, int eventId);

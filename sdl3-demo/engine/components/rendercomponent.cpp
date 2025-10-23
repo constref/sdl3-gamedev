@@ -5,7 +5,8 @@
 #include "../sdlstate.h"
 #include "../resources.h"
 #include "../framecontext.h"
-#include "../messaging/messages.h"
+#include <messaging/datapumps.h>
+#include <messaging/datadispatcher.h>
 
 SDL_FRect RenderComponent::mapViewport = { 0, 0, 0, 0 };
 
@@ -73,38 +74,38 @@ void RenderComponent::update(const FrameContext &ctx)
 	//}
 }
 
-void RenderComponent::onAttached(MessageDispatch &msgDispatch)
+void RenderComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<RenderComponent, SetAnimationMessage>(this);
-	msgDispatch.registerHandler<RenderComponent, DirectionMessage>(this);
-	msgDispatch.registerHandler<RenderComponent, FrameChangeMessage>(this);
-	msgDispatch.registerHandler<RenderComponent, ViewportMessage>(this);
+	dataDispatcher.registerHandler<RenderComponent, SetAnimationDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, FrameChangeDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, ViewportDPump>(this);
 }
 
-void RenderComponent::onMessage(const SetAnimationMessage &msg)
+void RenderComponent::onData(const SetAnimationDPump &dp)
 {
-	setTexture(msg.getTexture());
+	setTexture(dp.getTexture());
 }
 
-void RenderComponent::onMessage(const DirectionMessage &msg)
+void RenderComponent::onData(const DirectionDPump &dp)
 {
-	if (msg.getDirection() != 0)
+	if (dp.getDirection() != 0)
 	{
-		direction = msg.getDirection();
+		direction = dp.getDirection();
 	}
 }
 
-void RenderComponent::onMessage(const FrameChangeMessage &msg)
+void RenderComponent::onData(const FrameChangeDPump &dp)
 {
-	frameNumber = msg.getFrameNumber();
+	frameNumber = dp.getFrameNumber();
 }
 
-void RenderComponent::onMessage(const ViewportMessage &msg)
+void RenderComponent::onData(const ViewportDPump &dp)
 {
-	mapViewport.x = msg.getPosition().x;
-	mapViewport.y = msg.getPosition().y;
-	mapViewport.w = msg.getSize().x;
-	mapViewport.h = msg.getSize().y;
+	mapViewport.x = dp.getPosition().x;
+	mapViewport.y = dp.getPosition().y;
+	mapViewport.w = dp.getSize().x;
+	mapViewport.h = dp.getSize().y;
 }
 
 void RenderComponent::setTexture(SDL_Texture *texture)

@@ -4,9 +4,9 @@
 #include <components/component.h>
 
 struct FrameContext;
-class ScaleVelocityAxisMessage;
-class AddImpulseMessage;
-class DirectionMessage;
+class ScaleVelocityAxisDPump;
+class AddImpulseDPump;
+class DirectionDPump;
 
 class PhysicsComponent : public Component
 {
@@ -22,7 +22,7 @@ class PhysicsComponent : public Component
 public:
 	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached(MessageDispatch &msgDispatch) override;
+	void onAttached(DataDispatcher &dataDispatcher) override;
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel);
@@ -37,7 +37,7 @@ public:
 	bool isDynamic() const { return dynamic; }
 	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 
-	void onMessage(const ScaleVelocityAxisMessage &msg);
-	void onMessage(const AddImpulseMessage &msg);
-	void onMessage(const DirectionMessage &msg);
+	void onData(const ScaleVelocityAxisDPump &msg);
+	void onData(const AddImpulseDPump &msg);
+	void onData(const DirectionDPump &msg);
 };

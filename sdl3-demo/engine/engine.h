@@ -2,7 +2,6 @@
 
 #include <sdlstate.h>
 #include <inputstate.h>
-#include <resources.h>
 #include <framecontext.h>
 #include <application.h>
 #include <gameobject.h>
@@ -37,13 +36,13 @@ public:
 
 	void cleanup()
 	{
-		Resources::getInstance().unload();
+		app.cleanup();
 		state.cleanup();
 	}
 
 	void run()
 	{
-		const float fixedStep = 1.0f / 60.0f;
+		const float fixedStep = 1.0f / 120.0f;
 		float accumulator = 0;
 		prevTime = SDL_GetTicks();
 
@@ -95,9 +94,7 @@ public:
 				}
 			}
 
-			Resources &res = Resources::getInstance();
 			FrameContext ctx(state, inputState, fixedStep);
-
 			World &world = World::getInstance();
 			GameObject &root = world.getObject(app.getRoot());
 

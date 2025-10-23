@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <components/component.h>
-#include <messaging/messagedispatch.h>
+#include <messaging/datadispatcher.h>
 #include <ghandle.h>
 
 class GameObject
@@ -15,7 +15,7 @@ class GameObject
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
 	bool isInitialized;
 
-	MessageDispatch msgDispatch;
+	DataDispatcher dataDispatcher;
 
 public:
 	GameObject()
@@ -94,7 +94,7 @@ public:
 			for (auto *comp : stageVec)
 			{
 				// allow component to initialize itself
-				comp->onAttached(msgDispatch);
+				comp->onAttached(dataDispatcher);
 			}
 		}
 		isInitialized = true;
@@ -102,24 +102,23 @@ public:
 
 	GameObject &getObject(const GHandle &handle);
 
-	// TODO: This will be replace with a central message queue
-	template<typename MessageType>
-	void sendMessage(const MessageType &message)
+	template<typename DPType>
+	void sendMessage(const DPType &dp)
 	{
-		msgDispatch.send(message);
+		dataDispatcher.send(dp);
 	}
 
 	// TODO: This will be replace with a central message queue
-	template<typename MessageType>
-	void broadcastMessage(const MessageType &message)
+	template<typename DPType>
+	void broadcastMessage(const DPType &dp)
 	{
-		msgDispatch.send(message);
+		dataDispatcher.send(dp);
 
 		// propagate to children
 		for (GHandle child : children)
 		{
 			GameObject &childObj = getObject(child);
-			childObj.broadcastMessage(message);
+			childObj.broadcastMessage(dp);
 		}
 	}
 };

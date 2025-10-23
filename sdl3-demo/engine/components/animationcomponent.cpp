@@ -2,7 +2,7 @@
 #include "../animation.h"
 #include "../gameobject.h"
 #include "../framecontext.h"
-#include "../messaging/messages.h"
+#include "../messaging/datapumps.h"
 
 #include <cassert>
 
@@ -18,7 +18,7 @@ void AnimationComponent::update(const FrameContext &ctx)
 	{
 		animations[currentAnimation].step(ctx.deltaTime);
 		frameNumber = animations[currentAnimation].currentFrame() + 1;
-		owner.sendMessage(FrameChangeMessage{ frameNumber });
+		owner.sendMessage(FrameChangeDPump{ frameNumber });
 	}
 }
 
@@ -28,13 +28,13 @@ void AnimationComponent::setAnimation(int index)
 	currentAnimation = index;
 }
 
-void AnimationComponent::onAttached(MessageDispatch &msgDispatch)
+void AnimationComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<AnimationComponent, SetAnimationMessage>(this);
+	dataDispatcher.registerHandler<AnimationComponent, SetAnimationDPump>(this);
 }
 
-void AnimationComponent::onMessage(const SetAnimationMessage &msg)
+void AnimationComponent::onData(const SetAnimationDPump &dp)
 {
-	setAnimation(msg.getAnimationIndex());
+	setAnimation(dp.getAnimationIndex());
 	animations[currentAnimation].reset();
 }

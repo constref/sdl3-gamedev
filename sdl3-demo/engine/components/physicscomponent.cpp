@@ -1,11 +1,8 @@
 #include "physicscomponent.h"
-#include "physicscomponent.h"
 
-#include "../framecontext.h"
-#include "../gameobject.h"
-#include "../messaging/events.h"
-#include "../messaging/messages.h"
-
+#include <gameobject.h>
+#include <framecontext.h>
+#include <messaging/datapumps.h>
 
 // TODO: Want to remove this CollisionComponent include
 #include <components/collisioncomponent.h>
@@ -21,17 +18,17 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, Compone
 	hasCollider = false;
 }
 
-void PhysicsComponent::onAttached(MessageDispatch &msgDispatch)
+void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<PhysicsComponent, ScaleVelocityAxisMessage>(this);
-	msgDispatch.registerHandler<PhysicsComponent, AddImpulseMessage>(this);
-	msgDispatch.registerHandler<PhysicsComponent, DirectionMessage>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, ScaleVelocityAxisDPump>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, AddImpulseDPump>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, DirectionDPump>(this);
 }
 
 void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 {
 	this->velocity = vel;
-	owner.sendMessage(VelocityMessage{ vel });
+	owner.sendMessage(VelocityDPump{ vel });
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -75,8 +72,8 @@ void PhysicsComponent::update(const FrameContext &ctx)
 		if (hasCollider)
 		{
 			// collision component can check per-axis and apply resolution
-			owner.sendMessage(TentativeVelocityMessage{ tentative.x, Axis::X });
-			owner.sendMessage(TentativeVelocityMessage{ tentative.y, Axis::Y });
+			owner.sendMessage(TentativeVelocityDPump{ tentative.x, Axis::X });
+			owner.sendMessage(TentativeVelocityDPump{ tentative.y, Axis::Y });
 		}
 		else
 		{
@@ -85,21 +82,21 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	}
 }
 
-void PhysicsComponent::onMessage(const ScaleVelocityAxisMessage &msg)
+void PhysicsComponent::onData(const ScaleVelocityAxisDPump &msg)
 {
 	glm::vec2 vel = getVelocity();
 	vel[static_cast<int>(msg.getAxis())] *= msg.getFactor();
 	setVelocity(vel);
 }
 
-void PhysicsComponent::onMessage(const AddImpulseMessage &msg)
+void PhysicsComponent::onData(const AddImpulseDPump &msg)
 {
 	glm::vec2 vel = getVelocity();
 	vel += msg.getImpulse();
 	setVelocity(vel);
 }
 
-void PhysicsComponent::onMessage(const DirectionMessage &msg)
+void PhysicsComponent::onData(const DirectionDPump &msg)
 {
 	this->direction = msg.getDirection();
 }

@@ -3,10 +3,9 @@
 #include <algorithm>
 #include <format>
 
-#include "../gameobject.h"
-#include "../framecontext.h"
-#include "../messaging/events.h"
-#include "../messaging/messages.h"
+#include <gameobject.h>
+#include <framecontext.h>
+#include <messaging/datapumps.h>
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -28,22 +27,22 @@ CollisionComponent::~CollisionComponent()
 	}
 }
 
-void CollisionComponent::onAttached(MessageDispatch &msgDispatch)
+void CollisionComponent::onAttached(DataDispatcher &dataDispatcher)
 {
-	msgDispatch.registerHandler<CollisionComponent, VelocityMessage>(this);
-	msgDispatch.registerHandler<CollisionComponent, TentativeVelocityMessage>(this);
+	dataDispatcher.registerHandler<CollisionComponent, VelocityDPump>(this);
+	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityDPump>(this);
 }
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
 }
 
-void CollisionComponent::onMessage(const VelocityMessage &msg)
+void CollisionComponent::onData(const VelocityDPump &dp)
 {
-	this->velocity = msg.getVelocity();
+	this->velocity = dp.getVelocity();
 }
 
-void CollisionComponent::onMessage(const TentativeVelocityMessage &msg)
+void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 {
 	const auto checkCollisions = [this](glm::vec2 &position, Axis axis) {
 		for (auto comp : allComponents)
@@ -74,12 +73,12 @@ void CollisionComponent::onMessage(const TentativeVelocityMessage &msg)
 						if (velocity.x > 0) // from left
 						{
 							position.x -= overlap.x;
-							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(-1, 0) });
+							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(-1, 0) });
 						}
 						else if (velocity.x < 0) // from right
 						{
 							position.x += overlap.x;
-							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(1, 0) });
+							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(1, 0) });
 						}
 					}
 					else if (axis == Axis::Y && overlap.y)
@@ -87,12 +86,12 @@ void CollisionComponent::onMessage(const TentativeVelocityMessage &msg)
 						if (velocity.y > 0) // from top
 						{
 							position.y -= overlap.y;
-							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, 1) });
+							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(0, 1) });
 						}
 						else if (velocity.y < 0) // from bottom
 						{
 							position.y += overlap.y;
-							owner.sendMessage(CollisionMessage{ otherOwner, overlap, glm::vec2(0, -1) });
+							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(0, -1) });
 						}
 					}
 				}
@@ -101,8 +100,8 @@ void CollisionComponent::onMessage(const TentativeVelocityMessage &msg)
 		};
 
 	glm::vec2 tentativePos = owner.getPosition();
-	tentativePos[static_cast<int>(msg.getAxis())] += msg.getDelta();
-	checkCollisions(tentativePos, msg.getAxis());
+	tentativePos[static_cast<int>(dp.getAxis())] += dp.getDelta();
+	checkCollisions(tentativePos, dp.getAxis());
 	owner.setPosition(tentativePos);
 }
 

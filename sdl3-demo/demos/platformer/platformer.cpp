@@ -201,3 +201,8 @@ bool Platformer::initialize(SDLState &state)
 	}
 	return true;
 }
+
+void Platformer::cleanup()
+{
+	Resources::getInstance().unload();
+}
