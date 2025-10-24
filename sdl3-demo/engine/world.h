@@ -61,11 +61,6 @@ public:
 		return holder.object;
 	}
 
-	auto &getObjects()
-	{
-		return objects;
-	}
-
 	size_t getFreeCount() const
 	{
 		return freeList.size();
@@ -77,7 +72,7 @@ class World : public ObjectPool<GameObject, 2000>
 	World() { }
 
 public:
-	static World &getInstance()
+	static World &get()
 	{
 		static World instance;
 		return instance;

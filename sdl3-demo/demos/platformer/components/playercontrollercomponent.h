@@ -36,7 +36,7 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onStart() override;
 	void transitionState(PState newState);
 	void onData(const JumpDPump &msg);

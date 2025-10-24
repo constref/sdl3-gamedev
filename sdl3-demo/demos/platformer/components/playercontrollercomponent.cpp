@@ -18,7 +18,7 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	slideTexture = nullptr;
 }
 
-void PlayerControllerComponent::onAttached(DataDispatcher &dataDispatcher)
+void PlayerControllerComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<PlayerControllerComponent, JumpDPump>(this);
 	dataDispatcher.registerHandler<PlayerControllerComponent, CollisionDPump>(this);

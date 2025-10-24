@@ -19,7 +19,7 @@ WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, Component
 	playerVelocity = glm::vec2(0);
 }
 
-void WeaponComponent::onAttached(DataDispatcher &dataDispatcher)
+void WeaponComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<WeaponComponent, VelocityDPump>(this);
 	dataDispatcher.registerHandler<WeaponComponent, DirectionDPump>(this);
@@ -65,11 +65,11 @@ void WeaponComponent::update(const FrameContext &ctx)
 		if (timer.isTimeout())
 		{
 			timer.reset();
-			World &world = World::getInstance();
+			World &world = World::get();
 			GHandle handle = world.createObject();
 			GameObject &bullet = world.getObject(handle);
 
-			auto &res = Resources::getInstance();
+			auto &res = Resources::get();
 
 			auto &physCmp = bullet.addComponent<PhysicsComponent>();
 			const int yVariation = 40;

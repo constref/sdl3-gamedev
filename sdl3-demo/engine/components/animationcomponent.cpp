@@ -28,7 +28,7 @@ void AnimationComponent::setAnimation(int index)
 	currentAnimation = index;
 }
 
-void AnimationComponent::onAttached(DataDispatcher &dataDispatcher)
+void AnimationComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<AnimationComponent, SetAnimationDPump>(this);
 }

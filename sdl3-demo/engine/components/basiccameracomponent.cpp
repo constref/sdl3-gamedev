@@ -15,15 +15,15 @@ BasicCameraComponent::BasicCameraComponent(GameObject &owner, GHandle target, fl
 	velocity = glm::vec2(0);
 }
 
-void BasicCameraComponent::onAttached(DataDispatcher &dataDispatcher)
+void BasicCameraComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<BasicCameraComponent, VelocityDPump>(this);
 }
 
 void BasicCameraComponent::update(const FrameContext &ctx)
 {
-	GameObject &obj = World::getInstance().getObject(target);
-	const Resources &res = Resources::getInstance();
+	GameObject &obj = World::get().getObject(target);
+	const Resources &res = Resources::get();
 	camPosition.x = (obj.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2;
 	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;
 

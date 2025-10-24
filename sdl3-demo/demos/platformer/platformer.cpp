@@ -22,10 +22,10 @@ Platformer::Platformer()
 
 bool Platformer::initialize(SDLState &state)
 {
-	World &world = World::getInstance();
+	World &world = World::get();
 	hRoot = world.createObject();
 
-	Resources &res = Resources::getInstance();
+	Resources &res = Resources::get();
 	res.load(state.renderer);
 
 	struct LayerVisitor
@@ -36,7 +36,7 @@ bool Platformer::initialize(SDLState &state)
 		float tileWidth;
 		float tileHeight;
 
-		LayerVisitor(const SDLState &state, GameObject &root) : state(state), res(Resources::getInstance()), root(root)
+		LayerVisitor(const SDLState &state, GameObject &root) : state(state), res(Resources::get()), root(root)
 		{
 			tileWidth = static_cast<float>(res.map->tileWidth);
 			tileHeight = static_cast<float>(res.map->tileHeight);
@@ -44,7 +44,7 @@ bool Platformer::initialize(SDLState &state)
 
 		auto createObject(int r, int c)
 		{
-			World &world = World::getInstance();
+			World &world = World::get();
 			GHandle newObjHandle = world.createObject();
 			GameObject &obj = world.getObject(newObjHandle);
 
@@ -56,7 +56,7 @@ bool Platformer::initialize(SDLState &state)
 
 		void operator()(tmx::Layer &layer) // Tile layers
 		{
-			World &world = World::getInstance();
+			World &world = World::get();
 			GHandle hLayer = world.createObject();
 			for (int r = 0; r < res.map->mapHeight; ++r)
 			{
@@ -95,7 +95,7 @@ bool Platformer::initialize(SDLState &state)
 		}
 		void operator()(tmx::ObjectGroup &objectGroup) // Object layers
 		{
-			World &world = World::getInstance();
+			World &world = World::get();
 			GHandle hLayer = world.createObject();
 			GameObject &layerObject = world.getObject(hLayer);
 
@@ -110,7 +110,7 @@ bool Platformer::initialize(SDLState &state)
 					GHandle hPlayer = world.createObject();
 					GameObject &player = world.getObject(hPlayer);
 					player.setPosition(objPos);
-					auto &inputComponent = player.addComponent<InputComponent>();
+					auto &inputComponent = player.addComponent<InputComponent>(hPlayer);
 					auto &playerCtrlComponent = player.addComponent<PlayerControllerComponent>();
 					playerCtrlComponent.setIdleAnimation(res.ANIM_PLAYER_IDLE);
 					playerCtrlComponent.setIdleTexture(res.texIdle);
@@ -204,5 +204,5 @@ bool Platformer::initialize(SDLState &state)
 
 void Platformer::cleanup()
 {
-	Resources::getInstance().unload();
+	Resources::get().unload();
 }

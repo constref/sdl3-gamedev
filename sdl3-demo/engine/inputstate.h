@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <deque>
 #include <cassert>
+#include <ghandle.h>
 
 struct KeyEvent
 {
@@ -13,6 +14,8 @@ class InputState
 {
 	bool keys[SDL_SCANCODE_COUNT]{ false };
 	std::deque<KeyEvent> keyEvents;
+	GHandle focusTarget;
+
 public:
 	void setKeyState(SDL_Scancode scancode, bool pressed)
 	{
@@ -37,5 +40,17 @@ public:
 		event = keyEvents.front();
 		keyEvents.pop_front();
 		return true;
+	}
+
+	GHandle getFocusTarget() const { return focusTarget; }
+	void setFocus(GHandle focusTarget)
+	{
+		this->focusTarget = focusTarget;
+	}
+
+	static InputState &get()
+	{
+		static InputState instance;
+		return instance;
 	}
 };

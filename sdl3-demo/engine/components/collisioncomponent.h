@@ -21,7 +21,7 @@ public:
 	CollisionComponent(GameObject &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onData(const VelocityDPump &msg);
 	void onData(const TentativeVelocityDPump &dp);
 

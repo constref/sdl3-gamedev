@@ -1,22 +1,21 @@
 #pragma once
 
-#include <array>
-#include <vector>
 #include <messaging/dispatcher.h>
+//#include <messaging/datapump.h>
 
 class Component;
-class DataPumpBase;
+class EventBase;
 
-class DataPumpPolicy
+class EventPolicy
 {
 public:
 	template<typename Type, typename RecipientType>
 	static void invoke(RecipientType *recipient, const Type &obj)
 	{
-		recipient->onData(obj);
+		recipient->onEvent(obj);
 	}
 };
 
-class DataDispatcher : public Dispatcher<DataPumpBase, Component, DataPumpPolicy>
+class EventDispatcher : public Dispatcher<EventBase, Component, EventPolicy>
 {
 };

@@ -6,6 +6,7 @@
 #include <memory>
 #include <components/component.h>
 #include <messaging/datadispatcher.h>
+#include <messaging/eventdispatcher.h>
 #include <ghandle.h>
 
 class GameObject
@@ -16,6 +17,7 @@ class GameObject
 	bool isInitialized;
 
 	DataDispatcher dataDispatcher;
+	EventDispatcher eventDispatcher;
 
 public:
 	GameObject()
@@ -94,13 +96,19 @@ public:
 			for (auto *comp : stageVec)
 			{
 				// allow component to initialize itself
-				comp->onAttached(dataDispatcher);
+				comp->onAttached(dataDispatcher, eventDispatcher);
 			}
 		}
 		isInitialized = true;
 	}
 
 	GameObject &getObject(const GHandle &handle);
+
+	template<typename EventType>
+	void notify(const EventType &event)
+	{
+		eventDispatcher.send(event);
+	}
 
 	template<typename DPType>
 	void sendMessage(const DPType &dp)

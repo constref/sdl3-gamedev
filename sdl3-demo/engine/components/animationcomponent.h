@@ -14,7 +14,7 @@ public:
 	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onData(const SetAnimationDPump &dp);
 private:

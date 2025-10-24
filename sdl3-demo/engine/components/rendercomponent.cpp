@@ -23,7 +23,7 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float 
 	followViewport = 1;
 }
 
-void RenderComponent::onAttached(DataDispatcher &dataDispatcher)
+void RenderComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<RenderComponent, SetAnimationDPump>(this);
 	dataDispatcher.registerHandler<RenderComponent, DirectionDPump>(this);

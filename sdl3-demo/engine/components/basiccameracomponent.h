@@ -17,7 +17,7 @@ class BasicCameraComponent : public Component
 public:
 	BasicCameraComponent(GameObject &owner, GHandle target, float viewportWidth, float viewportHeight);
 
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void update(const FrameContext &ctx) override;
 	void onData(const VelocityDPump &msg);
 };

@@ -20,7 +20,7 @@ public:
 	WeaponComponent(GameObject &owner);
 
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onData(const VelocityDPump &dp);
 	void onData(const DirectionDPump &dp);

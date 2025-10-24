@@ -1,11 +1,14 @@
 #pragma once
 
+#include <format>
 #include <sdlstate.h>
 #include <inputstate.h>
 #include <framecontext.h>
 #include <application.h>
 #include <gameobject.h>
 #include <world.h>
+#include <messaging/eventqueue.h>
+#include <messaging/events.h>
 
 template<Application AppType>
 class Engine
@@ -45,6 +48,7 @@ public:
 		const float fixedStep = 1.0f / 120.0f;
 		float accumulator = 0;
 		prevTime = SDL_GetTicks();
+		long frameCount = 0;
 
 		running = true;
 		while (running)
@@ -53,6 +57,10 @@ public:
 			uint64_t nowTime = SDL_GetTicks();
 			float deltaTime = (nowTime - prevTime) / 1000.0f;
 			prevTime = nowTime;
+
+			FrameContext ctx(state, inputState, fixedStep, ++frameCount);
+			World &world = World::get();
+			GameObject &root = world.getObject(app.getRoot());
 
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
@@ -72,14 +80,12 @@ public:
 					}
 					case SDL_EVENT_KEY_DOWN:
 					{
-						inputState.setKeyState(event.key.scancode, true);
-						inputState.addEvent(event.key.scancode, true);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::down);
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						inputState.setKeyState(event.key.scancode, false);
-						inputState.addEvent(event.key.scancode, false);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -94,17 +100,22 @@ public:
 				}
 			}
 
-			FrameContext ctx(state, inputState, fixedStep);
-			World &world = World::getInstance();
-			GameObject &root = world.getObject(app.getRoot());
-
 			accumulator += deltaTime;
 			if (accumulator >= fixedStep)
 			{
+				EventQueue::get().dispatch(ComponentStage::Input);
 				update(ComponentStage::Input, root, world, ctx);
+
+				// TODO: Post-input events
+
 				update(ComponentStage::Physics, root, world, ctx);
+
+				// TODO: Post-physics events
+
 				update(ComponentStage::Gameplay, root, world, ctx);
 				update(ComponentStage::Animation, root, world, ctx);
+
+				// TODO: Pre-render events
 
 				accumulator -= fixedStep;
 			}
@@ -113,6 +124,9 @@ public:
 			SDL_RenderClear(state.renderer);
 
 			update(ComponentStage::Render, root, world, ctx);
+
+			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Objects: {}, Events: {}", World::get().getFreeCount(), EventQueue::get().getCount()).c_str());
 
 			SDL_RenderPresent(state.renderer);
 

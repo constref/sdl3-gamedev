@@ -1,20 +1,12 @@
 #pragma once
 
+#include <components/componentstage.h>
+
 struct FrameContext;
 class GameObject;
 class SubjectRegistry;
 class DataDispatcher;
-
-enum class ComponentStage
-{
-	Input = 0,
-	Physics = 1,
-	Gameplay = 2,
-	Animation = 3,
-	Render = 4,
-	PostRender = 5,
-	SIZE
-};
+class EventDispatcher;
 
 class Component
 {
@@ -27,7 +19,7 @@ public:
 	Component(GameObject &owner, ComponentStage stage) : owner(owner), stage(stage) {}
 	ComponentStage getStage() const { return stage; }
 	virtual ~Component() {}
-	virtual void onAttached(DataDispatcher &dispatch) {}
+	virtual void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) {}
 	virtual void onStart() {}
 	virtual void update(const FrameContext &ctx) = 0;
 	void emit(const FrameContext &ctx, int eventId);

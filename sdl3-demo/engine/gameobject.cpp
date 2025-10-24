@@ -3,6 +3,6 @@
 
 GameObject &GameObject::getObject(const GHandle &handle)
 {
-	World &world = World::getInstance();
+	World &world = World::get();
 	return world.getObject(handle);
 }

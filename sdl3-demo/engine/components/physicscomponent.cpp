@@ -18,7 +18,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, Compone
 	hasCollider = false;
 }
 
-void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher)
+void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<PhysicsComponent, ScaleVelocityAxisDPump>(this);
 	dataDispatcher.registerHandler<PhysicsComponent, AddImpulseDPump>(this);

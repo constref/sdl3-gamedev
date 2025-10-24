@@ -27,7 +27,7 @@ CollisionComponent::~CollisionComponent()
 	}
 }
 
-void CollisionComponent::onAttached(DataDispatcher &dataDispatcher)
+void CollisionComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	dataDispatcher.registerHandler<CollisionComponent, VelocityDPump>(this);
 	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityDPump>(this);

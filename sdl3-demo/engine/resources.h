@@ -18,7 +18,7 @@ struct TileSetTextures
 
 struct Resources
 {
-	static Resources &getInstance()
+	static Resources &get()
 	{
 		static Resources instance;
 		return instance;

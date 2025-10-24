@@ -26,7 +26,7 @@ class RenderComponent : public Component
 public:
 	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onData(const SetAnimationDPump &dp);
 	void onData(const DirectionDPump &dp);

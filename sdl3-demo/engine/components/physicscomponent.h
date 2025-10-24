@@ -22,7 +22,7 @@ class PhysicsComponent : public Component
 public:
 	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached(DataDispatcher &dataDispatcher) override;
+	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel);
