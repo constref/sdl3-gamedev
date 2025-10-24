@@ -6,7 +6,7 @@ class Dispatcher
 	using HandlerFn = void(*)(RecipientBase *, const Base &);
 	using Handler = std::pair<RecipientBase *, HandlerFn>;
 
-	std::array<std::vector<Handler>, 1000> registrations;
+	std::array<std::vector<Handler>, 25> registrations;
 
 public:
 	template<typename RecipientType, typename Type>

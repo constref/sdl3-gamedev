@@ -15,7 +15,7 @@ class DataPump : public DataPumpBase
 public:
 	constexpr static int index()
 	{
-		assert(nextIndex < 1000 && "Exceeded maximum data-pump index limit");
+		assert(nextIndex < 25 && "Exceeded maximum data-pump index limit");
 		static int idx = nextIndex++;
 		return idx;
 	}
