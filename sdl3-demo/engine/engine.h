@@ -80,10 +80,7 @@ public:
 					}
 					case SDL_EVENT_KEY_DOWN:
 					{
-						if (event.key.repeat == 0)
-						{
-							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::down);
-						}
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::down);
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
@@ -106,6 +103,7 @@ public:
 			accumulator += deltaTime;
 			if (accumulator >= fixedStep)
 			{
+				// Dispatch input related events to input stage component(s)
 				EventQueue::get().dispatch(ComponentStage::Input);
 				update(ComponentStage::Input, root, world, ctx);
 
@@ -134,20 +132,6 @@ public:
 			SDL_RenderPresent(state.renderer);
 
 			update(ComponentStage::PostRender, root, world, ctx);
-
-			// calculate viewport position
-			//gs.mapViewport.x = (gs.player()->getPosition().x + TILE_SIZE / 2) - gs.mapViewport.w / 2;
-			//gs.mapViewport.y = res.map->mapHeight * res.map->tileHeight - gs.mapViewport.h;
-
-			//if (gs.debugMode)
-			//{
-				// display some debug info
-				//SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-				//SDL_RenderDebugText(state.renderer, 5, 5,
-				//	std::format("G: {} - dt: {}", gs.player()->getComponent<PhysicsComponent>()->isGrounded(), ctx.deltaTime).c_str());
-			//}
-
-			// swap buffers and present
 		}
 	}
 
