@@ -50,7 +50,7 @@ void CollisionComponent::onData(const VelocityDPump &dp)
 
 void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 {
-	std::array<bool, 4> contacts; // left, right, top, bottom
+	std::array<bool, 4> contacts = { false }; // left, right, top, bottom
 	const auto checkCollisions = [this, &contacts](glm::vec2 &position, Axis axis) {
 		for (auto comp : allComponents)
 		{
