@@ -76,46 +76,17 @@ public:
 	float getFactor() const { return factor; }
 };
 
-class FallingDPump : public DataPump<FallingDPump>
-{
-};
-
-class JumpDPump : public DataPump<JumpDPump>
-{
-};
-
 class TentativeVelocityDPump : public DataPump<TentativeVelocityDPump>
 {
-	float delta;
-	Axis axis;
+	glm::vec2 delta;
 
 public:
-	TentativeVelocityDPump(float delta, Axis axis)
+	TentativeVelocityDPump(glm::vec2 delta)
 	{
 		this->delta = delta;
-		this->axis = axis;
 	}
 
-	float getDelta() const { return delta; }
-	Axis getAxis() const { return axis; }
-
-};
-
-class CollisionDPump : public DataPump<CollisionDPump>
-{
-	GameObject &other;
-	glm::vec2 overlap;
-	glm::vec2 normal;
-
-public:
-	CollisionDPump(GameObject &other, const glm::vec2 &overlap, const glm::vec2 &normal) :
-		other(other), overlap(overlap), normal(normal)
-	{
-	}
-
-	const GameObject &getOther() const { return other; }
-	const glm::vec2 &getOverlap() const { return overlap; }
-	const glm::vec2 &getNormal() const { return normal; }
+	glm::vec2 getDelta() const { return delta; }
 };
 
 class VelocityDPump : public DataPump<VelocityDPump>
@@ -143,12 +114,4 @@ public:
 	ViewportDPump(const glm::vec2 &position, const glm::vec2 &size) : position(position), size(size) {}
 	glm::vec2 getPosition() const { return position; }
 	glm::vec2 getSize() const { return size; }
-};
-
-class ShootStartDPump : public DataPump<ShootStartDPump>
-{
-};
-
-class ShootEndDPump : public DataPump<ShootEndDPump>
-{
 };

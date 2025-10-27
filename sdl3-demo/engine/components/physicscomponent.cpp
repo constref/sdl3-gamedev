@@ -3,9 +3,7 @@
 #include <gameobject.h>
 #include <framecontext.h>
 #include <messaging/datapumps.h>
-
-// TODO: Want to remove this CollisionComponent include
-#include <components/collisioncomponent.h>
+#include <messaging/events.h>
 
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, ComponentStage::Physics)
 {
@@ -15,7 +13,7 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, Compone
 	grounded = false;
 	netForce = glm::vec2(0);
 	dynamic = false;
-	hasCollider = false;
+	gravityFactor = 1.0f;
 }
 
 void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
@@ -28,23 +26,18 @@ void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatche
 void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 {
 	this->velocity = vel;
-	owner.sendMessage(VelocityDPump{ vel });
+	owner.pushData(VelocityDPump{ vel });
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
 {
-	if (owner.getComponent<CollisionComponent>())
-	{
-		hasCollider = true;
-	}
-
 	glm::vec2 vel = getVelocity();
 
 	netForce += direction * acceleration;
 
 	// gravity
 	const glm::vec2 gravity(0, 600);
-	netForce += gravity;
+	netForce += gravity * gravityFactor;
 
 	// apply forces
 	vel += netForce * ctx.deltaTime;
@@ -66,19 +59,11 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	setVelocity(vel);
 	netForce = glm::vec2(0);
 
+	const glm::vec2 delta = vel * ctx.deltaTime;
 	if (isDynamic())
 	{
-		const glm::vec2 tentative = vel * ctx.deltaTime;
-		if (hasCollider)
-		{
-			// collision component can check per-axis and apply resolution
-			owner.sendMessage(TentativeVelocityDPump{ tentative.x, Axis::X });
-			owner.sendMessage(TentativeVelocityDPump{ tentative.y, Axis::Y });
-		}
-		else
-		{
-			owner.setPosition(owner.getPosition() + tentative);
-		}
+		// collision component can check per-axis and apply resolution
+		owner.pushData(TentativeVelocityDPump{ delta });
 	}
 }
 

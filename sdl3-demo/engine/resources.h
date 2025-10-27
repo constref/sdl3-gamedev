@@ -69,7 +69,7 @@ struct Resources
 		playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
 		playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
 		bulletAnims.resize(2);
-		bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.05f);
+		bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.01f);
 		bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
 		enemyAnims.resize(3);
 		enemyAnims[ANIM_ENEMY] = Animation(8, 1.0f);

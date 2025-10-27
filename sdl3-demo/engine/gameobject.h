@@ -11,6 +11,7 @@
 
 class GameObject
 {
+	GHandle handle;
 	glm::vec2 position;
 	std::vector<GHandle> children;
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
@@ -20,8 +21,14 @@ class GameObject
 	EventDispatcher eventDispatcher;
 
 public:
+	GameObject(GHandle handle) : GameObject()
+	{
+		this->handle = handle;
+	}
+
 	GameObject()
 	{
+		handle = GHandle(0, 0);
 		position = glm::vec2(0);
 		isInitialized = false;
 	}
@@ -46,6 +53,8 @@ public:
 			comp->update(ctx);
 		}
 	}
+
+	GHandle getHandle() const { return handle; }
 
 	glm::vec2 getPosition() const { return position; }
 	void setPosition(const glm::vec2 position) { this->position = position; }
@@ -111,7 +120,7 @@ public:
 	}
 
 	template<typename DPType>
-	void sendMessage(const DPType &dp)
+	void pushData(const DPType &dp)
 	{
 		dataDispatcher.send(dp);
 	}

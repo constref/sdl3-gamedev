@@ -6,8 +6,8 @@
 
 class VelocityDPump;
 class DirectionDPump;
-class ShootStartDPump;
-class ShootEndDPump;
+class ShootBeginEvent;
+class ShootEndEvent;
 
 class WeaponComponent : public Component
 {
@@ -24,6 +24,6 @@ public:
 
 	void onData(const VelocityDPump &dp);
 	void onData(const DirectionDPump &dp);
-	void onData(const ShootStartDPump &dp);
-	void onData(const ShootEndDPump &dp);
+	void onEvent(const ShootBeginEvent &event);
+	void onEvent(const ShootEndEvent &event);
 };

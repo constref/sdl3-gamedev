@@ -5,24 +5,7 @@
 #include <cassert>
 
 #include <world.h>
-
-class EventBase
-{
-protected:
-	static inline int nextIndex = 0;
-};
-
-template<typename EventType>
-class Event : public EventBase
-{
-public:
-	constexpr static int index()
-	{
-		assert(nextIndex < 1000 && "Exceeded maximum event index limit");
-		static int idx = nextIndex++;
-		return idx;
-	}
-};
+#include <messaging/event.h>
 
 struct QueuedEvent
 {
@@ -34,16 +17,18 @@ struct QueuedEvent
 
 class EventQueue
 {
-	std::vector<QueuedEvent> queue;
-
-	size_t readIdx;
-	size_t writeIdx;
+	std::array<std::vector<QueuedEvent>, static_cast<size_t>(ComponentStage::SIZE)> queues;
+	std::array<std::pair<size_t, size_t>, static_cast<size_t>(ComponentStage::SIZE)> indices; // read,write pairs
 
 	EventQueue()
 	{
-		readIdx = 0;
-		writeIdx = 0;
-		queue.resize(5000);
+		for (int i = 0; i < static_cast<size_t>(ComponentStage::SIZE); ++i)
+		{
+			// TODO: Reduce mem footprint here
+			queues[i].resize(5000);
+			indices[i].first = 0;
+			indices[i].second = 0;
+		}
 	}
 
 public:
@@ -53,10 +38,21 @@ public:
 		return instance;
 	}
 
-	template<typename EventType, typename... Args>
-	void enqueue(GHandle target, Args&&... args)
+	auto &getQueue(ComponentStage stage)
 	{
-		queue[writeIdx++] = QueuedEvent 
+		return queues[static_cast<size_t>(stage)];
+	}
+	auto &getIndices(ComponentStage stage)
+	{
+		return indices[static_cast<size_t>(stage)];
+	}
+
+	template<typename EventType, typename... Args>
+	void enqueue(GHandle target, ComponentStage stage, Args&&... args)
+	{
+		auto &queue = getQueue(stage);
+		auto &indices = getIndices(stage);
+		queue[indices.second++] = QueuedEvent 
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
@@ -69,15 +65,19 @@ public:
 
 	void dispatch(ComponentStage stage)
 	{
-		while (readIdx < writeIdx)
+		auto &queue = getQueue(stage);
+		auto &indices = getIndices(stage);
+
+		while (indices.first < indices.second)
 		{
-			QueuedEvent &nextItem = queue[readIdx++];
+			QueuedEvent &nextItem = queue[indices.first++];
 			nextItem.dispatch(World::get().getObject(nextItem.target), *nextItem.event);
 		}
 	}
 
-	size_t getCount() const
+	size_t getCount(ComponentStage stage)
 	{
-		return writeIdx;
+		auto &indices = getIndices(stage);
+		return indices.second;
 	}
 };

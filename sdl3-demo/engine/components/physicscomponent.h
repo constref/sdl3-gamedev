@@ -17,7 +17,7 @@ class PhysicsComponent : public Component
 	float direction;
 	bool grounded;
 	bool dynamic;
-	bool hasCollider;
+	float gravityFactor;
 
 public:
 	PhysicsComponent(GameObject &owner);
@@ -36,6 +36,8 @@ public:
 	void setGrounded(bool grounded) { this->grounded = grounded; }
 	bool isDynamic() const { return dynamic; }
 	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
+	float getGravityFactor() const { return gravityFactor; }
+	void setGravityFactor(float gravityFactor) { this->gravityFactor = gravityFactor; }
 
 	void onData(const ScaleVelocityAxisDPump &msg);
 	void onData(const AddImpulseDPump &msg);

@@ -6,7 +6,11 @@
 #include "../inputstate.h"
 #include "../messaging/datapumps.h"
 
+#include <messaging/eventqueue.h>
 #include <messaging/events.h>
+
+class ShootBeginEvent;
+class ShootEndEvent;
 
 InputComponent::InputComponent(GameObject &owner, GHandle ownerHandle) : Component(owner, ComponentStage::Input)
 {
@@ -71,7 +75,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 	{
 		direction += 1;
 	}
-	owner.sendMessage(DirectionDPump{ direction });
+	owner.pushData(DirectionDPump{ direction });
 
 	switch (event.scancode)
 	{
@@ -79,7 +83,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				owner.sendMessage(JumpDPump{});
+				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), ComponentStage::Gameplay);
 			}
 			break;
 		}
@@ -87,11 +91,11 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				owner.sendMessage(ShootStartDPump{});
+				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), ComponentStage::Gameplay);
 			}
 			else
 			{
-				owner.sendMessage(ShootEndDPump{});
+				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), ComponentStage::Gameplay);
 			}
 			break;
 		}

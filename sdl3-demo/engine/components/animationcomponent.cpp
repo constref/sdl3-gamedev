@@ -18,7 +18,7 @@ void AnimationComponent::update(const FrameContext &ctx)
 	{
 		animations[currentAnimation].step(ctx.deltaTime);
 		frameNumber = animations[currentAnimation].currentFrame() + 1;
-		owner.sendMessage(FrameChangeDPump{ frameNumber });
+		owner.pushData(FrameChangeDPump{ frameNumber });
 	}
 }
 

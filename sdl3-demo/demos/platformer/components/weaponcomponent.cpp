@@ -6,11 +6,15 @@
 #include <resources.h>
 #include <messaging/datadispatcher.h>
 #include <messaging/datapumps.h>
+#include <messaging/events.h>
 #include <world.h>
 
 #include <components/rendercomponent.h>
 #include <components/animationcomponent.h>
 #include <components/physicscomponent.h>
+#include <components/collisioncomponent.h>
+
+#include "projectilecomponent.h"
 
 WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, ComponentStage::Gameplay), timer(0.1f)
 {
@@ -23,8 +27,8 @@ void WeaponComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher
 {
 	dataDispatcher.registerHandler<WeaponComponent, VelocityDPump>(this);
 	dataDispatcher.registerHandler<WeaponComponent, DirectionDPump>(this);
-	dataDispatcher.registerHandler<WeaponComponent, ShootStartDPump>(this);
-	dataDispatcher.registerHandler<WeaponComponent, ShootEndDPump>(this);
+	eventDispatcher.registerHandler<WeaponComponent, ShootBeginEvent>(this);
+	eventDispatcher.registerHandler<WeaponComponent, ShootEndEvent>(this);
 }
 
 void WeaponComponent::onData(const VelocityDPump &dp)
@@ -40,7 +44,7 @@ void WeaponComponent::onData(const DirectionDPump &dp)
 	}
 }
 
-void WeaponComponent::onData(const ShootStartDPump &dp)
+void WeaponComponent::onEvent(const ShootBeginEvent &event)
 {
 	if (!shooting)
 	{
@@ -48,7 +52,7 @@ void WeaponComponent::onData(const ShootStartDPump &dp)
 	}
 }
 
-void WeaponComponent::onData(const ShootEndDPump &dp)
+void WeaponComponent::onEvent(const ShootEndEvent &event)
 {
 	if (shooting)
 	{
@@ -76,12 +80,22 @@ void WeaponComponent::update(const FrameContext &ctx)
 			const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
 			physCmp.setVelocity(glm::vec2(playerVelocity.x + 600.0f * playerDirection, yVelocity));
 			physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
+			physCmp.setDynamic(true);
+			physCmp.setGravityFactor(0);
 
 			auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
-			animCmp.setAnimation(AnimationComponent::NO_ANIMATION);
+			animCmp.setAnimation(res.ANIM_BULLET_MOVING);
 
 			bullet.addComponent<RenderComponent>(res.texBullet,
-				static_cast<float>(res.texBullet->w), static_cast<float>(res.texBullet->h));
+				static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
+
+			auto &collCmp = bullet.addComponent<CollisionComponent>();
+			collCmp.setCollider(SDL_FRect{
+				.x = 0, .y = 0,
+				.w = 4, .h = 4
+			});
+
+			bullet.addComponent<ProjectileComponent>();
 
 			// adjust bullet start position
 			const float left = 4;
@@ -90,7 +104,7 @@ void WeaponComponent::update(const FrameContext &ctx)
 			const float xOffset = left + right * t; // LERP between left and right based on direction
 			bullet.setPosition(glm::vec2(
 				owner.getPosition().x + xOffset,
-				owner.getPosition().y + 32 / 2 + 1
+				owner.getPosition().y + 32 / 2 + 2
 			));
 
 			owner.addChild(handle);

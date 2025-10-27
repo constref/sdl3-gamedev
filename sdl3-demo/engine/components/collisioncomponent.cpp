@@ -6,6 +6,8 @@
 #include <gameobject.h>
 #include <framecontext.h>
 #include <messaging/datapumps.h>
+#include <messaging/events.h>
+#include <messaging/eventqueue.h>
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -15,6 +17,10 @@ CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner, Com
 	allComponents.push_back(this);
 
 	velocity = glm::vec2(0);
+	prevContacts[0] = false;
+	prevContacts[1] = false;
+	prevContacts[2] = false;
+	prevContacts[3] = false;
 }
 
 CollisionComponent::~CollisionComponent()
@@ -44,7 +50,8 @@ void CollisionComponent::onData(const VelocityDPump &dp)
 
 void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 {
-	const auto checkCollisions = [this](glm::vec2 &position, Axis axis) {
+	std::array<bool, 4> contacts; // left, right, top, bottom
+	const auto checkCollisions = [this, &contacts](glm::vec2 &position, Axis axis) {
 		for (auto comp : allComponents)
 		{
 			SDL_FRect rectA{
@@ -73,36 +80,71 @@ void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 						if (velocity.x > 0) // from left
 						{
 							position.x -= overlap.x;
-							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(-1, 0) });
+							contacts[0] = true;
+							if (!prevContacts[0])
+							{
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+									otherOwner.getHandle(), overlap, glm::vec2(-1, 0));
+							}
 						}
 						else if (velocity.x < 0) // from right
 						{
 							position.x += overlap.x;
-							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(1, 0) });
+							contacts[1] = true;
+							if (!prevContacts[1])
+							{
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+									otherOwner.getHandle(), overlap, glm::vec2(1, 0));
+							}
 						}
+						owner.pushData(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
 					}
 					else if (axis == Axis::Y && overlap.y)
 					{
 						if (velocity.y > 0) // from top
 						{
 							position.y -= overlap.y;
-							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(0, 1) });
+							contacts[2] = true;
+							if (!prevContacts[2])
+							{
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+									otherOwner.getHandle(), overlap, glm::vec2(0, 1));
+							}
 						}
 						else if (velocity.y < 0) // from bottom
 						{
 							position.y += overlap.y;
-							owner.sendMessage(CollisionDPump{ otherOwner, overlap, glm::vec2(0, -1) });
+							contacts[3] = true;
+							if (!prevContacts[3])
+							{
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+									otherOwner.getHandle(), overlap, glm::vec2(0, -1));
+							}
 						}
+						owner.pushData(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
 					}
 				}
 			}
 		}
-		};
+	};
 
 	glm::vec2 tentativePos = owner.getPosition();
-	tentativePos[static_cast<int>(dp.getAxis())] += dp.getDelta();
-	checkCollisions(tentativePos, dp.getAxis());
+	tentativePos.x += dp.getDelta().x;
+	checkCollisions(tentativePos, Axis::X);
+	tentativePos.y += dp.getDelta().y;
+	checkCollisions(tentativePos, Axis::Y);
+
 	owner.setPosition(tentativePos);
+
+	if (prevContacts[2] && !contacts[2])
+	{
+		EventQueue::get().enqueue<FallingEvent>(owner.getHandle(), ComponentStage::Physics);
+	}
+
+	for (int i = 0; i < contacts.size(); ++i)
+	{
+		prevContacts[i] = contacts[i];
+	}
 }
 
 bool CollisionComponent::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)

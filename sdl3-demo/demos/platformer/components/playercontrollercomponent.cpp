@@ -2,6 +2,7 @@
 
 #include <framecontext.h>
 #include <messaging/datapumps.h>
+#include <messaging/events.h>
 #include <gameobject.h>
 
 PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner, ComponentStage::Input)
@@ -20,16 +21,17 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 
 void PlayerControllerComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<PlayerControllerComponent, JumpDPump>(this);
-	dataDispatcher.registerHandler<PlayerControllerComponent, CollisionDPump>(this);
-	dataDispatcher.registerHandler<PlayerControllerComponent, FallingDPump>(this);
 	dataDispatcher.registerHandler<PlayerControllerComponent, VelocityDPump>(this);
 	dataDispatcher.registerHandler<PlayerControllerComponent, DirectionDPump>(this);
+
+	eventDispatcher.registerHandler<PlayerControllerComponent, CollisionEvent>(this);
+	eventDispatcher.registerHandler<PlayerControllerComponent, FallingEvent>(this);
+	eventDispatcher.registerHandler<PlayerControllerComponent, JumpEvent>(this);
 }
 
 void PlayerControllerComponent::onStart()
 {
-	transitionState(PState::idle);
+	transitionState(PState::airborne);
 }
 
 void PlayerControllerComponent::transitionState(PState newState)
@@ -39,27 +41,27 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.sendMessage(SetAnimationDPump{ idleAnimationIndex, idleTexture });
+			owner.pushData(SetAnimationDPump{ idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.sendMessage(SetAnimationDPump{ slideAnimationIndex, slideTexture });
+			owner.pushData(SetAnimationDPump{ slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::falling:
 		{
-			owner.sendMessage(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
 			break;
 		}
 	}
@@ -68,10 +70,10 @@ void PlayerControllerComponent::transitionState(PState newState)
 
 void PlayerControllerComponent::update(const FrameContext &ctx)
 {
-	if (velocity.y > 0 && currentState != PState::airborne)
-	{
-		transitionState(PState::airborne);
-	}
+	//if (velocity.y > 0 && currentState != PState::airborne)
+	//{
+	//	transitionState(PState::airborne);
+	//}
 
 	switch (currentState)
 	{
@@ -89,10 +91,10 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 				{
 					const float damping = 10.0f;
 					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-					owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, factor });
+					owner.pushData(ScaleVelocityAxisDPump{ Axis::X, factor });
 					if (std::abs(velocity.x) < 0.01f)
 					{
-						owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
+						owner.pushData(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
 					}
 				}
 			}
@@ -129,49 +131,6 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 	}
 }
 
-void PlayerControllerComponent::onData(const JumpDPump &msg)
-{
-	if (currentState != PState::airborne)
-	{
-		transitionState(PState::airborne);
-		glm::vec2 jumpImpulse(0, -250.0f);
-		owner.sendMessage(AddImpulseDPump{ jumpImpulse });
-	}
-}
-
-void PlayerControllerComponent::onData(const CollisionDPump &msg)
-{
-	float dotY = glm::dot(msg.getNormal(), glm::vec2(0, 1));
-	float dotX = glm::dot(msg.getNormal(), glm::vec2(1, 0));
-
-	if (dotY == 1.0f)
-	{
-		// landed on something
-		if (currentState == PState::airborne)
-		{
-			transitionState(velocity.x != 0 ? PState::running : PState::idle);
-		}
-		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
-	}
-	else if (dotY == -1.0f)
-	{
-		// hit something above
-		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
-	}
-	else if (dotX == 1.0f || dotX == -1.0f)
-	{
-		owner.sendMessage(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
-	}
-}
-
-void PlayerControllerComponent::onData(const FallingDPump &msg)
-{
-	if (currentState != PState::airborne)
-	{
-		transitionState(PState::airborne);
-	}
-}
-
 void PlayerControllerComponent::onData(const VelocityDPump &msg)
 {
 	this->velocity = msg.getVelocity();
@@ -180,4 +139,37 @@ void PlayerControllerComponent::onData(const VelocityDPump &msg)
 void PlayerControllerComponent::onData(const DirectionDPump &msg)
 {
 	this->direction = msg.getDirection();
+}
+
+void PlayerControllerComponent::onEvent(const CollisionEvent &event)
+{
+	float dotY = glm::dot(event.getNormal(), glm::vec2(0, 1));
+	float dotX = glm::dot(event.getNormal(), glm::vec2(1, 0));
+
+	if (dotY == 1.0f)
+	{
+		// landed on something
+		if (currentState == PState::airborne)
+		{
+			transitionState(velocity.x != 0 ? PState::running : PState::idle);
+		}
+	}
+}
+
+void PlayerControllerComponent::onEvent(const FallingEvent &event)
+{
+	if (currentState != PState::airborne)
+	{
+		transitionState(PState::airborne);
+	}
+}
+
+void PlayerControllerComponent::onEvent(const JumpEvent &event)
+{
+	if (currentState != PState::airborne)
+	{
+		transitionState(PState::airborne);
+		glm::vec2 jumpImpulse(0, -250.0f);
+		owner.pushData(AddImpulseDPump{ jumpImpulse });
+	}
 }

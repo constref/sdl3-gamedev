@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include <vector>
+#include <array>
 #include "component.h"
 
 struct SDL_FRect;
@@ -16,6 +17,7 @@ class CollisionComponent : public Component
 	static std::vector<CollisionComponent *> allComponents;
 	SDL_FRect collider;
 	glm::vec2 velocity;
+	std::array<bool, 4> prevContacts; // left, right, top, bottom
 
 public:
 	CollisionComponent(GameObject &owner);

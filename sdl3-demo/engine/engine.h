@@ -80,12 +80,12 @@ public:
 					}
 					case SDL_EVENT_KEY_DOWN:
 					{
-						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::down);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), ComponentStage::Input, event.key.scancode, KeyboardEvent::State::down);
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), event.key.scancode, KeyboardEvent::State::up);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), ComponentStage::Input, event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -110,10 +110,13 @@ public:
 				// TODO: Post-input events
 
 				update(ComponentStage::Physics, root, world, ctx);
+				EventQueue::get().dispatch(ComponentStage::Physics);
 
 				// TODO: Post-physics events
 
+				EventQueue::get().dispatch(ComponentStage::Gameplay);
 				update(ComponentStage::Gameplay, root, world, ctx);
+
 				update(ComponentStage::Animation, root, world, ctx);
 
 				// TODO: Pre-render events
@@ -127,7 +130,12 @@ public:
 			update(ComponentStage::Render, root, world, ctx);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Objects: {}, Events: {}", World::get().getFreeCount(), EventQueue::get().getCount()).c_str());
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Objects: {}, EInput: {}, EPhysics: {}, EGameplay: {}",
+				World::get().getFreeCount(),
+				EventQueue::get().getCount(ComponentStage::Input),
+				EventQueue::get().getCount(ComponentStage::Physics),
+				EventQueue::get().getCount(ComponentStage::Gameplay)
+			).c_str());
 
 			SDL_RenderPresent(state.renderer);
 

@@ -26,6 +26,7 @@ public:
 		}
 	}
 
+	template<typename T = GameObject>
 	GHandle createObject()
 	{
 		assert(!freeList.empty() && "Out of object slots in pool");
@@ -36,8 +37,9 @@ public:
 		Holder &holder = objects[idx];
 		holder.generation++;
 		holder.free = false;
+		holder.object = GameObject(GHandle(idx, holder.generation));
 
-		return GHandle(idx, holder.generation);
+		return holder.object.getHandle();
 	}
 
 	void freeObject(GHandle handle)

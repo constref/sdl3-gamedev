@@ -4,11 +4,11 @@
 #include <components/component.h>
 
 struct SDL_Texture;
-class JumpDPump;
-class CollisionDPump;
-class FallingDPump;
 class VelocityDPump;
 class DirectionDPump;
+class CollisionEvent;
+class FallingEvent;
+class JumpEvent;
 
 enum class PState
 {
@@ -39,11 +39,12 @@ public:
 	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onStart() override;
 	void transitionState(PState newState);
-	void onData(const JumpDPump &msg);
-	void onData(const CollisionDPump &msg);
-	void onData(const FallingDPump &msg);
 	void onData(const VelocityDPump &msg);
 	void onData(const DirectionDPump &msg);
+
+	void onEvent(const CollisionEvent &event);
+	void onEvent(const FallingEvent &event);
+	void onEvent(const JumpEvent &event);
 
 	void setIdleAnimation(int index) { idleAnimationIndex = index; }
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }
