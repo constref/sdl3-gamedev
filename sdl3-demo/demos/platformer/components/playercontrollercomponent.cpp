@@ -1,7 +1,7 @@
 #include "playercontrollercomponent.h"
 
 #include <framecontext.h>
-#include <messaging/datapumps.h>
+#include <messaging/commands.h>
 #include <messaging/events.h>
 #include <gameobject.h>
 
@@ -19,10 +19,10 @@ PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Compon
 	slideTexture = nullptr;
 }
 
-void PlayerControllerComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void PlayerControllerComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<PlayerControllerComponent, VelocityDPump>(this);
-	dataDispatcher.registerHandler<PlayerControllerComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<PlayerControllerComponent, UpdateDirectionCommand>(this);
 
 	eventDispatcher.registerHandler<PlayerControllerComponent, CollisionEvent>(this);
 	eventDispatcher.registerHandler<PlayerControllerComponent, FallingEvent>(this);
@@ -41,27 +41,27 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.pushData(SetAnimationDPump{ idleAnimationIndex, idleTexture });
+			owner.pushData(SetAnimationCommand{ idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.pushData(SetAnimationDPump{ slideAnimationIndex, slideTexture });
+			owner.pushData(SetAnimationCommand{ slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::falling:
 		{
-			owner.pushData(SetAnimationDPump{ runAnimationIndex, runTexture });
+			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 	}
@@ -86,10 +86,10 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 				{
 					const float damping = 10.0f;
 					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-					owner.pushData(ScaleVelocityAxisDPump{ Axis::X, factor });
+					owner.pushData(ScaleVelocityAxisCommand{ Axis::X, factor });
 					if (std::abs(velocity.x) < 0.01f)
 					{
-						owner.pushData(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
+						owner.pushData(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 					}
 				}
 			}
@@ -126,12 +126,12 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 	}
 }
 
-void PlayerControllerComponent::onData(const VelocityDPump &msg)
+void PlayerControllerComponent::onCommand(const UpdateVelocityCommand &msg)
 {
 	this->velocity = msg.getVelocity();
 }
 
-void PlayerControllerComponent::onData(const DirectionDPump &msg)
+void PlayerControllerComponent::onCommand(const UpdateDirectionCommand &msg)
 {
 	this->direction = msg.getDirection();
 }
@@ -165,6 +165,6 @@ void PlayerControllerComponent::onEvent(const JumpEvent &event)
 	{
 		transitionState(PState::airborne);
 		glm::vec2 jumpImpulse(0, -250.0f);
-		owner.pushData(AddImpulseDPump{ jumpImpulse });
+		owner.pushData(AddImpulseCommand{ jumpImpulse });
 	}
 }

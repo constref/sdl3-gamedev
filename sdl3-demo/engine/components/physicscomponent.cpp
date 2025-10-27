@@ -2,7 +2,7 @@
 
 #include <gameobject.h>
 #include <framecontext.h>
-#include <messaging/datapumps.h>
+#include <messaging/commands.h>
 #include <messaging/events.h>
 
 PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, ComponentStage::Physics)
@@ -16,17 +16,17 @@ PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, Compone
 	gravityFactor = 1.0f;
 }
 
-void PhysicsComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void PhysicsComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<PhysicsComponent, ScaleVelocityAxisDPump>(this);
-	dataDispatcher.registerHandler<PhysicsComponent, AddImpulseDPump>(this);
-	dataDispatcher.registerHandler<PhysicsComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, ScaleVelocityAxisCommand>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, AddImpulseCommand>(this);
+	dataDispatcher.registerHandler<PhysicsComponent, UpdateDirectionCommand>(this);
 }
 
 void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 {
 	this->velocity = vel;
-	owner.pushData(VelocityDPump{ vel });
+	owner.pushData(UpdateVelocityCommand{ vel });
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -63,25 +63,25 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	if (isDynamic())
 	{
 		// collision component can check per-axis and apply resolution
-		owner.pushData(TentativeVelocityDPump{ delta });
+		owner.pushData(TentativeVelocityCommand{ delta });
 	}
 }
 
-void PhysicsComponent::onData(const ScaleVelocityAxisDPump &msg)
+void PhysicsComponent::onCommand(const ScaleVelocityAxisCommand &msg)
 {
 	glm::vec2 vel = getVelocity();
 	vel[static_cast<int>(msg.getAxis())] *= msg.getFactor();
 	setVelocity(vel);
 }
 
-void PhysicsComponent::onData(const AddImpulseDPump &msg)
+void PhysicsComponent::onCommand(const AddImpulseCommand &msg)
 {
 	glm::vec2 vel = getVelocity();
 	vel += msg.getImpulse();
 	setVelocity(vel);
 }
 
-void PhysicsComponent::onData(const DirectionDPump &msg)
+void PhysicsComponent::onCommand(const UpdateDirectionCommand &msg)
 {
 	this->direction = msg.getDirection();
 }

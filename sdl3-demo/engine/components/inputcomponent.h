@@ -13,7 +13,7 @@ class InputComponent : public Component
 public:
 	InputComponent(GameObject &owner, GHandle ownerHandle);
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onEvent(const KeyboardEvent &event);
 };

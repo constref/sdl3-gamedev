@@ -4,8 +4,8 @@
 #include <components/component.h>
 
 struct SDL_Texture;
-class VelocityDPump;
-class DirectionDPump;
+class UpdateVelocityCommand;
+class UpdateDirectionCommand;
 class CollisionEvent;
 class FallingEvent;
 class JumpEvent;
@@ -36,11 +36,11 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(GameObject &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onStart() override;
 	void transitionState(PState newState);
-	void onData(const VelocityDPump &msg);
-	void onData(const DirectionDPump &msg);
+	void onCommand(const UpdateVelocityCommand &msg);
+	void onCommand(const UpdateDirectionCommand &msg);
 
 	void onEvent(const CollisionEvent &event);
 	void onEvent(const FallingEvent &event);

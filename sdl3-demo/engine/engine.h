@@ -134,7 +134,7 @@ public:
 			update(ComponentStage::Render, root, world, ctx);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Objects: {}, EInput: {}, EPhysics: {}, EGameplay: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Obj: {}, EI: {}, EP: {}, EG: {}",
 				World::get().getFreeCount(),
 				EventQueue::get().getCount(ComponentStage::Input),
 				EventQueue::get().getCount(ComponentStage::Physics),

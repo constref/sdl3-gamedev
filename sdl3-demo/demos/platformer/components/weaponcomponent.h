@@ -4,8 +4,8 @@
 #include <timer.h>
 #include <glm/glm.hpp>
 
-class VelocityDPump;
-class DirectionDPump;
+class UpdateVelocityCommand;
+class UpdateDirectionCommand;
 class ShootBeginEvent;
 class ShootEndEvent;
 
@@ -20,10 +20,10 @@ public:
 	WeaponComponent(GameObject &owner);
 
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
-	void onData(const VelocityDPump &dp);
-	void onData(const DirectionDPump &dp);
+	void onCommand(const UpdateVelocityCommand &dp);
+	void onCommand(const UpdateDirectionCommand &dp);
 	void onEvent(const ShootBeginEvent &event);
 	void onEvent(const ShootEndEvent &event);
 };

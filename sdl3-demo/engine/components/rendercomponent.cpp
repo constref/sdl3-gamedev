@@ -5,8 +5,8 @@
 #include "../sdlstate.h"
 #include "../resources.h"
 #include "../framecontext.h"
-#include <messaging/datapumps.h>
-#include <messaging/datadispatcher.h>
+#include <messaging/commands.h>
+#include <messaging/commanddispatcher.h>
 
 glm::vec2 RenderComponent::mapViewportPos = { 0, 0 };
 glm::vec2 RenderComponent::mapViewportSize = { 0, 0 };
@@ -23,12 +23,12 @@ RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float 
 	followViewport = 1;
 }
 
-void RenderComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void RenderComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<RenderComponent, SetAnimationDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, DirectionDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, FrameChangeDPump>(this);
-	dataDispatcher.registerHandler<RenderComponent, ViewportDPump>(this);
+	dataDispatcher.registerHandler<RenderComponent, SetAnimationCommand>(this);
+	dataDispatcher.registerHandler<RenderComponent, UpdateDirectionCommand>(this);
+	dataDispatcher.registerHandler<RenderComponent, FrameChangeCommand>(this);
+	dataDispatcher.registerHandler<RenderComponent, UpdateViewportCommand>(this);
 }
 
 void RenderComponent::update(const FrameContext &ctx)
@@ -66,12 +66,12 @@ void RenderComponent::update(const FrameContext &ctx)
 	}
 }
 
-void RenderComponent::onData(const SetAnimationDPump &dp)
+void RenderComponent::onCommand(const SetAnimationCommand &dp)
 {
 	setTexture(dp.getTexture());
 }
 
-void RenderComponent::onData(const DirectionDPump &dp)
+void RenderComponent::onCommand(const UpdateDirectionCommand &dp)
 {
 	if (dp.getDirection() != 0)
 	{
@@ -79,12 +79,12 @@ void RenderComponent::onData(const DirectionDPump &dp)
 	}
 }
 
-void RenderComponent::onData(const FrameChangeDPump &dp)
+void RenderComponent::onCommand(const FrameChangeCommand &dp)
 {
 	frameNumber = dp.getFrameNumber();
 }
 
-void RenderComponent::onData(const ViewportDPump &dp)
+void RenderComponent::onCommand(const UpdateViewportCommand &dp)
 {
 	mapViewportPos.x = dp.getPosition().x;
 	mapViewportPos.y = dp.getPosition().y;

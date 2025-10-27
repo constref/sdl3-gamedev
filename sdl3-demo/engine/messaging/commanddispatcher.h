@@ -5,18 +5,18 @@
 #include <messaging/dispatcher.h>
 
 class Component;
-class DataPumpBase;
+class CommandBase;
 
-class DataPumpPolicy
+class CommandPolicy
 {
 public:
 	template<typename Type, typename RecipientType>
 	static void invoke(RecipientType *recipient, const Type &obj)
 	{
-		recipient->onData(obj);
+		recipient->onCommand(obj);
 	}
 };
 
-class DataDispatcher : public Dispatcher<DataPumpBase, Component, DataPumpPolicy>
+class CommandDispatcher : public Dispatcher<CommandBase, Component, CommandPolicy>
 {
 };

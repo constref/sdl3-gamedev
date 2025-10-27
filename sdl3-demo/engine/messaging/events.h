@@ -3,6 +3,7 @@
 #include <messaging/event.h>
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
+#include <ghandle.h>
 
 struct KeyboardEvent : public Event<KeyboardEvent>
 {

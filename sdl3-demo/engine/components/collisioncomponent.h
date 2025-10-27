@@ -8,8 +8,8 @@
 #include "component.h"
 
 struct SDL_FRect;
-class VelocityDPump;
-class TentativeVelocityDPump;
+class UpdateVelocityCommand;
+class TentativeVelocityCommand;
 
 class CollisionComponent : public Component
 {
@@ -23,9 +23,9 @@ public:
 	CollisionComponent(GameObject &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
-	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-	void onData(const VelocityDPump &msg);
-	void onData(const TentativeVelocityDPump &dp);
+	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+	void onCommand(const UpdateVelocityCommand &msg);
+	void onCommand(const TentativeVelocityCommand &dp);
 
 	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }

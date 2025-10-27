@@ -1,5 +1,9 @@
 #pragma once
 
+#include <utility>
+#include <vector>
+#include <array>
+
 template<typename Base, typename RecipientBase, typename Policy>
 class Dispatcher
 {

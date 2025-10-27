@@ -4,9 +4,9 @@
 #include <components/component.h>
 
 struct FrameContext;
-class ScaleVelocityAxisDPump;
-class AddImpulseDPump;
-class DirectionDPump;
+class ScaleVelocityAxisCommand;
+class AddImpulseCommand;
+class UpdateDirectionCommand;
 
 class PhysicsComponent : public Component
 {
@@ -22,7 +22,7 @@ class PhysicsComponent : public Component
 public:
 	PhysicsComponent(GameObject &owner);
 	void update(const FrameContext &ctx);
-	void onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel);
@@ -39,7 +39,7 @@ public:
 	float getGravityFactor() const { return gravityFactor; }
 	void setGravityFactor(float gravityFactor) { this->gravityFactor = gravityFactor; }
 
-	void onData(const ScaleVelocityAxisDPump &msg);
-	void onData(const AddImpulseDPump &msg);
-	void onData(const DirectionDPump &msg);
+	void onCommand(const ScaleVelocityAxisCommand &msg);
+	void onCommand(const AddImpulseCommand &msg);
+	void onCommand(const UpdateDirectionCommand &msg);
 };

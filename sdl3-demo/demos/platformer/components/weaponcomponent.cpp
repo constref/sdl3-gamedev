@@ -4,8 +4,8 @@
 #include <framecontext.h>
 #include <sdlstate.h>
 #include <resources.h>
-#include <messaging/datadispatcher.h>
-#include <messaging/datapumps.h>
+#include <messaging/commanddispatcher.h>
+#include <messaging/commands.h>
 #include <messaging/events.h>
 #include <world.h>
 
@@ -23,20 +23,20 @@ WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, Component
 	playerVelocity = glm::vec2(0);
 }
 
-void WeaponComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void WeaponComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<WeaponComponent, VelocityDPump>(this);
-	dataDispatcher.registerHandler<WeaponComponent, DirectionDPump>(this);
+	dataDispatcher.registerHandler<WeaponComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<WeaponComponent, UpdateDirectionCommand>(this);
 	eventDispatcher.registerHandler<WeaponComponent, ShootBeginEvent>(this);
 	eventDispatcher.registerHandler<WeaponComponent, ShootEndEvent>(this);
 }
 
-void WeaponComponent::onData(const VelocityDPump &dp)
+void WeaponComponent::onCommand(const UpdateVelocityCommand &dp)
 {
 	playerVelocity = dp.getVelocity();
 }
 
-void WeaponComponent::onData(const DirectionDPump &dp)
+void WeaponComponent::onCommand(const UpdateDirectionCommand &dp)
 {
 	if (dp.getDirection())
 	{

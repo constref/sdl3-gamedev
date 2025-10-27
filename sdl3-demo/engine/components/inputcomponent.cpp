@@ -4,7 +4,7 @@
 #include "../gameobject.h"
 #include "../framecontext.h"
 #include "../inputstate.h"
-#include "../messaging/datapumps.h"
+#include "../messaging/commands.h"
 
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
@@ -18,7 +18,7 @@ InputComponent::InputComponent(GameObject &owner, GHandle ownerHandle) : Compone
 	this->ownerHandle = ownerHandle;
 }
 
-void InputComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void InputComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
 	eventDispatcher.registerHandler<InputComponent, KeyboardEvent>(this);
 
@@ -58,7 +58,7 @@ void InputComponent::update(const FrameContext &ctx)
 	//	}
 	//}
 
-	//owner.sendMessage(DirectionDPump{ direction });
+	//owner.sendMessage(UpdateDirectionCommand{ direction });
 }
 
 void InputComponent::onEvent(const KeyboardEvent &event)
@@ -75,7 +75,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 	{
 		direction += 1;
 	}
-	owner.pushData(DirectionDPump{ direction });
+	owner.pushData(UpdateDirectionCommand{ direction });
 
 	switch (event.scancode)
 	{

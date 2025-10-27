@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <components/component.h>
-#include <messaging/datadispatcher.h>
+#include <messaging/commanddispatcher.h>
 #include <messaging/eventdispatcher.h>
 #include <ghandle.h>
 
@@ -17,7 +17,7 @@ class GameObject
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
 	bool isInitialized;
 
-	DataDispatcher dataDispatcher;
+	CommandDispatcher dataDispatcher;
 	EventDispatcher eventDispatcher;
 
 public:

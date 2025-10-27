@@ -5,7 +5,7 @@
 
 #include <gameobject.h>
 #include <framecontext.h>
-#include <messaging/datapumps.h>
+#include <messaging/commands.h>
 #include <messaging/events.h>
 #include <messaging/eventqueue.h>
 
@@ -33,22 +33,22 @@ CollisionComponent::~CollisionComponent()
 	}
 }
 
-void CollisionComponent::onAttached(DataDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<CollisionComponent, VelocityDPump>(this);
-	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityDPump>(this);
+	dataDispatcher.registerHandler<CollisionComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityCommand>(this);
 }
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
 }
 
-void CollisionComponent::onData(const VelocityDPump &dp)
+void CollisionComponent::onCommand(const UpdateVelocityCommand &dp)
 {
 	this->velocity = dp.getVelocity();
 }
 
-void CollisionComponent::onData(const TentativeVelocityDPump &dp)
+void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 {
 	std::array<bool, 4> contacts = { false }; // left, right, top, bottom
 	const auto checkCollisions = [this, &contacts](glm::vec2 &position, Axis axis) {
@@ -97,7 +97,7 @@ void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 									otherOwner.getHandle(), overlap, glm::vec2(1, 0));
 							}
 						}
-						owner.pushData(ScaleVelocityAxisDPump{ Axis::X, 0.0f });
+						owner.pushData(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 					}
 					else if (axis == Axis::Y && overlap.y)
 					{
@@ -121,7 +121,7 @@ void CollisionComponent::onData(const TentativeVelocityDPump &dp)
 									otherOwner.getHandle(), overlap, glm::vec2(0, -1));
 							}
 						}
-						owner.pushData(ScaleVelocityAxisDPump{ Axis::Y, 0.0f });
+						owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0.0f });
 					}
 				}
 			}

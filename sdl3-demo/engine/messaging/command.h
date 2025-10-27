@@ -2,14 +2,14 @@
 
 #include <cassert>
 
-class DataPumpBase
+class CommandBase
 {
 protected:
 	static inline int nextIndex = 0;
 };
 
-template<typename DataPumpType>
-class DataPump : public DataPumpBase
+template<typename CommandType>
+class Command : public CommandBase
 {
 
 public:
