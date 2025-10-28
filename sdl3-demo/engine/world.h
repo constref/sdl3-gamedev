@@ -37,9 +37,9 @@ public:
 		Holder &holder = objects[idx];
 		holder.generation++;
 		holder.free = false;
-		holder.object = Node(NodeHandle(idx, holder.generation));
+		holder.object.emplace(NodeHandle(idx, holder.generation));
 
-		return holder.object.getHandle();
+		return holder.object.value().getHandle();
 	}
 
 	void free(NodeHandle handle)
@@ -49,6 +49,8 @@ public:
 		if (handle.generation == holder.generation && !holder.free)
 		{
 			holder.free = true;
+			holder.object.reset(); // std::optional calls destructor
+
 			assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
 			freeList.push_back(handle.index);
 		}
@@ -59,7 +61,7 @@ public:
 		Holder &holder = objects[handle.index];
 		assert(!holder.free && "Attempted to access a freed object");
 		assert(holder.generation == handle.generation && "Attempted to access an invalid object handle");
-		return holder.object;
+		return holder.object.value();
 	}
 
 	size_t getFreeCount() const

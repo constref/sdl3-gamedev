@@ -16,7 +16,7 @@ public:
 	template<typename RecipientType, typename Type>
 	void registerHandler(RecipientBase *recipient)
 	{
-		auto &handlers = registrations[Type::index()];
+		auto &handlers = registrations[Type::typeIndex()];
 		handlers.emplace_back(recipient, [](RecipientBase *to, const Base &base)
 		{
 			Policy::invoke(static_cast<RecipientType *>(to), static_cast<const Type &>(base));
@@ -26,7 +26,7 @@ public:
 	template<typename Type>
 	void send(const Type &obj)
 	{
-		auto &regs = registrations[Type::index()];
+		auto &regs = registrations[Type::typeIndex()];
 		for (auto &reg : regs)
 		{
 			reg.second(reg.first, obj);

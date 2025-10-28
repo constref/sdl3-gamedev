@@ -38,6 +38,7 @@ Node &Node::getNode(const NodeHandle &handle)
 void Node::destroySelf()
 {
 	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender);
+	Logger::info(this, std::format("Scheduled node ({}:{}) for removal.", getHandle().index, getHandle().generation));
 }
 
 void Node::update(ComponentStage stage, const FrameContext &ctx)
@@ -66,6 +67,6 @@ void Node::removeChild(NodeHandle childHandle)
 	}
 	else
 	{
-		Logger::warn(this, "Tried to remove non-existen child handle");
+		Logger::warn(this, "Tried to remove non-existent child.");
 	}
 }

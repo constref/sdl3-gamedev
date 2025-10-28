@@ -4,7 +4,9 @@
 #include <world.h>
 #include <messaging/events.h>
 #include <messaging/eventdispatcher.h>
+#include <messaging/commands.h>
 #include <resources.h>
+#include <components/collisioncomponent.h>
 
 ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
 {
@@ -15,6 +17,7 @@ void ProjectileComponent::onAttached(CommandDispatcher &dataDispatcher, EventDis
 {
 	eventDispatcher.registerHandler<ProjectileComponent, CollisionEvent>(this);
 	eventDispatcher.registerHandler<ProjectileComponent, NodeRemovalEvent>(this);
+	eventDispatcher.registerHandler<ProjectileComponent, AnimationEndEvent>(this);
 }
 
 void ProjectileComponent::onEvent(const CollisionEvent &event)
@@ -22,12 +25,10 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 	collisions++;
 	if (collisions == 1)
 	{
-		owner.destroySelf();
+		Resources &res = Resources::get();
+		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit });
+		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 	}
-}
-
-void ProjectileComponent::update(const FrameContext &ctx)
-{
 }
 
 void ProjectileComponent::onEvent(const NodeRemovalEvent &event)
@@ -36,4 +37,13 @@ void ProjectileComponent::onEvent(const NodeRemovalEvent &event)
 	parent.removeChild(owner.getHandle());
 
 	World::get().free(owner.getHandle());
+}
+
+void ProjectileComponent::onEvent(const AnimationEndEvent &event)
+{
+	Resources &res = Resources::get();
+	if (event.getIndex() == res.ANIM_BULLET_HIT)
+	{
+		owner.destroySelf();
+	}
 }

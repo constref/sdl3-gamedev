@@ -13,6 +13,7 @@ struct QueuedEvent
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch;
+	bool ignore;
 };
 
 class EventQueue
@@ -52,14 +53,15 @@ public:
 	{
 		auto &queue = getQueue(stage);
 		auto &indices = getIndices(stage);
-		queue[indices.second++] = QueuedEvent 
+		queue[indices.second++] = QueuedEvent
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
 			.dispatch = [](Node &obj, const EventBase &e)
 			{
 				obj.notify<const EventType &>(static_cast<const EventType &>(e));
-			}
+			},
+			.ignore = false
 		};
 	}
 
@@ -71,7 +73,10 @@ public:
 		while (indices.first < indices.second)
 		{
 			QueuedEvent &nextItem = queue[indices.first++];
-			nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
+			if (!nextItem.ignore)
+			{
+				nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
+			}
 		}
 	}
 

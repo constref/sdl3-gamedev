@@ -39,11 +39,20 @@ public:
 	const glm::vec2 &getNormal() const { return normal; }
 };
 
-class NodeRemovalEvent : public Event<NodeRemovalEvent>
+class AnimationEndEvent : public Event<AnimationEndEvent>
 {
+	int index;
+
 public:
-	NodeRemovalEvent() {}
+	AnimationEndEvent(int index)
+	{
+		this->index = index;
+	}
+
+	int getIndex() const { return 0; }
 };
+
+class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
 
 class FallingEvent : public Event<FallingEvent> {};
 class JumpEvent : public Event<JumpEvent> {};

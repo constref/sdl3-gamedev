@@ -12,7 +12,7 @@ template<typename EventType>
 class Event : public EventBase
 {
 public:
-	constexpr static int index()
+	constexpr static int typeIndex()
 	{
 		assert(nextIndex < 1000 && "Exceeded maximum event index limit");
 		static int idx = nextIndex++;

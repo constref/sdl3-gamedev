@@ -18,9 +18,9 @@ public:
 		return static_cast<int>(timer.getTime() / timer.getLength() * frameCount);
 	}
 
-	void step(float deltaTime)
+	bool step(float deltaTime)
 	{
-		timer.step(deltaTime);
+		return timer.step(deltaTime) > 0;
 	}
 
 	void reset()

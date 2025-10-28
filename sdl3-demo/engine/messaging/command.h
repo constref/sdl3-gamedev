@@ -13,7 +13,7 @@ class Command : public CommandBase
 {
 
 public:
-	constexpr static int index()
+	constexpr static int typeIndex()
 	{
 		assert(nextIndex < 25 && "Exceeded maximum data-pump index limit");
 		static int idx = nextIndex++;

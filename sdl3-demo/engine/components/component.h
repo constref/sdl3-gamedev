@@ -21,6 +21,6 @@ public:
 	virtual ~Component() {}
 	virtual void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) {}
 	virtual void onStart() {}
-	virtual void update(const FrameContext &ctx) = 0;
+	virtual void update(const FrameContext &ctx) {}
 	void emit(const FrameContext &ctx, int eventId);
 };
