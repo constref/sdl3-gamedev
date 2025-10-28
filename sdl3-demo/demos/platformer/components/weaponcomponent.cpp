@@ -86,8 +86,9 @@ void WeaponComponent::update(const FrameContext &ctx)
 			auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
 			animCmp.setAnimation(res.ANIM_BULLET_MOVING);
 
-			bullet.addComponent<RenderComponent>(res.texBullet,
+			auto &rndCmp = bullet.addComponent<RenderComponent>(res.texBullet,
 				static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
+			rndCmp.setDirection(playerDirection);
 
 			auto &collCmp = bullet.addComponent<CollisionComponent>();
 			collCmp.setCollider(SDL_FRect{

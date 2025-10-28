@@ -144,11 +144,13 @@ public:
 			update(ComponentStage::Render, root, world, ctx);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("Obj: {}, EI: {}, EP: {}, EG: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, PR: {}",
 				World::get().getFreeCount(),
 				EventQueue::get().getCount(ComponentStage::Input),
 				EventQueue::get().getCount(ComponentStage::Physics),
-				EventQueue::get().getCount(ComponentStage::Gameplay)
+				EventQueue::get().getCount(ComponentStage::Gameplay),
+				EventQueue::get().getCount(ComponentStage::Animation),
+				EventQueue::get().getCount(ComponentStage::PostRender)
 			).c_str());
 
 			SDL_RenderPresent(state.renderer);

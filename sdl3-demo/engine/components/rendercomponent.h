@@ -35,4 +35,5 @@ public:
 
 	void setTexture(SDL_Texture *texture) { this->texture = texture; }
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
+	void setDirection(float direction) { this->direction = direction; }
 };
