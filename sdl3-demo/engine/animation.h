@@ -28,5 +28,5 @@ public:
 		timer.reset();
 	}
 
-	bool isDone() const { return timer.isTimeout(); }
+	bool isDone() const { return timer.getTimeouts() > 0; }
 };
