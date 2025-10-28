@@ -45,7 +45,7 @@ public:
 
 	void run()
 	{
-		const float fixedStep = 1.0f / 120.0f;
+		const float fixedStep = 1.0f / 60.0f;
 		float accumulator = 0;
 		prevTime = SDL_GetTicks();
 		long frameCount = 0;
@@ -104,33 +104,31 @@ public:
 				}
 			}
 
+			// handle input every frame to avoid input lag
+			EventQueue::get().dispatch(ComponentStage::Input);
+			update(ComponentStage::Input, root, world, ctx);
+
+			// physics, gameplay and animation run fixed-timestep interval for determinism
 			accumulator += deltaTime;
-			if (accumulator >= fixedStep)
+			while (accumulator >= fixedStep)
 			{
-				// Dispatch input related events to input stage component(s)
-				EventQueue::get().dispatch(ComponentStage::Input);
-				update(ComponentStage::Input, root, world, ctx);
-
-				// TODO: Post-input events
-
-				update(ComponentStage::Physics, root, world, ctx);
 				EventQueue::get().dispatch(ComponentStage::Physics);
-
-				// TODO: Post-physics events
+				update(ComponentStage::Physics, root, world, ctx);
 
 				EventQueue::get().dispatch(ComponentStage::Gameplay);
 				update(ComponentStage::Gameplay, root, world, ctx);
 
+				EventQueue::get().dispatch(ComponentStage::Animation);
 				update(ComponentStage::Animation, root, world, ctx);
-
-				// TODO: Pre-render events
 
 				accumulator -= fixedStep;
 			}
 
+			// drawing happens every single frame
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
+			EventQueue::get().dispatch(ComponentStage::Render);
 			update(ComponentStage::Render, root, world, ctx);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
@@ -143,6 +141,7 @@ public:
 
 			SDL_RenderPresent(state.renderer);
 
+			EventQueue::get().dispatch(ComponentStage::PostRender);
 			update(ComponentStage::PostRender, root, world, ctx);
 		}
 	}

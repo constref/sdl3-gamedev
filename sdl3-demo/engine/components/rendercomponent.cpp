@@ -64,6 +64,8 @@ void RenderComponent::update(const FrameContext &ctx)
 			shouldFlash = false;
 		}
 	}
+	//SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 255);
+	//SDL_RenderRect(ctx.state.renderer, &dst);
 }
 
 void RenderComponent::onCommand(const SetAnimationCommand &dp)
