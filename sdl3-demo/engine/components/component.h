@@ -3,7 +3,7 @@
 #include <components/componentstage.h>
 
 struct FrameContext;
-class GameObject;
+class Node;
 class SubjectRegistry;
 class CommandDispatcher;
 class EventDispatcher;
@@ -13,10 +13,10 @@ class Component
 	ComponentStage stage;
 
 protected:
-	GameObject &owner;
+	Node &owner;
 
 public:
-	Component(GameObject &owner, ComponentStage stage) : owner(owner), stage(stage) {}
+	Component(Node &owner, ComponentStage stage) : owner(owner), stage(stage) {}
 	ComponentStage getStage() const { return stage; }
 	virtual ~Component() {}
 	virtual void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) {}

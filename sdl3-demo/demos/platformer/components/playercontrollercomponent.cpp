@@ -3,9 +3,9 @@
 #include <framecontext.h>
 #include <messaging/commands.h>
 #include <messaging/events.h>
-#include <gameobject.h>
+#include <node.h>
 
-PlayerControllerComponent::PlayerControllerComponent(GameObject &owner) : Component(owner, ComponentStage::Gameplay)
+PlayerControllerComponent::PlayerControllerComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
 {
 	direction = 0;
 	velocity = glm::vec2(0);

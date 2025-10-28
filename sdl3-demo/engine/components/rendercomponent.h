@@ -24,7 +24,7 @@ class RenderComponent : public Component
 	static glm::vec2 mapViewportSize;
 
 public:
-	RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height);
+	RenderComponent(Node &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 

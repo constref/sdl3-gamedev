@@ -1,7 +1,7 @@
 #include "rendercomponent.h"
 #include <SDL3/SDL.h>
 
-#include "../gameobject.h"
+#include "../node.h"
 #include "../sdlstate.h"
 #include "../resources.h"
 #include "../framecontext.h"
@@ -11,7 +11,7 @@
 glm::vec2 RenderComponent::mapViewportPos = { 0, 0 };
 glm::vec2 RenderComponent::mapViewportSize = { 0, 0 };
 
-RenderComponent::RenderComponent(GameObject &owner, SDL_Texture *texture, float width, float height)
+RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;

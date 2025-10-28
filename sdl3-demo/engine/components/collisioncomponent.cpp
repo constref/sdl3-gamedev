@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <format>
 
-#include <gameobject.h>
+#include <node.h>
 #include <framecontext.h>
 #include <messaging/commands.h>
 #include <messaging/events.h>
@@ -11,7 +11,7 @@
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
-CollisionComponent::CollisionComponent(GameObject &owner) : Component(owner, ComponentStage::Physics), collider{ 0 }
+CollisionComponent::CollisionComponent(Node &owner) : Component(owner, ComponentStage::Physics), collider{ 0 }
 {
 	// keep track of all collision components
 	allComponents.push_back(this);

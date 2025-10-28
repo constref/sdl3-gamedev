@@ -17,7 +17,7 @@ class WeaponComponent : public Component
 	glm::vec2 playerVelocity;
 
 public:
-	WeaponComponent(GameObject &owner);
+	WeaponComponent(Node &owner);
 
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;

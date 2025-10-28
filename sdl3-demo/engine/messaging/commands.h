@@ -52,14 +52,6 @@ public:
 	const glm::vec2 &getForce() const { return force; }
 };
 
-class SetGroundedCommand : public Command<SetGroundedCommand>
-{
-	bool grounded;
-public:
-	SetGroundedCommand(bool grounded) : grounded(grounded) {}
-	bool isGrounded() const { return grounded; }
-};
-
 enum class Axis : int
 {
 	X = 0,

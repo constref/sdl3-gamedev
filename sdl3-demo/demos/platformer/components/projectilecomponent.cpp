@@ -1,10 +1,11 @@
 #include "projectilecomponent.h"
 
+#include <node.h>
 #include <messaging/events.h>
 #include <messaging/eventdispatcher.h>
 #include <resources.h>
 
-ProjectileComponent::ProjectileComponent(GameObject &owner) : Component(owner, ComponentStage::Gameplay)
+ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
 {
 }
 

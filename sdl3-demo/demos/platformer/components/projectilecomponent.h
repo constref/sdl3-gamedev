@@ -7,7 +7,7 @@ class CollisionEvent;
 class ProjectileComponent : public Component
 {
 public:
-	ProjectileComponent(GameObject &owner);
+	ProjectileComponent(Node &owner);
 
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;

@@ -7,13 +7,13 @@
 #include <components/component.h>
 #include <messaging/commanddispatcher.h>
 #include <messaging/eventdispatcher.h>
-#include <ghandle.h>
+#include <nodehandle.h>
 
-class GameObject
+class Node
 {
-	GHandle handle;
+	NodeHandle handle;
 	glm::vec2 position;
-	std::vector<GHandle> children;
+	std::vector<NodeHandle> children;
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
 	bool isInitialized;
 
@@ -21,19 +21,19 @@ class GameObject
 	EventDispatcher eventDispatcher;
 
 public:
-	GameObject(GHandle handle) : GameObject()
+	Node(NodeHandle handle) : Node()
 	{
 		this->handle = handle;
 	}
 
-	GameObject()
+	Node()
 	{
-		handle = GHandle(0, 0);
+		handle = NodeHandle(0, 0);
 		position = glm::vec2(0);
 		isInitialized = false;
 	}
 
-	~GameObject()
+	~Node()
 	{
 		for (auto &stageVec : componentStages)
 		{
@@ -54,15 +54,15 @@ public:
 		}
 	}
 
-	GHandle getHandle() const { return handle; }
+	NodeHandle getHandle() const { return handle; }
 
 	glm::vec2 getPosition() const { return position; }
 	void setPosition(const glm::vec2 position) { this->position = position; }
 
 	auto &getChildren() { return children; }
-	void addChild(GHandle childHandle)
+	void addChild(NodeHandle childHandle)
 	{
-		GameObject &child = getObject(childHandle);
+		Node &child = getObject(childHandle);
 		child.initialize();
 
 		children.push_back(childHandle);
@@ -111,7 +111,7 @@ public:
 		isInitialized = true;
 	}
 
-	GameObject &getObject(const GHandle &handle);
+	Node &getObject(const NodeHandle &handle);
 
 	template<typename EventType>
 	void notify(const EventType &event)
@@ -132,10 +132,14 @@ public:
 		dataDispatcher.send(dp);
 
 		// propagate to children
-		for (GHandle child : children)
+		for (NodeHandle child : children)
 		{
-			GameObject &childObj = getObject(child);
+			Node &childObj = getObject(child);
 			childObj.broadcastMessage(dp);
 		}
+	}
+
+	void destroySelf()
+	{
 	}
 };

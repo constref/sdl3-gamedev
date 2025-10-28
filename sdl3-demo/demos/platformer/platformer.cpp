@@ -1,6 +1,6 @@
 #include "platformer.h"
 
-#include <gameobject.h>
+#include <node.h>
 #include <resources.h>
 #include <sdlstate.h>
 #include <world.h>
@@ -23,7 +23,7 @@ Platformer::Platformer()
 bool Platformer::initialize(SDLState &state)
 {
 	World &world = World::get();
-	hRoot = world.createObject();
+	hRoot = world.createNode();
 
 	Resources &res = Resources::get();
 	res.load(state.renderer);
@@ -32,11 +32,11 @@ bool Platformer::initialize(SDLState &state)
 	{
 		const SDLState &state;
 		const Resources &res;
-		GameObject &root;
+		Node &root;
 		float tileWidth;
 		float tileHeight;
 
-		LayerVisitor(const SDLState &state, GameObject &root) : state(state), res(Resources::get()), root(root)
+		LayerVisitor(const SDLState &state, Node &root) : state(state), res(Resources::get()), root(root)
 		{
 			tileWidth = static_cast<float>(res.map->tileWidth);
 			tileHeight = static_cast<float>(res.map->tileHeight);
@@ -45,8 +45,8 @@ bool Platformer::initialize(SDLState &state)
 		auto createObject(int r, int c)
 		{
 			World &world = World::get();
-			GHandle newObjHandle = world.createObject();
-			GameObject &obj = world.getObject(newObjHandle);
+			NodeHandle newObjHandle = world.createNode();
+			Node &obj = world.getObject(newObjHandle);
 
 			obj.setPosition(glm::vec2(
 				c * res.map->tileWidth,
@@ -57,7 +57,7 @@ bool Platformer::initialize(SDLState &state)
 		void operator()(tmx::Layer &layer) // Tile layers
 		{
 			World &world = World::get();
-			GHandle hLayer = world.createObject();
+			NodeHandle hLayer = world.createNode();
 			for (int r = 0; r < res.map->mapHeight; ++r)
 			{
 				for (int c = 0; c < res.map->mapWidth; ++c)
@@ -72,8 +72,8 @@ bool Platformer::initialize(SDLState &state)
 						const TileSetTextures &tst = *itr;
 						SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
 
-						GHandle hTile = createObject(r, c);
-						GameObject &tile = world.getObject(hTile);
+						NodeHandle hTile = createObject(r, c);
+						Node &tile = world.getObject(hTile);
 						auto &renderComponent = tile.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);
 						renderComponent.setTexture(tex);
 						// only level tiles get a collision component
@@ -86,7 +86,7 @@ bool Platformer::initialize(SDLState &state)
 								.h = static_cast<float>(tileHeight)
 								});
 						}
-						GameObject &layerObject = world.getObject(hLayer);
+						Node &layerObject = world.getObject(hLayer);
 						layerObject.addChild(hTile);
 					}
 				}
@@ -96,8 +96,8 @@ bool Platformer::initialize(SDLState &state)
 		void operator()(tmx::ObjectGroup &objectGroup) // Object layers
 		{
 			World &world = World::get();
-			GHandle hLayer = world.createObject();
-			GameObject &layerObject = world.getObject(hLayer);
+			NodeHandle hLayer = world.createNode();
+			Node &layerObject = world.getObject(hLayer);
 
 			for (tmx::LayerObject &obj : objectGroup.objects)
 			{
@@ -107,8 +107,8 @@ bool Platformer::initialize(SDLState &state)
 
 				if (obj.type == "Player")
 				{
-					GHandle hPlayer = world.createObject();
-					GameObject &player = world.getObject(hPlayer);
+					NodeHandle hPlayer = world.createNode();
+					Node &player = world.getObject(hPlayer);
 					player.setPosition(objPos);
 					auto &inputComponent = player.addComponent<InputComponent>(hPlayer);
 					auto &playerCtrlComponent = player.addComponent<PlayerControllerComponent>();
@@ -138,8 +138,8 @@ bool Platformer::initialize(SDLState &state)
 				}
 				else if (obj.type == "Enemy")
 				{
-					GHandle hEnemy = world.createObject();
-					GameObject &enemy = world.getObject(hEnemy);
+					NodeHandle hEnemy = world.createNode();
+					Node &enemy = world.getObject(hEnemy);
 
 					enemy.setPosition(objPos);
 					auto &physicsComponent = enemy.addComponent<PhysicsComponent>();
@@ -161,32 +161,32 @@ bool Platformer::initialize(SDLState &state)
 		}
 	};
 
-	GameObject &root = world.getObject(hRoot);
+	Node &root = world.getObject(hRoot);
 
 	// add the background elements
-	GHandle hBgLayer = world.createObject();
-	GameObject &bgLayer = world.getObject(hBgLayer);
+	NodeHandle hBgLayer = world.createNode();
+	Node &bgLayer = world.getObject(hBgLayer);
 
-	GHandle hBG1 = world.createObject();
-	GameObject &bg1 = world.getObject(hBG1);
+	NodeHandle hBG1 = world.createNode();
+	Node &bg1 = world.getObject(hBG1);
 	bg1.addComponent<RenderComponent>(res.texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG1);
 
-	GHandle hBG4 = world.createObject();
-	GameObject &bg4 = world.getObject(hBG4);
+	NodeHandle hBG4 = world.createNode();
+	Node &bg4 = world.getObject(hBG4);
 	bg4.addComponent<RenderComponent>(res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG4);
 
-	GHandle hBG3 = world.createObject();
-	GameObject &bg3 = world.getObject(hBG3);
+	NodeHandle hBG3 = world.createNode();
+	Node &bg3 = world.getObject(hBG3);
 	bg3.addComponent<RenderComponent>(res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG3);
 
-	GHandle hBG2 = world.createObject();
-	GameObject &bg2 = world.getObject(hBG2);
+	NodeHandle hBG2 = world.createNode();
+	Node &bg2 = world.getObject(hBG2);
 	bg2.addComponent<RenderComponent>(res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG2);

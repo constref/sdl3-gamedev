@@ -1,17 +1,17 @@
 #pragma once
 
 #include <components/component.h>
-#include <ghandle.h>
+#include <nodehandle.h>
 
 struct KeyboardEvent;
 
 class InputComponent : public Component
 {
 	float direction;
-	GHandle ownerHandle;
+	NodeHandle ownerHandle;
 
 public:
-	InputComponent(GameObject &owner, GHandle ownerHandle);
+	InputComponent(Node &owner, NodeHandle ownerHandle);
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 

@@ -16,7 +16,7 @@
 
 #include "projectilecomponent.h"
 
-WeaponComponent::WeaponComponent(GameObject &owner) : Component(owner, ComponentStage::Gameplay), timer(0.1f)
+WeaponComponent::WeaponComponent(Node &owner) : Component(owner, ComponentStage::Gameplay), timer(0.1f)
 {
 	shooting = false;
 	playerDirection = 1;
@@ -70,8 +70,8 @@ void WeaponComponent::update(const FrameContext &ctx)
 		{
 			timer.reset();
 			World &world = World::get();
-			GHandle handle = world.createObject();
-			GameObject &bullet = world.getObject(handle);
+			NodeHandle handle = world.createNode();
+			Node &bullet = world.getObject(handle);
 
 			auto &res = Resources::get();
 

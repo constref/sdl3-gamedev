@@ -1,7 +1,7 @@
 #include "inputcomponent.h"
 #include <glm/glm.hpp>
 
-#include "../gameobject.h"
+#include "../node.h"
 #include "../framecontext.h"
 #include "../inputstate.h"
 #include "../messaging/commands.h"
@@ -12,7 +12,7 @@
 class ShootBeginEvent;
 class ShootEndEvent;
 
-InputComponent::InputComponent(GameObject &owner, GHandle ownerHandle) : Component(owner, ComponentStage::Input)
+InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(owner, ComponentStage::Input)
 {
 	direction = 0;
 	this->ownerHandle = ownerHandle;

@@ -1,7 +1,7 @@
-#include "gameobject.h"
+#include "node.h"
 #include <world.h>
 
-GameObject &GameObject::getObject(const GHandle &handle)
+Node &Node::getObject(const NodeHandle &handle)
 {
 	World &world = World::get();
 	return world.getObject(handle);

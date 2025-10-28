@@ -5,7 +5,7 @@
 #include <inputstate.h>
 #include <framecontext.h>
 #include <application.h>
-#include <gameobject.h>
+#include <node.h>
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
@@ -72,7 +72,7 @@ public:
 			globalTime += deltaTime;
 			FrameContext ctx(state, fixedStep, globalTime, ++frameCount);
 			World &world = World::get();
-			GameObject &root = world.getObject(app.getRoot());
+			Node &root = world.getObject(app.getRoot());
 
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
@@ -122,7 +122,6 @@ public:
 			update(ComponentStage::Input, root, world, ctx);
 
 			accumulator += deltaTime;
-
 			while (accumulator >= fixedStep)
 			{
 				EventQueue::get().dispatch(ComponentStage::Physics);
@@ -159,14 +158,14 @@ public:
 		}
 	}
 
-	void update(ComponentStage stage, GameObject &obj, World &world, const FrameContext &ctx)
+	void update(ComponentStage stage, Node &obj, World &world, const FrameContext &ctx)
 	{
 		obj.update(stage, ctx);
 
 		auto &children = obj.getChildren();
-		for (GHandle &hChild : children)
+		for (NodeHandle &hChild : children)
 		{
-			GameObject &child = world.getObject(hChild);
+			Node &child = world.getObject(hChild);
 			update(stage, child, world, ctx);
 		}
 	}

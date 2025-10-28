@@ -3,19 +3,19 @@
 #include <components/component.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include <ghandle.h>
+#include <nodehandle.h>
 
 class UpdateVelocityCommand;
 
 class BasicCameraComponent : public Component
 {
-	GHandle target;
+	NodeHandle target;
 	glm::vec2 camPosition;
 	glm::vec2 viewportSize;
 	glm::vec2 velocity;
 
 public:
-	BasicCameraComponent(GameObject &owner, GHandle target, float viewportWidth, float viewportHeight);
+	BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight);
 
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void update(const FrameContext &ctx) override;

@@ -1,12 +1,12 @@
 #include "animationcomponent.h"
 #include "../animation.h"
-#include "../gameobject.h"
+#include "../node.h"
 #include "../framecontext.h"
 #include "../messaging/commands.h"
 
 #include <cassert>
 
-AnimationComponent::AnimationComponent(GameObject &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
+AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
 {
 	this->animations = animations;
 	this->frameNumber = 1;

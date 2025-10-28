@@ -1,11 +1,11 @@
 #include "physicscomponent.h"
 
-#include <gameobject.h>
+#include <node.h>
 #include <framecontext.h>
 #include <messaging/commands.h>
 #include <messaging/events.h>
 
-PhysicsComponent::PhysicsComponent(GameObject &owner) : Component(owner, ComponentStage::Physics)
+PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStage::Physics)
 {
 	direction = 0;
 	maxSpeed = glm::vec2(0, 0);

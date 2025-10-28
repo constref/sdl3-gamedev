@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <gameobject.h>
+#include <node.h>
 #include <objectholder.h>
 
 template<typename T, size_t MaxObjects>
@@ -26,8 +26,8 @@ public:
 		}
 	}
 
-	template<typename T = GameObject>
-	GHandle createObject()
+	template<typename T = Node>
+	NodeHandle createNode()
 	{
 		assert(!freeList.empty() && "Out of object slots in pool");
 
@@ -37,12 +37,12 @@ public:
 		Holder &holder = objects[idx];
 		holder.generation++;
 		holder.free = false;
-		holder.object = GameObject(GHandle(idx, holder.generation));
+		holder.object = Node(NodeHandle(idx, holder.generation));
 
 		return holder.object.getHandle();
 	}
 
-	void freeObject(GHandle handle)
+	void freeObject(NodeHandle handle)
 	{
 		assert(handle.index < objects.size() - 1 && "Object handle index out-of-bounds!");
 		Holder &holder = objects[handle.index];
@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	GameObject &getObject(const GHandle handle)
+	Node &getObject(const NodeHandle handle)
 	{
 		Holder &holder = objects[handle.index];
 		assert(!holder.free && "Attempted to access a freed object");
@@ -69,7 +69,7 @@ public:
 	}
 };
 
-class World : public ObjectPool<GameObject, 2000>
+class World : public ObjectPool<Node, 2000>
 {
 	World() { }
 

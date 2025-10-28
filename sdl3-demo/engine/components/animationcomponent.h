@@ -11,7 +11,7 @@ class AnimationComponent : public Component
 public:
 	static const int NO_ANIMATION = -1;
 
-	AnimationComponent(GameObject &owner, const std::vector<Animation> &animation);
+	AnimationComponent(Node &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;

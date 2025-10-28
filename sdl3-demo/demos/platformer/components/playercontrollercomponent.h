@@ -34,7 +34,7 @@ class PlayerControllerComponent : public Component
 	SDL_Texture *slideTexture;
 
 public:
-	PlayerControllerComponent(GameObject &owner);
+	PlayerControllerComponent(Node &owner);
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onStart() override;

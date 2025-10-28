@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include <deque>
 #include <cassert>
-#include <ghandle.h>
+#include <nodehandle.h>
 
 struct KeyEvent
 {
@@ -14,7 +14,7 @@ class InputState
 {
 	bool keys[SDL_SCANCODE_COUNT]{ false };
 	std::deque<KeyEvent> keyEvents;
-	GHandle focusTarget;
+	NodeHandle focusTarget;
 
 public:
 	void setKeyState(SDL_Scancode scancode, bool pressed)
@@ -42,8 +42,8 @@ public:
 		return true;
 	}
 
-	GHandle getFocusTarget() const { return focusTarget; }
-	void setFocus(GHandle focusTarget)
+	NodeHandle getFocusTarget() const { return focusTarget; }
+	void setFocus(NodeHandle focusTarget)
 	{
 		this->focusTarget = focusTarget;
 	}

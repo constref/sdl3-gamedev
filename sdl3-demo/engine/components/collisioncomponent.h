@@ -20,7 +20,7 @@ class CollisionComponent : public Component
 	std::array<bool, 4> prevContacts; // left, right, top, bottom
 
 public:
-	CollisionComponent(GameObject &owner);
+	CollisionComponent(Node &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;

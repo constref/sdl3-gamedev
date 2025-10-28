@@ -9,8 +9,8 @@
 
 struct QueuedEvent
 {
-	using HandlerFn = void(*)(GameObject &, const EventBase &);
-	GHandle target;
+	using HandlerFn = void(*)(Node &, const EventBase &);
+	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch;
 };
@@ -48,7 +48,7 @@ public:
 	}
 
 	template<typename EventType, typename... Args>
-	void enqueue(GHandle target, ComponentStage stage, Args&&... args)
+	void enqueue(NodeHandle target, ComponentStage stage, Args&&... args)
 	{
 		auto &queue = getQueue(stage);
 		auto &indices = getIndices(stage);
@@ -56,7 +56,7 @@ public:
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
-			.dispatch = [](GameObject &obj, const EventBase &e)
+			.dispatch = [](Node &obj, const EventBase &e)
 			{
 				obj.notify<const EventType &>(static_cast<const EventType &>(e));
 			}

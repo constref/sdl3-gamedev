@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ghandle.h>
+#include <nodehandle.h>
 
 struct SDLState;
 struct Resources;
@@ -11,7 +11,7 @@ struct FrameContext
 	SDLState &state;
 	float deltaTime;
 	double globalTime;
-	GHandle rootObject;
+	NodeHandle rootObject;
 	long frameNumber;
 
 	FrameContext(SDLState &state, float deltaTime, double globalTime, long frameNumber)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ghandle.h>
+#include <nodehandle.h>
 
 struct SDLState;
 struct FrameContext;
@@ -8,8 +8,8 @@ class World;
 
 class Platformer
 {
-	GHandle hRoot;
-	GHandle hPlayer;
+	NodeHandle hRoot;
+	NodeHandle hPlayer;
 
 	float bg2Scroll, bg3Scroll, bg4Scroll;
 	bool debugMode;
@@ -17,7 +17,7 @@ class Platformer
 public:
 	Platformer();
 
-	GHandle getPlayerHandle() const { return hPlayer; }
+	NodeHandle getPlayerHandle() const { return hPlayer; }
 	bool initialize(SDLState &state);
 	void cleanup();
 	void onStart();

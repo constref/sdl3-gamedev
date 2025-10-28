@@ -20,7 +20,7 @@ class PhysicsComponent : public Component
 	float gravityFactor;
 
 public:
-	PhysicsComponent(GameObject &owner);
+	PhysicsComponent(Node &owner);
 	void update(const FrameContext &ctx);
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 

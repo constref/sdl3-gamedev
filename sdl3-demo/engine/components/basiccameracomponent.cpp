@@ -1,13 +1,13 @@
 #include "basiccameracomponent.h"
 
-#include <gameobject.h>
+#include <node.h>
 #include <framecontext.h>
 #include <resources.h>
 #include <messaging/commands.h>
 #include <messaging/commanddispatcher.h>
 #include <world.h>
 
-BasicCameraComponent::BasicCameraComponent(GameObject &owner, GHandle target, float viewportWidth, float viewportHeight) : Component(owner, ComponentStage::Gameplay)
+BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight) : Component(owner, ComponentStage::Gameplay)
 {
 	this->target = target;
 	camPosition = glm::vec2(0);
@@ -22,7 +22,7 @@ void BasicCameraComponent::onAttached(CommandDispatcher &dataDispatcher, EventDi
 
 void BasicCameraComponent::update(const FrameContext &ctx)
 {
-	GameObject &obj = World::get().getObject(target);
+	Node &obj = World::get().getObject(target);
 	const Resources &res = Resources::get();
 	camPosition.x = (obj.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2;
 	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;
