@@ -19,6 +19,7 @@ class Engine
 	AppType app;
 	bool debugMode;
 	bool running;
+	constexpr static bool clampDeltaTime = true;
 
 public:
 	Engine(int logW, int logH) : state(1600, 900, logW, logH)
@@ -45,20 +46,31 @@ public:
 
 	void run()
 	{
-		const float fixedStep = 1.0f / 60.0f;
+		const float fixedStep = 1.0f / 120.0f;
+		const float dtThreshold = 1.0f / 30.0f;
 		float accumulator = 0;
 		prevTime = SDL_GetTicks();
 		long frameCount = 0;
+		double globalTime = 0;
 
 		running = true;
 		while (running)
 		{
 			// calculate deltaTime
 			uint64_t nowTime = SDL_GetTicks();
-			float deltaTime = (nowTime - prevTime) / 1000.0f;
+			float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
 			prevTime = nowTime;
 
-			FrameContext ctx(state, inputState, fixedStep, ++frameCount);
+			float deltaTime = actualDeltaTime;
+			if constexpr(clampDeltaTime)
+			{
+				// clamp actual delta time if too large due to
+				// breakpoint or major slow-down
+				deltaTime = std::min(deltaTime, dtThreshold);
+			}
+
+			globalTime += deltaTime;
+			FrameContext ctx(state, fixedStep, globalTime, ++frameCount);
 			World &world = World::get();
 			GameObject &root = world.getObject(app.getRoot());
 
@@ -104,12 +116,13 @@ public:
 				}
 			}
 
+
 			// handle input every frame to avoid input lag
 			EventQueue::get().dispatch(ComponentStage::Input);
 			update(ComponentStage::Input, root, world, ctx);
 
-			// physics, gameplay and animation run fixed-timestep interval for determinism
 			accumulator += deltaTime;
+
 			while (accumulator >= fixedStep)
 			{
 				EventQueue::get().dispatch(ComponentStage::Physics);
