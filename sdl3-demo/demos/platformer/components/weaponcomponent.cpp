@@ -66,7 +66,7 @@ void WeaponComponent::update(const FrameContext &ctx)
 
 	if (shooting)
 	{
-		if (timer.isTimeout())
+		if (timer.getTimeouts())
 		{
 			timer.reset();
 			World &world = World::get();
