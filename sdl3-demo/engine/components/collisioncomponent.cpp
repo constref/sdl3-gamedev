@@ -8,6 +8,7 @@
 #include <messaging/commands.h>
 #include <messaging/events.h>
 #include <messaging/eventqueue.h>
+#include <logger.h>
 
 std::vector<CollisionComponent *> CollisionComponent::allComponents;
 
@@ -37,6 +38,21 @@ void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDisp
 {
 	dataDispatcher.registerHandler<CollisionComponent, UpdateVelocityCommand>(this);
 	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityCommand>(this);
+	eventDispatcher.registerHandler<CollisionComponent, NodeRemovalEvent>(this);
+}
+
+
+void CollisionComponent::onEvent(const NodeRemovalEvent &event)
+{
+	auto itr = std::find(allComponents.begin(), allComponents.end(), this);
+	if (itr != allComponents.end())
+	{
+		allComponents.erase(itr);
+	}
+	else
+	{
+		Logger::warn(this, "Unable to find collider info for given component.");
+	}
 }
 
 void CollisionComponent::update(const FrameContext &ctx)

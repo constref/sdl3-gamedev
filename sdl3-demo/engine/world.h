@@ -42,12 +42,11 @@ public:
 		return holder.object.getHandle();
 	}
 
-	void freeObject(NodeHandle handle)
+	void free(NodeHandle handle)
 	{
 		assert(handle.index < objects.size() - 1 && "Object handle index out-of-bounds!");
 		Holder &holder = objects[handle.index];
-		if (handle.generation == 0 || holder.free ||
-			holder.generation != handle.generation)
+		if (handle.generation == holder.generation && !holder.free)
 		{
 			holder.free = true;
 			assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
@@ -55,7 +54,7 @@ public:
 		}
 	}
 
-	Node &getObject(const NodeHandle handle)
+	Node &getNode(const NodeHandle handle)
 	{
 		Holder &holder = objects[handle.index];
 		assert(!holder.free && "Attempted to access a freed object");

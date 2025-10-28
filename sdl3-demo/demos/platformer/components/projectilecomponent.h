@@ -3,9 +3,11 @@
 #include <components/component.h>
 
 class CollisionEvent;
+class NodeRemovalEvent;
 
 class ProjectileComponent : public Component
 {
+	int collisions;
 public:
 	ProjectileComponent(Node &owner);
 
@@ -13,4 +15,5 @@ public:
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onEvent(const CollisionEvent &event);
+	void onEvent(const NodeRemovalEvent &event);
 };

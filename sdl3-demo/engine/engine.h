@@ -72,7 +72,7 @@ public:
 			globalTime += deltaTime;
 			FrameContext ctx(state, fixedStep, globalTime, ++frameCount);
 			World &world = World::get();
-			Node &root = world.getObject(app.getRoot());
+			Node &root = world.getNode(app.getRoot());
 
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
@@ -165,7 +165,7 @@ public:
 		auto &children = obj.getChildren();
 		for (NodeHandle &hChild : children)
 		{
-			Node &child = world.getObject(hChild);
+			Node &child = world.getNode(hChild);
 			update(stage, child, world, ctx);
 		}
 	}

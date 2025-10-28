@@ -22,7 +22,7 @@ void BasicCameraComponent::onAttached(CommandDispatcher &dataDispatcher, EventDi
 
 void BasicCameraComponent::update(const FrameContext &ctx)
 {
-	Node &obj = World::get().getObject(target);
+	Node &obj = World::get().getNode(target);
 	const Resources &res = Resources::get();
 	camPosition.x = (obj.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2;
 	camPosition.y = res.map->mapHeight * res.map->tileHeight - viewportSize.y;

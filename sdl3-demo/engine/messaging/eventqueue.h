@@ -71,7 +71,7 @@ public:
 		while (indices.first < indices.second)
 		{
 			QueuedEvent &nextItem = queue[indices.first++];
-			nextItem.dispatch(World::get().getObject(nextItem.target), *nextItem.event);
+			nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
 		}
 	}
 

@@ -10,6 +10,7 @@
 struct SDL_FRect;
 class UpdateVelocityCommand;
 class TentativeVelocityCommand;
+class NodeRemovalEvent;
 
 class CollisionComponent : public Component
 {
@@ -24,8 +25,9 @@ public:
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
 	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-	void onCommand(const UpdateVelocityCommand &msg);
-	void onCommand(const TentativeVelocityCommand &dp);
+	void onCommand(const UpdateVelocityCommand &cmd);
+	void onCommand(const TentativeVelocityCommand &cmd);
+	void onEvent(const NodeRemovalEvent &event);
 
 	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }

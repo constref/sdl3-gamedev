@@ -46,7 +46,7 @@ bool Platformer::initialize(SDLState &state)
 		{
 			World &world = World::get();
 			NodeHandle newObjHandle = world.createNode();
-			Node &obj = world.getObject(newObjHandle);
+			Node &obj = world.getNode(newObjHandle);
 
 			obj.setPosition(glm::vec2(
 				c * res.map->tileWidth,
@@ -73,7 +73,7 @@ bool Platformer::initialize(SDLState &state)
 						SDL_Texture *tex = tst.textures[tGid - tst.firstGid];
 
 						NodeHandle hTile = createObject(r, c);
-						Node &tile = world.getObject(hTile);
+						Node &tile = world.getNode(hTile);
 						auto &renderComponent = tile.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);
 						renderComponent.setTexture(tex);
 						// only level tiles get a collision component
@@ -86,7 +86,7 @@ bool Platformer::initialize(SDLState &state)
 								.h = static_cast<float>(tileHeight)
 								});
 						}
-						Node &layerObject = world.getObject(hLayer);
+						Node &layerObject = world.getNode(hLayer);
 						layerObject.addChild(hTile);
 					}
 				}
@@ -97,7 +97,7 @@ bool Platformer::initialize(SDLState &state)
 		{
 			World &world = World::get();
 			NodeHandle hLayer = world.createNode();
-			Node &layerObject = world.getObject(hLayer);
+			Node &layerObject = world.getNode(hLayer);
 
 			for (tmx::LayerObject &obj : objectGroup.objects)
 			{
@@ -108,7 +108,7 @@ bool Platformer::initialize(SDLState &state)
 				if (obj.type == "Player")
 				{
 					NodeHandle hPlayer = world.createNode();
-					Node &player = world.getObject(hPlayer);
+					Node &player = world.getNode(hPlayer);
 					player.setPosition(objPos);
 					auto &inputComponent = player.addComponent<InputComponent>(hPlayer);
 					auto &playerCtrlComponent = player.addComponent<PlayerControllerComponent>();
@@ -139,7 +139,7 @@ bool Platformer::initialize(SDLState &state)
 				else if (obj.type == "Enemy")
 				{
 					NodeHandle hEnemy = world.createNode();
-					Node &enemy = world.getObject(hEnemy);
+					Node &enemy = world.getNode(hEnemy);
 
 					enemy.setPosition(objPos);
 					auto &physicsComponent = enemy.addComponent<PhysicsComponent>();
@@ -161,32 +161,32 @@ bool Platformer::initialize(SDLState &state)
 		}
 	};
 
-	Node &root = world.getObject(hRoot);
+	Node &root = world.getNode(hRoot);
 
 	// add the background elements
 	NodeHandle hBgLayer = world.createNode();
-	Node &bgLayer = world.getObject(hBgLayer);
+	Node &bgLayer = world.getNode(hBgLayer);
 
 	NodeHandle hBG1 = world.createNode();
-	Node &bg1 = world.getObject(hBG1);
+	Node &bg1 = world.getNode(hBG1);
 	bg1.addComponent<RenderComponent>(res.texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG1);
 
 	NodeHandle hBG4 = world.createNode();
-	Node &bg4 = world.getObject(hBG4);
+	Node &bg4 = world.getNode(hBG4);
 	bg4.addComponent<RenderComponent>(res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG4);
 
 	NodeHandle hBG3 = world.createNode();
-	Node &bg3 = world.getObject(hBG3);
+	Node &bg3 = world.getNode(hBG3);
 	bg3.addComponent<RenderComponent>(res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG3);
 
 	NodeHandle hBG2 = world.createNode();
-	Node &bg2 = world.getObject(hBG2);
+	Node &bg2 = world.getNode(hBG2);
 	bg2.addComponent<RenderComponent>(res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG2);

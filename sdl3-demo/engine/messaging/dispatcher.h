@@ -14,12 +14,12 @@ class Dispatcher
 
 public:
 	template<typename RecipientType, typename Type>
-	void registerHandler(RecipientBase *component)
+	void registerHandler(RecipientBase *recipient)
 	{
 		auto &handlers = registrations[Type::index()];
-		handlers.emplace_back(component, [](RecipientBase *comp, const Base &base)
+		handlers.emplace_back(recipient, [](RecipientBase *to, const Base &base)
 		{
-			Policy::invoke(static_cast<RecipientType *>(comp), static_cast<const Type &>(base));
+			Policy::invoke(static_cast<RecipientType *>(to), static_cast<const Type &>(base));
 		});
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 struct NodeHandle
 {
@@ -13,6 +14,11 @@ struct NodeHandle
 	bool isValid() const
 	{
 		return generation != 0;
+	}
+
+	bool operator==(const NodeHandle &other)
+	{
+		return index == other.index && generation == other.generation;
 	}
 };
 

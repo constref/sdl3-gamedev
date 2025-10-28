@@ -9,9 +9,12 @@
 #include <messaging/eventdispatcher.h>
 #include <nodehandle.h>
 
+class NodeRemovalEvent;
+
 class Node
 {
 	NodeHandle handle;
+	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
@@ -21,52 +24,19 @@ class Node
 	EventDispatcher eventDispatcher;
 
 public:
-	Node(NodeHandle handle) : Node()
-	{
-		this->handle = handle;
-	}
+	Node(NodeHandle handle);
+	Node();
+	virtual ~Node();
 
-	Node()
-	{
-		handle = NodeHandle(0, 0);
-		position = glm::vec2(0);
-		isInitialized = false;
-	}
-
-	~Node()
-	{
-		for (auto &stageVec : componentStages)
-		{
-			for (auto *comp : stageVec)
-			{
-				delete comp;
-			}
-			stageVec.clear();
-		}
-	}
-
-	void update(ComponentStage stage, const FrameContext &ctx)
-	{
-		auto &stageVec = componentStages[static_cast<size_t>(stage)];
-		for (auto &comp : stageVec)
-		{
-			comp->update(ctx);
-		}
-	}
+	void update(ComponentStage stage, const FrameContext &ctx);
 
 	NodeHandle getHandle() const { return handle; }
-
 	glm::vec2 getPosition() const { return position; }
 	void setPosition(const glm::vec2 position) { this->position = position; }
-
+	auto &getParent() const { return parent; }
 	auto &getChildren() { return children; }
-	void addChild(NodeHandle childHandle)
-	{
-		Node &child = getObject(childHandle);
-		child.initialize();
-
-		children.push_back(childHandle);
-	}
+	void addChild(NodeHandle childHandle);
+	void removeChild(NodeHandle childHandle);
 
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)
@@ -111,7 +81,7 @@ public:
 		isInitialized = true;
 	}
 
-	Node &getObject(const NodeHandle &handle);
+	Node &getNode(const NodeHandle &handle);
 
 	template<typename EventType>
 	void notify(const EventType &event)
@@ -134,12 +104,10 @@ public:
 		// propagate to children
 		for (NodeHandle child : children)
 		{
-			Node &childObj = getObject(child);
+			Node &childObj = getNode(child);
 			childObj.broadcastMessage(dp);
 		}
 	}
 
-	void destroySelf()
-	{
-	}
+	void destroySelf();
 };

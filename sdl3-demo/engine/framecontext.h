@@ -11,7 +11,6 @@ struct FrameContext
 	SDLState &state;
 	float deltaTime;
 	double globalTime;
-	NodeHandle rootObject;
 	long frameNumber;
 
 	FrameContext(SDLState &state, float deltaTime, double globalTime, long frameNumber)
@@ -19,7 +18,6 @@ struct FrameContext
 	{
 		this->deltaTime = deltaTime;
 		this->globalTime = 0;
-		this->rootObject = rootObject;
 		this->frameNumber = frameNumber;
 	}
 };

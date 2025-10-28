@@ -71,7 +71,7 @@ void WeaponComponent::update(const FrameContext &ctx)
 			timer.reset();
 			World &world = World::get();
 			NodeHandle handle = world.createNode();
-			Node &bullet = world.getObject(handle);
+			Node &bullet = world.getNode(handle);
 
 			auto &res = Resources::get();
 
