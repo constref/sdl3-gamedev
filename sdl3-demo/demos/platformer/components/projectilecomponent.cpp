@@ -23,6 +23,7 @@ void ProjectileComponent::onAttached(CommandDispatcher &dataDispatcher, EventDis
 
 void ProjectileComponent::onEvent(const CollisionEvent &event)
 {
+	// TODO: Remove the need to count, group contacts per-frame
 	collisions++;
 	if (collisions == 1)
 	{
@@ -30,7 +31,7 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit, true });
 		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
-		EventQueue::get().enqueue<RemoveCollisionEvent>(owner.getHandle(), ComponentStage::Physics);
+		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::Physics);
 	}
 }
 

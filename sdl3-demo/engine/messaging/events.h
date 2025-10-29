@@ -52,7 +52,7 @@ public:
 	int getIndex() const { return index; }
 };
 
-class RemoveCollisionEvent : public Event<RemoveCollisionEvent> { };
+class RemoveColliderEvent : public Event<RemoveColliderEvent> { };
 class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
 class FallingEvent : public Event<FallingEvent> {};
 class JumpEvent : public Event<JumpEvent> {};
