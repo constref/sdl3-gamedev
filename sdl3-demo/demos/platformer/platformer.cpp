@@ -118,6 +118,12 @@ bool Platformer::initialize(SDLState &state)
 					playerCtrlComponent.setRunTexture(res.texRun);
 					playerCtrlComponent.setSlideAnimation(res.ANIM_PLAYER_SLIDE);
 					playerCtrlComponent.setSlideTexture(res.texSlide);
+					playerCtrlComponent.setSlideShootAnimation(res.ANIM_PLAYER_SLIDE_SHOOT);
+					playerCtrlComponent.setSlideShootTexture(res.texSlideShoot);
+					playerCtrlComponent.setShootAnimation(res.ANIM_PLAYER_SHOOT);
+					playerCtrlComponent.setShootTexture(res.texShoot);
+					playerCtrlComponent.setRunShootAnimation(res.ANIM_PLAYER_RUN);
+					playerCtrlComponent.setRunShootTexture(res.texRunShoot);
 					player.addComponent<WeaponComponent>();
 					auto &physicsComponent = player.addComponent<PhysicsComponent>();
 					physicsComponent.setAcceleration(glm::vec2(400, 0));

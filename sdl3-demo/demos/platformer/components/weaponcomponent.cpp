@@ -99,13 +99,15 @@ void WeaponComponent::update(const FrameContext &ctx)
 			bullet.addComponent<ProjectileComponent>();
 
 			// adjust bullet start position
-			const float left = 4;
-			const float right = 24;
+			SDL_FRect collider = collCmp.getCollider();
+			const float left = -6;
+			const float right = 33;
 			const float t = (playerDirection + 1) / 2.0f; // results in a value of 0..1
-			const float xOffset = left + right * t; // LERP between left and right based on direction
+			const float xOffset = left + (right - left) * t; // LERP between left and right based on direction
+
 			bullet.setPosition(glm::vec2(
 				owner.getPosition().x + xOffset,
-				owner.getPosition().y + 32 / 2 + 2
+				owner.getPosition().y + 32 / 2
 			));
 
 			owner.addChild(handle);
