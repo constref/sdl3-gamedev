@@ -40,7 +40,6 @@ Node &Node::getNode(const NodeHandle &handle)
 void Node::scheduleDestroy()
 {
 	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender);
-	Logger::info(this, std::format("Scheduled node ({}:{}) for removal.", getHandle().index, getHandle().generation));
 }
 
 void Node::update(ComponentStage stage, const FrameContext &ctx)
