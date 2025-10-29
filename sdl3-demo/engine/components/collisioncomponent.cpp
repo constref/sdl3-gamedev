@@ -10,12 +10,11 @@
 #include <messaging/eventqueue.h>
 #include <logger.h>
 
-std::vector<CollisionComponent *> CollisionComponent::allComponents;
+std::vector<NodeHandle> CollisionComponent::collidableNodes;
 
 CollisionComponent::CollisionComponent(Node &owner) : Component(owner, ComponentStage::Physics), collider{ 0 }
 {
-	// keep track of all collision components
-	allComponents.push_back(this);
+	collidableNodes.push_back(owner.getHandle());
 
 	velocity = glm::vec2(0);
 	prevContacts[0] = false;
@@ -26,12 +25,6 @@ CollisionComponent::CollisionComponent(Node &owner) : Component(owner, Component
 
 CollisionComponent::~CollisionComponent()
 {
-	// remove from static list
-	auto itr = std::find(allComponents.begin(), allComponents.end(), this);
-	if (itr != allComponents.end())
-	{
-		allComponents.erase(itr);
-	}
 }
 
 void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
@@ -44,10 +37,10 @@ void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDisp
 
 void CollisionComponent::onEvent(const NodeRemovalEvent &event)
 {
-	auto itr = std::find(allComponents.begin(), allComponents.end(), this);
-	if (itr != allComponents.end())
+	auto itr = std::find(collidableNodes.begin(), collidableNodes.end(), owner.getHandle());
+	if (itr != collidableNodes.end())
 	{
-		allComponents.erase(itr);
+		collidableNodes.erase(itr);
 	}
 	else
 	{
@@ -68,7 +61,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 {
 	std::array<bool, 4> contacts = { false }; // left, right, top, bottom
 	const auto checkCollisions = [this, &contacts](glm::vec2 &position, Axis axis) {
-		for (auto comp : allComponents)
+		for (NodeHandle handle : collidableNodes)
 		{
 			SDL_FRect rectA{
 				.x = position.x + collider.x,
@@ -77,9 +70,10 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 				.h = collider.h
 			};
 
+			auto &otherOwner = World::get().getNode(handle);
+			CollisionComponent *comp = otherOwner.getComponent<CollisionComponent>();
 			if (comp != this)
 			{
-				auto &otherOwner = comp->owner;
 				SDL_FRect rectB{
 					.x = otherOwner.getPosition().x + comp->collider.x,
 					.y = otherOwner.getPosition().y + comp->collider.y,

@@ -5,6 +5,8 @@
 #include <functional>
 #include <vector>
 #include <array>
+
+#include <nodehandle.h>
 #include "component.h"
 
 struct SDL_FRect;
@@ -15,7 +17,7 @@ class NodeRemovalEvent;
 class CollisionComponent : public Component
 {
 	// TODO: Will remove static vector in favor of a spatial partitioning structure
-	static std::vector<CollisionComponent *> allComponents;
+	static std::vector<NodeHandle> collidableNodes;
 	SDL_FRect collider;
 	glm::vec2 velocity;
 	std::array<bool, 4> prevContacts; // left, right, top, bottom

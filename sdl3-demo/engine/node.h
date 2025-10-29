@@ -69,7 +69,7 @@ public:
 
 	void initialize()
 	{
-		// notify all components of their syblings
+		// notify all components of their siblings
 		for (auto &stageVec : componentStages)
 		{
 			for (auto *comp : stageVec)

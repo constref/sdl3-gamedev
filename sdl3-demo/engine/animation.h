@@ -20,7 +20,8 @@ public:
 
 	bool step(float deltaTime)
 	{
-		return timer.step(deltaTime) > 0;
+		int timeouts = timer.step(deltaTime);
+		return timeouts > 0;
 	}
 
 	void reset()

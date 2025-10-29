@@ -49,7 +49,7 @@ public:
 		this->index = index;
 	}
 
-	int getIndex() const { return 0; }
+	int getIndex() const { return index; }
 };
 
 class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
