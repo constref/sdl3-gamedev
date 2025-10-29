@@ -1,4 +1,5 @@
 #include "node.h"
+
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
@@ -23,6 +24,7 @@ Node::~Node()
 	{
 		for (auto *comp : stageVec)
 		{
+			comp->onDetached(dataDispatcher, eventDispatcher);
 			delete comp;
 		}
 		stageVec.clear();
@@ -35,7 +37,7 @@ Node &Node::getNode(const NodeHandle &handle)
 	return world.getNode(handle);
 }
 
-void Node::destroySelf()
+void Node::scheduleDestroy()
 {
 	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender);
 	Logger::info(this, std::format("Scheduled node ({}:{}) for removal.", getHandle().index, getHandle().generation));
@@ -68,5 +70,21 @@ void Node::removeChild(NodeHandle childHandle)
 	else
 	{
 		Logger::warn(this, "Tried to remove non-existent child.");
+	}
+}
+
+void Node::removeComponent(const Component &comp)
+{
+	auto &stageVec = componentStages[static_cast<size_t>(comp.getStage())];
+	auto itr = std::find(stageVec.begin(), stageVec.end(), &comp);
+	if (itr != stageVec.end())
+	{
+		stageVec.erase(itr);
+		comp.onDetached(dataDispatcher, eventDispatcher);
+		delete &comp;
+	}
+	else
+	{
+		Logger::error(this, "Couldn't remove component, address is invalid.");
 	}
 }

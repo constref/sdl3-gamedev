@@ -25,18 +25,6 @@ CollisionComponent::CollisionComponent(Node &owner) : Component(owner, Component
 
 CollisionComponent::~CollisionComponent()
 {
-}
-
-void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<CollisionComponent, UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityCommand>(this);
-	eventDispatcher.registerHandler<CollisionComponent, NodeRemovalEvent>(this);
-}
-
-
-void CollisionComponent::onEvent(const NodeRemovalEvent &event)
-{
 	auto itr = std::find(collidableNodes.begin(), collidableNodes.end(), owner.getHandle());
 	if (itr != collidableNodes.end())
 	{
@@ -44,12 +32,31 @@ void CollisionComponent::onEvent(const NodeRemovalEvent &event)
 	}
 	else
 	{
-		Logger::warn(this, "Unable to find collider info for given component.");
+		Logger::error(this, "Collision component not found.");
 	}
+}
+
+void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+{
+	dataDispatcher.registerHandler<CollisionComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityCommand>(this);
+	eventDispatcher.registerHandler<CollisionComponent, RemoveCollisionEvent>(this);
+}
+
+void CollisionComponent::onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const
+{
+	dataDispatcher.unregisterHandler<CollisionComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.unregisterHandler<CollisionComponent, TentativeVelocityCommand>(this);
+	eventDispatcher.unregisterHandler<CollisionComponent, RemoveCollisionEvent>(this);
 }
 
 void CollisionComponent::update(const FrameContext &ctx)
 {
+}
+
+void CollisionComponent::onEvent(const RemoveCollisionEvent &event)
+{
+	owner.removeComponent(*this);
 }
 
 void CollisionComponent::onCommand(const UpdateVelocityCommand &dp)

@@ -10,26 +10,36 @@ class Dispatcher
 	using HandlerFn = void(*)(RecipientBase *, const Base &);
 	using Handler = std::pair<RecipientBase *, HandlerFn>;
 
-	std::array<std::vector<Handler>, 25> registrations;
+	std::array<std::vector<Handler>, 25> deliverables;
 
 public:
 	template<typename RecipientType, typename Type>
 	void registerHandler(RecipientBase *recipient)
 	{
-		auto &handlers = registrations[Type::typeIndex()];
+		auto &handlers = deliverables[Type::typeIndex()];
 		handlers.emplace_back(recipient, [](RecipientBase *to, const Base &base)
 		{
 			Policy::invoke(static_cast<RecipientType *>(to), static_cast<const Type &>(base));
 		});
 	}
 
+	template<typename RecipientType, typename Type>
+	void unregisterHandler(const RecipientBase *recipient)
+	{
+		auto &handlers = deliverables[Type::typeIndex()];
+		auto itr = std::find_if(handlers.begin(), handlers.end(), 
+			[recipient](const Handler &handler) { return handler.first == recipient; });
+		assert(itr != handlers.end() && "Tried to unregister a handler that hasn't been registered.");
+		handlers.erase(itr);
+	}
+
 	template<typename Type>
 	void send(const Type &obj)
 	{
-		auto &regs = registrations[Type::typeIndex()];
-		for (auto &reg : regs)
+		auto &handlers = deliverables[Type::typeIndex()];
+		for (auto &handler : handlers)
 		{
-			reg.second(reg.first, obj);
+			handler.second(handler.first, obj);
 		}
 	}
 };

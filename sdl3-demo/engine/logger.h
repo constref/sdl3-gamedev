@@ -18,4 +18,10 @@ public:
 	{
 		std::cout << std::format("[INFO] {}: {}", typeid(SourceObj).name(), msg) << std::endl;
 	}
+
+	template<typename SourceObj>
+	static void error(SourceObj *src, const std::string &msg)
+	{
+		std::cout << std::format("[ERROR] {}: {}", typeid(SourceObj).name(), msg) << std::endl;
+	}
 };

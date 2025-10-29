@@ -52,8 +52,8 @@ public:
 	int getIndex() const { return index; }
 };
 
+class RemoveCollisionEvent : public Event<RemoveCollisionEvent> { };
 class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
-
 class FallingEvent : public Event<FallingEvent> {};
 class JumpEvent : public Event<JumpEvent> {};
 class ShootBeginEvent : public Event<ShootBeginEvent> {};

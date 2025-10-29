@@ -5,6 +5,7 @@
 #include <messaging/events.h>
 #include <messaging/eventdispatcher.h>
 #include <messaging/commands.h>
+#include <messaging/eventqueue.h>
 #include <resources.h>
 #include <components/collisioncomponent.h>
 
@@ -28,6 +29,8 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		Resources &res = Resources::get();
 		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit });
 		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
+
+		EventQueue::get().enqueue<RemoveCollisionEvent>(owner.getHandle(), ComponentStage::Physics);
 	}
 }
 
@@ -44,6 +47,6 @@ void ProjectileComponent::onEvent(const AnimationEndEvent &event)
 	Resources &res = Resources::get();
 	if (event.getIndex() == res.ANIM_BULLET_HIT)
 	{
-		owner.destroySelf();
+		owner.scheduleDestroy();
 	}
 }

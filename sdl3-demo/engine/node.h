@@ -67,6 +67,8 @@ public:
 		return nullptr;
 	}
 
+	void removeComponent(const Component &comp);
+
 	void initialize()
 	{
 		// notify all components of their siblings
@@ -109,5 +111,5 @@ public:
 		}
 	}
 
-	void destroySelf();
+	void scheduleDestroy();
 };
