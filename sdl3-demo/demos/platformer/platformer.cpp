@@ -13,6 +13,7 @@
 
 #include "components/playercontrollercomponent.h"
 #include "components/weaponcomponent.h"
+#include "components/healthcomponent.h"
 
 Platformer::Platformer()
 {
@@ -156,6 +157,7 @@ bool Platformer::initialize(SDLState &state)
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = 28
 						});
+					enemy.addComponent<HealthComponent>(300);
 					auto &animComponent = enemy.addComponent<AnimationComponent>(res.enemyAnims);
 					animComponent.setAnimation(res.ANIM_ENEMY);
 					auto &renderComponent = enemy.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);

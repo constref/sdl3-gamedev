@@ -9,6 +9,8 @@
 #include <resources.h>
 #include <components/collisioncomponent.h>
 
+#include "events.h"
+
 ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
 {
 	collisions = 0;
@@ -32,6 +34,7 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
 		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::Physics);
+		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 15);
 	}
 }
 
