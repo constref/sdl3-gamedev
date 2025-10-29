@@ -27,7 +27,7 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 	if (collisions == 1)
 	{
 		Resources &res = Resources::get();
-		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit });
+		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit, true });
 		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
 		EventQueue::get().enqueue<RemoveCollisionEvent>(owner.getHandle(), ComponentStage::Physics);

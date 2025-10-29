@@ -12,6 +12,7 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 {
 	this->animations = animations;
 	this->frameNumber = 1;
+	this->notifyEnd = false;
 }
 
 void AnimationComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
@@ -23,9 +24,10 @@ void AnimationComponent::update(const FrameContext &ctx)
 {
 	if (currentAnimation != NO_ANIMATION)
 	{
-		if (animations[currentAnimation].step(ctx.deltaTime))
+		if (animations[currentAnimation].step(ctx.deltaTime) && notifyEnd)
 		{
 			EventQueue::get().enqueue<AnimationEndEvent>(owner.getHandle(), ComponentStage::Animation, currentAnimation);
+			notifyEnd = false;
 		}
 		frameNumber = animations[currentAnimation].currentFrame() + 1;
 		owner.pushData(FrameChangeCommand{ frameNumber });
@@ -42,4 +44,5 @@ void AnimationComponent::onCommand(const SetAnimationCommand &dp)
 {
 	setAnimation(dp.getAnimationIndex());
 	animations[currentAnimation].reset();
+	notifyEnd = dp.shouldNotifyEnd();
 }

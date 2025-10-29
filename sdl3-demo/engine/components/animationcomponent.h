@@ -8,6 +8,8 @@ class SetAnimationCommand;
 
 class AnimationComponent : public Component
 {
+	bool notifyEnd;
+
 public:
 	static const int NO_ANIMATION = -1;
 

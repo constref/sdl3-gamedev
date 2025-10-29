@@ -9,14 +9,19 @@ class SetAnimationCommand : public Command<SetAnimationCommand>
 {
 	int animationIndex;
 	SDL_Texture *texture;
+	bool notifyEnd;
+
 public:
-	SetAnimationCommand(int animationIndex, SDL_Texture *texture)
-		: animationIndex(animationIndex), texture(texture)
+	SetAnimationCommand(int animationIndex, SDL_Texture *texture, bool notifEnd = false)
 	{
+		this->animationIndex = animationIndex;
+		this->texture = texture;
+		this->notifyEnd = notifyEnd;
 	}
 
 	int getAnimationIndex() const { return animationIndex; }
 	SDL_Texture *getTexture() const { return texture; }
+	bool shouldNotifyEnd() const { return notifyEnd; }
 };
 
 class FrameChangeCommand : public Command<FrameChangeCommand>
