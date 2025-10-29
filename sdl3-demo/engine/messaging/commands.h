@@ -12,7 +12,7 @@ class SetAnimationCommand : public Command<SetAnimationCommand>
 	bool notifyEnd;
 
 public:
-	SetAnimationCommand(int animationIndex, SDL_Texture *texture, bool notifEnd = false)
+	SetAnimationCommand(int animationIndex, SDL_Texture *texture, bool notifyEnd = false)
 	{
 		this->animationIndex = animationIndex;
 		this->texture = texture;
