@@ -14,19 +14,16 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStag
 	netForce = glm::vec2(0);
 	dynamic = false;
 	gravityFactor = 1.0f;
-}
 
-void PhysicsComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<ScaleVelocityAxisCommand>(this);
-	dataDispatcher.registerHandler<AddImpulseCommand>(this);
-	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
+	owner.getCommandDispatcher().registerHandler<ScaleVelocityAxisCommand>(this);
+	owner.getCommandDispatcher().registerHandler<AddImpulseCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 }
 
 void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 {
 	this->velocity = vel;
-	owner.pushData(UpdateVelocityCommand{ vel });
+	owner.sendCommand(UpdateVelocityCommand{ vel });
 }
 
 void PhysicsComponent::update(const FrameContext &ctx)
@@ -63,7 +60,7 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	if (isDynamic())
 	{
 		// collision component can check per-axis and apply resolution
-		owner.pushData(TentativeVelocityCommand{ delta });
+		owner.sendCommand(TentativeVelocityCommand{ delta });
 	}
 }
 

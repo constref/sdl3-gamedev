@@ -18,8 +18,6 @@ public:
 	AnimationComponent(Node &owner, const std::vector<Animation> &animation);
 	void update(const FrameContext &ctx) override;
 	void setAnimation(int index);
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-
 	void onCommand(const SetAnimationCommand &dp);
 	void onEvent(const AnimationStopEvent &event);
 private:

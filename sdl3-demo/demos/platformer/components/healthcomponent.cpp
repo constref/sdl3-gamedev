@@ -4,9 +4,10 @@
 #include <messaging/eventdispatcher.h>
 #include <messaging/eventqueue.h>
 
-void HealthComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+HealthComponent::HealthComponent(Node &owner, int hp) : Component(owner, ComponentStage::Gameplay)
 {
-	eventDispatcher.registerHandler<DamageEvent>(this);
+	this->hp = hp;
+	owner.getEventDispatcher().registerHandler<DamageEvent>(this);
 }
 
 void HealthComponent::onEvent(const DamageEvent &event)
@@ -15,7 +16,6 @@ void HealthComponent::onEvent(const DamageEvent &event)
 	{
 		int oldHp = hp;
 		hp -= event.getAmount();
-		Logger::info(this, std::format("{} - {} = {}", oldHp, event.getAmount(), hp));
 
 		if (hp <= 0)
 		{

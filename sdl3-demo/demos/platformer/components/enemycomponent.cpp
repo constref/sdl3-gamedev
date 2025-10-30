@@ -1,18 +1,15 @@
 #include "enemycomponent.h"
+#include "enemycomponent.h"
 #include <messaging/messaging.h>
 #include <resources.h>
 #include <logger.h>
 
 #include "events.h"
 
-void EnemyComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
+EnemyComponent::EnemyComponent(Node &owner, EnemyType type) : Component(owner, ComponentStage::Gameplay), type(type)
 {
-	eventDispatcher.registerHandler<DeathEvent>(this);
-	eventDispatcher.registerHandler<AnimationEndEvent>(this);
-}
-
-void EnemyComponent::onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const
-{
+	owner.getEventDispatcher().registerHandler<DeathEvent>(this);
+	owner.getEventDispatcher().registerHandler<AnimationEndEvent>(this);
 }
 
 void EnemyComponent::onEvent(const DeathEvent &event)
@@ -21,7 +18,7 @@ void EnemyComponent::onEvent(const DeathEvent &event)
 	EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender);
 	if (type == EnemyType::creeper)
 	{
-		owner.pushData(SetAnimationCommand{ res.ANIM_ENEMY_DIE, res.texEnemyDie, true });
+		owner.sendCommand(SetAnimationCommand{ res.ANIM_ENEMY_DIE, res.texEnemyDie, true });
 	}
 }
 

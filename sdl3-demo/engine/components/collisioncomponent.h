@@ -26,8 +26,6 @@ public:
 	CollisionComponent(Node &owner);
 	~CollisionComponent();
 	void update(const FrameContext &ctx) override;
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-	void onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const override;
 	void onCommand(const UpdateVelocityCommand &cmd);
 	void onCommand(const TentativeVelocityCommand &cmd);
 	void onEvent(const RemoveColliderEvent &event);

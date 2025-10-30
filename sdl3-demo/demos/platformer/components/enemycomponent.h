@@ -14,11 +14,7 @@ class EnemyComponent : public Component
 {
 	const EnemyType type;
 public:
-	EnemyComponent(Node &owner, EnemyType type)
-		: Component(owner, ComponentStage::Gameplay), type(type) { }
-
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-	void onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const override;
+	EnemyComponent(Node &owner, EnemyType type);
 
 	void onEvent(const DeathEvent &event);
 	void onEvent(const AnimationEndEvent &event);

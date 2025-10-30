@@ -24,7 +24,6 @@ Node::~Node()
 	{
 		for (auto *comp : stageVec)
 		{
-			comp->onDetached(dataDispatcher, eventDispatcher);
 			delete comp;
 		}
 		stageVec.clear();
@@ -79,7 +78,6 @@ void Node::removeComponent(const Component &comp)
 	if (itr != stageVec.end())
 	{
 		stageVec.erase(itr);
-		comp.onDetached(dataDispatcher, eventDispatcher);
 		delete &comp;
 	}
 	else

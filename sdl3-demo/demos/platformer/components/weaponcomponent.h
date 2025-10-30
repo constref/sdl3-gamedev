@@ -20,8 +20,6 @@ public:
 	WeaponComponent(Node &owner);
 
 	void update(const FrameContext &ctx) override;
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
-
 	void onCommand(const UpdateVelocityCommand &dp);
 	void onCommand(const UpdateDirectionCommand &dp);
 	void onEvent(const ShootBeginEvent &event);

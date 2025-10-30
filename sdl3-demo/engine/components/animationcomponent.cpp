@@ -12,12 +12,8 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 	this->frameNumber = 1;
 	this->notifyEnd = false;
 	this->playing = true;
-}
-
-void AnimationComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<SetAnimationCommand>(this);
-	eventDispatcher.registerHandler<AnimationStopEvent>(this);
+	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
+	owner.getEventDispatcher().registerHandler<AnimationStopEvent>(this);
 }
 
 void AnimationComponent::update(const FrameContext &ctx)
@@ -33,7 +29,7 @@ void AnimationComponent::update(const FrameContext &ctx)
 		else
 		{
 			frameNumber = animations[currentAnimation].currentFrame() + 1;
-			owner.pushData(FrameChangeCommand{ frameNumber });
+			owner.sendCommand(FrameChangeCommand{ frameNumber });
 		}
 	}
 }

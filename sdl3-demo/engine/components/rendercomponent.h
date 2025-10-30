@@ -26,7 +26,6 @@ class RenderComponent : public Component
 public:
 	RenderComponent(Node &owner, SDL_Texture *texture, float width, float height);
 	void update(const FrameContext &ctx) override;
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
 	void onCommand(const SetAnimationCommand &dp);
 	void onCommand(const UpdateDirectionCommand &dp);

@@ -49,7 +49,6 @@ class PlayerControllerComponent : public Component
 public:
 	PlayerControllerComponent(Node &owner);
 	void update(const FrameContext &ctx) override;
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 	void onStart() override;
 	void transitionState(PState newState);
 	void onCommand(const UpdateVelocityCommand &msg);

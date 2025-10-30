@@ -16,11 +16,8 @@ InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(
 {
 	direction = 0;
 	this->ownerHandle = ownerHandle;
-}
 
-void InputComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	eventDispatcher.registerHandler<KeyboardEvent>(this);
+	owner.getEventDispatcher().registerHandler<KeyboardEvent>(this);
 
 	// ensure global input state knows this object has input focus
 	// TODO: Need a more robust solution to support 2+ players
@@ -75,7 +72,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 	{
 		direction += 1;
 	}
-	owner.pushData(UpdateDirectionCommand{ direction });
+	owner.sendCommand(UpdateDirectionCommand{ direction });
 
 	switch (event.scancode)
 	{

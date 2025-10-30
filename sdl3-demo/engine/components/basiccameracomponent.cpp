@@ -13,11 +13,8 @@ BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float
 	camPosition = glm::vec2(0);
 	viewportSize = glm::vec2(viewportWidth, viewportHeight);
 	velocity = glm::vec2(0);
-}
 
-void BasicCameraComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler< UpdateVelocityCommand>(this);
+	owner.getCommandDispatcher().registerHandler< UpdateVelocityCommand>(this);
 }
 
 void BasicCameraComponent::update(const FrameContext &ctx)

@@ -20,14 +20,11 @@ RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width,
 	this->frameNumber = 1;
 	direction = 1;
 	followViewport = 1;
-}
 
-void RenderComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<SetAnimationCommand>(this);
-	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
-	dataDispatcher.registerHandler<FrameChangeCommand>(this);
-	dataDispatcher.registerHandler<UpdateViewportCommand>(this);
+	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
+	owner.getCommandDispatcher().registerHandler<FrameChangeCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateViewportCommand>(this);
 }
 
 void RenderComponent::update(const FrameContext &ctx)

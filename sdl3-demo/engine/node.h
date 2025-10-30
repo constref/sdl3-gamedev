@@ -13,14 +13,14 @@ class NodeRemovalEvent;
 
 class Node
 {
+protected:
 	NodeHandle handle;
 	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
 	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
 	bool isInitialized;
-
-	CommandDispatcher dataDispatcher;
+	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
 
 public:
@@ -37,6 +37,8 @@ public:
 	auto &getChildren() { return children; }
 	void addChild(NodeHandle childHandle);
 	void removeChild(NodeHandle childHandle);
+	CommandDispatcher &getCommandDispatcher() { return cmdDispatcher; }
+	EventDispatcher &getEventDispatcher() { return eventDispatcher; }
 
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)
@@ -71,15 +73,6 @@ public:
 
 	void initialize()
 	{
-		// notify all components of their siblings
-		for (auto &stageVec : componentStages)
-		{
-			for (auto *comp : stageVec)
-			{
-				// allow component to initialize itself
-				comp->onAttached(dataDispatcher, eventDispatcher);
-			}
-		}
 		isInitialized = true;
 	}
 
@@ -92,16 +85,16 @@ public:
 	}
 
 	template<typename DPType>
-	void pushData(const DPType &dp)
+	void sendCommand(const DPType &dp)
 	{
-		dataDispatcher.send(dp);
+		cmdDispatcher.send(dp);
 	}
 
 	// TODO: This will be replace with a central message queue
 	template<typename DPType>
 	void broadcastMessage(const DPType &dp)
 	{
-		dataDispatcher.send(dp);
+		cmdDispatcher.send(dp);
 
 		// propagate to children
 		for (NodeHandle child : children)

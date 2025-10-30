@@ -11,7 +11,7 @@ class ProjectileComponent : public Component
 	int collisions;
 public:
 	ProjectileComponent(Node &owner);
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
+
 	void onEvent(const CollisionEvent &event);
 	void onEvent(const NodeRemovalEvent &event);
 	void onEvent(const AnimationEndEvent &event);

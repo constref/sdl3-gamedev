@@ -23,14 +23,22 @@ public:
 		});
 	}
 
-	template<typename Type, typename RecipientType>
-	void unregisterHandler(const RecipientType *recipient)
+	void unregisterHandler(const RecipientBase *recipient)
 	{
-		auto &handlers = deliverables[Type::typeIndex()];
-		auto itr = std::find_if(handlers.begin(), handlers.end(), 
-			[recipient](const Handler &handler) { return handler.first == recipient; });
-		assert(itr != handlers.end() && "Tried to unregister a handler that hasn't been registered.");
-		handlers.erase(itr);
+		for (int i = 0; i < deliverables.size(); ++i)
+		{
+			auto &handlers = deliverables[i];
+
+			if (handlers.size())
+			{
+				auto itr = std::find_if(handlers.begin(), handlers.end(),
+					[recipient](const Handler &handler) { return handler.first == recipient; });
+				if (itr != handlers.end())
+				{
+					handlers.erase(itr);
+				}
+			}
+		}
 	}
 
 	template<typename Type>

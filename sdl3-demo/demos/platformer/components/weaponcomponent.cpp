@@ -21,14 +21,11 @@ WeaponComponent::WeaponComponent(Node &owner) : Component(owner, ComponentStage:
 	shooting = false;
 	playerDirection = 1;
 	playerVelocity = glm::vec2(0);
-}
 
-void WeaponComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
-	eventDispatcher.registerHandler<ShootBeginEvent>(this);
-	eventDispatcher.registerHandler<ShootEndEvent>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateVelocityCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
+	owner.getEventDispatcher().registerHandler<ShootBeginEvent>(this);
+	owner.getEventDispatcher().registerHandler<ShootEndEvent>(this);
 }
 
 void WeaponComponent::onCommand(const UpdateVelocityCommand &dp)

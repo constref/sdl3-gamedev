@@ -21,6 +21,10 @@ CollisionComponent::CollisionComponent(Node &owner) : Component(owner, Component
 	prevContacts[1] = false;
 	prevContacts[2] = false;
 	prevContacts[3] = false;
+
+	owner.getCommandDispatcher().registerHandler<UpdateVelocityCommand>(this);
+	owner.getCommandDispatcher().registerHandler<TentativeVelocityCommand>(this);
+	owner.getEventDispatcher().registerHandler<RemoveColliderEvent>(this);
 }
 
 CollisionComponent::~CollisionComponent()
@@ -34,20 +38,6 @@ CollisionComponent::~CollisionComponent()
 	{
 		Logger::error(this, "Collision component not found.");
 	}
-}
-
-void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<TentativeVelocityCommand>(this);
-	eventDispatcher.registerHandler<RemoveColliderEvent>(this);
-}
-
-void CollisionComponent::onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const
-{
-	dataDispatcher.unregisterHandler<UpdateVelocityCommand>(this);
-	dataDispatcher.unregisterHandler<TentativeVelocityCommand>(this);
-	eventDispatcher.unregisterHandler<RemoveColliderEvent>(this);
 }
 
 void CollisionComponent::update(const FrameContext &ctx)
@@ -114,7 +104,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 									otherOwner.getHandle(), overlap, glm::vec2(1, 0));
 							}
 						}
-						owner.pushData(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
+						owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 					}
 					else if (axis == Axis::Y && overlap.y)
 					{
@@ -138,7 +128,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 									otherOwner.getHandle(), overlap, glm::vec2(0, -1));
 							}
 						}
-						owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0.0f });
+						owner.sendCommand(ScaleVelocityAxisCommand{ Axis::Y, 0.0f });
 					}
 				}
 			}

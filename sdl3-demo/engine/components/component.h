@@ -22,11 +22,9 @@ protected:
 public:
 	Component(Node &owner, ComponentStage stage) : owner(owner), stage(stage) { id = ++nextId; }
 	ComponentStage getStage() const { return stage; }
-	virtual ~Component() {}
+	virtual ~Component();
 
 	ComponentId getId() const { return id; }
-	virtual void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) {}
-	virtual void onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const {}
 	virtual void onStart() {}
 	virtual void update(const FrameContext &ctx) {}
 };

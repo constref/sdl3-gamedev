@@ -18,18 +18,15 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner) : Component(ow
 	runTexture = nullptr;
 	slideAnimationIndex = 0;
 	slideTexture = nullptr;
-}
 
-void PlayerControllerComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateVelocityCommand>(this);
+	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 
-	eventDispatcher.registerHandler<CollisionEvent>(this);
-	eventDispatcher.registerHandler<FallingEvent>(this);
-	eventDispatcher.registerHandler<JumpEvent>(this);
-	eventDispatcher.registerHandler<ShootBeginEvent>(this);
-	eventDispatcher.registerHandler<ShootEndEvent>(this);
+	owner.getEventDispatcher().registerHandler<CollisionEvent>(this);
+	owner.getEventDispatcher().registerHandler<FallingEvent>(this);
+	owner.getEventDispatcher().registerHandler<JumpEvent>(this);
+	owner.getEventDispatcher().registerHandler<ShootBeginEvent>(this);
+	owner.getEventDispatcher().registerHandler<ShootEndEvent>(this);
 }
 
 void PlayerControllerComponent::onStart()
@@ -44,47 +41,47 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.pushData(SetAnimationCommand{ idleAnimationIndex, idleTexture });
+			owner.sendCommand(SetAnimationCommand{ idleAnimationIndex, idleTexture });
 			break;
 		}
 		case PState::shooting:
 		{
-			owner.pushData(SetAnimationCommand{ shootAnimationIndex, shootTexture });
+			owner.sendCommand(SetAnimationCommand{ shootAnimationIndex, shootTexture });
 			break;
 		}
 		case PState::running:
 		{
-			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
+			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::runningShooting:
 		{
-			owner.pushData(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
+			owner.sendCommand(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.pushData(SetAnimationCommand{ slideAnimationIndex, slideTexture });
+			owner.sendCommand(SetAnimationCommand{ slideAnimationIndex, slideTexture });
 			break;
 		}
 		case PState::slidingShooting:
 		{
-			owner.pushData(SetAnimationCommand{ slideShootAnimationIndex, slideShootTexture });
+			owner.sendCommand(SetAnimationCommand{ slideShootAnimationIndex, slideShootTexture });
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
+			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 		case PState::airborneShooting:
 		{
-			owner.pushData(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
+			owner.sendCommand(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
 			break;
 		}
 		case PState::falling:
 		{
-			owner.pushData(SetAnimationCommand{ runAnimationIndex, runTexture });
+			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
 			break;
 		}
 	}
@@ -110,10 +107,10 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 				{
 					const float damping = 10.0f;
 					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-					owner.pushData(ScaleVelocityAxisCommand{ Axis::X, factor });
+					owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
 					if (std::abs(velocity.x) < 0.01f)
 					{
-						owner.pushData(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
+						owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 					}
 				}
 			}
@@ -193,7 +190,7 @@ void PlayerControllerComponent::onEvent(const JumpEvent &event)
 	{
 		transitionState(!shooting ? PState::airborne : PState::airborneShooting);
 		glm::vec2 jumpImpulse(0, -250.0f);
-		owner.pushData(AddImpulseCommand{ jumpImpulse });
+		owner.sendCommand(AddImpulseCommand{ jumpImpulse });
 	}
 }
 

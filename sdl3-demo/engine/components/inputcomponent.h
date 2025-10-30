@@ -12,8 +12,7 @@ class InputComponent : public Component
 
 public:
 	InputComponent(Node &owner, NodeHandle ownerHandle);
-	void update(const FrameContext &ctx) override;
-	void onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) override;
 
+	void update(const FrameContext &ctx) override;
 	void onEvent(const KeyboardEvent &event);
 };

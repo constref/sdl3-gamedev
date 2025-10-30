@@ -14,13 +14,10 @@
 ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
 {
 	collisions = 0;
-}
 
-void ProjectileComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
-{
-	eventDispatcher.registerHandler<CollisionEvent>(this);
-	eventDispatcher.registerHandler<NodeRemovalEvent>(this);
-	eventDispatcher.registerHandler<AnimationEndEvent>(this);
+	owner.getEventDispatcher().registerHandler<CollisionEvent>(this);
+	owner.getEventDispatcher().registerHandler<NodeRemovalEvent>(this);
+	owner.getEventDispatcher().registerHandler<AnimationEndEvent>(this);
 }
 
 void ProjectileComponent::onEvent(const CollisionEvent &event)
@@ -30,8 +27,8 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 	if (collisions == 1)
 	{
 		Resources &res = Resources::get();
-		owner.pushData(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit, true });
-		owner.pushData(ScaleVelocityAxisCommand{ Axis::Y, 0 });
+		owner.sendCommand(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit, true });
+		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
 		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender);
 		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 15);
