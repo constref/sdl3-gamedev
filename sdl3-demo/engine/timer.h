@@ -29,6 +29,7 @@ public:
 
 	int getTimeouts() const { return timeouts; }
 	float getTime() const { return time; }
+	void setTime(float time) { this->time = time; }
 	float getLength() const { return length; }
 	void reset() { time = 0, timeouts = 0; }
 };

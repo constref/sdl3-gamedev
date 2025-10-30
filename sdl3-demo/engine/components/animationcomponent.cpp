@@ -24,13 +24,17 @@ void AnimationComponent::update(const FrameContext &ctx)
 {
 	if (currentAnimation != NO_ANIMATION && playing)
 	{
-		if (animations[currentAnimation].step(ctx.deltaTime) && notifyEnd)
+		int timeouts = animations[currentAnimation].step(ctx.deltaTime);
+		if (timeouts && notifyEnd)
 		{
 			EventQueue::get().enqueue<AnimationEndEvent>(owner.getHandle(), ComponentStage::Animation, currentAnimation);
 			notifyEnd = false;
 		}
-		frameNumber = animations[currentAnimation].currentFrame() + 1;
-		owner.pushData(FrameChangeCommand{ frameNumber });
+		else
+		{
+			frameNumber = animations[currentAnimation].currentFrame() + 1;
+			owner.pushData(FrameChangeCommand{ frameNumber });
+		}
 	}
 }
 
