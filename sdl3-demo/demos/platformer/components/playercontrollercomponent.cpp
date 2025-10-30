@@ -186,7 +186,7 @@ void PlayerControllerComponent::onEvent(const FallingEvent &event)
 
 void PlayerControllerComponent::onEvent(const JumpEvent &event)
 {
-	if (currentState != PState::airborne)
+	if (currentState != PState::airborne && currentState != PState::airborneShooting)
 	{
 		transitionState(!shooting ? PState::airborne : PState::airborneShooting);
 		glm::vec2 jumpImpulse(0, -250.0f);
