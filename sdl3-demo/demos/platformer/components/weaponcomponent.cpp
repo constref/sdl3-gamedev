@@ -25,10 +25,10 @@ WeaponComponent::WeaponComponent(Node &owner) : Component(owner, ComponentStage:
 
 void WeaponComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<WeaponComponent, UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<WeaponComponent, UpdateDirectionCommand>(this);
-	eventDispatcher.registerHandler<WeaponComponent, ShootBeginEvent>(this);
-	eventDispatcher.registerHandler<WeaponComponent, ShootEndEvent>(this);
+	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
+	eventDispatcher.registerHandler<ShootBeginEvent>(this);
+	eventDispatcher.registerHandler<ShootEndEvent>(this);
 }
 
 void WeaponComponent::onCommand(const UpdateVelocityCommand &dp)

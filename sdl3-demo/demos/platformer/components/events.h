@@ -8,3 +8,5 @@ public:
 
 	int getAmount() const { return amount; }
 };
+
+class DeathEvent : public  Event<DeathEvent> { };

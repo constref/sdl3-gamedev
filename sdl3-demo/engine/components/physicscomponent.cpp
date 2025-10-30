@@ -18,9 +18,9 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStag
 
 void PhysicsComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<PhysicsComponent, ScaleVelocityAxisCommand>(this);
-	dataDispatcher.registerHandler<PhysicsComponent, AddImpulseCommand>(this);
-	dataDispatcher.registerHandler<PhysicsComponent, UpdateDirectionCommand>(this);
+	dataDispatcher.registerHandler<ScaleVelocityAxisCommand>(this);
+	dataDispatcher.registerHandler<AddImpulseCommand>(this);
+	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
 }
 
 void PhysicsComponent::setVelocity(const glm::vec2 &vel)

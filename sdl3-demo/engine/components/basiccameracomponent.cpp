@@ -17,7 +17,7 @@ BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float
 
 void BasicCameraComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<BasicCameraComponent, UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler< UpdateVelocityCommand>(this);
 }
 
 void BasicCameraComponent::update(const FrameContext &ctx)

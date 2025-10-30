@@ -49,7 +49,7 @@ public:
 		if (handle.generation == holder.generation && !holder.free)
 		{
 			holder.free = true;
-			holder.object.reset(); // std::optional calls destructor
+			holder.object.reset();
 
 			assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
 			freeList.push_back(handle.index);

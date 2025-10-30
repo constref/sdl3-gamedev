@@ -38,16 +38,16 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<CollisionComponent, UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<CollisionComponent, TentativeVelocityCommand>(this);
-	eventDispatcher.registerHandler<CollisionComponent, RemoveColliderEvent>(this);
+	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<TentativeVelocityCommand>(this);
+	eventDispatcher.registerHandler<RemoveColliderEvent>(this);
 }
 
 void CollisionComponent::onDetached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher) const
 {
-	dataDispatcher.unregisterHandler<CollisionComponent, UpdateVelocityCommand>(this);
-	dataDispatcher.unregisterHandler<CollisionComponent, TentativeVelocityCommand>(this);
-	eventDispatcher.unregisterHandler<CollisionComponent, RemoveColliderEvent>(this);
+	dataDispatcher.unregisterHandler<UpdateVelocityCommand>(this);
+	dataDispatcher.unregisterHandler<TentativeVelocityCommand>(this);
+	eventDispatcher.unregisterHandler<RemoveColliderEvent>(this);
 }
 
 void CollisionComponent::update(const FrameContext &ctx)

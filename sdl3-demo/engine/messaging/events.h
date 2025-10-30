@@ -52,6 +52,7 @@ public:
 	int getIndex() const { return index; }
 };
 
+class AnimationStopEvent : public Event<AnimationStopEvent> { };
 class RemoveColliderEvent : public Event<RemoveColliderEvent> { };
 class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
 class FallingEvent : public Event<FallingEvent> {};

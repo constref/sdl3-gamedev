@@ -22,14 +22,14 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner) : Component(ow
 
 void PlayerControllerComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<PlayerControllerComponent, UpdateVelocityCommand>(this);
-	dataDispatcher.registerHandler<PlayerControllerComponent, UpdateDirectionCommand>(this);
+	dataDispatcher.registerHandler<UpdateVelocityCommand>(this);
+	dataDispatcher.registerHandler<UpdateDirectionCommand>(this);
 
-	eventDispatcher.registerHandler<PlayerControllerComponent, CollisionEvent>(this);
-	eventDispatcher.registerHandler<PlayerControllerComponent, FallingEvent>(this);
-	eventDispatcher.registerHandler<PlayerControllerComponent, JumpEvent>(this);
-	eventDispatcher.registerHandler<PlayerControllerComponent, ShootBeginEvent>(this);
-	eventDispatcher.registerHandler<PlayerControllerComponent, ShootEndEvent>(this);
+	eventDispatcher.registerHandler<CollisionEvent>(this);
+	eventDispatcher.registerHandler<FallingEvent>(this);
+	eventDispatcher.registerHandler<JumpEvent>(this);
+	eventDispatcher.registerHandler<ShootBeginEvent>(this);
+	eventDispatcher.registerHandler<ShootEndEvent>(this);
 }
 
 void PlayerControllerComponent::onStart()

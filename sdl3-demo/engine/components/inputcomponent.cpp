@@ -20,7 +20,7 @@ InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(
 
 void InputComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	eventDispatcher.registerHandler<InputComponent, KeyboardEvent>(this);
+	eventDispatcher.registerHandler<KeyboardEvent>(this);
 
 	// ensure global input state knows this object has input focus
 	// TODO: Need a more robust solution to support 2+ players

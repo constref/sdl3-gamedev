@@ -1,11 +1,9 @@
 #include "animationcomponent.h"
+
+#include <messaging/messaging.h>
 #include "../animation.h"
 #include "../node.h"
 #include "../framecontext.h"
-#include "../messaging/commands.h"
-#include <messaging/events.h>
-#include <messaging/eventqueue.h>
-
 #include <cassert>
 
 AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
@@ -13,16 +11,18 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 	this->animations = animations;
 	this->frameNumber = 1;
 	this->notifyEnd = false;
+	this->playing = true;
 }
 
 void AnimationComponent::onAttached(CommandDispatcher &dataDispatcher, EventDispatcher &eventDispatcher)
 {
-	dataDispatcher.registerHandler<AnimationComponent, SetAnimationCommand>(this);
+	dataDispatcher.registerHandler<SetAnimationCommand>(this);
+	eventDispatcher.registerHandler<AnimationStopEvent>(this);
 }
 
 void AnimationComponent::update(const FrameContext &ctx)
 {
-	if (currentAnimation != NO_ANIMATION)
+	if (currentAnimation != NO_ANIMATION && playing)
 	{
 		if (animations[currentAnimation].step(ctx.deltaTime) && notifyEnd)
 		{
@@ -45,4 +45,9 @@ void AnimationComponent::onCommand(const SetAnimationCommand &dp)
 	setAnimation(dp.getAnimationIndex());
 	animations[currentAnimation].reset();
 	notifyEnd = dp.shouldNotifyEnd();
+}
+
+void AnimationComponent::onEvent(const AnimationStopEvent &event)
+{
+	playing = false;
 }

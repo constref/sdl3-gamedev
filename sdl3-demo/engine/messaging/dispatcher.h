@@ -13,8 +13,8 @@ class Dispatcher
 	std::array<std::vector<Handler>, 25> deliverables;
 
 public:
-	template<typename RecipientType, typename Type>
-	void registerHandler(RecipientBase *recipient)
+	template<typename Type, typename RecipientType>
+	void registerHandler(RecipientType *recipient)
 	{
 		auto &handlers = deliverables[Type::typeIndex()];
 		handlers.emplace_back(recipient, [](RecipientBase *to, const Base &base)
@@ -23,8 +23,8 @@ public:
 		});
 	}
 
-	template<typename RecipientType, typename Type>
-	void unregisterHandler(const RecipientBase *recipient)
+	template<typename Type, typename RecipientType>
+	void unregisterHandler(const RecipientType *recipient)
 	{
 		auto &handlers = deliverables[Type::typeIndex()];
 		auto itr = std::find_if(handlers.begin(), handlers.end(), 
