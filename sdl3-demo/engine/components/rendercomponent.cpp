@@ -1,10 +1,9 @@
 #include "rendercomponent.h"
 #include <SDL3/SDL.h>
 
-#include "../node.h"
-#include "../sdlstate.h"
-#include "../resources.h"
-#include "../framecontext.h"
+#include <node.h>
+#include <sdlstate.h>
+#include <framecontext.h>
 #include <messaging/commands.h>
 #include <messaging/commanddispatcher.h>
 
@@ -64,8 +63,6 @@ void RenderComponent::update(const FrameContext &ctx)
 			shouldFlash = false;
 		}
 	}
-	//SDL_SetRenderDrawColor(ctx.state.renderer, 255, 0, 0, 255);
-	//SDL_RenderRect(ctx.state.renderer, &dst);
 }
 
 void RenderComponent::onCommand(const SetAnimationCommand &dp)
