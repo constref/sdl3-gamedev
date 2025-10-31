@@ -12,6 +12,7 @@ class UpdateViewportCommand;
 
 class RenderComponent : public Component
 {
+protected:
 	Timer flashTimer;
 	SDL_Texture *texture;
 	bool shouldFlash;

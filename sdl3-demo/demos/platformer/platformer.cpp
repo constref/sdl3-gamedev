@@ -5,7 +5,6 @@
 #include <sdlstate.h>
 #include <world.h>
 #include <components/animationcomponent.h>
-#include <components/rendercomponent.h>
 #include <components/inputcomponent.h>
 #include <components/physicscomponent.h>
 #include <components/collisioncomponent.h>
@@ -15,6 +14,7 @@
 #include "components/weaponcomponent.h"
 #include "components/healthcomponent.h"
 #include "components/enemycomponent.h"
+#include "components/spriterendercomponent.h"
 
 Platformer::Platformer()
 {
@@ -161,7 +161,7 @@ bool Platformer::initialize(SDLState &state)
 					enemy.addComponent<HealthComponent>(300);
 					auto &animComponent = enemy.addComponent<AnimationComponent>(res.enemyAnims);
 					animComponent.setAnimation(res.ANIM_ENEMY);
-					auto &renderComponent = enemy.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);
+					auto &renderComponent = enemy.addComponent<SpriteRenderComponent>(res.texEnemy, tileWidth, tileHeight);
 					enemy.addComponent<EnemyComponent>(EnemyType::creeper);
 
 					layerObject.addChild(hEnemy);

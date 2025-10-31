@@ -1,9 +1,9 @@
 #include "animationcomponent.h"
 
 #include <messaging/messaging.h>
-#include "../animation.h"
-#include "../node.h"
-#include "../framecontext.h"
+#include <animation.h>
+#include <node.h>
+#include <framecontext.h>
 #include <cassert>
 
 AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
@@ -12,6 +12,7 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 	this->frameNumber = 1;
 	this->notifyEnd = false;
 	this->playing = true;
+
 	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
 	owner.getEventDispatcher().registerHandler<AnimationStopEvent>(this);
 }
@@ -43,7 +44,6 @@ void AnimationComponent::setAnimation(int index)
 void AnimationComponent::onCommand(const SetAnimationCommand &dp)
 {
 	setAnimation(dp.getAnimationIndex());
-	animations[currentAnimation].reset();
 	notifyEnd = dp.shouldNotifyEnd();
 }
 
