@@ -21,8 +21,8 @@ protected:
 	int frameNumber;
 	float direction;
 	float followViewport;
-	static glm::vec2 mapViewportPos;
-	static glm::vec2 mapViewportSize;
+	glm::vec2 mapViewportPos;
+	glm::vec2 mapViewportSize;
 
 public:
 	RenderComponent(Node &owner, SDL_Texture *texture, float width, float height);

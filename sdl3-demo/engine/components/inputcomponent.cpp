@@ -8,9 +8,7 @@
 
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
-
-class ShootBeginEvent;
-class ShootEndEvent;
+#include <logger.h>
 
 InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(owner, ComponentStage::Input)
 {
@@ -22,40 +20,6 @@ InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(
 	// ensure global input state knows this object has input focus
 	// TODO: Need a more robust solution to support 2+ players
 	InputState::get().setFocus(ownerHandle);
-}
-
-void InputComponent::update(const FrameContext &ctx)
-{
-
-	//KeyEvent keyEvent;
-	//while (ctx.input.popEvent(keyEvent))
-	//{
-	//	switch (keyEvent.scancode)
-	//	{
-	//		case SDL_SCANCODE_K:
-	//		{
-	//			if (keyEvent.pressed)
-	//			{
-	//				owner.sendMessage(JumpDPump{});
-	//			}
-	//			break;
-	//		}
-	//		case SDL_SCANCODE_J:
-	//		{
-	//			if (keyEvent.pressed)
-	//			{
-	//				owner.sendMessage(ShootStartDPump{});
-	//			}
-	//			else
-	//			{
-	//				owner.sendMessage(ShootEndDPump{});
-	//			}
-	//			break;
-	//		}
-	//	}
-	//}
-
-	//owner.sendMessage(UpdateDirectionCommand{ direction });
 }
 
 void InputComponent::onEvent(const KeyboardEvent &event)
@@ -73,6 +37,8 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		direction += 1;
 	}
 	owner.sendCommand(UpdateDirectionCommand{ direction });
+
+	Logger::info(this, std::format("Dir: {}", direction));
 
 	switch (event.scancode)
 	{

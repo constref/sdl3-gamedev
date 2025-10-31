@@ -18,6 +18,7 @@ class PhysicsComponent : public Component
 	bool grounded;
 	bool dynamic;
 	float gravityFactor;
+	float damping;
 
 public:
 	PhysicsComponent(Node &owner);
@@ -37,6 +38,7 @@ public:
 	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 	float getGravityFactor() const { return gravityFactor; }
 	void setGravityFactor(float gravityFactor) { this->gravityFactor = gravityFactor; }
+	void setDamping(float damping) { this->damping = damping; }
 
 	void onCommand(const ScaleVelocityAxisCommand &msg);
 	void onCommand(const AddImpulseCommand &msg);

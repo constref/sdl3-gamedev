@@ -7,9 +7,6 @@
 #include <messaging/commands.h>
 #include <messaging/commanddispatcher.h>
 
-glm::vec2 RenderComponent::mapViewportPos = { 0, 0 };
-glm::vec2 RenderComponent::mapViewportSize = { 0, 0 };
-
 RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
 {
@@ -20,6 +17,8 @@ RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width,
 	this->frameNumber = 1;
 	direction = 1;
 	followViewport = 1;
+	mapViewportPos = { 0, 0 };
+	mapViewportSize = { 0, 0 };
 
 	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
 	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);

@@ -1,8 +1,7 @@
 #include "healthcomponent.h"
 #include "events.h"
 #include <logger.h>
-#include <messaging/eventdispatcher.h>
-#include <messaging/eventqueue.h>
+#include <messaging/messaging.h>
 
 HealthComponent::HealthComponent(Node &owner, int hp) : Component(owner, ComponentStage::Gameplay)
 {
@@ -14,9 +13,8 @@ void HealthComponent::onEvent(const DamageEvent &event)
 {
 	if (hp > 0)
 	{
-		int oldHp = hp;
 		hp -= event.getAmount();
-
+		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(100, 0) });
 		if (hp <= 0)
 		{
 			hp = 0;
@@ -24,4 +22,3 @@ void HealthComponent::onEvent(const DamageEvent &event)
 		}
 	}
 }
-

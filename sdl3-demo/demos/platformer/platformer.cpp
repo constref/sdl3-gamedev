@@ -128,7 +128,7 @@ bool Platformer::initialize(SDLState &state)
 					playerCtrlComponent.setRunShootTexture(res.texRunShoot);
 					player.addComponent<WeaponComponent>();
 					auto &physicsComponent = player.addComponent<PhysicsComponent>();
-					physicsComponent.setAcceleration(glm::vec2(400, 0));
+					physicsComponent.setAcceleration(glm::vec2(800, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(100, 300));
 					physicsComponent.setDynamic(true);
 					auto &collisionComponent = player.addComponent<CollisionComponent>();

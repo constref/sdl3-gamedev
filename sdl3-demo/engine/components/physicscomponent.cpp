@@ -14,6 +14,7 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStag
 	netForce = glm::vec2(0);
 	dynamic = false;
 	gravityFactor = 1.0f;
+	damping = 5.0f;
 
 	owner.getCommandDispatcher().registerHandler<ScaleVelocityAxisCommand>(this);
 	owner.getCommandDispatcher().registerHandler<AddImpulseCommand>(this);
@@ -61,6 +62,13 @@ void PhysicsComponent::update(const FrameContext &ctx)
 	{
 		// collision component can check per-axis and apply resolution
 		owner.sendCommand(TentativeVelocityCommand{ delta });
+	}
+
+	const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
+	owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
+	if (std::abs(velocity.x) < 0.01f)
+	{
+		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 	}
 }
 

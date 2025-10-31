@@ -51,3 +51,11 @@ void ProjectileComponent::onEvent(const AnimationEndEvent &event)
 		owner.scheduleDestroy();
 	}
 }
+
+void ProjectileComponent::onCommand(const UpdateViewportCommand &dp)
+{
+	//mapViewportPos.x = dp.getPosition().x;
+	//mapViewportPos.y = dp.getPosition().y;
+	//mapViewportSize.x = dp.getSize().x;
+	//mapViewportSize.y = dp.getSize().y;
+}

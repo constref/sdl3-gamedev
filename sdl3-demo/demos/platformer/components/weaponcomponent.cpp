@@ -79,6 +79,7 @@ void WeaponComponent::update(const FrameContext &ctx)
 			physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
 			physCmp.setDynamic(true);
 			physCmp.setGravityFactor(0);
+			physCmp.setDamping(0);
 
 			auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
 			animCmp.setAnimation(res.ANIM_BULLET_MOVING);

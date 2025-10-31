@@ -18,6 +18,8 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner) : Component(ow
 	runTexture = nullptr;
 	slideAnimationIndex = 0;
 	slideTexture = nullptr;
+	shootAnimationIndex = 0;
+	shootTexture = nullptr;
 
 	owner.getCommandDispatcher().registerHandler<UpdateVelocityCommand>(this);
 	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
@@ -103,16 +105,16 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 			else
 			{
 				// direction is zero, decelerate to stop
-				if (velocity.x)
-				{
-					const float damping = 10.0f;
-					const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-					owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
-					if (std::abs(velocity.x) < 0.01f)
-					{
-						owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
-					}
-				}
+				//if (velocity.x)
+				//{
+				//	const float damping = 10.0f;
+				//	const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
+				//	owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
+				//	if (std::abs(velocity.x) < 0.01f)
+				//	{
+				//		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
+				//	}
+				//}
 			}
 			break;
 		}
