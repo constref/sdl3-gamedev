@@ -4,8 +4,10 @@
 #include <messaging/commands.h>
 #include <messaging/events.h>
 #include <node.h>
+#include <logger.h>
 
-PlayerControllerComponent::PlayerControllerComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
+PlayerControllerComponent::PlayerControllerComponent(Node &owner)
+	: Component(owner, ComponentStage::Gameplay), slideTimer(0.2f)
 {
 	direction = 0;
 	velocity = glm::vec2(0);
@@ -102,20 +104,6 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 			{
 				transitionState(!shooting ? PState::running : PState::runningShooting);
 			}
-			else
-			{
-				// direction is zero, decelerate to stop
-				//if (velocity.x)
-				//{
-				//	const float damping = 10.0f;
-				//	const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-				//	owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
-				//	if (std::abs(velocity.x) < 0.01f)
-				//	{
-				//		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
-				//	}
-				//}
-			}
 			break;
 		}
 		case PState::running:
@@ -128,23 +116,28 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 			}
 			else if (direction * velocity.x < 0)
 			{
+				Logger::info(this, "Sliding");
 				// if direction we're holding is opposite to velocity, use sliding state
 				transitionState(!shooting ? PState::sliding : PState::slidingShooting);
+				slideTimer.reset();
 			}
 			break;
 		}
 		case PState::sliding:
 		case PState::slidingShooting:
 		{
-			if (direction == 0)
+			if (slideTimer.step(ctx.deltaTime))
 			{
-				// if no longer holding direction, go to idle
-				transitionState(!shooting ? PState::idle : PState::shooting);
-			}
-			else if (direction * velocity.x > 0)
-			{
-				// if direction and velocity directions match, go to running
-				transitionState(!shooting ? PState::running : PState::runningShooting);
+				if (direction == 0)
+				{
+					// if no longer holding direction, go to idle
+					transitionState(!shooting ? PState::idle : PState::shooting);
+				}
+				else if (direction * velocity.x > 0)
+				{
+					// if direction and velocity directions match, go to running
+					transitionState(!shooting ? PState::running : PState::runningShooting);
+				}
 			}
 			break;
 		}
@@ -172,7 +165,7 @@ void PlayerControllerComponent::onEvent(const CollisionEvent &event)
 		if (currentState == PState::airborne || currentState == PState::airborneShooting)
 		{
 			transitionState(velocity.x != 0 ?
-				(!shooting ? PState::running : PState::runningShooting)  :
+				(!shooting ? PState::running : PState::runningShooting) :
 				(!shooting ? PState::idle : PState::shooting));
 		}
 	}

@@ -38,8 +38,6 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 	}
 	owner.sendCommand(UpdateDirectionCommand{ direction });
 
-	Logger::info(this, std::format("Dir: {}", direction));
-
 	switch (event.scancode)
 	{
 		case SDL_SCANCODE_K:

@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <components/component.h>
+#include <timer.h>
 
 struct SDL_Texture;
 class UpdateVelocityCommand;
@@ -31,6 +32,7 @@ class PlayerControllerComponent : public Component
 	glm::vec2 velocity;
 	bool grounded;
 	bool shooting;
+	Timer slideTimer;
 
 	PState currentState;
 	int idleAnimationIndex;
