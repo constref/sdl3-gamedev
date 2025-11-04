@@ -14,7 +14,7 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStag
 	netForce = glm::vec2(0);
 	dynamic = false;
 	gravityFactor = 1.0f;
-	damping = 5.0f;
+	damping = 10.0f;
 
 	owner.getCommandDispatcher().registerHandler<ScaleVelocityAxisCommand>(this);
 	owner.getCommandDispatcher().registerHandler<AddImpulseCommand>(this);
