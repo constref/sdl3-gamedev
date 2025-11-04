@@ -11,9 +11,10 @@ RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width,
 	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;
-	shouldFlash = false;
+	this->shouldFlash = false;
 	this->width = width;
 	this->height = height;
+	this->scale = glm::vec2(1.0f, 1.0f);
 	this->frameNumber = 1;
 	direction = 1;
 	followViewport = 1;

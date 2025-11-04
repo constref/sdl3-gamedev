@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "component.h"
-#include "../timer.h"
+#include <components/component.h>
+#include <timer.h>
 
 struct SDL_Texture;
 class SetAnimationCommand;
@@ -18,6 +18,7 @@ protected:
 	bool shouldFlash;
 	float width;
 	float height;
+	glm::vec2 scale;
 	int frameNumber;
 	float direction;
 	float followViewport;
