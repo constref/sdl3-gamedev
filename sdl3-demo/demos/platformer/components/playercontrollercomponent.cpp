@@ -7,7 +7,7 @@
 #include <logger.h>
 
 PlayerControllerComponent::PlayerControllerComponent(Node &owner)
-	: Component(owner, ComponentStage::Gameplay), slideTimer(0.2f)
+	: Component(owner, ComponentStage::Gameplay), slideTimer(0.16f)
 {
 	direction = 0;
 	velocity = glm::vec2(0);

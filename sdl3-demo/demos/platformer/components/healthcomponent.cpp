@@ -14,7 +14,6 @@ void HealthComponent::onEvent(const DamageEvent &event)
 	if (hp > 0)
 	{
 		hp -= event.getAmount();
-		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(100, 0) });
 		if (hp <= 0)
 		{
 			hp = 0;

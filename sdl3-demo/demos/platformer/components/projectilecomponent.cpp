@@ -32,6 +32,8 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 
 		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender);
 		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 15);
+
+		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(100, 0) });
 	}
 }
 
