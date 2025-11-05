@@ -2,22 +2,25 @@
 
 #include <nodehandle.h>
 
-struct SDLState;
 struct Resources;
 class InputState;
 
 struct FrameContext
 {
-	SDLState &state;
 	float deltaTime;
 	double globalTime;
 	long frameNumber;
 
-	FrameContext(SDLState &state, float deltaTime, double globalTime, long frameNumber)
-		: state(state)
+	FrameContext()
 	{
-		this->deltaTime = deltaTime;
+		this->deltaTime = 0;
 		this->globalTime = 0;
-		this->frameNumber = frameNumber;
+		this->frameNumber = 0;
+	}
+
+	static FrameContext &global()
+	{
+		static FrameContext ctx;
+		return ctx;
 	}
 };

@@ -18,7 +18,8 @@ void EnemyComponent::onEvent(const DeathEvent &event)
 	EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender);
 	if (type == EnemyType::creeper)
 	{
-		owner.sendCommand(SetAnimationCommand{ res.ANIM_ENEMY_DIE, res.texEnemyDie, true });
+		//owner.sendCommand(SetAnimationCommand{ res.ANIM_ENEMY_DIE, res.texEnemyDie, true });
+		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, res.ANIM_ENEMY_DIE, res.texEnemyDie);
 	}
 }
 

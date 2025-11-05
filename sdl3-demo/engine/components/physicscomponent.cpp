@@ -27,8 +27,9 @@ void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 	owner.sendCommand(UpdateVelocityCommand{ vel });
 }
 
-void PhysicsComponent::update(const FrameContext &ctx)
+void PhysicsComponent::update()
 {
+	auto &ctx = FrameContext::global();
 	glm::vec2 vel = getVelocity();
 
 	netForce += direction * acceleration;

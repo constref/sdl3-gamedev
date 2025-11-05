@@ -17,7 +17,7 @@ BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float
 	owner.getCommandDispatcher().registerHandler< UpdateVelocityCommand>(this);
 }
 
-void BasicCameraComponent::update(const FrameContext &ctx)
+void BasicCameraComponent::update()
 {
 	Node &obj = World::get().getNode(target);
 	const Resources &res = Resources::get();

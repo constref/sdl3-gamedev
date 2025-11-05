@@ -92,7 +92,7 @@ void PlayerControllerComponent::transitionState(PState newState)
 	currentState = newState;
 }
 
-void PlayerControllerComponent::update(const FrameContext &ctx)
+void PlayerControllerComponent::update()
 {
 	switch (currentState)
 	{
@@ -126,7 +126,7 @@ void PlayerControllerComponent::update(const FrameContext &ctx)
 		case PState::sliding:
 		case PState::slidingShooting:
 		{
-			if (slideTimer.step(ctx.deltaTime))
+			if (slideTimer.step(FrameContext::global().deltaTime))
 			{
 				if (direction == 0)
 				{

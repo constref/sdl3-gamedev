@@ -40,7 +40,7 @@ CollisionComponent::~CollisionComponent()
 	}
 }
 
-void CollisionComponent::update(const FrameContext &ctx)
+void CollisionComponent::update()
 {
 }
 

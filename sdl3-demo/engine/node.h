@@ -28,7 +28,7 @@ public:
 	Node();
 	virtual ~Node();
 
-	void update(ComponentStage stage, const FrameContext &ctx);
+	void update(ComponentStage stage);
 
 	NodeHandle getHandle() const { return handle; }
 	glm::vec2 getPosition() const { return position; }

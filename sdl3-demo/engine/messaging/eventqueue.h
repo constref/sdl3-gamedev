@@ -6,6 +6,7 @@
 
 #include <world.h>
 #include <messaging/event.h>
+#include <framecontext.h>
 
 struct QueuedEvent
 {
@@ -13,7 +14,7 @@ struct QueuedEvent
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch;
-	bool ignore;
+	double triggerTime;
 };
 
 class EventQueue
@@ -48,7 +49,7 @@ public:
 		return indices[static_cast<size_t>(stage)];
 	}
 
-	template<typename EventType, typename... Args>
+	template<typename EventType, int Delay = 0, typename... Args>
 	void enqueue(NodeHandle target, ComponentStage stage, Args&&... args)
 	{
 		auto &queue = getQueue(stage);
@@ -61,7 +62,7 @@ public:
 			{
 				obj.notify<const EventType &>(static_cast<const EventType &>(e));
 			},
-			.ignore = false
+			.triggerTime = FrameContext::global().globalTime
 		};
 	}
 
@@ -73,10 +74,7 @@ public:
 		while (indices.first < indices.second)
 		{
 			QueuedEvent &nextItem = queue[indices.first++];
-			if (!nextItem.ignore)
-			{
-				nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
-			}
+			nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
 		}
 	}
 

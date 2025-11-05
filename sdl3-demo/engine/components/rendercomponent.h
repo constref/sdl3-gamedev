@@ -9,6 +9,7 @@ class SetAnimationCommand;
 class UpdateDirectionCommand;
 class FrameChangeCommand;
 class UpdateViewportCommand;
+class AnimationPlayEvent;
 
 class RenderComponent : public Component
 {
@@ -27,12 +28,14 @@ protected:
 
 public:
 	RenderComponent(Node &owner, SDL_Texture *texture, float width, float height);
-	void update(const FrameContext &ctx) override;
+	void update() override;
 
 	void onCommand(const SetAnimationCommand &dp);
 	void onCommand(const UpdateDirectionCommand &dp);
 	void onCommand(const FrameChangeCommand &dp);
 	void onCommand(const UpdateViewportCommand &dp);
+
+	void onEvent(const AnimationPlayEvent &event);
 
 	void setTexture(SDL_Texture *texture) { this->texture = texture; }
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }

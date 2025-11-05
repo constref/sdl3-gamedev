@@ -14,14 +14,15 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 	this->playing = true;
 
 	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
+	owner.getEventDispatcher().registerHandler<AnimationPlayEvent>(this);
 	owner.getEventDispatcher().registerHandler<AnimationStopEvent>(this);
 }
 
-void AnimationComponent::update(const FrameContext &ctx)
+void AnimationComponent::update()
 {
 	if (currentAnimation != NO_ANIMATION && playing)
 	{
-		int timeouts = animations[currentAnimation].step(ctx.deltaTime);
+		int timeouts = animations[currentAnimation].step(FrameContext::global().deltaTime);
 		if (timeouts && notifyEnd)
 		{
 			EventQueue::get().enqueue<AnimationEndEvent>(owner.getHandle(), ComponentStage::Animation, currentAnimation);
@@ -50,4 +51,9 @@ void AnimationComponent::onCommand(const SetAnimationCommand &dp)
 void AnimationComponent::onEvent(const AnimationStopEvent &event)
 {
 	playing = false;
+}
+
+void AnimationComponent::onEvent(const AnimationPlayEvent &event)
+{
+	setAnimation(event.getAnimationIndex());
 }

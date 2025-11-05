@@ -50,7 +50,7 @@ class PlayerControllerComponent : public Component
 
 public:
 	PlayerControllerComponent(Node &owner);
-	void update(const FrameContext &ctx) override;
+	void update() override;
 	void onStart() override;
 	void transitionState(PState newState);
 	void onCommand(const UpdateVelocityCommand &msg);

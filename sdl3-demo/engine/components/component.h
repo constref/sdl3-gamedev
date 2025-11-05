@@ -26,5 +26,5 @@ public:
 
 	ComponentId getId() const { return id; }
 	virtual void onStart() {}
-	virtual void update(const FrameContext &ctx) {}
+	virtual void update() {}
 };

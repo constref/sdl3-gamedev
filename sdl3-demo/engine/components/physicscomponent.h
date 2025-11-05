@@ -22,7 +22,7 @@ class PhysicsComponent : public Component
 
 public:
 	PhysicsComponent(Node &owner);
-	void update(const FrameContext &ctx);
+	void update();
 
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel);

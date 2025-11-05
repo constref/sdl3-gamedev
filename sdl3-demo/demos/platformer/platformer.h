@@ -21,7 +21,7 @@ public:
 	bool initialize(SDLState &state);
 	void cleanup();
 	void onStart();
-	void update(const FrameContext &ctx);
+	void update();
 
 	auto getRoot() const
 	{

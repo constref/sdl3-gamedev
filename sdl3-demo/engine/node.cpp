@@ -41,12 +41,12 @@ void Node::scheduleDestroy()
 	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender);
 }
 
-void Node::update(ComponentStage stage, const FrameContext &ctx)
+void Node::update(ComponentStage stage)
 {
 	auto &stageVec = componentStages[static_cast<size_t>(stage)];
 	for (auto &comp : stageVec)
 	{
-		comp->update(ctx);
+		comp->update();
 	}
 }
 

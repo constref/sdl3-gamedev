@@ -25,7 +25,7 @@ class CollisionComponent : public Component
 public:
 	CollisionComponent(Node &owner);
 	~CollisionComponent();
-	void update(const FrameContext &ctx) override;
+	void update() override;
 	void onCommand(const UpdateVelocityCommand &cmd);
 	void onCommand(const TentativeVelocityCommand &cmd);
 	void onEvent(const RemoveColliderEvent &event);

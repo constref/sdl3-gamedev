@@ -7,8 +7,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-	Engine<Platformer> engine(512, 288);
-	if (!engine.initialize())
+	Engine<Platformer> engine;
+	if (!engine.initialize(512, 288))
 	{
 		return 1;
 	}

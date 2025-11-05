@@ -17,6 +17,6 @@ class BasicCameraComponent : public Component
 public:
 	BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight);
 
-	void update(const FrameContext &ctx) override;
+	void update() override;
 	void onCommand(const UpdateVelocityCommand &msg);
 };

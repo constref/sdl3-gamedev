@@ -6,6 +6,7 @@
 #include <framecontext.h>
 #include <messaging/commands.h>
 #include <messaging/commanddispatcher.h>
+#include <messaging/events.h>
 
 RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width, float height)
 	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
@@ -25,9 +26,10 @@ RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width,
 	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 	owner.getCommandDispatcher().registerHandler<FrameChangeCommand>(this);
 	owner.getCommandDispatcher().registerHandler<UpdateViewportCommand>(this);
+	owner.getEventDispatcher().registerHandler<AnimationPlayEvent>(this);
 }
 
-void RenderComponent::update(const FrameContext &ctx)
+void RenderComponent::update()
 {
 	float srcX = (frameNumber - 1) * width;
 	SDL_FRect src{
@@ -43,19 +45,21 @@ void RenderComponent::update(const FrameContext &ctx)
 		.w = width,
 		.h = height
 	};
+
+	SDL_Renderer *renderer = SDLState::global().renderer;
 	SDL_FlipMode flipMode = direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{
-		SDL_RenderTextureRotated(ctx.state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
+		SDL_RenderTextureRotated(renderer, texture, &src, &dst, 0, nullptr, flipMode);
 	}
 	else
 	{
 		// flash object with a redish tint
 		SDL_SetTextureColorModFloat(texture, 2.5f, 1.0f, 1.0f);
-		SDL_RenderTextureRotated(ctx.state.renderer, texture, &src, &dst, 0, nullptr, flipMode);
+		SDL_RenderTextureRotated(renderer, texture, &src, &dst, 0, nullptr, flipMode);
 		SDL_SetTextureColorModFloat(texture, 1.0f, 1.0f, 1.0f);
 
-		if (flashTimer.step(ctx.deltaTime))
+		if (flashTimer.step(FrameContext::global().deltaTime))
 		{
 			shouldFlash = false;
 		}
@@ -86,4 +90,9 @@ void RenderComponent::onCommand(const UpdateViewportCommand &dp)
 	mapViewportPos.y = dp.getPosition().y;
 	mapViewportSize.x = dp.getSize().x;
 	mapViewportSize.y = dp.getSize().y;
+}
+
+void RenderComponent::onEvent(const AnimationPlayEvent &event)
+{
+	setTexture(event.getTexture());
 }

@@ -10,20 +10,30 @@ struct SDLState
 	const bool *keys;
 	bool fullscreen;
 
-	SDLState(int width, int height, int logW, int logH) : keys(SDL_GetKeyboardState(nullptr))
+	SDLState() : keys(SDL_GetKeyboardState(nullptr))
 	{
 		window = nullptr;
 		renderer = nullptr;
+		width = 0;
+		height = 0;
+		logW = 0;
+		logH = 0;
+		fullscreen = false;
+	}
+
+	static SDLState &global()
+	{
+		static SDLState state;
+		return state;
+	}
+
+	bool initialize(int width, int height, int logW, int logH)
+	{
 		this->width = width;
 		this->height = height;
 		this->logW = logW;
 		this->logH = logH;
 
-		fullscreen = false;
-	}
-
-	bool initialize()
-	{
 		if (!SDL_Init(SDL_INIT_VIDEO))
 		{
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);

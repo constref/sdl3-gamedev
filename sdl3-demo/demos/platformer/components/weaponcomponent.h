@@ -19,7 +19,7 @@ class WeaponComponent : public Component
 public:
 	WeaponComponent(Node &owner);
 
-	void update(const FrameContext &ctx) override;
+	void update() override;
 	void onCommand(const UpdateVelocityCommand &dp);
 	void onCommand(const UpdateDirectionCommand &dp);
 	void onEvent(const ShootBeginEvent &event);

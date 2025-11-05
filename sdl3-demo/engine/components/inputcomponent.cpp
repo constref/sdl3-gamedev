@@ -1,14 +1,13 @@
 #include "inputcomponent.h"
 #include <glm/glm.hpp>
 
-#include "../node.h"
-#include "../framecontext.h"
-#include "../inputstate.h"
-#include "../messaging/commands.h"
-
+#include <node.h>
+#include <framecontext.h>
+#include <inputstate.h>
+#include <logger.h>
+#include <messaging/commands.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
-#include <logger.h>
 
 InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(owner, ComponentStage::Input)
 {

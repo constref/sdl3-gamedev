@@ -13,7 +13,6 @@
 template<Application AppType>
 class Engine
 {
-	SDLState state;
 	uint64_t prevTime;
 	InputState inputState;
 	AppType app;
@@ -22,16 +21,17 @@ class Engine
 	constexpr static bool clampDeltaTime = true;
 
 public:
-	Engine(int logW, int logH) : state(1600, 900, logW, logH)
+	Engine()
 	{
 		debugMode = false;
 		running = false;
 		prevTime = 0;
 	}
 
-	bool initialize()
+	bool initialize(int logW, int logH)
 	{
-		if (state.initialize() && app.initialize(state))
+		SDLState &state = SDLState::global();
+		if (state.initialize(1600, 900, logW, logH) && app.initialize(state))
 		{
 			return true;
 		}
@@ -41,7 +41,7 @@ public:
 	void cleanup()
 	{
 		app.cleanup();
-		state.cleanup();
+		SDLState::global().cleanup();
 	}
 
 	void run()
@@ -70,7 +70,13 @@ public:
 			}
 
 			globalTime += deltaTime;
-			FrameContext ctx(state, fixedStep, globalTime, ++frameCount);
+
+			FrameContext &ctx = FrameContext::global();
+			ctx.deltaTime = fixedStep;
+			ctx.globalTime = globalTime;
+			ctx.frameNumber = ++frameCount;
+
+			SDLState &state = SDLState::global();
 			World &world = World::get();
 			Node &root = world.getNode(app.getRoot());
 
@@ -119,19 +125,19 @@ public:
 
 			// handle input every frame to avoid input lag
 			EventQueue::get().dispatch(ComponentStage::Input);
-			update(ComponentStage::Input, root, world, ctx);
+			update(ComponentStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
 				EventQueue::get().dispatch(ComponentStage::Physics);
-				update(ComponentStage::Physics, root, world, ctx);
+				update(ComponentStage::Physics, root, world);
 
 				EventQueue::get().dispatch(ComponentStage::Gameplay);
-				update(ComponentStage::Gameplay, root, world, ctx);
+				update(ComponentStage::Gameplay, root, world);
 
 				EventQueue::get().dispatch(ComponentStage::Animation);
-				update(ComponentStage::Animation, root, world, ctx);
+				update(ComponentStage::Animation, root, world);
 
 				accumulator -= fixedStep;
 			}
@@ -141,7 +147,7 @@ public:
 			SDL_RenderClear(state.renderer);
 
 			EventQueue::get().dispatch(ComponentStage::Render);
-			update(ComponentStage::Render, root, world, ctx);
+			update(ComponentStage::Render, root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
 			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, PR: {}",
@@ -156,19 +162,19 @@ public:
 			SDL_RenderPresent(state.renderer);
 
 			EventQueue::get().dispatch(ComponentStage::PostRender);
-			update(ComponentStage::PostRender, root, world, ctx);
+			update(ComponentStage::PostRender, root, world);
 		}
 	}
 
-	void update(ComponentStage stage, Node &obj, World &world, const FrameContext &ctx)
+	void update(ComponentStage stage, Node &obj, World &world)
 	{
-		obj.update(stage, ctx);
+		obj.update(stage);
 
 		auto &children = obj.getChildren();
 		for (NodeHandle &hChild : children)
 		{
 			Node &child = world.getNode(hChild);
-			update(stage, child, world, ctx);
+			update(stage, child, world);
 		}
 	}
 };

@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <nodehandle.h>
 
+struct SDL_Texture;
+
 struct KeyboardEvent : public Event<KeyboardEvent>
 {
 	enum class State
@@ -37,6 +39,25 @@ public:
 	NodeHandle getOther() const { return other; }
 	const glm::vec2 &getOverlap() const { return overlap; }
 	const glm::vec2 &getNormal() const { return normal; }
+};
+
+class AnimationPlayEvent : public Event<AnimationPlayEvent>
+{
+	int animationIndex;
+	SDL_Texture *texture;
+	bool oneShot = true;
+
+public:
+	AnimationPlayEvent(int animationIndex, SDL_Texture *texture, bool oneShot = true)
+	{
+		this->animationIndex = animationIndex;
+		this->texture = texture;
+		this->oneShot = true;
+	}
+
+	int getAnimationIndex() const { return animationIndex; }
+	SDL_Texture *getTexture() const { return texture; }
+	bool isOneShot() const { return oneShot; }
 };
 
 class AnimationEndEvent : public Event<AnimationEndEvent>
