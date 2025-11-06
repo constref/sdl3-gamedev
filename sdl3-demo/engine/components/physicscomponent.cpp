@@ -55,6 +55,14 @@ void PhysicsComponent::update()
 		vel.y = yDir * maxSpeed.y;
 	}
 
+	// simulate friction
+	const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
+	vel.x *= factor;
+	if (std::abs(vel.x) < 0.01f)
+	{
+		vel.x = 0;
+	}
+
 	setVelocity(vel);
 	netForce = glm::vec2(0);
 
@@ -63,13 +71,6 @@ void PhysicsComponent::update()
 	{
 		// collision component can check per-axis and apply resolution
 		owner.sendCommand(TentativeVelocityCommand{ delta });
-	}
-
-	const float factor = std::max(0.9f, 1.0f - damping * ctx.deltaTime);
-	owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, factor });
-	if (std::abs(velocity.x) < 0.01f)
-	{
-		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::X, 0.0f });
 	}
 }
 
