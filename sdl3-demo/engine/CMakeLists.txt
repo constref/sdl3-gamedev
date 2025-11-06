@@ -13,7 +13,6 @@ add_library(engine STATIC
 	"application.h"
 	"sdlstate.h"
 	"resources.h"
-	
 	"resources.cpp"
 	"framecontext.h"
 	"inputstate.h"
@@ -33,11 +32,22 @@ add_library(engine STATIC
 	"components/rendercomponent.h"
 	"components/rendercomponent.cpp"
 	"messaging/observer.h"
-	
 	"messaging/command.h"
 	"messaging/commanddispatcher.h"
 	"messaging/commands.h"
-	"world.h" "world.cpp" "objectholder.h" "node.cpp" "messaging/eventqueue.h" "messaging/events.h" "messaging/dispatcher.h" "messaging/eventdispatcher.h" "components/componentstage.h" "messaging/event.h" "components/maintainercomponent.h" "logger.h" "messaging/messaging.h" )
+	"world.h"
+	"world.cpp"
+	"objectholder.h"
+	"node.cpp"
+	"messaging/eventqueue.h"
+	"messaging/events.h"
+	"messaging/dispatcher.h"
+	"messaging/eventdispatcher.h"
+	"components/componentstage.h"
+	"messaging/event.h"
+	"components/maintainercomponent.h"
+	"logger.h"
+	"messaging/messaging.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
