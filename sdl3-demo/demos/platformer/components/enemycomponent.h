@@ -2,8 +2,15 @@
 
 #include <components/component.h>
 
+class DamageEvent;
 class DeathEvent;
-class AnimationEndEvent;
+
+enum class EnemyState
+{
+	idle,
+	damaged,
+	dead
+};
 
 enum class EnemyType
 {
@@ -12,10 +19,12 @@ enum class EnemyType
 
 class EnemyComponent : public Component
 {
+	EnemyState state;
 	const EnemyType type;
+
 public:
 	EnemyComponent(Node &owner, EnemyType type);
 
+	void onEvent(const DamageEvent &event);
 	void onEvent(const DeathEvent &event);
-	void onEvent(const AnimationEndEvent &event);
 };

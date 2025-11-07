@@ -15,6 +15,7 @@ struct QueuedEvent
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch;
 	double triggerTime;
+	bool processed;
 };
 
 class EventQueue
@@ -49,8 +50,9 @@ public:
 		return indices[static_cast<size_t>(stage)];
 	}
 
-	template<typename EventType, int Delay = 0, typename... Args>
-	void enqueue(NodeHandle target, ComponentStage stage, Args&&... args)
+	template<typename EventType, typename... Args>
+
+	void enqueue(NodeHandle target, ComponentStage stage, float delay, Args&&... args)
 	{
 		auto &queue = getQueue(stage);
 		auto &indices = getIndices(stage);
@@ -62,19 +64,33 @@ public:
 			{
 				obj.notify<const EventType &>(static_cast<const EventType &>(e));
 			},
-			.triggerTime = FrameContext::global().globalTime
+			.triggerTime = FrameContext::global().globalTime + delay,
+			.processed = false
 		};
 	}
 
 	void dispatch(ComponentStage stage)
 	{
+		const FrameContext &ctx = FrameContext::global();
 		auto &queue = getQueue(stage);
 		auto &indices = getIndices(stage);
 
-		while (indices.first < indices.second)
+		size_t rIdx = indices.first;
+		size_t numEvents = indices.second - indices.first;
+		int numDispatched = 0;
+		while (rIdx < indices.second)
 		{
-			QueuedEvent &nextItem = queue[indices.first++];
-			nextItem.dispatch(World::get().getNode(nextItem.target), *nextItem.event);
+			QueuedEvent &item = queue[rIdx++];
+			if (!item.processed && item.triggerTime <= ctx.globalTime)
+			{
+				item.dispatch(World::get().getNode(item.target), *item.event);
+				item.processed = true;
+				numDispatched++;
+			}
+		}
+		if (numEvents == numDispatched)
+		{
+			indices.first = rIdx;
 		}
 	}
 

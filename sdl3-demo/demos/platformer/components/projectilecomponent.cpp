@@ -17,7 +17,6 @@ ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, Compone
 
 	owner.getEventDispatcher().registerHandler<CollisionEvent>(this);
 	owner.getEventDispatcher().registerHandler<NodeRemovalEvent>(this);
-	owner.getEventDispatcher().registerHandler<AnimationEndEvent>(this);
 }
 
 void ProjectileComponent::onEvent(const CollisionEvent &event)
@@ -27,13 +26,14 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 	if (collisions == 1)
 	{
 		Resources &res = Resources::get();
-		owner.sendCommand(SetAnimationCommand{ res.ANIM_BULLET_HIT, res.texBulletHit, true });
 		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
-		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender);
-		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 15);
+		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
+		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender, 0);
+		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 0, 15);
+		owner.scheduleDestroy(res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 
-		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(100, 0) });
+		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(500, 0) });
 	}
 }
 
@@ -43,15 +43,6 @@ void ProjectileComponent::onEvent(const NodeRemovalEvent &event)
 	parent.removeChild(owner.getHandle());
 
 	World::get().free(owner.getHandle());
-}
-
-void ProjectileComponent::onEvent(const AnimationEndEvent &event)
-{
-	Resources &res = Resources::get();
-	if (event.getIndex() == res.ANIM_BULLET_HIT)
-	{
-		owner.scheduleDestroy();
-	}
 }
 
 void ProjectileComponent::onCommand(const UpdateViewportCommand &dp)

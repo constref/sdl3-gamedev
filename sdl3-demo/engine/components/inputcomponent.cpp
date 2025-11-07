@@ -43,7 +43,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), ComponentStage::Gameplay);
+				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
 			}
 			break;
 		}
@@ -51,11 +51,11 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), ComponentStage::Gameplay);
+				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
 			}
 			else
 			{
-				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), ComponentStage::Gameplay);
+				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
 			}
 			break;
 		}

@@ -104,5 +104,5 @@ public:
 		}
 	}
 
-	void scheduleDestroy();
+	void scheduleDestroy(float delay = 0);
 };

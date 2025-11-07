@@ -63,6 +63,7 @@ void PhysicsComponent::update()
 		vel.x = 0;
 	}
 
+	// update velocity and send it to interested components
 	setVelocity(vel);
 	netForce = glm::vec2(0);
 

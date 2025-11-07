@@ -10,28 +10,35 @@ AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation>
 {
 	this->animations = animations;
 	this->frameNumber = 1;
-	this->notifyEnd = false;
-	this->playing = true;
+	this->playbackMode = AnimationPlaybackMode::continuous;
 
-	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
 	owner.getEventDispatcher().registerHandler<AnimationPlayEvent>(this);
 	owner.getEventDispatcher().registerHandler<AnimationStopEvent>(this);
 }
 
 void AnimationComponent::update()
 {
-	if (currentAnimation != NO_ANIMATION && playing)
+	if (currentAnimation != NO_ANIMATION)
 	{
+		// check if animation has ended
 		int timeouts = animations[currentAnimation].step(FrameContext::global().deltaTime);
-		if (timeouts && notifyEnd)
+		if (!timeouts)
 		{
-			EventQueue::get().enqueue<AnimationEndEvent>(owner.getHandle(), ComponentStage::Animation, currentAnimation);
-			notifyEnd = false;
+			// if not, get frameNumber as usual
+			frameNumber = animations[currentAnimation].currentFrame() + 1;
+			owner.sendCommand(FrameChangeCommand{ frameNumber });
 		}
 		else
 		{
-			frameNumber = animations[currentAnimation].currentFrame() + 1;
-			owner.sendCommand(FrameChangeCommand{ frameNumber });
+			if (playbackMode == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
+			{
+				currentAnimation = NO_ANIMATION;
+			}
+			else // continuous play, send out updated frameNumber (wrapped-around back to 0)
+			{
+				frameNumber = animations[currentAnimation].currentFrame() + 1;
+				owner.sendCommand(FrameChangeCommand{ frameNumber });
+			}
 		}
 	}
 }
@@ -42,18 +49,12 @@ void AnimationComponent::setAnimation(int index)
 	currentAnimation = index;
 }
 
-void AnimationComponent::onCommand(const SetAnimationCommand &dp)
-{
-	setAnimation(dp.getAnimationIndex());
-	notifyEnd = dp.shouldNotifyEnd();
-}
-
 void AnimationComponent::onEvent(const AnimationStopEvent &event)
 {
-	playing = false;
 }
 
 void AnimationComponent::onEvent(const AnimationPlayEvent &event)
 {
 	setAnimation(event.getAnimationIndex());
+	playbackMode = event.getPlaybackMode();
 }

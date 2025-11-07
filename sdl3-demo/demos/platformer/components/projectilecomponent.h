@@ -5,7 +5,6 @@
 class UpdateViewportCommand;
 class CollisionEvent;
 class NodeRemovalEvent;
-class AnimationEndEvent;
 
 class ProjectileComponent : public Component
 {
@@ -17,5 +16,4 @@ public:
 	void onCommand(const UpdateViewportCommand &dp);
 	void onEvent(const CollisionEvent &event);
 	void onEvent(const NodeRemovalEvent &event);
-	void onEvent(const AnimationEndEvent &event);
 };

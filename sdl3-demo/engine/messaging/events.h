@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 #include <nodehandle.h>
+#include <animationplaybackmode.h>
 
 struct SDL_Texture;
 
@@ -45,32 +46,19 @@ class AnimationPlayEvent : public Event<AnimationPlayEvent>
 {
 	int animationIndex;
 	SDL_Texture *texture;
-	bool oneShot = true;
+	AnimationPlaybackMode mode;
 
 public:
-	AnimationPlayEvent(int animationIndex, SDL_Texture *texture, bool oneShot = true)
+	AnimationPlayEvent(int animationIndex, SDL_Texture *texture, AnimationPlaybackMode mode = AnimationPlaybackMode::oneShot)
 	{
 		this->animationIndex = animationIndex;
 		this->texture = texture;
-		this->oneShot = true;
+		this->mode = mode;
 	}
 
 	int getAnimationIndex() const { return animationIndex; }
 	SDL_Texture *getTexture() const { return texture; }
-	bool isOneShot() const { return oneShot; }
-};
-
-class AnimationEndEvent : public Event<AnimationEndEvent>
-{
-	int index;
-
-public:
-	AnimationEndEvent(int index)
-	{
-		this->index = index;
-	}
-
-	int getIndex() const { return index; }
+	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 
 class AnimationStopEvent : public Event<AnimationStopEvent> { };

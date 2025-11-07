@@ -1,8 +1,7 @@
 #include "playercontrollercomponent.h"
 
 #include <framecontext.h>
-#include <messaging/commands.h>
-#include <messaging/events.h>
+#include <messaging/messaging.h>
 #include <node.h>
 #include <logger.h>
 
@@ -45,47 +44,47 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			owner.sendCommand(SetAnimationCommand{ idleAnimationIndex, idleTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, idleAnimationIndex, idleTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::shooting:
 		{
-			owner.sendCommand(SetAnimationCommand{ shootAnimationIndex, shootTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, shootAnimationIndex, shootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::running:
 		{
-			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::runningShooting:
 		{
-			owner.sendCommand(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::sliding:
 		{
-			owner.sendCommand(SetAnimationCommand{ slideAnimationIndex, slideTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, slideAnimationIndex, slideTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::slidingShooting:
 		{
-			owner.sendCommand(SetAnimationCommand{ slideShootAnimationIndex, slideShootTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, slideShootAnimationIndex, slideShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborne:
 		{
-			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborneShooting:
 		{
-			owner.sendCommand(SetAnimationCommand{ runShootAnimationIndex, runShootTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::falling:
 		{
-			owner.sendCommand(SetAnimationCommand{ runAnimationIndex, runTexture });
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 	}

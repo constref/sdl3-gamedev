@@ -1,17 +1,17 @@
 #pragma once
 
 #include <vector>
+#include <animationplaybackmode.h>
 #include "component.h"
 
 class Animation;
-class SetAnimationCommand;
 class AnimationStopEvent;
 class AnimationPlayEvent;
 
 class AnimationComponent : public Component
 {
-	bool notifyEnd;
-	bool playing;
+	bool oneShot;
+	AnimationPlaybackMode playbackMode;
 
 public:
 	static const int NO_ANIMATION = -1;
@@ -19,9 +19,12 @@ public:
 	AnimationComponent(Node &owner, const std::vector<Animation> &animation);
 	void update() override;
 	void setAnimation(int index);
-	void onCommand(const SetAnimationCommand &dp);
 	void onEvent(const AnimationStopEvent &event);
 	void onEvent(const AnimationPlayEvent &event);
+	void setPlaybackMode(AnimationPlaybackMode mode)
+	{
+		playbackMode = mode;
+	}
 
 private:
 	int currentAnimation = NO_ANIMATION;

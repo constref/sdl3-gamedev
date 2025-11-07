@@ -47,7 +47,9 @@ add_library(engine STATIC
 	"messaging/event.h"
 	"components/maintainercomponent.h"
 	"logger.h"
-	"messaging/messaging.h")
+	"messaging/messaging.h"
+	"containers/ringbuffer.h"
+	"containers/atomicringbuffer.h" "animationplaybackmode.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

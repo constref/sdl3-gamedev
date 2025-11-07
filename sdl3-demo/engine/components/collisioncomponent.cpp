@@ -90,7 +90,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 							contacts[0] = true;
 							if (!prevContacts[0])
 							{
-								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics, 0,
 									otherOwner.getHandle(), overlap, glm::vec2(-1, 0));
 							}
 						}
@@ -100,7 +100,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 							contacts[1] = true;
 							if (!prevContacts[1])
 							{
-								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics, 0,
 									otherOwner.getHandle(), overlap, glm::vec2(1, 0));
 							}
 						}
@@ -114,7 +114,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 							contacts[2] = true;
 							if (!prevContacts[2])
 							{
-								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics, 0,
 									otherOwner.getHandle(), overlap, glm::vec2(0, 1));
 							}
 						}
@@ -124,7 +124,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 							contacts[3] = true;
 							if (!prevContacts[3])
 							{
-								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics,
+								EventQueue::get().enqueue<CollisionEvent>(owner.getHandle(), ComponentStage::Physics, 0,
 									otherOwner.getHandle(), overlap, glm::vec2(0, -1));
 							}
 						}
@@ -145,7 +145,7 @@ void CollisionComponent::onCommand(const TentativeVelocityCommand &dp)
 
 	if (prevContacts[2] && !contacts[2])
 	{
-		EventQueue::get().enqueue<FallingEvent>(owner.getHandle(), ComponentStage::Physics);
+		EventQueue::get().enqueue<FallingEvent>(owner.getHandle(), ComponentStage::Physics, 0);
 	}
 
 	for (int i = 0; i < contacts.size(); ++i)

@@ -36,9 +36,9 @@ Node &Node::getNode(const NodeHandle &handle)
 	return world.getNode(handle);
 }
 
-void Node::scheduleDestroy()
+void Node::scheduleDestroy(float delay)
 {
-	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender);
+	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender, delay);
 }
 
 void Node::update(ComponentStage stage)

@@ -22,7 +22,6 @@ RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width,
 	mapViewportPos = { 0, 0 };
 	mapViewportSize = { 0, 0 };
 
-	owner.getCommandDispatcher().registerHandler<SetAnimationCommand>(this);
 	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 	owner.getCommandDispatcher().registerHandler<FrameChangeCommand>(this);
 	owner.getCommandDispatcher().registerHandler<UpdateViewportCommand>(this);
@@ -64,11 +63,6 @@ void RenderComponent::update()
 			shouldFlash = false;
 		}
 	}
-}
-
-void RenderComponent::onCommand(const SetAnimationCommand &dp)
-{
-	setTexture(dp.getTexture());
 }
 
 void RenderComponent::onCommand(const UpdateDirectionCommand &dp)
