@@ -26,7 +26,6 @@ public:
 		}
 	}
 
-	template<typename T = Node>
 	NodeHandle createNode()
 	{
 		assert(!freeList.empty() && "Out of object slots in pool");
