@@ -20,12 +20,12 @@ struct QueuedEvent
 
 class EventQueue
 {
-	std::array<std::vector<QueuedEvent>, static_cast<size_t>(ComponentStage::SIZE)> queues;
-	std::array<std::pair<size_t, size_t>, static_cast<size_t>(ComponentStage::SIZE)> indices; // read,write pairs
+	std::array<std::vector<QueuedEvent>, static_cast<size_t>(FrameStage::StageCount)> queues;
+	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
 
 	EventQueue()
 	{
-		for (int i = 0; i < static_cast<size_t>(ComponentStage::SIZE); ++i)
+		for (int i = 0; i < static_cast<size_t>(FrameStage::StageCount); ++i)
 		{
 			// TODO: Reduce mem footprint here
 			queues[i].resize(5000);
@@ -41,21 +41,20 @@ public:
 		return instance;
 	}
 
-	auto &getQueue(ComponentStage stage)
+	auto &getQueue(FrameStage stage)
 	{
 		return queues[static_cast<size_t>(stage)];
 	}
-	auto &getIndices(ComponentStage stage)
+	auto &getIndices(FrameStage stage)
 	{
 		return indices[static_cast<size_t>(stage)];
 	}
 
 	template<typename EventType, typename... Args>
-
-	void enqueue(NodeHandle target, ComponentStage stage, float delay, Args&&... args)
+	void enqueue(NodeHandle target, float delay, Args&&... args)
 	{
-		auto &queue = getQueue(stage);
-		auto &indices = getIndices(stage);
+		auto &queue = getQueue(EventType::stage);
+		auto &indices = getIndices(EventType::stage);
 		queue[indices.second++] = QueuedEvent
 		{
 			.target = target,
@@ -69,7 +68,7 @@ public:
 		};
 	}
 
-	void dispatch(ComponentStage stage)
+	void dispatch(FrameStage stage)
 	{
 		const FrameContext &ctx = FrameContext::global();
 		auto &queue = getQueue(stage);
@@ -94,7 +93,7 @@ public:
 		}
 	}
 
-	size_t getCount(ComponentStage stage)
+	size_t getCount(FrameStage stage)
 	{
 		auto &indices = getIndices(stage);
 		return indices.second;

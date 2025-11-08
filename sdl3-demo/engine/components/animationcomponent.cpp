@@ -6,7 +6,7 @@
 #include <framecontext.h>
 #include <cassert>
 
-AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, ComponentStage::Animation)
+AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, FrameStage::Animation)
 {
 	this->animations = animations;
 	this->frameNumber = 1;

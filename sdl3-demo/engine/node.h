@@ -18,7 +18,7 @@ protected:
 	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
-	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
+	std::array<std::vector<Component *>, static_cast<int>(FrameStage::StageCount)> componentStages;
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
@@ -28,7 +28,7 @@ public:
 	Node();
 	virtual ~Node();
 
-	void update(ComponentStage stage);
+	void update(FrameStage stage);
 
 	NodeHandle getHandle() const { return handle; }
 	glm::vec2 getPosition() const { return position; }

@@ -7,7 +7,7 @@
 #include <messaging/commanddispatcher.h>
 #include <world.h>
 
-BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight) : Component(owner, ComponentStage::Gameplay)
+BasicCameraComponent::BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight) : Component(owner, FrameStage::Gameplay)
 {
 	this->target = target;
 	camPosition = glm::vec2(0);

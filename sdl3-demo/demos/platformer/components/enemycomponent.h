@@ -21,6 +21,7 @@ class EnemyComponent : public Component
 {
 	EnemyState state;
 	const EnemyType type;
+	double dmgTime;
 
 public:
 	EnemyComponent(Node &owner, EnemyType type);

@@ -9,7 +9,7 @@
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
 
-InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(owner, ComponentStage::Input)
+InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(owner, FrameStage::Input)
 {
 	direction = 0;
 	this->ownerHandle = ownerHandle;
@@ -43,7 +43,7 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
+				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}
@@ -51,11 +51,11 @@ void InputComponent::onEvent(const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
+				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
 			}
 			else
 			{
-				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), ComponentStage::Gameplay, 0);
+				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}

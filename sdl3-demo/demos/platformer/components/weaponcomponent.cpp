@@ -16,7 +16,7 @@
 
 #include "projectilecomponent.h"
 
-WeaponComponent::WeaponComponent(Node &owner) : Component(owner, ComponentStage::Gameplay), timer(0.1f)
+WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gameplay), timer(0.1f)
 {
 	shooting = false;
 	playerDirection = 1;

@@ -38,10 +38,10 @@ Node &Node::getNode(const NodeHandle &handle)
 
 void Node::scheduleDestroy(float delay)
 {
-	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), ComponentStage::PostRender, delay);
+	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), delay);
 }
 
-void Node::update(ComponentStage stage)
+void Node::update(FrameStage stage)
 {
 	auto &stageVec = componentStages[static_cast<size_t>(stage)];
 	for (auto &comp : stageVec)

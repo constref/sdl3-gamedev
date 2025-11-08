@@ -43,7 +43,7 @@ add_library(engine STATIC
 	"messaging/events.h"
 	"messaging/dispatcher.h"
 	"messaging/eventdispatcher.h"
-	"components/componentstage.h"
+	"framestage.h"
 	"messaging/event.h"
 	"components/maintainercomponent.h"
 	"logger.h"

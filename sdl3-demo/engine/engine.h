@@ -101,13 +101,13 @@ public:
 						// ignore repeat key-down signals while holding (prevent event spam)
 						if (!event.key.repeat)
 						{
-							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), ComponentStage::Input, 0, event.key.scancode, KeyboardEvent::State::down);
+							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
 						}
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), ComponentStage::Input, 0, event.key.scancode, KeyboardEvent::State::up);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -124,20 +124,20 @@ public:
 
 
 			// handle input every frame to avoid input lag
-			EventQueue::get().dispatch(ComponentStage::Input);
-			update(ComponentStage::Input, root, world);
+			EventQueue::get().dispatch(FrameStage::Input);
+			update(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				EventQueue::get().dispatch(ComponentStage::Physics);
-				update(ComponentStage::Physics, root, world);
+				EventQueue::get().dispatch(FrameStage::Physics);
+				update(FrameStage::Physics, root, world);
 
-				EventQueue::get().dispatch(ComponentStage::Gameplay);
-				update(ComponentStage::Gameplay, root, world);
+				EventQueue::get().dispatch(FrameStage::Gameplay);
+				update(FrameStage::Gameplay, root, world);
 
-				EventQueue::get().dispatch(ComponentStage::Animation);
-				update(ComponentStage::Animation, root, world);
+				EventQueue::get().dispatch(FrameStage::Animation);
+				update(FrameStage::Animation, root, world);
 
 				accumulator -= fixedStep;
 			}
@@ -146,27 +146,27 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			EventQueue::get().dispatch(ComponentStage::Render);
-			update(ComponentStage::Render, root, world);
+			EventQueue::get().dispatch(FrameStage::Render);
+			update(FrameStage::Render, root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, PR: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
 				World::get().getFreeCount(),
-				EventQueue::get().getCount(ComponentStage::Input),
-				EventQueue::get().getCount(ComponentStage::Physics),
-				EventQueue::get().getCount(ComponentStage::Gameplay),
-				EventQueue::get().getCount(ComponentStage::Animation),
-				EventQueue::get().getCount(ComponentStage::PostRender)
+				EventQueue::get().getCount(FrameStage::Input),
+				EventQueue::get().getCount(FrameStage::Physics),
+				EventQueue::get().getCount(FrameStage::Gameplay),
+				EventQueue::get().getCount(FrameStage::Animation),
+				EventQueue::get().getCount(FrameStage::End)
 			).c_str());
 
 			SDL_RenderPresent(state.renderer);
 
-			EventQueue::get().dispatch(ComponentStage::PostRender);
-			update(ComponentStage::PostRender, root, world);
+			EventQueue::get().dispatch(FrameStage::End);
+			update(FrameStage::End, root, world);
 		}
 	}
 
-	void update(ComponentStage stage, Node &obj, World &world)
+	void update(FrameStage stage, Node &obj, World &world)
 	{
 		obj.update(stage);
 

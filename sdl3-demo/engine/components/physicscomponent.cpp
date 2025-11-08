@@ -5,7 +5,7 @@
 #include <messaging/commands.h>
 #include <messaging/events.h>
 
-PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, ComponentStage::Physics)
+PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, FrameStage::Physics)
 {
 	direction = 0;
 	maxSpeed = glm::vec2(0, 0);

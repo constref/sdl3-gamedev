@@ -9,7 +9,7 @@
 #include <messaging/events.h>
 
 RenderComponent::RenderComponent(Node &owner, SDL_Texture *texture, float width, float height)
-	: Component(owner, ComponentStage::Render), flashTimer(0.05f)
+	: Component(owner, FrameStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;
 	this->shouldFlash = false;

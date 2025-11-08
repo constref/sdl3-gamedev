@@ -6,7 +6,7 @@
 #include <logger.h>
 
 PlayerControllerComponent::PlayerControllerComponent(Node &owner)
-	: Component(owner, ComponentStage::Gameplay), slideTimer(0.16f)
+	: Component(owner, FrameStage::Gameplay), slideTimer(0.16f)
 {
 	direction = 0;
 	velocity = glm::vec2(0);
@@ -44,47 +44,47 @@ void PlayerControllerComponent::transitionState(PState newState)
 	{
 		case PState::idle:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, idleAnimationIndex, idleTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, idleAnimationIndex, idleTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::shooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, shootAnimationIndex, shootTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, shootAnimationIndex, shootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::running:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::runningShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::sliding:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, slideAnimationIndex, slideTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, slideAnimationIndex, slideTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::slidingShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, slideShootAnimationIndex, slideShootTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, slideShootAnimationIndex, slideShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborne:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborneShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runShootAnimationIndex, runShootTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::falling:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 	}

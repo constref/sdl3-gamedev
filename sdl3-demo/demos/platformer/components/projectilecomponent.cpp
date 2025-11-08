@@ -11,7 +11,7 @@
 
 #include "events.h"
 
-ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, ComponentStage::Gameplay)
+ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, FrameStage::Gameplay)
 {
 	collisions = 0;
 
@@ -28,9 +28,10 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		Resources &res = Resources::get();
 		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
-		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), ComponentStage::Animation, 0, res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
-		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), ComponentStage::PostRender, 0);
-		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 0, 15);
+		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0,
+			res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
+		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
+		EventQueue::get().enqueue<DamageEvent>(event.getOther(), 0, 15);
 		owner.scheduleDestroy(res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 
 		// apply push force from projectile

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <framestage.h>
 
 class EventBase
 {
@@ -8,7 +9,7 @@ protected:
 	static inline int nextIndex = 0;
 };
 
-template<typename EventType>
+template<typename EventType, FrameStage CompStage = FrameStage::Gameplay>
 class Event : public EventBase
 {
 public:
@@ -18,4 +19,6 @@ public:
 		static int idx = nextIndex++;
 		return idx;
 	}
+
+	const static inline FrameStage stage = CompStage;
 };

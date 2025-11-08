@@ -8,7 +8,7 @@
 
 struct SDL_Texture;
 
-struct KeyboardEvent : public Event<KeyboardEvent>
+struct KeyboardEvent : public Event<KeyboardEvent, FrameStage::Input>
 {
 	enum class State
 	{
@@ -25,7 +25,7 @@ struct KeyboardEvent : public Event<KeyboardEvent>
 	}
 };
 
-class CollisionEvent : public Event<CollisionEvent>
+class CollisionEvent : public Event<CollisionEvent, FrameStage::Physics>
 {
 	NodeHandle other;
 	glm::vec2 overlap;
@@ -42,7 +42,7 @@ public:
 	const glm::vec2 &getNormal() const { return normal; }
 };
 
-class AnimationPlayEvent : public Event<AnimationPlayEvent>
+class AnimationPlayEvent : public Event<AnimationPlayEvent, FrameStage::Animation>
 {
 	int animationIndex;
 	SDL_Texture *texture;
@@ -61,10 +61,22 @@ public:
 	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 
-class AnimationStopEvent : public Event<AnimationStopEvent> { };
-class RemoveColliderEvent : public Event<RemoveColliderEvent> { };
-class NodeRemovalEvent : public Event<NodeRemovalEvent> {};
-class FallingEvent : public Event<FallingEvent> {};
-class JumpEvent : public Event<JumpEvent> {};
-class ShootBeginEvent : public Event<ShootBeginEvent> {};
-class ShootEndEvent : public Event<ShootEndEvent> {};
+class TimerOnTimeout : public Event<TimerOnTimeout, FrameStage::Start>
+{
+	int tag;
+public:
+	TimerOnTimeout(int tag = 0)
+	{
+		this->tag = tag;
+	}
+
+	int getTag() const { return tag; }
+};
+
+class AnimationStopEvent : public Event<AnimationStopEvent, FrameStage::Animation> { };
+class RemoveColliderEvent : public Event<RemoveColliderEvent, FrameStage::End> { };
+class NodeRemovalEvent : public Event<NodeRemovalEvent, FrameStage::End> {};
+class FallingEvent : public Event<FallingEvent, FrameStage::Physics> {};
+class JumpEvent : public Event<JumpEvent, FrameStage::Gameplay> {};
+class ShootBeginEvent : public Event<ShootBeginEvent, FrameStage::Gameplay> {};
+class ShootEndEvent : public Event<ShootEndEvent, FrameStage::Gameplay> {};
