@@ -24,7 +24,7 @@ Node::~Node()
 	{
 		for (auto *comp : stageVec)
 		{
-			comp->~Component();
+			delete comp;
 		}
 		stageVec.clear();
 	}
@@ -77,8 +77,8 @@ void Node::removeComponent(const Component &comp)
 	auto itr = std::find(stageVec.begin(), stageVec.end(), &comp);
 	if (itr != stageVec.end())
 	{
-		// TODO: Add freeing from component memory block
 		stageVec.erase(itr);
+		delete &comp;
 	}
 	else
 	{

@@ -8,22 +8,17 @@
 #include <messaging/commanddispatcher.h>
 #include <messaging/eventdispatcher.h>
 #include <nodehandle.h>
-#include <logger.h>
 
 class NodeRemovalEvent;
 
 class Node
 {
-	constexpr static size_t CompBuffSize = 1024 * 1024;
-	static inline std::array<char, CompBuffSize> compBuffer;
-	static inline size_t allocPtr = 0;
-
 protected:
 	NodeHandle handle;
 	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
-	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::EnumLength)> componentStages;
+	std::array<std::vector<Component *>, static_cast<int>(ComponentStage::SIZE)> componentStages;
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
@@ -49,10 +44,7 @@ public:
 	T &addComponent(Args... args)
 	{
 		// create and store component
-		//T *comp = new T(*this, args...);
-		T *comp = new(reinterpret_cast<void *>(compBuffer.data() + allocPtr)) T(*this, args...);
-		allocPtr += sizeof(T);
-		Logger::info(this, std::format("{} / {} bytes allocated ({:.2f}%)", allocPtr, CompBuffSize, static_cast<float>(allocPtr) / CompBuffSize * 100));
+		T *comp = new T(*this, args...);
 
 		auto &stageVec = componentStages[static_cast<size_t>(comp->getStage())];
 		stageVec.push_back(comp);

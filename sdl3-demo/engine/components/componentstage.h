@@ -8,5 +8,5 @@ enum class ComponentStage
 	Animation = 3,
 	Render = 4,
 	PostRender = 5,
-	EnumLength
+	SIZE
 };

@@ -20,12 +20,12 @@ struct QueuedEvent
 
 class EventQueue
 {
-	std::array<std::vector<QueuedEvent>, static_cast<size_t>(ComponentStage::EnumLength)> queues;
-	std::array<std::pair<size_t, size_t>, static_cast<size_t>(ComponentStage::EnumLength)> indices; // read,write pairs
+	std::array<std::vector<QueuedEvent>, static_cast<size_t>(ComponentStage::SIZE)> queues;
+	std::array<std::pair<size_t, size_t>, static_cast<size_t>(ComponentStage::SIZE)> indices; // read,write pairs
 
 	EventQueue()
 	{
-		for (int i = 0; i < static_cast<size_t>(ComponentStage::EnumLength); ++i)
+		for (int i = 0; i < static_cast<size_t>(ComponentStage::SIZE); ++i)
 		{
 			// TODO: Reduce mem footprint here
 			queues[i].resize(5000);
