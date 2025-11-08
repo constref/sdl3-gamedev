@@ -26,9 +26,10 @@ struct Resources
 
 	const int ANIM_PLAYER_IDLE = 0;
 	const int ANIM_PLAYER_RUN = 1;
-	const int ANIM_PLAYER_SLIDE = 2;
-	const int ANIM_PLAYER_SHOOT = 3;
-	const int ANIM_PLAYER_SLIDE_SHOOT = 4;
+	const int ANIM_PLAYER_JUMP = 2;
+	const int ANIM_PLAYER_SLIDE = 3;
+	const int ANIM_PLAYER_SHOOT = 4;
+	const int ANIM_PLAYER_SLIDE_SHOOT = 5;
 	std::vector<Animation> playerAnims;
 	const int ANIM_BULLET_MOVING = 0;
 	const int ANIM_BULLET_HIT = 1;
@@ -62,9 +63,10 @@ struct Resources
 
 	void load(SDL_Renderer *renderer)
 	{
-		playerAnims.resize(5);
+		playerAnims.resize(6);
 		playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
 		playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
+		playerAnims[ANIM_PLAYER_JUMP] = Animation(4, 1.0f);
 		playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
 		playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
 		playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);

@@ -17,6 +17,8 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner)
 	idleTexture = nullptr;
 	runAnimationIndex = 0;
 	runTexture = nullptr;
+	jumpAnimationIndex = 0;
+	jumpTexture = nullptr;
 	slideAnimationIndex = 0;
 	slideTexture = nullptr;
 	shootAnimationIndex = 0;
@@ -74,7 +76,7 @@ void PlayerControllerComponent::transitionState(PState newState)
 		}
 		case PState::airborne:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, jumpAnimationIndex, jumpTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborneShooting:
@@ -84,7 +86,7 @@ void PlayerControllerComponent::transitionState(PState newState)
 		}
 		case PState::falling:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, runAnimationIndex, runTexture, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, jumpAnimationIndex, jumpTexture, AnimationPlaybackMode::continuous);
 			break;
 		}
 	}

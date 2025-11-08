@@ -39,6 +39,8 @@ class PlayerControllerComponent : public Component
 	SDL_Texture *idleTexture;
 	int runAnimationIndex;
 	SDL_Texture *runTexture;
+	int jumpAnimationIndex;
+	SDL_Texture *jumpTexture;
 	int slideAnimationIndex;
 	SDL_Texture *slideTexture;
 	int slideShootAnimationIndex;
@@ -66,6 +68,8 @@ public:
 	void setIdleTexture(SDL_Texture *tex) { idleTexture = tex; }
 	void setRunAnimation(int index) { runAnimationIndex = index; }
 	void setRunTexture(SDL_Texture *tex) { runTexture = tex; }
+	void setJumpAnimation(int index) { jumpAnimationIndex = index; }
+	void setJumpTexture(SDL_Texture *tex) { jumpTexture = tex; }
 	void setSlideAnimation(int index) { slideAnimationIndex = index; }
 	void setSlideTexture(SDL_Texture *tex) { slideTexture = tex; }
 	void setSlideShootAnimation(int index) { slideShootAnimationIndex = index; }
