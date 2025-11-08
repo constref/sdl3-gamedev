@@ -115,7 +115,6 @@ void PlayerControllerComponent::update()
 			}
 			else if (direction * velocity.x < 0)
 			{
-				Logger::info(this, "Sliding");
 				// if direction we're holding is opposite to velocity, use sliding state
 				transitionState(!shooting ? PState::sliding : PState::slidingShooting);
 				slideTimer.reset();

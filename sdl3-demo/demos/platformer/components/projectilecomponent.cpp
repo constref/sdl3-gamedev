@@ -33,7 +33,9 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		EventQueue::get().enqueue<DamageEvent>(event.getOther(), ComponentStage::Gameplay, 0, 15);
 		owner.scheduleDestroy(res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 
-		owner.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(500, 0) });
+		// apply push force from projectile
+		Node &other = World::get().getNode(event.getOther());
+		other.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(200, 0) });
 	}
 }
 
