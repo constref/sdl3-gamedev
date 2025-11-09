@@ -31,12 +31,8 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0,
 			res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
 		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
-		EventQueue::get().enqueue<DamageEvent>(event.getOther(), 0, 15);
+		EventQueue::get().enqueue<DamageEvent>(event.getOther(), 0, owner.getParent(), 15); // damage source is the person firing the gun, not the projectile
 		owner.scheduleDestroy(res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
-
-		// apply push force from projectile
-		Node &other = World::get().getNode(event.getOther());
-		other.sendCommand<AddImpulseCommand>(AddImpulseCommand{ glm::vec2(200, 0) });
 	}
 }
 

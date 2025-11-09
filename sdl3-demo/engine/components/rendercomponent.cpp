@@ -46,7 +46,7 @@ void RenderComponent::update()
 	};
 
 	SDL_Renderer *renderer = SDLState::global().renderer;
-	SDL_FlipMode flipMode = direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+	SDL_FlipMode flipMode = direction < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 	if (!shouldFlash)
 	{
 		SDL_RenderTextureRotated(renderer, texture, &src, &dst, 0, nullptr, flipMode);

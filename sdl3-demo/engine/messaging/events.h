@@ -61,7 +61,7 @@ public:
 	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 
-class TimerOnTimeout : public Event<TimerOnTimeout, FrameStage::Start>
+class TimerOnTimeout : public Event<TimerOnTimeout, FrameStage::Gameplay>
 {
 	int tag;
 public:

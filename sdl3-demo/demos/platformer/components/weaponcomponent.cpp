@@ -59,7 +59,7 @@ void WeaponComponent::onEvent(const ShootEndEvent &event)
 
 void WeaponComponent::update()
 {
-	timer.step(FrameContext::global().deltaTime);
+	timer.step(FrameContext::dt());
 
 	if (shooting)
 	{

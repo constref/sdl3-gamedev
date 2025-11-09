@@ -3,6 +3,7 @@
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
+#include <timer.h>
 #include <logger.h>
 
 Node::Node(NodeHandle handle) : Node()

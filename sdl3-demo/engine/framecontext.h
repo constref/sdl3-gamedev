@@ -23,4 +23,13 @@ struct FrameContext
 		static FrameContext ctx;
 		return ctx;
 	}
+
+	static float dt()
+	{
+		return global().deltaTime;
+	}
+	static double gt()
+	{
+		return global().globalTime;
+	}
 };
