@@ -8,8 +8,9 @@
 
 struct SDL_Texture;
 
-struct KeyboardEvent : public Event<KeyboardEvent, FrameStage::Input>
+class KeyboardEvent : public Event<KeyboardEvent, FrameStage::Input>
 {
+public:
 	enum class State
 	{
 		down,

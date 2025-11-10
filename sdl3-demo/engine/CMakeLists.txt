@@ -49,7 +49,7 @@ add_library(engine STATIC
 	"logger.h"
 	"messaging/messaging.h"
 	"containers/ringbuffer.h"
-	"containers/atomicringbuffer.h" "animationplaybackmode.h")
+	"containers/atomicringbuffer.h" "animationplaybackmode.h" "systems/system.h" "systems/collisionsystem.h" "systems/inputsystem.h" "systems/inputsystem.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

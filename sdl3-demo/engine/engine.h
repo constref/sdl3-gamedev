@@ -1,6 +1,8 @@
 #pragma once
 
 #include <format>
+#include <memory>
+#include <array>
 #include <sdlstate.h>
 #include <inputstate.h>
 #include <framecontext.h>
@@ -9,6 +11,7 @@
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
+#include <systems/inputsystem.h>
 
 template<Application AppType>
 class Engine
@@ -19,6 +22,8 @@ class Engine
 	bool debugMode;
 	bool running;
 	constexpr static bool clampDeltaTime = true;
+
+	std::array<std::vector<std::unique_ptr<SystemBase>>, static_cast<size_t>(FrameStage::StageCount)> systems;
 
 public:
 	Engine()
@@ -35,6 +40,7 @@ public:
 		{
 			return true;
 		}
+
 		return false;
 	}
 
@@ -52,6 +58,8 @@ public:
 		prevTime = SDL_GetTicks();
 		long frameCount = 0;
 		double globalTime = 0;
+
+		systems[static_cast<size_t>(FrameStage::Input)].push_back(std::make_unique<InputSystem>());
 
 		running = true;
 		while (running)
@@ -101,13 +109,13 @@ public:
 						// ignore repeat key-down signals while holding (prevent event spam)
 						if (!event.key.repeat)
 						{
-							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
+							EventQueue::get().enqueue2<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
 						}
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
+						EventQueue::get().enqueue2<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -124,7 +132,9 @@ public:
 
 
 			// handle input every frame to avoid input lag
-			processStage(FrameStage::Input, root, world);
+			//processStage(FrameStage::Input, root, world);
+			EventQueue::get().dispatch2(FrameStage::Input);
+			updateSystems(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
@@ -159,6 +169,26 @@ public:
 			earlyUpdate(FrameStage::End, root, world);
 			EventQueue::get().dispatch(FrameStage::End);
 			update(FrameStage::End, root, world);
+		}
+	}
+
+	void updateSystems(FrameStage stage, Node &obj, World &world)
+	{
+		auto &stageSystems = systems[static_cast<size_t>(stage)];
+
+		for (auto &sys : stageSystems)
+		{
+			if (sys->hasRequiredComponents(obj))
+			{
+				sys->update(obj);
+			}
+		}
+
+		auto &children = obj.getChildren();
+		for (NodeHandle &hChild : children)
+		{
+			Node &child = world.getNode(hChild);
+			updateSystems(stage, child, world);
 		}
 	}
 

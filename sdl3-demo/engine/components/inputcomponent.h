@@ -3,7 +3,7 @@
 #include <components/component.h>
 #include <nodehandle.h>
 
-struct KeyboardEvent;
+class KeyboardEvent;
 
 class InputComponent : public Component
 {
