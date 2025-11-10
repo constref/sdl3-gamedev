@@ -8,7 +8,7 @@
 #include "events.h"
 
 EnemyComponent::EnemyComponent(Node &owner, EnemyType type)
-	: Component(owner, FrameStage::Gameplay), type(type), timerDamaged(1.0f)
+	: Component(owner, FrameStage::Gameplay), type(type), timerDamaged(0.5f)
 {
 	state = EnemyState::idle;
 
