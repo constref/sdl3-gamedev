@@ -4,9 +4,7 @@
 #include <timer.h>
 #include <vector>
 
-struct FrameContext;
 class Node;
-class SubjectRegistry;
 class CommandDispatcher;
 class EventDispatcher;
 class TimerOnTimeout;

@@ -19,6 +19,7 @@
 WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gameplay), timer(0.1f)
 {
 	shooting = false;
+	canFire = true;
 	playerDirection = 1;
 	playerVelocity = glm::vec2(0);
 
@@ -26,6 +27,9 @@ WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gam
 	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 	owner.getEventDispatcher().registerHandler<ShootBeginEvent>(this);
 	owner.getEventDispatcher().registerHandler<ShootEndEvent>(this);
+	owner.getEventDispatcher().registerHandler<TimerOnTimeout>(this);
+
+	addTimer(timer);
 }
 
 void WeaponComponent::onCommand(const UpdateVelocityCommand &dp)
@@ -57,59 +61,60 @@ void WeaponComponent::onEvent(const ShootEndEvent &event)
 	}
 }
 
+void WeaponComponent::onEvent(const TimerOnTimeout &event)
+{
+	canFire = true;
+}
+
 void WeaponComponent::update()
 {
-	timer.step(FrameContext::dt());
-
-	if (shooting)
+	if (shooting && canFire)
 	{
-		if (timer.getTimeouts())
-		{
-			timer.reset();
-			World &world = World::get();
-			NodeHandle handle = world.createNode();
-			Node &bullet = world.getNode(handle);
+		timer.reset();
+		canFire = false;
+		World &world = World::get();
+		NodeHandle handle = world.createNode();
+		Node &bullet = world.getNode(handle);
 
-			auto &res = Resources::get();
+		auto &res = Resources::get();
 
-			auto &physCmp = bullet.addComponent<PhysicsComponent>();
-			const int yVariation = 40;
-			const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
-			physCmp.setVelocity(glm::vec2(playerVelocity.x + 600.0f * playerDirection, yVelocity));
-			physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
-			physCmp.setDynamic(true);
-			physCmp.setGravityFactor(0);
-			physCmp.setDamping(0);
+		auto &physCmp = bullet.addComponent<PhysicsComponent>();
+		const int yVariation = 40;
+		const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
+		physCmp.setVelocity(glm::vec2(playerVelocity.x + 600.0f * playerDirection, yVelocity));
+		physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
+		physCmp.setDynamic(true);
+		physCmp.setGravityFactor(0);
+		physCmp.setDamping(0);
 
-			auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
-			animCmp.setAnimation(res.ANIM_BULLET_MOVING);
+		auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
+		animCmp.setAnimation(res.ANIM_BULLET_MOVING);
 
-			auto &rndCmp = bullet.addComponent<RenderComponent>(res.texBullet,
-				static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
-			rndCmp.setDirection(playerDirection);
+		auto &rndCmp = bullet.addComponent<RenderComponent>(res.texBullet,
+			static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
+		rndCmp.setDirection(playerDirection);
 
-			auto &collCmp = bullet.addComponent<CollisionComponent>();
-			collCmp.setCollider(SDL_FRect{
-				.x = 0, .y = 0,
-				.w = 4, .h = 4
+		auto &collCmp = bullet.addComponent<CollisionComponent>();
+		collCmp.setCollider(SDL_FRect{
+			.x = 0, .y = 0,
+			.w = 4, .h = 4
 			});
 
-			bullet.addComponent<ProjectileComponent>();
+		bullet.addComponent<ProjectileComponent>();
 
-			// adjust bullet start position
-			SDL_FRect collider = collCmp.getCollider();
-			const float left = -6;
-			const float right = 33;
-			const float t = (playerDirection + 1) / 2.0f; // results in a value of 0..1
-			const float xOffset = left + (right - left) * t; // LERP between left and right based on direction
+		// adjust bullet start position
+		SDL_FRect collider = collCmp.getCollider();
+		const float left = -6;
+		const float right = 33;
+		const float t = (playerDirection + 1) / 2.0f; // results in a value of 0..1
+		const float xOffset = left + (right - left) * t; // LERP between left and right based on direction
 
-			bullet.setPosition(glm::vec2(
-				owner.getPosition().x + xOffset,
-				owner.getPosition().y + 32 / 2
-			));
+		bullet.setPosition(glm::vec2(
+			owner.getPosition().x + xOffset,
+			owner.getPosition().y + 32 / 2
+		));
 
-			owner.addChild(handle);
-		}
+		owner.addChild(handle);
 	}
 }
 

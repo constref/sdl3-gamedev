@@ -8,10 +8,12 @@ class UpdateVelocityCommand;
 class UpdateDirectionCommand;
 class ShootBeginEvent;
 class ShootEndEvent;
+class TimerOnTimeout;
 
 class WeaponComponent : public Component
 {
 	bool shooting;
+	bool canFire;
 	Timer timer;
 	float playerDirection;
 	glm::vec2 playerVelocity;
@@ -24,4 +26,5 @@ public:
 	void onCommand(const UpdateDirectionCommand &dp);
 	void onEvent(const ShootBeginEvent &event);
 	void onEvent(const ShootEndEvent &event);
+	void onEvent(const TimerOnTimeout &event);
 };
