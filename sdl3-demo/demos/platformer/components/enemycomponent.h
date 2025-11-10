@@ -6,6 +6,7 @@
 
 class DamageEvent;
 class DeathEvent;
+class TimerOnTimeout;
 
 enum class EnemyState
 {
@@ -29,7 +30,7 @@ class EnemyComponent : public Component
 public:
 	EnemyComponent(Node &owner, EnemyType type);
 
-	void update();
 	void onEvent(const DamageEvent &event);
 	void onEvent(const DeathEvent &event);
+	void onEvent(const TimerOnTimeout &event);
 };

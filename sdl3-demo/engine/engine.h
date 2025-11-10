@@ -62,7 +62,7 @@ public:
 			prevTime = nowTime;
 
 			float deltaTime = actualDeltaTime;
-			if constexpr(clampDeltaTime)
+			if constexpr (clampDeltaTime)
 			{
 				// clamp actual delta time if too large due to
 				// breakpoint or major slow-down
@@ -124,20 +124,14 @@ public:
 
 
 			// handle input every frame to avoid input lag
-			EventQueue::get().dispatch(FrameStage::Input);
-			update(FrameStage::Input, root, world);
+			processStage(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				EventQueue::get().dispatch(FrameStage::Physics);
-				update(FrameStage::Physics, root, world);
-
-				EventQueue::get().dispatch(FrameStage::Gameplay);
-				update(FrameStage::Gameplay, root, world);
-
-				EventQueue::get().dispatch(FrameStage::Animation);
-				update(FrameStage::Animation, root, world);
+				processStage(FrameStage::Physics, root, world);
+				processStage(FrameStage::Gameplay, root, world);
+				processStage(FrameStage::Animation, root, world);
 
 				accumulator -= fixedStep;
 			}
@@ -146,6 +140,7 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
+			earlyUpdate(FrameStage::Render, root, world);
 			EventQueue::get().dispatch(FrameStage::Render);
 			update(FrameStage::Render, root, world);
 
@@ -161,8 +156,21 @@ public:
 
 			SDL_RenderPresent(state.renderer);
 
+			earlyUpdate(FrameStage::End, root, world);
 			EventQueue::get().dispatch(FrameStage::End);
 			update(FrameStage::End, root, world);
+		}
+	}
+
+	void earlyUpdate(FrameStage stage, Node &obj, World &world)
+	{
+		obj.earlyUpdate(stage);
+
+		auto &children = obj.getChildren();
+		for (NodeHandle &hChild : children)
+		{
+			Node &child = world.getNode(hChild);
+			earlyUpdate(stage, child, world);
 		}
 	}
 
@@ -176,5 +184,12 @@ public:
 			Node &child = world.getNode(hChild);
 			update(stage, child, world);
 		}
+	}
+
+	void processStage(FrameStage stage, Node &obj, World &world)
+	{
+		earlyUpdate(stage, obj, world);
+		EventQueue::get().dispatch(stage);
+		update(stage, obj, world);
 	}
 };

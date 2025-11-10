@@ -1,6 +1,8 @@
 #pragma once
 
 #include <framestage.h>
+#include <timer.h>
+#include <vector>
 
 struct FrameContext;
 class Node;
@@ -16,6 +18,7 @@ class Component
 	static inline ComponentId nextId;
 	ComponentId id;
 	FrameStage stage;
+	std::vector<Timer *> timers;
 
 protected:
 	Node &owner;
@@ -27,5 +30,9 @@ public:
 
 	ComponentId getId() const { return id; }
 	virtual void onStart() {}
+	virtual void earlyUpdate();
 	virtual void update() {}
+
+	void addTimer(Timer &timer);
+	void removeTimer(const Timer &timer);
 };

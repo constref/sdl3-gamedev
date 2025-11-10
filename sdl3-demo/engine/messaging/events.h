@@ -63,14 +63,14 @@ public:
 
 class TimerOnTimeout : public Event<TimerOnTimeout, FrameStage::Gameplay>
 {
-	int tag;
+	int timeouts;
 public:
-	TimerOnTimeout(int tag = 0)
+	TimerOnTimeout(int timeouts)
 	{
-		this->tag = tag;
+		this->timeouts = timeouts;
 	}
 
-	int getTag() const { return tag; }
+	int getTimeouts() const { return timeouts; }
 };
 
 class AnimationStopEvent : public Event<AnimationStopEvent, FrameStage::Animation> { };

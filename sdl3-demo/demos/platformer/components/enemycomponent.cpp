@@ -14,41 +14,7 @@ EnemyComponent::EnemyComponent(Node &owner, EnemyType type)
 
 	owner.getEventDispatcher().registerHandler<DamageEvent>(this);
 	owner.getEventDispatcher().registerHandler<DeathEvent>(this);
-}
-
-void EnemyComponent::update()
-{
-	const Resources &res = Resources::get();
-	switch (state)
-	{
-		case EnemyState::damaged:
-		{
-			if (timerDamaged.step(FrameContext::dt()))
-			{
-				state = EnemyState::idle;
-				EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY, res.texEnemy, AnimationPlaybackMode::continuous);
-
-				// turn towards damage source
-				Node &sourceNode = World::get().getNode(damageSource);
-				glm::vec2 sourceDir = glm::normalize(glm::vec2(sourceNode.getPosition().x - owner.getPosition().x, 0));
-				owner.getCommandDispatcher().send<UpdateDirectionCommand>(UpdateDirectionCommand(sourceDir.x));
-			}
-			break;
-		}
-	}
-}
-
-void EnemyComponent::onEvent(const DeathEvent &event)
-{
-	const Resources &res = Resources::get();
-	EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
-
-	if (type == EnemyType::creeper)
-	{
-		state = EnemyState::dead;
-		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_DIE, res.texEnemyDie);
-		EventQueue::get().enqueue<AnimationStopEvent>(owner.getHandle(), res.enemyAnims[res.ANIM_ENEMY_DIE].getLength());
-	}
+	owner.getEventDispatcher().registerHandler<TimerOnTimeout>(this);
 }
 
 void EnemyComponent::onEvent(const DamageEvent &event)
@@ -57,6 +23,7 @@ void EnemyComponent::onEvent(const DamageEvent &event)
 	if (type == EnemyType::creeper)
 	{
 		timerDamaged.reset();
+		addTimer(timerDamaged);
 
 		damageSource = event.getSource();
 		Node &sourceNode = World::get().getNode(damageSource);
@@ -77,3 +44,37 @@ void EnemyComponent::onEvent(const DamageEvent &event)
 		}
 	}
 }
+
+void EnemyComponent::onEvent(const TimerOnTimeout &event)
+{
+	const Resources &res = Resources::get();
+	switch (state)
+	{
+		case EnemyState::damaged:
+		{
+			removeTimer(timerDamaged);
+			state = EnemyState::idle;
+			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY, res.texEnemy, AnimationPlaybackMode::continuous);
+
+			// turn towards damage source
+			Node &sourceNode = World::get().getNode(damageSource);
+			glm::vec2 sourceDir = glm::normalize(glm::vec2(sourceNode.getPosition().x - owner.getPosition().x, 0));
+			owner.getCommandDispatcher().send<UpdateDirectionCommand>(UpdateDirectionCommand(sourceDir.x));
+			break;
+		}
+	}
+}
+
+void EnemyComponent::onEvent(const DeathEvent &event)
+{
+	const Resources &res = Resources::get();
+	EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
+
+	if (type == EnemyType::creeper)
+	{
+		state = EnemyState::dead;
+		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_DIE, res.texEnemyDie);
+		EventQueue::get().enqueue<AnimationStopEvent>(owner.getHandle(), res.enemyAnims[res.ANIM_ENEMY_DIE].getLength());
+	}
+}
+

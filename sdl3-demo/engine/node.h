@@ -28,6 +28,7 @@ public:
 	Node();
 	virtual ~Node();
 
+	void earlyUpdate(FrameStage stage);
 	void update(FrameStage stage);
 
 	NodeHandle getHandle() const { return handle; }
