@@ -16,7 +16,7 @@
 
 #include "projectilecomponent.h"
 
-WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gameplay), timer(0.1f)
+WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gameplay), cooldownTimer(0.1f)
 {
 	shooting = false;
 	canFire = true;
@@ -29,7 +29,7 @@ WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gam
 	owner.getEventDispatcher().registerHandler<ShootEndEvent>(this);
 	owner.getEventDispatcher().registerHandler<TimerOnTimeout>(this);
 
-	addTimer(timer);
+	addTimer(cooldownTimer);
 }
 
 void WeaponComponent::onCommand(const UpdateVelocityCommand &dp)
@@ -70,8 +70,10 @@ void WeaponComponent::update()
 {
 	if (shooting && canFire)
 	{
-		timer.reset();
+		// restart cooldown timer
+		cooldownTimer.reset();
 		canFire = false;
+
 		World &world = World::get();
 		NodeHandle handle = world.createNode();
 		Node &bullet = world.getNode(handle);

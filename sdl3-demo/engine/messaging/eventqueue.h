@@ -55,7 +55,9 @@ public:
 	{
 		auto &queue = getQueue(EventType::stage);
 		auto &indices = getIndices(EventType::stage);
-		queue[indices.second++] = QueuedEvent
+
+		size_t wIdx = indices.second++;
+		queue[wIdx] = QueuedEvent
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),

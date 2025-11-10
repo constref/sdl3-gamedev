@@ -14,7 +14,7 @@ class WeaponComponent : public Component
 {
 	bool shooting;
 	bool canFire;
-	Timer timer;
+	Timer cooldownTimer;
 	float playerDirection;
 	glm::vec2 playerVelocity;
 
