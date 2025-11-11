@@ -9,12 +9,12 @@
 #include <components/physicscomponent.h>
 #include <components/collisioncomponent.h>
 #include <components/basiccameracomponent.h>
+#include <components/spritecomponent.h>
 
 #include "components/playercontrollercomponent.h"
 #include "components/weaponcomponent.h"
 #include "components/healthcomponent.h"
 #include "components/enemycomponent.h"
-#include "components/spriterendercomponent.h"
 
 Platformer::Platformer()
 {
@@ -76,7 +76,7 @@ bool Platformer::initialize(SDLState &state)
 
 						NodeHandle hTile = createObject(r, c);
 						Node &tile = world.getNode(hTile);
-						auto &renderComponent = tile.addComponent<RenderComponent>(res.texEnemy, tileWidth, tileHeight);
+						auto &renderComponent = tile.addComponent<SpriteComponent>(res.texEnemy, tileWidth, tileHeight);
 						renderComponent.setTexture(tex);
 						// only level tiles get a collision component
 						if (layer.name == "Level")
@@ -139,7 +139,7 @@ bool Platformer::initialize(SDLState &state)
 						.w = 10, .h = 26
 						});
 					auto &animComponent = player.addComponent<AnimationComponent>(res.playerAnims);
-					auto &renderComponent = player.addComponent<RenderComponent>(res.texIdle, tileWidth, tileHeight);
+					auto &renderComponent = player.addComponent<SpriteComponent>(res.texIdle, tileWidth, tileHeight);
 
 					// we have our player, we can create the camera and set it as a target
 					auto &camComponent = root.addComponent<BasicCameraComponent>(hPlayer, static_cast<float>(state.logW), static_cast<float>(state.logH));
@@ -163,7 +163,7 @@ bool Platformer::initialize(SDLState &state)
 					enemy.addComponent<HealthComponent>(300);
 					auto &animComponent = enemy.addComponent<AnimationComponent>(res.enemyAnims);
 					animComponent.setAnimation(res.ANIM_ENEMY);
-					auto &renderComponent = enemy.addComponent<SpriteRenderComponent>(res.texEnemy, tileWidth, tileHeight);
+					auto &renderComponent = enemy.addComponent<SpriteComponent>(res.texEnemy, tileWidth, tileHeight);
 					enemy.addComponent<EnemyComponent>(EnemyType::creeper);
 
 					layerObject.addChild(hEnemy);
@@ -181,25 +181,25 @@ bool Platformer::initialize(SDLState &state)
 
 	NodeHandle hBG1 = world.createNode();
 	Node &bg1 = world.getNode(hBG1);
-	bg1.addComponent<RenderComponent>(res.texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH))
+	bg1.addComponent<SpriteComponent>(res.texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG1);
 
 	NodeHandle hBG4 = world.createNode();
 	Node &bg4 = world.getNode(hBG4);
-	bg4.addComponent<RenderComponent>(res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
+	bg4.addComponent<SpriteComponent>(res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG4);
 
 	NodeHandle hBG3 = world.createNode();
 	Node &bg3 = world.getNode(hBG3);
-	bg3.addComponent<RenderComponent>(res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
+	bg3.addComponent<SpriteComponent>(res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG3);
 
 	NodeHandle hBG2 = world.createNode();
 	Node &bg2 = world.getNode(hBG2);
-	bg2.addComponent<RenderComponent>(res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
+	bg2.addComponent<SpriteComponent>(res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
 		.setFollowViewport(false);
 	bgLayer.addChild(hBG2);
 

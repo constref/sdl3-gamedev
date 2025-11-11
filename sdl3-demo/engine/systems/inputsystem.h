@@ -2,10 +2,11 @@
 
 #include <systems/system.h>
 #include <components/inputcomponent.h>
+#include <components/physicscomponent.h>
 
 class KeyboardEvent;
 
-class InputSystem : public System<InputComponent>
+class InputSystem : public System<FrameStage::Input, InputComponent, PhysicsComponent>
 {
 public:
 	InputSystem();

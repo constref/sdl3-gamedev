@@ -9,7 +9,7 @@
 #include <resources.h>
 #include <components/collisioncomponent.h>
 
-#include "events.h"
+#include "../events.h"
 
 ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, FrameStage::Gameplay)
 {

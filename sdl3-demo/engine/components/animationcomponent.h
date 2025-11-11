@@ -5,8 +5,6 @@
 #include "component.h"
 
 class Animation;
-class AnimationStopEvent;
-class AnimationPlayEvent;
 
 class AnimationComponent : public Component
 {
@@ -18,13 +16,16 @@ public:
 
 	AnimationComponent(Node &owner, const std::vector<Animation> &animation);
 	void update() override;
+	int getAnimation() const;
 	void setAnimation(int index);
-	void onEvent(const AnimationStopEvent &event);
-	void onEvent(const AnimationPlayEvent &event);
+	AnimationPlaybackMode getPlaybackMode() const { return playbackMode; }
 	void setPlaybackMode(AnimationPlaybackMode mode)
 	{
 		playbackMode = mode;
 	}
+
+	int getFrameNumber() const { return frameNumber; }
+	auto &getAnimations() { return animations; }
 
 private:
 	int currentAnimation = NO_ANIMATION;

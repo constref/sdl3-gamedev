@@ -5,7 +5,7 @@
 #include <node.h>
 #include <glm/glm.hpp>
 
-#include "events.h"
+#include "../events.h"
 
 EnemyComponent::EnemyComponent(Node &owner, EnemyType type)
 	: Component(owner, FrameStage::Gameplay), type(type), timerDamaged(0.5f)

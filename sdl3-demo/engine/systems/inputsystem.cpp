@@ -16,29 +16,31 @@ void InputSystem::update(Node &node)
 
 void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 {
+	Node &node = World::get().getNode(hNode);
+	auto [ic, pc] = getRequiredComponents(node);
+
 	auto &state = InputState::get();
 	state.setKeyState(event.scancode, event.state == KeyboardEvent::State::down);
 
-	float direction = 0;
+	glm::vec2 direction{ 0 };
 	if (state.isKeyPressed(SDL_SCANCODE_A))
 	{
-		direction += -1;
+		direction.x += -1;
 	}
 	if (state.isKeyPressed(SDL_SCANCODE_D))
 	{
-		direction += 1;
+		direction.x += 1;
 	}
+	pc->setDirection(direction);
 
 	Node &owner = World::get().getNode(hNode);
-	owner.sendCommand(UpdateDirectionCommand{ direction });
-
 	switch (event.scancode)
 	{
 		case SDL_SCANCODE_K:
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue2<JumpEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}
@@ -46,11 +48,11 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue2<ShootBeginEvent>(owner.getHandle(), 0);
 			}
 			else
 			{
-				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue2<ShootEndEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}

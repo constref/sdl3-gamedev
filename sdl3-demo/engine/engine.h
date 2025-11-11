@@ -12,6 +12,10 @@
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
 #include <systems/inputsystem.h>
+#include <systems/spriterendersystem.h>
+#include <systems/spriteanimationsystem.h>
+#include <systems/physicssystem.h>
+#include <systems/collisionsystem.h>
 
 template<Application AppType>
 class Engine
@@ -60,6 +64,10 @@ public:
 		double globalTime = 0;
 
 		systems[static_cast<size_t>(FrameStage::Input)].push_back(std::make_unique<InputSystem>());
+		systems[static_cast<size_t>(FrameStage::Physics)].push_back(std::make_unique<PhysicsSystem>());
+		systems[static_cast<size_t>(FrameStage::Physics)].push_back(std::make_unique<CollisionSystem>());
+		systems[static_cast<size_t>(FrameStage::Animation)].push_back(std::make_unique<SpriteAnimationSystem>());
+		systems[static_cast<size_t>(FrameStage::Render)].push_back(std::make_unique<SpriteRenderSystem>());
 
 		running = true;
 		while (running)
@@ -87,6 +95,9 @@ public:
 			SDLState &state = SDLState::global();
 			World &world = World::get();
 			Node &root = world.getNode(app.getRoot());
+
+			EventQueue::get().dispatch2(FrameStage::Start);
+			processSystems(FrameStage::Start, root, world);
 
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
@@ -130,18 +141,19 @@ public:
 				}
 			}
 
-
 			// handle input every frame to avoid input lag
-			//processStage(FrameStage::Input, root, world);
 			EventQueue::get().dispatch2(FrameStage::Input);
-			updateSystems(FrameStage::Input, root, world);
+			processSystems(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				processStage(FrameStage::Physics, root, world);
-				processStage(FrameStage::Gameplay, root, world);
-				processStage(FrameStage::Animation, root, world);
+				EventQueue::get().dispatch2(FrameStage::Physics);
+				processSystems(FrameStage::Physics, root, world);
+				//processStage(FrameStage::Gameplay, root, world);
+
+				EventQueue::get().dispatch2(FrameStage::Animation);
+				processSystems(FrameStage::Animation, root, world);
 
 				accumulator -= fixedStep;
 			}
@@ -150,76 +162,48 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			earlyUpdate(FrameStage::Render, root, world);
-			EventQueue::get().dispatch(FrameStage::Render);
-			update(FrameStage::Render, root, world);
+			EventQueue::get().dispatch2(FrameStage::Render);
+			processSystems(FrameStage::Render, root, world);
 
-			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
-				World::get().getFreeCount(),
-				EventQueue::get().getCount(FrameStage::Input),
-				EventQueue::get().getCount(FrameStage::Physics),
-				EventQueue::get().getCount(FrameStage::Gameplay),
-				EventQueue::get().getCount(FrameStage::Animation),
-				EventQueue::get().getCount(FrameStage::End)
-			).c_str());
+			//SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			//SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
+			//	World::get().getFreeCount(),
+			//	EventQueue::get().getCount(FrameStage::Input),
+			//	EventQueue::get().getCount(FrameStage::Physics),
+			//	EventQueue::get().getCount(FrameStage::Gameplay),
+			//	EventQueue::get().getCount(FrameStage::Animation),
+			//	EventQueue::get().getCount(FrameStage::End)
+			//).c_str());
 
 			SDL_RenderPresent(state.renderer);
 
-			earlyUpdate(FrameStage::End, root, world);
-			EventQueue::get().dispatch(FrameStage::End);
-			update(FrameStage::End, root, world);
+			EventQueue::get().dispatch2(FrameStage::End);
+			processSystems(FrameStage::End, root, world);
 		}
 	}
 
-	void updateSystems(FrameStage stage, Node &obj, World &world)
+	void processSystems(FrameStage stage, Node &obj, World &world)
 	{
 		auto &stageSystems = systems[static_cast<size_t>(stage)];
 
 		for (auto &sys : stageSystems)
 		{
-			if (sys->hasRequiredComponents(obj))
-			{
-				sys->update(obj);
-			}
+			processNodes(sys, obj, world);
+		}
+	}
+
+	void processNodes(std::unique_ptr<SystemBase> &sys, Node &obj, World &world)
+	{
+		if (sys->hasRequiredComponents(obj))
+		{
+			sys->update(obj);
 		}
 
 		auto &children = obj.getChildren();
 		for (NodeHandle &hChild : children)
 		{
 			Node &child = world.getNode(hChild);
-			updateSystems(stage, child, world);
+			processNodes(sys, child, world);
 		}
-	}
-
-	void earlyUpdate(FrameStage stage, Node &obj, World &world)
-	{
-		obj.earlyUpdate(stage);
-
-		auto &children = obj.getChildren();
-		for (NodeHandle &hChild : children)
-		{
-			Node &child = world.getNode(hChild);
-			earlyUpdate(stage, child, world);
-		}
-	}
-
-	void update(FrameStage stage, Node &obj, World &world)
-	{
-		obj.update(stage);
-
-		auto &children = obj.getChildren();
-		for (NodeHandle &hChild : children)
-		{
-			Node &child = world.getNode(hChild);
-			update(stage, child, world);
-		}
-	}
-
-	void processStage(FrameStage stage, Node &obj, World &world)
-	{
-		earlyUpdate(stage, obj, world);
-		EventQueue::get().dispatch(stage);
-		update(stage, obj, world);
 	}
 };

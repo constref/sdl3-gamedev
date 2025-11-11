@@ -18,7 +18,7 @@ protected:
 	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
-	std::array<std::vector<Component *>, static_cast<int>(FrameStage::StageCount)> componentStages;
+	std::vector<Component *> components;
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
@@ -27,9 +27,6 @@ public:
 	Node(NodeHandle handle);
 	Node();
 	virtual ~Node();
-
-	void earlyUpdate(FrameStage stage);
-	void update(FrameStage stage);
 
 	NodeHandle getHandle() const { return handle; }
 	glm::vec2 getPosition() const { return position; }
@@ -46,9 +43,7 @@ public:
 	{
 		// create and store component
 		T *comp = new T(*this, args...);
-
-		auto &stageVec = componentStages[static_cast<size_t>(comp->getStage())];
-		stageVec.push_back(comp);
+		components.push_back(comp);
 
 		return *comp;
 	}
@@ -56,19 +51,17 @@ public:
 	template<typename T>
 	T *getComponent()
 	{
-		for (auto &stageVec : componentStages)
+		for (auto *comp : components)
 		{
-			for (auto *comp : stageVec)
+			T *specific = dynamic_cast<T *>(comp);
+			if (specific)
 			{
-				T *specific = dynamic_cast<T *>(comp);
-				if (specific)
-				{
-					return specific;
-				}
+				return specific;
 			}
 		}
 		return nullptr;
 	}
+
 
 	void removeComponent(const Component &comp);
 

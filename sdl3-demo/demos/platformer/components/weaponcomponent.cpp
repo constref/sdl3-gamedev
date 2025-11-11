@@ -9,7 +9,7 @@
 #include <messaging/events.h>
 #include <world.h>
 
-#include <components/rendercomponent.h>
+#include <components/spritecomponent.h>
 #include <components/animationcomponent.h>
 #include <components/physicscomponent.h>
 #include <components/collisioncomponent.h>
@@ -92,7 +92,7 @@ void WeaponComponent::update()
 		auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
 		animCmp.setAnimation(res.ANIM_BULLET_MOVING);
 
-		auto &rndCmp = bullet.addComponent<RenderComponent>(res.texBullet,
+		auto &rndCmp = bullet.addComponent<SpriteComponent>(res.texBullet,
 			static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
 		rndCmp.setDirection(playerDirection);
 

@@ -1,9 +1,15 @@
 #pragma once
 
-#include "system.h"
+#include <systems/system.h>
 #include <components/physicscomponent.h>
 #include <components/collisioncomponent.h>
 
-class CollisionSystem : public System<PhysicsComponent, CollisionComponent>
+struct SDL_FRect;
+
+class CollisionSystem : public System<FrameStage::Physics, PhysicsComponent, CollisionComponent>
 {
+public:
+	void update(Node &node) override;
+
+	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 };

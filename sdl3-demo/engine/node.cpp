@@ -21,14 +21,11 @@ Node::Node()
 
 Node::~Node()
 {
-	for (auto &stageVec : componentStages)
+	for (auto *comp : components)
 	{
-		for (auto *comp : stageVec)
-		{
-			delete comp;
-		}
-		stageVec.clear();
+		delete comp;
 	}
+	components.clear();
 }
 
 Node &Node::getNode(const NodeHandle &handle)
@@ -40,24 +37,6 @@ Node &Node::getNode(const NodeHandle &handle)
 void Node::scheduleDestroy(float delay)
 {
 	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), delay);
-}
-
-void Node::earlyUpdate(FrameStage stage)
-{
-	auto &stageVec = componentStages[static_cast<size_t>(stage)];
-	for (auto &comp : stageVec)
-	{
-		comp->earlyUpdate();
-	}
-}
-
-void Node::update(FrameStage stage)
-{
-	auto &stageVec = componentStages[static_cast<size_t>(stage)];
-	for (auto &comp : stageVec)
-	{
-		comp->update();
-	}
 }
 
 void Node::addChild(NodeHandle childHandle)
@@ -83,11 +62,10 @@ void Node::removeChild(NodeHandle childHandle)
 
 void Node::removeComponent(const Component &comp)
 {
-	auto &stageVec = componentStages[static_cast<size_t>(comp.getStage())];
-	auto itr = std::find(stageVec.begin(), stageVec.end(), &comp);
-	if (itr != stageVec.end())
+	auto itr = std::find(components.begin(), components.end(), &comp);
+	if (itr != components.end())
 	{
-		stageVec.erase(itr);
+		components.erase(itr);
 		delete &comp;
 	}
 	else

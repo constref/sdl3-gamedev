@@ -4,9 +4,7 @@
 #include <components/component.h>
 
 struct FrameContext;
-class ScaleVelocityAxisCommand;
 class AddImpulseCommand;
-class UpdateDirectionCommand;
 
 class PhysicsComponent : public Component
 {
@@ -14,7 +12,8 @@ class PhysicsComponent : public Component
 	glm::vec2 acceleration;
 	glm::vec2 netForce;
 	glm::vec2 maxSpeed;
-	float direction;
+	glm::vec2 direction;
+	glm::vec2 delta;
 	bool grounded;
 	bool dynamic;
 	float gravityFactor;
@@ -22,15 +21,14 @@ class PhysicsComponent : public Component
 
 public:
 	PhysicsComponent(Node &owner);
-	void update();
 
+	glm::vec2 getDirection() const { return direction; }
+	void setDirection(const glm::vec2 direction) { this->direction = direction; }
 	glm::vec2 getVelocity() const { return velocity; }
 	void setVelocity(const glm::vec2 &vel);
 	glm::vec2 getAcceleration() const { return acceleration; }
-	void setAcceleration(const glm::vec2 &acc)
-	{
-		acceleration = acc;
-	}
+	void setAcceleration(const glm::vec2 &acc) { acceleration = acc; }
+	glm::vec2 getMaxSpeed() const { return maxSpeed; }
 	void setMaxSpeed(const glm::vec2 &maxSpeed) { this->maxSpeed = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
@@ -38,9 +36,12 @@ public:
 	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 	float getGravityFactor() const { return gravityFactor; }
 	void setGravityFactor(float gravityFactor) { this->gravityFactor = gravityFactor; }
+	float getDamping() const { return damping; }
 	void setDamping(float damping) { this->damping = damping; }
+	glm::vec2 getDelta() const { return delta; }
+	void setDelta(glm::vec2 delta) { this->delta = delta; }
 
-	void onCommand(const ScaleVelocityAxisCommand &msg);
-	void onCommand(const AddImpulseCommand &msg);
-	void onCommand(const UpdateDirectionCommand &msg);
+	//void onCommand(const ScaleVelocityAxisCommand &msg);
+	//void onCommand(const AddImpulseCommand &msg);
+	//void onCommand(const UpdateDirectionCommand &msg);
 };

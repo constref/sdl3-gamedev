@@ -29,8 +29,8 @@ add_library(engine STATIC
 	"components/collisioncomponent.cpp"
 	"components/basiccameracomponent.h"
 	"components/basiccameracomponent.cpp"
-	"components/rendercomponent.h"
-	"components/rendercomponent.cpp"
+	"components/spritecomponent.h"
+	"components/spritecomponent.cpp"
 	"messaging/observer.h"
 	"messaging/command.h"
 	"messaging/commanddispatcher.h"
@@ -49,7 +49,18 @@ add_library(engine STATIC
 	"logger.h"
 	"messaging/messaging.h"
 	"containers/ringbuffer.h"
-	"containers/atomicringbuffer.h" "animationplaybackmode.h" "systems/system.h" "systems/collisionsystem.h" "systems/inputsystem.h" "systems/inputsystem.cpp")
+	"containers/atomicringbuffer.h"
+	"animationplaybackmode.h"
+	"systems/system.h"
+	"systems/physicssystem.h"
+	"systems/physicssystem.cpp"
+	"systems/inputsystem.h"
+	"systems/inputsystem.cpp"
+	"systems/spriterendersystem.h"
+	"systems/spriterendersystem.cpp"
+	"systems/spriteanimationsystem.h"
+	"systems/spriteanimationsystem.cpp"
+ "systems/collisionsystem.h" "systems/collisionsystem.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
