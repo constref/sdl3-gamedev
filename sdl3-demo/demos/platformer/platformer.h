@@ -5,6 +5,7 @@
 struct SDLState;
 struct FrameContext;
 class World;
+class SystemRegistry;
 
 class Platformer
 {
@@ -18,7 +19,7 @@ public:
 	Platformer();
 
 	NodeHandle getPlayerHandle() const { return hPlayer; }
-	bool initialize(SDLState &state);
+	bool initialize(SystemRegistry &sysReg, SDLState &state);
 	void cleanup();
 	void onStart();
 	void update();

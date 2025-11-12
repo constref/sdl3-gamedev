@@ -41,7 +41,5 @@ public:
 	glm::vec2 getDelta() const { return delta; }
 	void setDelta(glm::vec2 delta) { this->delta = delta; }
 
-	//void onCommand(const ScaleVelocityAxisCommand &msg);
-	//void onCommand(const AddImpulseCommand &msg);
-	//void onCommand(const UpdateDirectionCommand &msg);
+	void addImpulse(const glm::vec2 &impulse);
 };

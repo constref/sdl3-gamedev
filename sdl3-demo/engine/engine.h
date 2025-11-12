@@ -11,6 +11,7 @@
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
+#include <systems/systemregistry.h>
 #include <systems/inputsystem.h>
 #include <systems/spriterendersystem.h>
 #include <systems/spriteanimationsystem.h>
@@ -26,8 +27,7 @@ class Engine
 	bool debugMode;
 	bool running;
 	constexpr static bool clampDeltaTime = true;
-
-	std::array<std::vector<std::unique_ptr<SystemBase>>, static_cast<size_t>(FrameStage::StageCount)> systems;
+	SystemRegistry sysRegistry;
 
 public:
 	Engine()
@@ -40,7 +40,7 @@ public:
 	bool initialize(int logW, int logH)
 	{
 		SDLState &state = SDLState::global();
-		if (state.initialize(1600, 900, logW, logH) && app.initialize(state))
+		if (state.initialize(1600, 900, logW, logH) && app.initialize(sysRegistry, state))
 		{
 			return true;
 		}
@@ -63,11 +63,11 @@ public:
 		long frameCount = 0;
 		double globalTime = 0;
 
-		systems[static_cast<size_t>(FrameStage::Input)].push_back(std::make_unique<InputSystem>());
-		systems[static_cast<size_t>(FrameStage::Physics)].push_back(std::make_unique<PhysicsSystem>());
-		systems[static_cast<size_t>(FrameStage::Physics)].push_back(std::make_unique<CollisionSystem>());
-		systems[static_cast<size_t>(FrameStage::Animation)].push_back(std::make_unique<SpriteAnimationSystem>());
-		systems[static_cast<size_t>(FrameStage::Render)].push_back(std::make_unique<SpriteRenderSystem>());
+		sysRegistry.registerSystem(std::make_unique<InputSystem>());
+		sysRegistry.registerSystem(std::make_unique<PhysicsSystem>());
+		sysRegistry.registerSystem(std::make_unique<CollisionSystem>());
+		sysRegistry.registerSystem(std::make_unique<SpriteAnimationSystem>());
+		sysRegistry.registerSystem(std::make_unique<SpriteRenderSystem>());
 
 		running = true;
 		while (running)
@@ -150,8 +150,8 @@ public:
 			{
 				EventQueue::get().dispatch2(FrameStage::Physics);
 				processSystems(FrameStage::Physics, root, world);
-				//processStage(FrameStage::Gameplay, root, world);
-
+				EventQueue::get().dispatch2(FrameStage::Gameplay);
+				processSystems(FrameStage::Gameplay, root, world);
 				EventQueue::get().dispatch2(FrameStage::Animation);
 				processSystems(FrameStage::Animation, root, world);
 
@@ -184,8 +184,7 @@ public:
 
 	void processSystems(FrameStage stage, Node &obj, World &world)
 	{
-		auto &stageSystems = systems[static_cast<size_t>(stage)];
-
+		auto &stageSystems = sysRegistry.getStageSystems(stage);
 		for (auto &sys : stageSystems)
 		{
 			processNodes(sys, obj, world);

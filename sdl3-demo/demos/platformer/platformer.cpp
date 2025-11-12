@@ -10,11 +10,14 @@
 #include <components/collisioncomponent.h>
 #include <components/basiccameracomponent.h>
 #include <components/spritecomponent.h>
+#include <systems/systemregistry.h>
 
 #include "components/playercontrollercomponent.h"
 #include "components/weaponcomponent.h"
 #include "components/healthcomponent.h"
 #include "components/enemycomponent.h"
+
+#include "systems/playercontrolsystem.h"
 
 Platformer::Platformer()
 {
@@ -22,13 +25,15 @@ Platformer::Platformer()
 	debugMode = false;
 }
 
-bool Platformer::initialize(SDLState &state)
+bool Platformer::initialize(SystemRegistry &sysReg, SDLState &state)
 {
 	World &world = World::get();
 	hRoot = world.createNode();
 
 	Resources &res = Resources::get();
 	res.load(state.renderer);
+
+	sysReg.registerSystem(std::make_unique<PlayerControlSystem>());
 
 	struct LayerVisitor
 	{
@@ -76,6 +81,7 @@ bool Platformer::initialize(SDLState &state)
 
 						NodeHandle hTile = createObject(r, c);
 						Node &tile = world.getNode(hTile);
+						tile.setTag(1);
 						auto &renderComponent = tile.addComponent<SpriteComponent>(res.texEnemy, tileWidth, tileHeight);
 						renderComponent.setTexture(tex);
 						// only level tiles get a collision component
@@ -111,6 +117,7 @@ bool Platformer::initialize(SDLState &state)
 				{
 					NodeHandle hPlayer = world.createNode();
 					Node &player = world.getNode(hPlayer);
+					player.setTag(2);
 					player.setPosition(objPos);
 					auto &inputComponent = player.addComponent<InputComponent>(hPlayer);
 					auto &ctrlComp = player.addComponent<PlayerControllerComponent>();
@@ -150,6 +157,7 @@ bool Platformer::initialize(SDLState &state)
 				{
 					NodeHandle hEnemy = world.createNode();
 					Node &enemy = world.getNode(hEnemy);
+					enemy.setTag(3);
 
 					enemy.setPosition(objPos);
 					auto &physicsComponent = enemy.addComponent<PhysicsComponent>();

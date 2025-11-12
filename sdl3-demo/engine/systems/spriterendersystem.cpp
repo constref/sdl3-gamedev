@@ -19,8 +19,8 @@ void SpriteRenderSystem::update(Node &node)
 	SDL_FRect dst{
 		//.x = node.getPosition().x - mapViewportPos.x * followViewport,
 		//.y = node.getPosition().y - mapViewportPos.y * followViewport,
-		.x = node.getPosition().x,
-		.y = node.getPosition().y - 1300 * rc->getFollowViewport(),
+		.x = node.getPosition().x * rc->getFollowViewport(),
+		.y = node.getPosition().y - 350.0f * rc->getFollowViewport(),
 		.w = size.x,
 		.h = size.y
 	};

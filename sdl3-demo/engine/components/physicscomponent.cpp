@@ -32,9 +32,7 @@ void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 //	setVelocity(vel);
 //}
 //
-//void PhysicsComponent::onCommand(const AddImpulseCommand &msg)
-//{
-//	glm::vec2 vel = getVelocity();
-//	vel += msg.getImpulse();
-//	setVelocity(vel);
-//}
+void PhysicsComponent::addImpulse(const glm::vec2 &impulse)
+{
+	velocity += impulse;
+}

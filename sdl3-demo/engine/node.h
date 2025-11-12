@@ -22,6 +22,7 @@ protected:
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
+	int tag;
 
 public:
 	Node(NodeHandle handle);
@@ -37,6 +38,8 @@ public:
 	void removeChild(NodeHandle childHandle);
 	CommandDispatcher &getCommandDispatcher() { return cmdDispatcher; }
 	EventDispatcher &getEventDispatcher() { return eventDispatcher; }
+	int getTag() const { return tag; }
+	void setTag(int tag) { this->tag = tag; }
 
 	template<typename T, typename... Args>
 	T &addComponent(Args... args)
@@ -47,6 +50,8 @@ public:
 
 		return *comp;
 	}
+
+	void removeComponent(const Component &comp);
 
 	template<typename T>
 	T *getComponent()
@@ -61,9 +66,6 @@ public:
 		}
 		return nullptr;
 	}
-
-
-	void removeComponent(const Component &comp);
 
 	void initialize()
 	{
