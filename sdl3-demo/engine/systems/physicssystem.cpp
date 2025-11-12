@@ -4,6 +4,13 @@
 #include <node.h>
 #include <logger.h>
 #include <format>
+#include <messaging/eventqueue.h>
+#include <messaging/events.h>
+
+PhysicsSystem::PhysicsSystem()
+{
+	EventQueue::get().dispatcher.registerHandler2<DirectionChanged>(this);
+}
 
 void PhysicsSystem::update(Node &node)
 {
@@ -49,4 +56,11 @@ void PhysicsSystem::update(Node &node)
 		// collision component can check per-axis and apply resolution
 		pc->setDelta(vel * FrameContext::dt());
 	}
+}
+
+void PhysicsSystem::onEvent(NodeHandle target, const DirectionChanged &event)
+{
+	Node &node = World::get().getNode(target);
+	auto *pc = node.getComponent<PhysicsComponent>();
+	pc->setDirection(event.getDirection());
 }

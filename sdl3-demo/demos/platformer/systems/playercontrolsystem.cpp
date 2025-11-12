@@ -15,53 +15,55 @@ PlayerControlSystem::PlayerControlSystem()
 
 void PlayerControlSystem::update(Node &node)
 {
-	//switch (currentState)
-	//{
-	//	case PState::idle:
-	//	case PState::shooting:
-	//	{
-	//		// holding a direction, start running
-	//		if (direction)
-	//		{
-	//			transitionState(!shooting ? PState::running : PState::runningShooting);
-	//		}
-	//		break;
-	//	}
-	//	case PState::running:
-	//	case PState::runningShooting:
-	//	{
-	//		if (direction == 0)
-	//		{
-	//			// no longer holding direction, go to idle
-	//			transitionState(!shooting ? PState::idle : PState::shooting);
-	//		}
-	//		else if (direction * velocity.x < 0)
-	//		{
-	//			// if direction we're holding is opposite to velocity, use sliding state
-	//			transitionState(!shooting ? PState::sliding : PState::slidingShooting);
-	//			slideTimer.reset();
-	//		}
-	//		break;
-	//	}
-	//	case PState::sliding:
-	//	case PState::slidingShooting:
-	//	{
-	//		if (slideTimer.step(FrameContext::global().deltaTime))
-	//		{
-	//			if (direction == 0)
-	//			{
-	//				// if no longer holding direction, go to idle
-	//				transitionState(!shooting ? PState::idle : PState::shooting);
-	//			}
-	//			else if (direction * velocity.x > 0)
-	//			{
-	//				// if direction and velocity directions match, go to running
-	//				transitionState(!shooting ? PState::running : PState::runningShooting);
-	//			}
-	//		}
-	//		break;
-	//	}
-	//}
+	auto [ic, pcc, pc] = getRequiredComponents(node);
+
+	switch (pcc->getCurrentState())
+	{
+		case PState::idle:
+		case PState::shooting:
+		{
+			// holding a direction, start running
+			if (pc->getDirection().x)
+			{
+				transitionState(node, !pcc->isShooting() ? PState::running : PState::runningShooting);
+			}
+			break;
+		}
+		case PState::running:
+		case PState::runningShooting:
+		{
+			if (pc->getDirection().x == 0)
+			{
+				// no longer holding direction, go to idle
+				transitionState(node, !pcc->isShooting() ? PState::idle : PState::shooting);
+			}
+			else if (pc->getDirection().x * pc->getVelocity().x < 0)
+			{
+				// if direction we're holding is opposite to velocity, use sliding state
+				transitionState(node, !pcc->isShooting() ? PState::sliding : PState::slidingShooting);
+				pcc->getSlideTimer().reset();
+			}
+			break;
+		}
+		case PState::sliding:
+		case PState::slidingShooting:
+		{
+			if (pcc->getSlideTimer().step(FrameContext::global().deltaTime))
+			{
+				if (pc->getDirection().x == 0)
+				{
+					// if no longer holding direction, go to idle
+					transitionState(node, !pcc->isShooting() ? PState::idle : PState::shooting);
+				}
+				else if (pc->getDirection().x * pc->getVelocity().x > 0)
+				{
+					// if direction and velocity directions match, go to running
+					transitionState(node, !pcc->isShooting() ? PState::running : PState::runningShooting);
+				}
+			}
+			break;
+		}
+	}
 }
 
 void PlayerControlSystem::transitionState(Node &node, PState newState)

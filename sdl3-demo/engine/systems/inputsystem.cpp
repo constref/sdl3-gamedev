@@ -7,6 +7,7 @@
 
 InputSystem::InputSystem()
 {
+	direction = { 0, 0 };
 	EventQueue::get().dispatcher.registerHandler2<KeyboardEvent>(this);
 }
 
@@ -17,7 +18,7 @@ void InputSystem::update(Node &node)
 void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 {
 	Node &node = World::get().getNode(hNode);
-	auto [ic, pc] = getRequiredComponents(node);
+	auto [ic] = getRequiredComponents(node);
 
 	auto &state = InputState::get();
 	state.setKeyState(event.scancode, event.state == KeyboardEvent::State::down);
@@ -31,7 +32,19 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 	{
 		direction.x += 1;
 	}
-	pc->setDirection(direction);
+	if (state.isKeyPressed(SDL_SCANCODE_W))
+	{
+		direction.y += 1;
+	}
+	if (state.isKeyPressed(SDL_SCANCODE_S))
+	{
+		direction.y -= 1;
+	}
+	if (this->direction != direction)
+	{
+		this->direction = direction;
+		EventQueue::get().enqueue2<DirectionChanged>(hNode, 0, direction);
+	}
 
 	Node &owner = World::get().getNode(hNode);
 	switch (event.scancode)

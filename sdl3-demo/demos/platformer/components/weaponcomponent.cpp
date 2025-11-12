@@ -94,7 +94,7 @@ void WeaponComponent::update()
 
 		auto &rndCmp = bullet.addComponent<SpriteComponent>(res.texBullet,
 			static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
-		rndCmp.setDirection(playerDirection);
+		//rndCmp.setDirection(playerDirection);
 
 		auto &collCmp = bullet.addComponent<CollisionComponent>();
 		collCmp.setCollider(SDL_FRect{
