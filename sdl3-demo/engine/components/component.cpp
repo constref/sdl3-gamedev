@@ -20,7 +20,7 @@ void Component::earlyUpdate()
 	{
 		if (int timeouts = t->step(FrameContext::dt()); timeouts > 0)
 		{
-			EventQueue::get().enqueue<TimerOnTimeout>(owner.getHandle(), 0, timeouts);
+			EventQueue::get().enqueue2<TimerOnTimeout>(owner.getHandle(), 0, timeouts);
 		}
 	}
 }

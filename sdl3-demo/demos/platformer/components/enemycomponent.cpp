@@ -38,7 +38,7 @@ void EnemyComponent::onEvent(const DamageEvent &event)
 			case EnemyState::idle:
 			{
 				state = EnemyState::damaged;
-				EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_HIT, res.texEnemyHit, AnimationPlaybackMode::continuous);
+				EventQueue::get().enqueue2<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_HIT, res.texEnemyHit, AnimationPlaybackMode::continuous);
 				break;
 			}
 		}
@@ -54,7 +54,7 @@ void EnemyComponent::onEvent(const TimerOnTimeout &event)
 		{
 			removeTimer(timerDamaged);
 			state = EnemyState::idle;
-			EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY, res.texEnemy, AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue2<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY, res.texEnemy, AnimationPlaybackMode::continuous);
 
 			// turn towards damage source
 			Node &sourceNode = World::get().getNode(damageSource);
@@ -68,13 +68,13 @@ void EnemyComponent::onEvent(const TimerOnTimeout &event)
 void EnemyComponent::onEvent(const DeathEvent &event)
 {
 	const Resources &res = Resources::get();
-	EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
+	EventQueue::get().enqueue2<RemoveColliderEvent>(owner.getHandle(), 0);
 
 	if (type == EnemyType::creeper)
 	{
 		state = EnemyState::dead;
-		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_DIE, res.texEnemyDie);
-		EventQueue::get().enqueue<AnimationStopEvent>(owner.getHandle(), res.enemyAnims[res.ANIM_ENEMY_DIE].getLength());
+		EventQueue::get().enqueue2<AnimationPlayEvent>(owner.getHandle(), 0, res.ANIM_ENEMY_DIE, res.texEnemyDie);
+		EventQueue::get().enqueue2<AnimationStopEvent>(owner.getHandle(), res.enemyAnims[res.ANIM_ENEMY_DIE].getLength());
 	}
 }
 

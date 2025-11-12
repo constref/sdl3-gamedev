@@ -96,7 +96,7 @@ public:
 			World &world = World::get();
 			Node &root = world.getNode(app.getRoot());
 
-			EventQueue::get().dispatch2(FrameStage::Start);
+			EventQueue::get().dispatch(FrameStage::Start);
 			processSystems(FrameStage::Start, root, world);
 
 			SDL_Event event{ 0 };
@@ -142,17 +142,17 @@ public:
 			}
 
 			// handle input every frame to avoid input lag
-			EventQueue::get().dispatch2(FrameStage::Input);
+			EventQueue::get().dispatch(FrameStage::Input);
 			processSystems(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				EventQueue::get().dispatch2(FrameStage::Physics);
+				EventQueue::get().dispatch(FrameStage::Physics);
 				processSystems(FrameStage::Physics, root, world);
-				EventQueue::get().dispatch2(FrameStage::Gameplay);
+				EventQueue::get().dispatch(FrameStage::Gameplay);
 				processSystems(FrameStage::Gameplay, root, world);
-				EventQueue::get().dispatch2(FrameStage::Animation);
+				EventQueue::get().dispatch(FrameStage::Animation);
 				processSystems(FrameStage::Animation, root, world);
 
 				accumulator -= fixedStep;
@@ -162,22 +162,22 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			EventQueue::get().dispatch2(FrameStage::Render);
+			EventQueue::get().dispatch(FrameStage::Render);
 			processSystems(FrameStage::Render, root, world);
 
-			//SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			//SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
-			//	World::get().getFreeCount(),
-			//	EventQueue::get().getCount(FrameStage::Input),
-			//	EventQueue::get().getCount(FrameStage::Physics),
-			//	EventQueue::get().getCount(FrameStage::Gameplay),
-			//	EventQueue::get().getCount(FrameStage::Animation),
-			//	EventQueue::get().getCount(FrameStage::End)
-			//).c_str());
+			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
+				World::get().getFreeCount(),
+				EventQueue::get().getCount(FrameStage::Input),
+				EventQueue::get().getCount(FrameStage::Physics),
+				EventQueue::get().getCount(FrameStage::Gameplay),
+				EventQueue::get().getCount(FrameStage::Animation),
+				EventQueue::get().getCount(FrameStage::End)
+			).c_str());
 
 			SDL_RenderPresent(state.renderer);
 
-			EventQueue::get().dispatch2(FrameStage::End);
+			EventQueue::get().dispatch(FrameStage::End);
 			processSystems(FrameStage::End, root, world);
 		}
 	}

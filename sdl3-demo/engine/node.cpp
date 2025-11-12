@@ -37,7 +37,7 @@ Node &Node::getNode(const NodeHandle &handle)
 
 void Node::scheduleDestroy(float delay)
 {
-	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), delay);
+	EventQueue::get().enqueue2<NodeRemovalEvent>(getHandle(), delay);
 }
 
 void Node::addChild(NodeHandle childHandle)

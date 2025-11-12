@@ -31,8 +31,7 @@ struct QueuedEvent2
 
 class EventQueue
 {
-	std::array<std::vector<QueuedEvent2>, static_cast<size_t>(FrameStage::StageCount)> queues2;
-	std::array<std::vector<QueuedEvent>, static_cast<size_t>(FrameStage::StageCount)> queues;
+	std::array<std::vector<QueuedEvent2>, static_cast<size_t>(FrameStage::StageCount)> queues;
 	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
 
 	EventQueue()
@@ -43,7 +42,7 @@ class EventQueue
 			queues[i].resize(5000);
 			indices[i].first = 0;
 			indices[i].second = 0;
-			queues2[i].resize(5000);
+			queues[i].resize(5000);
 		}
 	}
 
@@ -68,7 +67,7 @@ public:
 	template<typename EventType, typename... Args>
 	void enqueue2(NodeHandle target, float delay, Args&&... args)
 	{
-		auto &queue = queues2[static_cast<size_t>(EventType::stage)];
+		auto &queue = queues[static_cast<size_t>(EventType::stage)];
 		auto &indices = getIndices(EventType::stage);
 
 		size_t wIdx = indices.second++;
@@ -85,29 +84,9 @@ public:
 		};
 	}
 
-	template<typename EventType, typename... Args>
-	void enqueue(NodeHandle target, float delay, Args&&... args)
+	void dispatch(FrameStage stage)
 	{
-		auto &queue = getQueue(EventType::stage);
-		auto &indices = getIndices(EventType::stage);
-
-		size_t wIdx = indices.second++;
-		queue[wIdx] = QueuedEvent
-		{
-			.target = target,
-			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
-			.dispatch = [](Node &obj, const EventBase &e)
-			{
-				obj.notify<const EventType &>(static_cast<const EventType &>(e));
-			},
-			.triggerTime = FrameContext::global().globalTime + delay,
-			.processed = false
-		};
-	}
-
-	void dispatch2(FrameStage stage)
-	{
-		auto &queue = queues2[static_cast<size_t>(stage)];
+		auto &queue = queues[static_cast<size_t>(stage)];
 		auto &indices = getIndices(stage);
 
 		size_t rIdx = indices.first;
@@ -119,30 +98,6 @@ public:
 			if (!item.processed && item.triggerTime <= FrameContext::gt())
 			{
 				item.dispatch(item.target, *item.event);
-				item.processed = true;
-				numDispatched++;
-			}
-		}
-		if (numEvents == numDispatched)
-		{
-			indices.first = rIdx;
-		}
-	}
-
-	void dispatch(FrameStage stage)
-	{
-		auto &queue = getQueue(stage);
-		auto &indices = getIndices(stage);
-
-		size_t rIdx = indices.first;
-		size_t numEvents = indices.second - indices.first;
-		int numDispatched = 0;
-		while (rIdx < indices.second)
-		{
-			QueuedEvent &item = queue[rIdx++];
-			if (!item.processed && item.triggerTime <= FrameContext::gt())
-			{
-				item.dispatch(World::get().getNode(item.target), *item.event);
 				item.processed = true;
 				numDispatched++;
 			}

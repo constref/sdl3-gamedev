@@ -17,7 +17,7 @@ void HealthComponent::onEvent(const DamageEvent &event)
 		if (hp <= 0)
 		{
 			hp = 0;
-			EventQueue::get().enqueue<DeathEvent>(owner.getHandle(), 0);
+			EventQueue::get().enqueue2<DeathEvent>(owner.getHandle(), 0);
 		}
 	}
 }

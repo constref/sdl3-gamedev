@@ -18,6 +18,7 @@
 #include "components/enemycomponent.h"
 
 #include "systems/playercontrolsystem.h"
+#include "systems/weaponsystem.h"
 
 Platformer::Platformer()
 {
@@ -34,6 +35,7 @@ bool Platformer::initialize(SystemRegistry &sysReg, SDLState &state)
 	res.load(state.renderer);
 
 	sysReg.registerSystem(std::make_unique<PlayerControlSystem>());
+	sysReg.registerSystem(std::make_unique<WeaponSystem>());
 
 	struct LayerVisitor
 	{
