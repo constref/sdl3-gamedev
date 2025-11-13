@@ -10,7 +10,7 @@
 
 SpriteRenderSystem::SpriteRenderSystem()
 {
-	EventQueue::get().dispatcher.registerHandler2<DirectionChanged>(this);
+	EventQueue::get().dispatcher.registerHandler2<DirectionChangedEvent>(this);
 	EventQueue::get().dispatcher.registerHandler2<AnimationPlayEvent>(this);
 }
 
@@ -61,7 +61,7 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &ev
 	sc->setTexture(event.getTexture());
 }
 
-void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChanged &event)
+void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
 {
 	if (event.getDirection().x != 0)
 	{

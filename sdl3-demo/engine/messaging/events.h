@@ -26,11 +26,11 @@ public:
 	}
 };
 
-class DirectionChanged : public Event<DirectionChanged, FrameStage::Physics>
+class DirectionChangedEvent : public Event<DirectionChangedEvent, FrameStage::Physics>
 {
 	glm::vec2 direction;
 public:
-	DirectionChanged(glm::vec2 direction) : direction(direction) {}
+	DirectionChangedEvent(glm::vec2 direction) : direction(direction) {}
 
 	glm::vec2 getDirection() const { return direction; }
 };

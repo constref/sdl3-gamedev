@@ -4,12 +4,6 @@
 #include <timer.h>
 #include <glm/glm.hpp>
 
-class UpdateVelocityCommand;
-class UpdateDirectionCommand;
-class ShootBeginEvent;
-class ShootEndEvent;
-class TimerOnTimeout;
-
 class WeaponComponent : public Component
 {
 	bool shooting;
@@ -21,10 +15,8 @@ class WeaponComponent : public Component
 public:
 	WeaponComponent(Node &owner);
 
-	void update() override;
-	void onCommand(const UpdateVelocityCommand &dp);
-	void onCommand(const UpdateDirectionCommand &dp);
-	void onEvent(const ShootBeginEvent &event);
-	void onEvent(const ShootEndEvent &event);
-	void onEvent(const TimerOnTimeout &event);
+	bool isShooting() const { return shooting; }
+	void setIsShooting(bool shooting) { this->shooting = shooting; }
+
+	Timer &getCooldownTimer() { return cooldownTimer; }
 };

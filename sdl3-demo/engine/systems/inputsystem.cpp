@@ -42,7 +42,7 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 	if (ic->getDirection() != direction)
 	{
 		ic->setDirection(direction);
-		EventQueue::get().enqueue<DirectionChanged>(hNode, 0, direction);
+		EventQueue::get().enqueue<DirectionChangedEvent>(hNode, 0, direction);
 	}
 
 	Node &owner = World::get().getNode(hNode);

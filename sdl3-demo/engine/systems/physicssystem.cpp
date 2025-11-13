@@ -9,7 +9,7 @@
 
 PhysicsSystem::PhysicsSystem()
 {
-	EventQueue::get().dispatcher.registerHandler2<DirectionChanged>(this);
+	EventQueue::get().dispatcher.registerHandler2<DirectionChangedEvent>(this);
 }
 
 void PhysicsSystem::update(Node &node)
@@ -58,7 +58,7 @@ void PhysicsSystem::update(Node &node)
 	}
 }
 
-void PhysicsSystem::onEvent(NodeHandle target, const DirectionChanged &event)
+void PhysicsSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
 {
 	Node &node = World::get().getNode(target);
 	auto *pc = node.getComponent<PhysicsComponent>();
