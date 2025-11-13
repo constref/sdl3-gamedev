@@ -4,7 +4,7 @@
 #include <components/inputcomponent.h>
 #include <components/basiccameracomponent.h>
 
-class BasicCameraSystem : public System<FrameStage::Render, InputComponent, BasicCameraComponent>
+class BasicCameraSystem : public System<FrameStage::Gameplay, InputComponent, BasicCameraComponent>
 {
 	glm::vec2 viewportPosition;
 	glm::vec2 viewportSize;

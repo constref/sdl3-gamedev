@@ -151,9 +151,7 @@ bool Platformer::initialize(SystemRegistry &sysReg, SDLState &state)
 						});
 					auto &animComponent = player.addComponent<AnimationComponent>(res.playerAnims);
 					auto &renderComponent = player.addComponent<SpriteComponent>(res.texIdle, tileWidth, tileHeight);
-
-					// we have our player, we can create the camera and set it as a target
-					root.addComponent<BasicCameraComponent>();
+					player.addComponent<BasicCameraComponent>();
 
 					layerObject.addChild(hPlayer);
 				}

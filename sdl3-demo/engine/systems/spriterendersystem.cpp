@@ -5,6 +5,7 @@
 #include <messaging/eventqueue.h>
 #include <sdlstate.h>
 #include <framecontext.h>
+#include <systems/context/rendercontext.h>
 #include <world.h>
 
 SpriteRenderSystem::SpriteRenderSystem()
@@ -27,10 +28,8 @@ void SpriteRenderSystem::update(Node &node)
 	};
 
 	SDL_FRect dst{
-		//.x = node.getPosition().x - mapViewportPos.x * followViewport,
-		//.y = node.getPosition().y - mapViewportPos.y * followViewport,
-		.x = node.getPosition().x * sc->getFollowViewport(),
-		.y = node.getPosition().y - 1310.0f * sc->getFollowViewport(),
+		.x = node.getPosition().x - RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(),
+		.y = node.getPosition().y - RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(),
 		.w = size.x,
 		.h = size.y
 	};
