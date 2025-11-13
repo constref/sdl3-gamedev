@@ -8,10 +8,8 @@ class KeyboardEvent;
 
 class InputSystem : public System<FrameStage::Input, InputComponent>
 {
-	glm::vec2 direction;
 public:
 	InputSystem();
 	void update(Node &node) override;
-
 	void onEvent(NodeHandle hNode, const KeyboardEvent &event);
 };

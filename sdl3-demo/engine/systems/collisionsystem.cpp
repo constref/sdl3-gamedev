@@ -51,7 +51,7 @@ void CollisionSystem::update(Node &node)
 								contacts[0] = true;
 								if (!prevContacts[0])
 								{
-									EventQueue::get().enqueue2<CollisionEvent>(node.getHandle(), 0,
+									EventQueue::get().enqueue<CollisionEvent>(node.getHandle(), 0,
 										otherOwner.getHandle(), overlap, glm::vec2(-1, 0));
 								}
 							}
@@ -61,7 +61,7 @@ void CollisionSystem::update(Node &node)
 								contacts[1] = true;
 								if (!prevContacts[1])
 								{
-									EventQueue::get().enqueue2<CollisionEvent>(node.getHandle(), 0,
+									EventQueue::get().enqueue<CollisionEvent>(node.getHandle(), 0,
 										otherOwner.getHandle(), overlap, glm::vec2(1, 0));
 								}
 							}
@@ -75,7 +75,7 @@ void CollisionSystem::update(Node &node)
 								contacts[2] = true;
 								if (!prevContacts[2])
 								{
-									EventQueue::get().enqueue2<CollisionEvent>(node.getHandle(), 0,
+									EventQueue::get().enqueue<CollisionEvent>(node.getHandle(), 0,
 										otherOwner.getHandle(), overlap, glm::vec2(0, 1));
 								}
 							}
@@ -85,7 +85,7 @@ void CollisionSystem::update(Node &node)
 								contacts[3] = true;
 								if (!prevContacts[3])
 								{
-									EventQueue::get().enqueue2<CollisionEvent>(node.getHandle(), 0,
+									EventQueue::get().enqueue<CollisionEvent>(node.getHandle(), 0,
 										otherOwner.getHandle(), overlap, glm::vec2(0, -1));
 								}
 							}
@@ -106,7 +106,7 @@ void CollisionSystem::update(Node &node)
 
 		if (prevContacts[2] && !contacts[2])
 		{
-			EventQueue::get().enqueue2<FallingEvent>(node.getHandle(), 0);
+			EventQueue::get().enqueue<FallingEvent>(node.getHandle(), 0);
 		}
 
 		for (int i = 0; i < contacts.size(); ++i)

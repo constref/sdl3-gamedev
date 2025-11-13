@@ -30,7 +30,7 @@ void SpriteRenderSystem::update(Node &node)
 		//.x = node.getPosition().x - mapViewportPos.x * followViewport,
 		//.y = node.getPosition().y - mapViewportPos.y * followViewport,
 		.x = node.getPosition().x * sc->getFollowViewport(),
-		.y = node.getPosition().y - 350.0f * sc->getFollowViewport(),
+		.y = node.getPosition().y - 1310.0f * sc->getFollowViewport(),
 		.w = size.x,
 		.h = size.y
 	};
@@ -59,7 +59,6 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &ev
 {
 	Node &node = World::get().getNode(target);
 	auto [sc] = getRequiredComponents(node);
-
 	sc->setTexture(event.getTexture());
 }
 

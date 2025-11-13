@@ -7,7 +7,6 @@
 
 InputSystem::InputSystem()
 {
-	direction = { 0, 0 };
 	EventQueue::get().dispatcher.registerHandler2<KeyboardEvent>(this);
 }
 
@@ -40,10 +39,10 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 	{
 		direction.y -= 1;
 	}
-	if (this->direction != direction)
+	if (ic->getDirection() != direction)
 	{
-		this->direction = direction;
-		EventQueue::get().enqueue2<DirectionChanged>(hNode, 0, direction);
+		ic->setDirection(direction);
+		EventQueue::get().enqueue<DirectionChanged>(hNode, 0, direction);
 	}
 
 	Node &owner = World::get().getNode(hNode);
@@ -53,7 +52,7 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue2<JumpEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}
@@ -61,11 +60,11 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue2<ShootBeginEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
 			}
 			else
 			{
-				EventQueue::get().enqueue2<ShootEndEvent>(owner.getHandle(), 0);
+				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}

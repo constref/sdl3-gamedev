@@ -75,47 +75,47 @@ void PlayerControlSystem::transitionState(Node &node, PState newState)
 	{
 		case PState::idle:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getIdleAnimation(), pcc->getIdleTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getIdleAnimation(), pcc->getIdleTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::shooting:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getShootAnimation(), pcc->getShootTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getShootAnimation(), pcc->getShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::running:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunAnimation(), pcc->getRunTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunAnimation(), pcc->getRunTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::runningShooting:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::sliding:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideAnimation(), pcc->getSlideTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideAnimation(), pcc->getSlideTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::slidingShooting:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideShootAnimation(), pcc->getSlideShootTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideShootAnimation(), pcc->getSlideShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborne:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborneShooting:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::falling:
 		{
-			EventQueue::get().enqueue2<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
+			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 	}

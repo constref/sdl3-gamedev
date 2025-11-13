@@ -120,13 +120,13 @@ public:
 						// ignore repeat key-down signals while holding (prevent event spam)
 						if (!event.key.repeat)
 						{
-							EventQueue::get().enqueue2<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
+							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
 						}
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						EventQueue::get().enqueue2<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
+						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;

@@ -28,10 +28,10 @@ void ProjectileComponent::onEvent(const CollisionEvent &event)
 		Resources &res = Resources::get();
 		owner.sendCommand(ScaleVelocityAxisCommand{ Axis::Y, 0 });
 
-		EventQueue::get().enqueue2<AnimationPlayEvent>(owner.getHandle(), 0,
+		EventQueue::get().enqueue<AnimationPlayEvent>(owner.getHandle(), 0,
 			res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
-		EventQueue::get().enqueue2<RemoveColliderEvent>(owner.getHandle(), 0);
-		EventQueue::get().enqueue2<DamageEvent>(event.getOther(), 0, owner.getParent(), 15); // damage source is the person firing the gun, not the projectile
+		EventQueue::get().enqueue<RemoveColliderEvent>(owner.getHandle(), 0);
+		EventQueue::get().enqueue<DamageEvent>(event.getOther(), 0, owner.getParent(), 15); // damage source is the person firing the gun, not the projectile
 		owner.scheduleDestroy(res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 	}
 }

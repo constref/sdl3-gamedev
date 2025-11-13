@@ -5,18 +5,13 @@
 #include <memory>
 #include <nodehandle.h>
 
-class UpdateVelocityCommand;
-
 class BasicCameraComponent : public Component
 {
-	NodeHandle target;
-	glm::vec2 camPosition;
-	glm::vec2 viewportSize;
-	glm::vec2 velocity;
+	glm::vec2 position;
 
 public:
-	BasicCameraComponent(Node &owner, NodeHandle target, float viewportWidth, float viewportHeight);
+	BasicCameraComponent(Node &owner);
 
-	void update() override;
-	void onCommand(const UpdateVelocityCommand &msg);
+	glm::vec2 getPosition() const { return position; }
+	void setPosition(const glm::vec2 &position) { this->position = position; }
 };

@@ -18,6 +18,7 @@
 #include "components/enemycomponent.h"
 
 #include "systems/playercontrolsystem.h"
+#include "systems/basiccamerasystem.h"
 #include "systems/weaponsystem.h"
 
 Platformer::Platformer()
@@ -36,6 +37,7 @@ bool Platformer::initialize(SystemRegistry &sysReg, SDLState &state)
 
 	sysReg.registerSystem(std::make_unique<PlayerControlSystem>());
 	sysReg.registerSystem(std::make_unique<WeaponSystem>());
+	sysReg.registerSystem(std::make_unique<BasicCameraSystem>(glm::vec2(state.logW, state.logH)));
 
 	struct LayerVisitor
 	{
@@ -151,7 +153,7 @@ bool Platformer::initialize(SystemRegistry &sysReg, SDLState &state)
 					auto &renderComponent = player.addComponent<SpriteComponent>(res.texIdle, tileWidth, tileHeight);
 
 					// we have our player, we can create the camera and set it as a target
-					auto &camComponent = root.addComponent<BasicCameraComponent>(hPlayer, static_cast<float>(state.logW), static_cast<float>(state.logH));
+					root.addComponent<BasicCameraComponent>();
 
 					layerObject.addChild(hPlayer);
 				}

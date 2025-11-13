@@ -65,7 +65,7 @@ public:
 	}
 
 	template<typename EventType, typename... Args>
-	void enqueue2(NodeHandle target, float delay, Args&&... args)
+	void enqueue(NodeHandle target, float delay, Args&&... args)
 	{
 		auto &queue = queues[static_cast<size_t>(EventType::stage)];
 		auto &indices = getIndices(EventType::stage);
