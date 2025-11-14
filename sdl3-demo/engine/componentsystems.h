@@ -31,8 +31,8 @@ public:
 			{
 				if (sys->hasRequiredComponents(node))
 				{
+					linkSystem(node, *sys);
 				}
-
 			}
 		}
 

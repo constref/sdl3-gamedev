@@ -45,9 +45,16 @@ public:
 	bool initialize(int logW, int logH)
 	{
 		SDLState &state = SDLState::global();
-		if (state.initialize(1600, 900, logW, logH) && app.initialize(services, state))
+		if (state.initialize(1600, 900, logW, logH))
 		{
-			return true;
+			// core system registrations
+			services.compSys().registerSystem(std::make_unique<InputSystem>(services));
+			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
+			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
+			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
+			services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
+
+			return app.initialize(services, state);
 		}
 
 		return false;
@@ -67,12 +74,6 @@ public:
 		prevTime = SDL_GetTicks();
 		long frameCount = 0;
 		double globalTime = 0;
-
-		services.compSys().registerSystem(std::make_unique<InputSystem>(services));
-		services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
-		services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
-		services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-		services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
 
 		running = true;
 		while (running)
@@ -189,10 +190,16 @@ public:
 
 	void processSystems(FrameStage stage, Node &obj, World &world)
 	{
-		auto &stageSystems = services.compSys().getSystemRegistry().getStageSystems(stage);
+		auto &stageSystems = obj.getStageSystems(stage);
 		for (auto &sys : stageSystems)
 		{
-			processNodes(sys, obj, world);
+			sys->update(obj);
+		}
+		auto &children = obj.getChildren();
+		for (NodeHandle &hChild : children)
+		{
+			Node &child = world.getNode(hChild);
+			processSystems(stage, child, world);
 		}
 	}
 

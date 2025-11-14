@@ -19,7 +19,7 @@ protected:
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
 	std::vector<Component *> components;
-	std::vector<SystemBase *> linkedSystems;
+	std::array<std::vector<SystemBase *>, static_cast<size_t>(FrameStage::StageCount)> linkedSystems;
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
@@ -42,9 +42,14 @@ public:
 	int getTag() const { return tag; }
 	void setTag(int tag) { this->tag = tag; }
 
-
 	friend void addNodeComponent(Node &node, Component &comp);
 	friend void removeNodeComponent(Node &node, const Component &comp);
+	friend void linkSystem(Node &node, SystemBase &sys);
+
+	auto &getStageSystems(FrameStage stage)
+	{
+		return linkedSystems[static_cast<size_t>(stage)];
+	}
 
 	void removeComponent(const Component &comp);
 

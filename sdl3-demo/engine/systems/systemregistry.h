@@ -10,7 +10,7 @@ class SystemRegistry
 
 public:
 	template<typename SysType>
-	void registerSystem(std::unique_ptr<SysType> sys)
+	void registerSystem(std::unique_ptr<SysType> &&sys)
 	{
 		systems[static_cast<size_t>(SysType::stage())].push_back(std::move(sys));
 	}
