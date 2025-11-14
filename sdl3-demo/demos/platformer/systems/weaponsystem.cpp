@@ -15,6 +15,8 @@
 
 WeaponSystem::WeaponSystem(Services &services) : System(services)
 {
+	services.eventQueue().dispatcher.registerHandler2<CollisionEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<NodeRemovalEvent>(this);
 	services.eventQueue().dispatcher.registerHandler2<ShootBeginEvent>(this);
 	services.eventQueue().dispatcher.registerHandler2<ShootEndEvent>(this);
 	//services.eventQueue().dispatcher.registerHandler<TimerOnTimeout>(this);
@@ -34,6 +36,7 @@ void WeaponSystem::update(Node &node)
 		World &world = services.world();
 		NodeHandle handle = world.createNode();
 		Node &bullet = world.getNode(handle);
+		bullet.setTag(4);
 
 		auto &res = Resources::get();
 
@@ -57,7 +60,7 @@ void WeaponSystem::update(Node &node)
 		collCmp.setCollider(SDL_FRect{
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
-			});
+		});
 
 
 		services.compSys().addComponent<ProjectileComponent>(bullet);
@@ -94,4 +97,12 @@ void WeaponSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 	{
 		wc->setIsShooting(false);
 	}
+}
+
+void WeaponSystem::onEvent(NodeHandle target, const CollisionEvent &event)
+{
+}
+
+void WeaponSystem::onEvent(NodeHandle target, const NodeRemovalEvent &event)
+{
 }

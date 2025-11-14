@@ -43,11 +43,3 @@ void ProjectileComponent::onEvent(const NodeRemovalEvent &event)
 
 	//services.world().free(owner.getHandle());
 }
-
-void ProjectileComponent::onCommand(const UpdateViewportCommand &dp)
-{
-	//mapViewportPos.x = dp.getPosition().x;
-	//mapViewportPos.y = dp.getPosition().y;
-	//mapViewportSize.x = dp.getSize().x;
-	//mapViewportSize.y = dp.getSize().y;
-}
