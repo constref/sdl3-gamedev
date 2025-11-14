@@ -11,16 +11,6 @@
 
 struct QueuedEvent
 {
-	using HandlerFn = void(*)(Node &, const EventBase &);
-	NodeHandle target;
-	std::unique_ptr<EventBase> event;
-	HandlerFn dispatch = nullptr;
-	double triggerTime = 0;
-	bool processed = false;
-};
-
-struct QueuedEvent2
-{
 	using HandlerFn = void(*)(NodeHandle handle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
@@ -31,7 +21,9 @@ struct QueuedEvent2
 
 class EventQueue
 {
-	std::array<std::vector<QueuedEvent2>, static_cast<size_t>(FrameStage::StageCount)> queues;
+	// each node has its own mailbox
+
+	std::array<std::vector<QueuedEvent>, static_cast<size_t>(FrameStage::StageCount)> queues;
 	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
 
 	EventQueue()
@@ -71,7 +63,7 @@ public:
 		auto &indices = getIndices(EventType::stage);
 
 		size_t wIdx = indices.second++;
-		queue[wIdx] = QueuedEvent2
+		queue[wIdx] = QueuedEvent
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
@@ -94,7 +86,7 @@ public:
 		int numDispatched = 0;
 		while (rIdx < indices.second)
 		{
-			QueuedEvent2 &item = queue[rIdx++];
+			QueuedEvent &item = queue[rIdx++];
 			if (!item.processed && item.triggerTime <= FrameContext::gt())
 			{
 				item.dispatch(item.target, *item.event);

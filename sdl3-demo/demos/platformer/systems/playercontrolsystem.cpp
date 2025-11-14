@@ -149,10 +149,13 @@ void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event
 void PlayerControlSystem::onEvent(NodeHandle target, const FallingEvent &event)
 {
 	Node &node = World::get().getNode(target);
-	auto [ic, pcc, pc] = getRequiredComponents(node);
-	if (pcc->getCurrentState() != PState::airborne)
+	if (hasRequiredComponents(node))
 	{
-		transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
+		auto [ic, pcc, pc] = getRequiredComponents(node);
+		if (pcc->getCurrentState() != PState::airborne)
+		{
+			transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
+		}
 	}
 }
 

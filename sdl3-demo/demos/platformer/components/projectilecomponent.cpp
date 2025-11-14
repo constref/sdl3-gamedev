@@ -14,9 +14,6 @@
 ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, FrameStage::Gameplay)
 {
 	collisions = 0;
-
-	owner.getEventDispatcher().registerHandler<CollisionEvent>(this);
-	owner.getEventDispatcher().registerHandler<NodeRemovalEvent>(this);
 }
 
 void ProjectileComponent::onEvent(const CollisionEvent &event)
@@ -42,12 +39,4 @@ void ProjectileComponent::onEvent(const NodeRemovalEvent &event)
 	parent.removeChild(owner.getHandle());
 
 	World::get().free(owner.getHandle());
-}
-
-void ProjectileComponent::onCommand(const UpdateViewportCommand &dp)
-{
-	//mapViewportPos.x = dp.getPosition().x;
-	//mapViewportPos.y = dp.getPosition().y;
-	//mapViewportSize.x = dp.getSize().x;
-	//mapViewportSize.y = dp.getSize().y;
 }

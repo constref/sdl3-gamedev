@@ -13,7 +13,6 @@ class ProjectileComponent : public Component
 public:
 	ProjectileComponent(Node &owner);
 
-	void onCommand(const UpdateViewportCommand &dp);
 	void onEvent(const CollisionEvent &event);
 	void onEvent(const NodeRemovalEvent &event);
 };

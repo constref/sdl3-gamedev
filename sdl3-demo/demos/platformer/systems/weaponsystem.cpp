@@ -14,8 +14,10 @@
 
 WeaponSystem::WeaponSystem()
 {
-	EventQueue::get().dispatcher.registerHandler<ShootBeginEvent>(this);
-	EventQueue::get().dispatcher.registerHandler<ShootEndEvent>(this);
+	EventQueue::get().dispatcher.registerHandler2<ShootBeginEvent>(this);
+	EventQueue::get().dispatcher.registerHandler2<ShootEndEvent>(this);
+	EventQueue::get().dispatcher.registerHandler2<CollisionEvent>(this);
+	EventQueue::get().dispatcher.registerHandler2<NodeRemovalEvent>(this);
 	//EventQueue::get().dispatcher.registerHandler<TimerOnTimeout>(this);
 }
 
@@ -33,6 +35,7 @@ void WeaponSystem::update(Node &node)
 		World &world = World::get();
 		NodeHandle handle = world.createNode();
 		Node &bullet = world.getNode(handle);
+		bullet.setTag(4);
 
 		auto &res = Resources::get();
 
@@ -56,7 +59,7 @@ void WeaponSystem::update(Node &node)
 		collCmp.setCollider(SDL_FRect{
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
-			});
+		});
 
 		bullet.addComponent<ProjectileComponent>();
 
@@ -92,4 +95,12 @@ void WeaponSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 	{
 		wc->setIsShooting(false);
 	}
+}
+
+void WeaponSystem::onEvent(NodeHandle target, const CollisionEvent &event)
+{
+}
+
+void WeaponSystem::onEvent(NodeHandle target, const NodeRemovalEvent &event)
+{
 }
