@@ -19,4 +19,9 @@ public:
 	{
 		return systems[static_cast<size_t>(stage)];
 	}
+
+	auto &getSystems()
+	{
+		return systems;
+	}
 };

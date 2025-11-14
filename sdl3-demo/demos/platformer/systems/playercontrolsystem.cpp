@@ -4,13 +4,13 @@
 #include <messaging/events.h>
 
 
-PlayerControlSystem::PlayerControlSystem()
+PlayerControlSystem::PlayerControlSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler2<CollisionEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<FallingEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<JumpEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<ShootBeginEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<ShootEndEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<CollisionEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<FallingEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<JumpEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<ShootBeginEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<ShootEndEvent>(this);
 }
 
 void PlayerControlSystem::update(Node &node)
@@ -75,47 +75,47 @@ void PlayerControlSystem::transitionState(Node &node, PState newState)
 	{
 		case PState::idle:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getIdleAnimation(), pcc->getIdleTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getIdleAnimation(), pcc->getIdleTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::shooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getShootAnimation(), pcc->getShootTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getShootAnimation(), pcc->getShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::running:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunAnimation(), pcc->getRunTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunAnimation(), pcc->getRunTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::runningShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::sliding:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideAnimation(), pcc->getSlideTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideAnimation(), pcc->getSlideTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::slidingShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideShootAnimation(), pcc->getSlideShootTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getSlideShootAnimation(), pcc->getSlideShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborne:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::airborneShooting:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getRunShootAnimation(), pcc->getRunShootTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 		case PState::falling:
 		{
-			EventQueue::get().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, pcc->getJumpAnimation(), pcc->getJumpTexture(), AnimationPlaybackMode::continuous);
 			break;
 		}
 	}
@@ -124,7 +124,7 @@ void PlayerControlSystem::transitionState(Node &node, PState newState)
 
 void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	if (hasRequiredComponents(node))
 	{
 		auto [ic, pcc, pc] = getRequiredComponents(node);
@@ -148,7 +148,7 @@ void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event
 
 void PlayerControlSystem::onEvent(NodeHandle target, const FallingEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [ic, pcc, pc] = getRequiredComponents(node);
 	if (pcc->getCurrentState() != PState::airborne)
 	{
@@ -158,7 +158,7 @@ void PlayerControlSystem::onEvent(NodeHandle target, const FallingEvent &event)
 
 void PlayerControlSystem::onEvent(NodeHandle target, const JumpEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [ic, pcc, pc] = getRequiredComponents(node);
 	if (pcc->getCurrentState() != PState::airborne &&
 		pcc->getCurrentState() != PState::airborneShooting)
@@ -170,7 +170,7 @@ void PlayerControlSystem::onEvent(NodeHandle target, const JumpEvent &event)
 
 void PlayerControlSystem::onEvent(NodeHandle target, const ShootBeginEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [ic, pcc, pc] = getRequiredComponents(node);
 
 	pcc->setIsShooting(true);
@@ -200,7 +200,7 @@ void PlayerControlSystem::onEvent(NodeHandle target, const ShootBeginEvent &even
 }
 void PlayerControlSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [ic, pcc, pc] = getRequiredComponents(node);
 
 	pcc->setIsShooting(false);

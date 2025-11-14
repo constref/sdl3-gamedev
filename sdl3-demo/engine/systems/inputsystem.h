@@ -9,7 +9,7 @@ class KeyboardEvent;
 class InputSystem : public System<FrameStage::Input, InputComponent>
 {
 public:
-	InputSystem();
+	InputSystem(Services &services);
 	void update(Node &node) override;
 	void onEvent(NodeHandle hNode, const KeyboardEvent &event);
 };

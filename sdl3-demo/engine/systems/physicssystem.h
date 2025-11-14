@@ -9,7 +9,7 @@ class DirectionChangedEvent;
 class PhysicsSystem : public System<FrameStage::Physics, PhysicsComponent, CollisionComponent>
 {
 public:
-	PhysicsSystem();
+	PhysicsSystem(Services &services);
 
 	void update(Node &node) override;
 	void onEvent(NodeHandle target, const DirectionChangedEvent &event);

@@ -10,7 +10,7 @@ class DirectionChangedEvent;
 class SpriteRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 public:
-	SpriteRenderSystem();
+	SpriteRenderSystem(Services &services);
 	void update(Node &node) override;
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const DirectionChangedEvent &event);

@@ -7,7 +7,6 @@
 #include <world.h>
 #include <messaging/event.h>
 #include <framecontext.h>
-#include <systems/system.h>
 
 struct QueuedEvent
 {
@@ -21,7 +20,7 @@ struct QueuedEvent
 
 struct QueuedEvent2
 {
-	using HandlerFn = void(*)(NodeHandle handle, const EventBase &);
+	using HandlerFn = void(*)(EventDispatcher2 &dispatcher, NodeHandle handle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch = nullptr;
@@ -34,6 +33,7 @@ class EventQueue
 	std::array<std::vector<QueuedEvent2>, static_cast<size_t>(FrameStage::StageCount)> queues;
 	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
 
+public:
 	EventQueue()
 	{
 		for (int i = 0; i < static_cast<size_t>(FrameStage::StageCount); ++i)
@@ -46,14 +46,7 @@ class EventQueue
 		}
 	}
 
-public:
 	EventDispatcher2 dispatcher;
-
-	static EventQueue &get()
-	{
-		static EventQueue instance;
-		return instance;
-	}
 
 	auto &getQueue(FrameStage stage)
 	{
@@ -75,9 +68,9 @@ public:
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
-			.dispatch = [](NodeHandle target, const EventBase &e)
+			.dispatch = [](EventDispatcher2 &dispatcher, NodeHandle target, const EventBase &e)
 			{
-				EventQueue::get().dispatcher.send2<EventType>(target, static_cast<const EventType &>(e));
+				dispatcher.send2<EventType>(target, static_cast<const EventType &>(e));
 			},
 			.triggerTime = FrameContext::gt() + delay,
 			.processed = false
@@ -97,7 +90,7 @@ public:
 			QueuedEvent2 &item = queue[rIdx++];
 			if (!item.processed && item.triggerTime <= FrameContext::gt())
 			{
-				item.dispatch(item.target, *item.event);
+				item.dispatch(dispatcher, item.target, *item.event);
 				item.processed = true;
 				numDispatched++;
 			}

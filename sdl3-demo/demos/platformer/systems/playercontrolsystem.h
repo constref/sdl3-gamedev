@@ -15,7 +15,7 @@ class ShootEndEvent;
 class PlayerControlSystem : public System<FrameStage::Gameplay, InputComponent, PlayerControllerComponent, PhysicsComponent>
 {
 public:
-	PlayerControlSystem();
+	PlayerControlSystem(Services &services);
 	void update(Node &node) override;
 	void transitionState(Node &node, PState newState);
 

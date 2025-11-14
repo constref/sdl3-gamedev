@@ -15,7 +15,7 @@ class WeaponSystem : public System<FrameStage::Gameplay, WeaponComponent, Physic
 	glm::vec2 playerDirection;
 
 public:
-	WeaponSystem();
+	WeaponSystem(Services &services);
 	void update(Node &node);
 
 	void onEvent(NodeHandle target, const DirectionChangedEvent &event);

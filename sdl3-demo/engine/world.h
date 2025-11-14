@@ -71,12 +71,6 @@ public:
 
 class World : public ObjectPool<Node, 5000>
 {
-	World() { }
-
 public:
-	static World &get()
-	{
-		static World instance;
-		return instance;
-	}
+	World() {}
 };

@@ -8,10 +8,10 @@
 #include <systems/context/rendercontext.h>
 #include <world.h>
 
-SpriteRenderSystem::SpriteRenderSystem()
+SpriteRenderSystem::SpriteRenderSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler2<DirectionChangedEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<AnimationPlayEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<DirectionChangedEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<AnimationPlayEvent>(this);
 }
 
 void SpriteRenderSystem::update(Node &node)
@@ -56,7 +56,7 @@ void SpriteRenderSystem::update(Node &node)
 
 void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [sc] = getRequiredComponents(node);
 	sc->setTexture(event.getTexture());
 }
@@ -65,7 +65,7 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent 
 {
 	if (event.getDirection().x != 0)
 	{
-		Node &node = World::get().getNode(target);
+		Node &node = services.world().getNode(target);
 		auto [sc] = getRequiredComponents(node);
 		sc->setFlipMode(event.getDirection().x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 	}

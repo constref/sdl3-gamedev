@@ -11,12 +11,13 @@
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
+#include <componentsystems.h>
 
-WeaponSystem::WeaponSystem()
+WeaponSystem::WeaponSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler<ShootBeginEvent>(this);
-	EventQueue::get().dispatcher.registerHandler<ShootEndEvent>(this);
-	//EventQueue::get().dispatcher.registerHandler<TimerOnTimeout>(this);
+	services.eventQueue().dispatcher.registerHandler2<ShootBeginEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<ShootEndEvent>(this);
+	//services.eventQueue().dispatcher.registerHandler<TimerOnTimeout>(this);
 }
 
 void WeaponSystem::update(Node &node)
@@ -30,13 +31,13 @@ void WeaponSystem::update(Node &node)
 		wc->getCooldownTimer().reset();
 		canFire = false;
 
-		World &world = World::get();
+		World &world = services.world();
 		NodeHandle handle = world.createNode();
 		Node &bullet = world.getNode(handle);
 
 		auto &res = Resources::get();
 
-		auto &physCmp = bullet.addComponent<PhysicsComponent>();
+		auto &physCmp = services.compSys().addComponent<PhysicsComponent>(bullet);
 		const int yVariation = 40;
 		const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
 		physCmp.setVelocity(glm::vec2(pc->getVelocity().x + 600.0f * pc->getDirection().x, yVelocity));
@@ -45,20 +46,21 @@ void WeaponSystem::update(Node &node)
 		physCmp.setGravityFactor(0);
 		physCmp.setDamping(0);
 
-		auto &animCmp = bullet.addComponent<AnimationComponent>(res.bulletAnims);
+		auto &animCmp = services.compSys().addComponent<AnimationComponent>(bullet, res.bulletAnims);
 		animCmp.setAnimation(res.ANIM_BULLET_MOVING);
 
-		auto &rndCmp = bullet.addComponent<SpriteComponent>(res.texBullet,
+		auto &rndCmp = services.compSys().addComponent<SpriteComponent>(bullet, res.texBullet,
 			static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
 		//rndCmp.setDirection(playerDirection);
 
-		auto &collCmp = bullet.addComponent<CollisionComponent>();
+		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
 		collCmp.setCollider(SDL_FRect{
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
 			});
 
-		bullet.addComponent<ProjectileComponent>();
+
+		services.compSys().addComponent<ProjectileComponent>(bullet);
 
 		// adjust bullet start position
 		SDL_FRect collider = collCmp.getCollider();
@@ -72,13 +74,13 @@ void WeaponSystem::update(Node &node)
 			node.getPosition().y + 32 / 2
 		));
 
-		node.addChild(handle);
+		node.addChild(bullet);
 	}
 }
 
 void WeaponSystem::onEvent(NodeHandle target, const ShootBeginEvent &event)
 {
-	auto [wc, pc] = getRequiredComponents(World::get().getNode(target));
+	auto [wc, pc] = getRequiredComponents(services.world().getNode(target));
 	if (!wc->isShooting())
 	{
 		wc->setIsShooting(true);
@@ -87,7 +89,7 @@ void WeaponSystem::onEvent(NodeHandle target, const ShootBeginEvent &event)
 
 void WeaponSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 {
-	auto [wc, pc] = getRequiredComponents(World::get().getNode(target));
+	auto [wc, pc] = getRequiredComponents(services.world().getNode(target));
 	if (wc->isShooting())
 	{
 		wc->setIsShooting(false);

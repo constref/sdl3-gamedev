@@ -10,7 +10,7 @@ class AnimationPlayEvent;
 class SpriteAnimationSystem : public System<FrameStage::Animation, AnimationComponent, SpriteComponent>
 {
 public:
-	SpriteAnimationSystem();
+	SpriteAnimationSystem(Services &services);
 	void update(Node &node) override;
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);

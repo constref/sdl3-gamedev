@@ -16,13 +16,13 @@ Component::~Component()
 void Component::earlyUpdate()
 {
 	// run times and generate events
-	for (Timer *t : timers)
-	{
-		if (int timeouts = t->step(FrameContext::dt()); timeouts > 0)
-		{
-			EventQueue::get().enqueue<TimerOnTimeout>(owner.getHandle(), 0, timeouts);
-		}
-	}
+	//for (Timer *t : timers)
+	//{
+	//	if (int timeouts = t->step(FrameContext::dt()); timeouts > 0)
+	//	{
+	//		services.eventQueue().enqueue<TimerOnTimeout>(owner.getHandle(), 0, timeouts);
+	//	}
+	//}
 }
 
 void Component::addTimer(Timer &timer)

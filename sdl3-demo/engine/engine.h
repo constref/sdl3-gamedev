@@ -11,7 +11,7 @@
 #include <world.h>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
-#include <systems/systemregistry.h>
+#include <componentsystems.h>
 #include <systems/inputsystem.h>
 #include <systems/spriterendersystem.h>
 #include <systems/spriteanimationsystem.h>
@@ -22,15 +22,20 @@ template<Application AppType>
 class Engine
 {
 	uint64_t prevTime;
-	InputState inputState;
 	AppType app;
 	bool debugMode;
 	bool running;
 	constexpr static bool clampDeltaTime = true;
-	SystemRegistry sysRegistry;
+
+	// core services
+	ComponentSystems compSys;
+	EventQueue eventQueue;
+	World world;
+	InputState inputState;
+	Services services;
 
 public:
-	Engine()
+	Engine() : services(world, compSys, eventQueue, inputState)
 	{
 		debugMode = false;
 		running = false;
@@ -40,7 +45,7 @@ public:
 	bool initialize(int logW, int logH)
 	{
 		SDLState &state = SDLState::global();
-		if (state.initialize(1600, 900, logW, logH) && app.initialize(sysRegistry, state))
+		if (state.initialize(1600, 900, logW, logH) && app.initialize(services, state))
 		{
 			return true;
 		}
@@ -63,11 +68,11 @@ public:
 		long frameCount = 0;
 		double globalTime = 0;
 
-		sysRegistry.registerSystem(std::make_unique<InputSystem>());
-		sysRegistry.registerSystem(std::make_unique<PhysicsSystem>());
-		sysRegistry.registerSystem(std::make_unique<CollisionSystem>());
-		sysRegistry.registerSystem(std::make_unique<SpriteAnimationSystem>());
-		sysRegistry.registerSystem(std::make_unique<SpriteRenderSystem>());
+		services.compSys().registerSystem(std::make_unique<InputSystem>(services));
+		services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
+		services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
+		services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
+		services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
 
 		running = true;
 		while (running)
@@ -93,10 +98,10 @@ public:
 			ctx.frameNumber = ++frameCount;
 
 			SDLState &state = SDLState::global();
-			World &world = World::get();
+			World &world = services.world();
 			Node &root = world.getNode(app.getRoot());
 
-			EventQueue::get().dispatch(FrameStage::Start);
+			services.eventQueue().dispatch(FrameStage::Start);
 			processSystems(FrameStage::Start, root, world);
 
 			SDL_Event event{ 0 };
@@ -120,13 +125,13 @@ public:
 						// ignore repeat key-down signals while holding (prevent event spam)
 						if (!event.key.repeat)
 						{
-							EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
+							//services.eventQueue().enqueue<KeyboardEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
 						}
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						EventQueue::get().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
+						//services.eventQueue().enqueue<KeyboardEvent>(InputState::get().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -142,17 +147,17 @@ public:
 			}
 
 			// handle input every frame to avoid input lag
-			EventQueue::get().dispatch(FrameStage::Input);
+			services.eventQueue().dispatch(FrameStage::Input);
 			processSystems(FrameStage::Input, root, world);
 
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				EventQueue::get().dispatch(FrameStage::Physics);
+				services.eventQueue().dispatch(FrameStage::Physics);
 				processSystems(FrameStage::Physics, root, world);
-				EventQueue::get().dispatch(FrameStage::Gameplay);
+				services.eventQueue().dispatch(FrameStage::Gameplay);
 				processSystems(FrameStage::Gameplay, root, world);
-				EventQueue::get().dispatch(FrameStage::Animation);
+				services.eventQueue().dispatch(FrameStage::Animation);
 				processSystems(FrameStage::Animation, root, world);
 
 				accumulator -= fixedStep;
@@ -162,29 +167,29 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			EventQueue::get().dispatch(FrameStage::Render);
+			services.eventQueue().dispatch(FrameStage::Render);
 			processSystems(FrameStage::Render, root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
 			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
-				World::get().getFreeCount(),
-				EventQueue::get().getCount(FrameStage::Input),
-				EventQueue::get().getCount(FrameStage::Physics),
-				EventQueue::get().getCount(FrameStage::Gameplay),
-				EventQueue::get().getCount(FrameStage::Animation),
-				EventQueue::get().getCount(FrameStage::End)
+				services.world().getFreeCount(),
+				services.eventQueue().getCount(FrameStage::Input),
+				services.eventQueue().getCount(FrameStage::Physics),
+				services.eventQueue().getCount(FrameStage::Gameplay),
+				services.eventQueue().getCount(FrameStage::Animation),
+				services.eventQueue().getCount(FrameStage::End)
 			).c_str());
 
 			SDL_RenderPresent(state.renderer);
 
-			EventQueue::get().dispatch(FrameStage::End);
+			services.eventQueue().dispatch(FrameStage::End);
 			processSystems(FrameStage::End, root, world);
 		}
 	}
 
 	void processSystems(FrameStage stage, Node &obj, World &world)
 	{
-		auto &stageSystems = sysRegistry.getStageSystems(stage);
+		auto &stageSystems = services.compSys().getSystemRegistry().getStageSystems(stage);
 		for (auto &sys : stageSystems)
 		{
 			processNodes(sys, obj, world);

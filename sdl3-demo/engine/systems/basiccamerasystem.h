@@ -10,6 +10,6 @@ class BasicCameraSystem : public System<FrameStage::Gameplay, InputComponent, Ba
 	glm::vec2 viewportSize;
 
 public:
-	BasicCameraSystem(glm::vec2 viewportSize);
+	BasicCameraSystem(Services &services, glm::vec2 viewportSize);
 	void update(Node &node);
 };

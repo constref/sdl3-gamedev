@@ -7,9 +7,9 @@
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
 
-PhysicsSystem::PhysicsSystem()
+PhysicsSystem::PhysicsSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler2<DirectionChangedEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<DirectionChangedEvent>(this);
 }
 
 void PhysicsSystem::update(Node &node)
@@ -60,7 +60,7 @@ void PhysicsSystem::update(Node &node)
 
 void PhysicsSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto *pc = node.getComponent<PhysicsComponent>();
 	pc->setDirection(event.getDirection());
 }

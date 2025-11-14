@@ -19,6 +19,7 @@ protected:
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
 	std::vector<Component *> components;
+	std::vector<SystemBase *> linkedSystems;
 	bool isInitialized;
 	CommandDispatcher cmdDispatcher;
 	EventDispatcher eventDispatcher;
@@ -34,22 +35,16 @@ public:
 	void setPosition(const glm::vec2 position) { this->position = position; }
 	auto &getParent() const { return parent; }
 	auto &getChildren() { return children; }
-	void addChild(NodeHandle childHandle);
+	void addChild(Node &child);
 	void removeChild(NodeHandle childHandle);
 	CommandDispatcher &getCommandDispatcher() { return cmdDispatcher; }
 	EventDispatcher &getEventDispatcher() { return eventDispatcher; }
 	int getTag() const { return tag; }
 	void setTag(int tag) { this->tag = tag; }
 
-	template<typename T, typename... Args>
-	T &addComponent(Args... args)
-	{
-		// create and store component
-		T *comp = new T(*this, args...);
-		components.push_back(comp);
 
-		return *comp;
-	}
+	friend void addNodeComponent(Node &node, Component &comp);
+	friend void removeNodeComponent(Node &node, const Component &comp);
 
 	void removeComponent(const Component &comp);
 
@@ -65,39 +60,6 @@ public:
 			}
 		}
 		return nullptr;
-	}
-
-	void initialize()
-	{
-		isInitialized = true;
-	}
-
-	Node &getNode(const NodeHandle &handle);
-
-	template<typename EventType>
-	void notify(const EventType &event)
-	{
-		eventDispatcher.send(event);
-	}
-
-	template<typename DPType>
-	void sendCommand(const DPType &dp)
-	{
-		cmdDispatcher.send(dp);
-	}
-
-	// TODO: This will be replace with a central message queue
-	template<typename DPType>
-	void broadcastMessage(const DPType &dp)
-	{
-		cmdDispatcher.send(dp);
-
-		// propagate to children
-		for (NodeHandle child : children)
-		{
-			Node &childObj = getNode(child);
-			childObj.broadcastMessage(dp);
-		}
 	}
 
 	void scheduleDestroy(float delay = 0);

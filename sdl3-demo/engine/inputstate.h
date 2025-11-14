@@ -47,10 +47,4 @@ public:
 	{
 		this->focusTarget = focusTarget;
 	}
-
-	static InputState &get()
-	{
-		static InputState instance;
-		return instance;
-	}
 };

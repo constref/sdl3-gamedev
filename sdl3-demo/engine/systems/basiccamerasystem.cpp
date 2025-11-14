@@ -2,7 +2,7 @@
 #include <resources.h>
 #include <systems/context/rendercontext.h>
 
-BasicCameraSystem::BasicCameraSystem(glm::vec2 viewportSize)
+BasicCameraSystem::BasicCameraSystem(Services &services, glm::vec2 viewportSize) : System(services)
 {
 	this->viewportPosition = { 0, 0 };
 	this->viewportSize = viewportSize;

@@ -5,9 +5,9 @@
 #include <inputstate.h>
 #include <world.h>
 
-InputSystem::InputSystem()
+InputSystem::InputSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler2<KeyboardEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<KeyboardEvent>(this);
 }
 
 void InputSystem::update(Node &node)
@@ -16,10 +16,10 @@ void InputSystem::update(Node &node)
 
 void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 {
-	Node &node = World::get().getNode(hNode);
+	Node &node = services.world().getNode(hNode);
 	auto [ic] = getRequiredComponents(node);
 
-	auto &state = InputState::get();
+	auto &state = services.inputState();
 	state.setKeyState(event.scancode, event.state == KeyboardEvent::State::down);
 
 	glm::vec2 direction{ 0 };
@@ -42,17 +42,17 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 	if (ic->getDirection() != direction)
 	{
 		ic->setDirection(direction);
-		EventQueue::get().enqueue<DirectionChangedEvent>(hNode, 0, direction);
+		services.eventQueue().enqueue<DirectionChangedEvent>(hNode, 0, direction);
 	}
 
-	Node &owner = World::get().getNode(hNode);
+	Node &owner = services.world().getNode(hNode);
 	switch (event.scancode)
 	{
 		case SDL_SCANCODE_K:
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<JumpEvent>(owner.getHandle(), 0);
+				services.eventQueue().enqueue<JumpEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}
@@ -60,11 +60,11 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 		{
 			if (event.state == KeyboardEvent::State::down)
 			{
-				EventQueue::get().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
+				services.eventQueue().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
 			}
 			else
 			{
-				EventQueue::get().enqueue<ShootEndEvent>(owner.getHandle(), 0);
+				services.eventQueue().enqueue<ShootEndEvent>(owner.getHandle(), 0);
 			}
 			break;
 		}

@@ -16,5 +16,5 @@ InputComponent::InputComponent(Node &owner, NodeHandle ownerHandle) : Component(
 
 	// ensure global input state knows this object has input focus
 	// TODO: Need a more robust solution to support 2+ players
-	InputState::get().setFocus(ownerHandle);
+	//InputState::get().setFocus(ownerHandle);
 }

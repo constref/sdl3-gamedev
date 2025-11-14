@@ -6,10 +6,10 @@
 #include <messaging/events.h>
 #include <world.h>
 
-SpriteAnimationSystem::SpriteAnimationSystem()
+SpriteAnimationSystem::SpriteAnimationSystem(Services &services) : System(services)
 {
-	EventQueue::get().dispatcher.registerHandler2<AnimationPlayEvent>(this);
-	EventQueue::get().dispatcher.registerHandler2<AnimationStopEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<AnimationPlayEvent>(this);
+	services.eventQueue().dispatcher.registerHandler2<AnimationStopEvent>(this);
 }
 
 void SpriteAnimationSystem::update(Node &node)
@@ -47,7 +47,7 @@ void SpriteAnimationSystem::onEvent(NodeHandle target, const AnimationStopEvent 
 
 void SpriteAnimationSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
 {
-	Node &node = World::get().getNode(target);
+	Node &node = services.world().getNode(target);
 	auto [ac, sc] = getRequiredComponents(node);
 
 	ac->setAnimation(event.getAnimationIndex());

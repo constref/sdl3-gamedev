@@ -29,23 +29,10 @@ Node::~Node()
 	components.clear();
 }
 
-Node &Node::getNode(const NodeHandle &handle)
+void Node::addChild(Node &child)
 {
-	World &world = World::get();
-	return world.getNode(handle);
-}
-
-void Node::scheduleDestroy(float delay)
-{
-	EventQueue::get().enqueue<NodeRemovalEvent>(getHandle(), delay);
-}
-
-void Node::addChild(NodeHandle childHandle)
-{
-	Node &child = getNode(childHandle);
 	child.parent = handle;
-	child.initialize();
-	children.push_back(childHandle);
+	children.push_back(child.handle);
 }
 
 void Node::removeChild(NodeHandle childHandle)
