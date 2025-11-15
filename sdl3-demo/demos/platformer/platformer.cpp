@@ -13,14 +13,13 @@
 #include <systems/systemregistry.h>
 #include <componentsystems.h>
 
+#include "systems/playercontrolsystem.h"
+#include "systems/basiccamerasystem.h"
+#include "systems/weaponsystem.h"
 #include "components/playercontrollercomponent.h"
 #include "components/weaponcomponent.h"
 #include "components/healthcomponent.h"
 #include "components/enemycomponent.h"
-
-#include "systems/playercontrolsystem.h"
-#include "systems/basiccamerasystem.h"
-#include "systems/weaponsystem.h"
 
 Platformer::Platformer()
 {

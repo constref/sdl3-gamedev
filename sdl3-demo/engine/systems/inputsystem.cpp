@@ -70,3 +70,8 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 		}
 	}
 }
+
+void InputSystem::onLinked(Node &node)
+{
+	services.inputState().setFocus(node.getHandle());
+}

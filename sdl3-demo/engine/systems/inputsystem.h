@@ -12,4 +12,5 @@ public:
 	InputSystem(Services &services);
 	void update(Node &node) override;
 	void onEvent(NodeHandle hNode, const KeyboardEvent &event);
+	void onLinked(Node &node) override;
 };

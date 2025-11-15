@@ -26,5 +26,6 @@ void linkSystem(Node &node, SystemBase &sys)
 	if (std::find(stageSystems.begin(), stageSystems.end(), &sys) == stageSystems.end())
 	{
 		stageSystems.push_back(&sys);
+		sys.onLinked(node);
 	}
 }
