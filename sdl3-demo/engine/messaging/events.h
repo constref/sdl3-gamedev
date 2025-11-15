@@ -84,7 +84,6 @@ public:
 };
 
 class AnimationStopEvent : public Event<AnimationStopEvent, FrameStage::Animation> { };
-class RemoveColliderEvent : public Event<RemoveColliderEvent, FrameStage::End> { };
 class NodeRemovalEvent : public Event<NodeRemovalEvent, FrameStage::End> {};
 class FallingEvent : public Event<FallingEvent, FrameStage::Physics> {};
 class JumpEvent : public Event<JumpEvent, FrameStage::Gameplay> {};

@@ -15,6 +15,7 @@ std::vector<NodeHandle> CollisionComponent::collidableNodes;
 CollisionComponent::CollisionComponent(Node &owner) : Component(owner, FrameStage::Physics), collider{ 0 }
 {
 	collidableNodes.push_back(owner.getHandle());
+	hasCollider = true;
 
 	velocity = glm::vec2(0);
 	prevContacts[0] = false;
@@ -25,18 +26,22 @@ CollisionComponent::CollisionComponent(Node &owner) : Component(owner, FrameStag
 
 CollisionComponent::~CollisionComponent()
 {
+	if (hasCollider)
+	{
+		removeCollider();
+	}
+}
+
+void CollisionComponent::removeCollider()
+{
 	auto itr = std::find(collidableNodes.begin(), collidableNodes.end(), owner.getHandle());
 	if (itr != collidableNodes.end())
 	{
 		collidableNodes.erase(itr);
+		hasCollider = false;
 	}
 	else
 	{
 		Logger::error(this, "Collision component not found.");
 	}
-}
-
-void CollisionComponent::onEvent(const RemoveColliderEvent &event)
-{
-	owner.removeComponent(*this);
 }

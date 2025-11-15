@@ -26,10 +26,9 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 			Resources &res = Resources::get();
 			pc->setVelocity(glm::vec2(0));
 
-
 			services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
 				res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
-			services.eventQueue().enqueue<RemoveColliderEvent>(target, 0);
+			cc->removeCollider();
 			//services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, owner.getParent(), 15); // damage source is the person firing the gun, not the projectile
 			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 		}

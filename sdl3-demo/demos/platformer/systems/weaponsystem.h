@@ -20,7 +20,5 @@ public:
 
 	void onEvent(NodeHandle target, const ShootBeginEvent &event);
 	void onEvent(NodeHandle target, const ShootEndEvent &event);
-	void onEvent(NodeHandle target, const CollisionEvent &event);
-	void onEvent(NodeHandle target, const NodeRemovalEvent &event);
 	//void onEvent(NodeHandle target, const TimerOnTimeout &event);
 };

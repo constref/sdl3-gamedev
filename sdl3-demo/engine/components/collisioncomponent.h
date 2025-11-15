@@ -19,6 +19,7 @@ class CollisionComponent : public Component
 	SDL_FRect collider;
 	glm::vec2 velocity;
 	std::array<bool, 4> prevContacts; // left, right, top, bottom
+	bool hasCollider;
 
 public:
 	CollisionComponent(Node &owner);
@@ -27,9 +28,9 @@ public:
 	// TODO: Will remove static vector in favor of a spatial partitioning structure
 	static std::vector<NodeHandle> collidableNodes;
 
-	void onEvent(const RemoveColliderEvent &event);
-
 	SDL_FRect getCollider() const { return collider; }
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }
 	auto &getPrevContacts() { return prevContacts; }
+
+	void removeCollider();
 };
