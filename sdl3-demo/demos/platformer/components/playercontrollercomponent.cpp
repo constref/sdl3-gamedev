@@ -23,9 +23,6 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner)
 	slideTexture = nullptr;
 	shootAnimationIndex = 0;
 	shootTexture = nullptr;
-
-	owner.getCommandDispatcher().registerHandler<UpdateVelocityCommand>(this);
-	owner.getCommandDispatcher().registerHandler<UpdateDirectionCommand>(this);
 }
 
 void PlayerControllerComponent::onCommand(const UpdateVelocityCommand &msg)

@@ -7,7 +7,7 @@
 
 InputSystem::InputSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<KeyboardEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<KeyboardEvent>(this);
 }
 
 void InputSystem::update(Node &node)

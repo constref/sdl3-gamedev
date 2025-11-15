@@ -21,8 +21,6 @@ CollisionComponent::CollisionComponent(Node &owner) : Component(owner, FrameStag
 	prevContacts[1] = false;
 	prevContacts[2] = false;
 	prevContacts[3] = false;
-
-	owner.getEventDispatcher().registerHandler<RemoveColliderEvent>(this);
 }
 
 CollisionComponent::~CollisionComponent()

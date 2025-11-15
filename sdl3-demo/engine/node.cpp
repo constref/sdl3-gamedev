@@ -5,6 +5,7 @@
 #include <messaging/events.h>
 #include <timer.h>
 #include <logger.h>
+#include <systems/system.h>
 
 Node::Node(NodeHandle handle) : Node()
 {
@@ -60,4 +61,10 @@ void Node::removeComponent(const Component &comp)
 	{
 		Logger::error(this, "Couldn't remove component, address is invalid.");
 	}
+}
+
+bool Node::isLinkedWith(SystemBase *sys)
+{
+	auto &stageSys = linkedSystems[static_cast<size_t>(sys->getStage())];
+	return std::ranges::find(stageSys, sys) != stageSys.end();
 }

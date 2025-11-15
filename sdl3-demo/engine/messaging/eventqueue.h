@@ -11,7 +11,7 @@
 
 struct QueuedEvent
 {
-	using HandlerFn = void(*)(EventDispatcher2 &dispatcher, NodeHandle handle, const EventBase &);
+	using HandlerFn = void(*)(EventDispatcher &dispatcher, NodeHandle handle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch = nullptr;
@@ -21,8 +21,6 @@ struct QueuedEvent
 
 class EventQueue
 {
-	// each node has its own mailbox
-
 	std::array<std::vector<QueuedEvent>, static_cast<size_t>(FrameStage::StageCount)> queues;
 	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
 
@@ -35,12 +33,10 @@ public:
 			queues[i].resize(5000);
 			indices[i].first = 0;
 			indices[i].second = 0;
-			queues[i].resize(5000);
 		}
 	}
 
-	EventDispatcher2 dispatcher;
-
+	EventDispatcher dispatcher;
 	auto &getQueue(FrameStage stage)
 	{
 		return queues[static_cast<size_t>(stage)];
@@ -53,7 +49,7 @@ public:
 	template<typename EventType, typename... Args>
 	void enqueue(NodeHandle target, float delay, Args&&... args)
 	{
-		auto &queue = queues[static_cast<size_t>(EventType::stage)];
+		auto &queue = getQueue(EventType::stage);
 		auto &indices = getIndices(EventType::stage);
 
 		size_t wIdx = indices.second++;
@@ -61,9 +57,9 @@ public:
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
-			.dispatch = [](EventDispatcher2 &dispatcher, NodeHandle target, const EventBase &e)
+			.dispatch = [](EventDispatcher &dispatcher, NodeHandle target, const EventBase &e)
 			{
-				dispatcher.send2<EventType>(target, static_cast<const EventType &>(e));
+				dispatcher.send<EventType>(target, static_cast<const EventType &>(e));
 			},
 			.triggerTime = FrameContext::gt() + delay,
 			.processed = false
@@ -72,7 +68,7 @@ public:
 
 	void dispatch(FrameStage stage)
 	{
-		auto &queue = queues[static_cast<size_t>(stage)];
+		auto &queue = getQueue(stage);
 		auto &indices = getIndices(stage);
 
 		size_t rIdx = indices.first;

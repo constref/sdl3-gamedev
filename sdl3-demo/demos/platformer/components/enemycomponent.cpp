@@ -11,10 +11,6 @@ EnemyComponent::EnemyComponent(Node &owner, EnemyType type)
 	: Component(owner, FrameStage::Gameplay), type(type), timerDamaged(0.5f)
 {
 	state = EnemyState::idle;
-
-	owner.getEventDispatcher().registerHandler<DamageEvent>(this);
-	owner.getEventDispatcher().registerHandler<DeathEvent>(this);
-	owner.getEventDispatcher().registerHandler<TimerOnTimeout>(this);
 }
 
 void EnemyComponent::onEvent(const DamageEvent &event)

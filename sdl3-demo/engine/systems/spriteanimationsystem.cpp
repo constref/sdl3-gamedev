@@ -8,8 +8,8 @@
 
 SpriteAnimationSystem::SpriteAnimationSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<AnimationPlayEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<AnimationStopEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<AnimationPlayEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<AnimationStopEvent>(this);
 }
 
 void SpriteAnimationSystem::update(Node &node)

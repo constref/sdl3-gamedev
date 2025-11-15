@@ -10,6 +10,7 @@
 #include <nodehandle.h>
 
 class NodeRemovalEvent;
+class SystemBase;
 
 class Node
 {
@@ -21,8 +22,6 @@ protected:
 	std::vector<Component *> components;
 	std::array<std::vector<SystemBase *>, static_cast<size_t>(FrameStage::StageCount)> linkedSystems;
 	bool isInitialized;
-	CommandDispatcher cmdDispatcher;
-	EventDispatcher eventDispatcher;
 	int tag;
 
 public:
@@ -37,8 +36,6 @@ public:
 	auto &getChildren() { return children; }
 	void addChild(Node &child);
 	void removeChild(NodeHandle childHandle);
-	CommandDispatcher &getCommandDispatcher() { return cmdDispatcher; }
-	EventDispatcher &getEventDispatcher() { return eventDispatcher; }
 	int getTag() const { return tag; }
 	void setTag(int tag) { this->tag = tag; }
 
@@ -50,6 +47,8 @@ public:
 	{
 		return linkedSystems[static_cast<size_t>(stage)];
 	}
+
+	bool isLinkedWith(SystemBase *sys);
 
 	void removeComponent(const Component &comp);
 

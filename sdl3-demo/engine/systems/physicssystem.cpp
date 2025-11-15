@@ -9,7 +9,7 @@
 
 PhysicsSystem::PhysicsSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<DirectionChangedEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
 }
 
 void PhysicsSystem::update(Node &node)

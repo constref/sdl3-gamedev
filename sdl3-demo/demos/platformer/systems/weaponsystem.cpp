@@ -15,10 +15,10 @@
 
 WeaponSystem::WeaponSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<CollisionEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<NodeRemovalEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<ShootBeginEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<ShootEndEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<CollisionEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<NodeRemovalEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<ShootBeginEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<ShootEndEvent>(this);
 	//services.eventQueue().dispatcher.registerHandler<TimerOnTimeout>(this);
 }
 

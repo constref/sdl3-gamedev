@@ -9,8 +9,6 @@
 
 Component::~Component()
 {
-	owner.getCommandDispatcher().unregisterHandler(this);
-	owner.getEventDispatcher().unregisterHandler(this);
 }
 
 void Component::earlyUpdate()

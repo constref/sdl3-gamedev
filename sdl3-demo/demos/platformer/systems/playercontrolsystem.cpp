@@ -6,11 +6,11 @@
 
 PlayerControlSystem::PlayerControlSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<CollisionEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<FallingEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<JumpEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<ShootBeginEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<ShootEndEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<CollisionEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<FallingEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<JumpEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<ShootBeginEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<ShootEndEvent>(this);
 }
 
 void PlayerControlSystem::update(Node &node)
@@ -125,7 +125,7 @@ void PlayerControlSystem::transitionState(Node &node, PState newState)
 void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	if (hasRequiredComponents(node))
+	if (node.isLinkedWith(this))
 	{
 		auto [ic, pcc, pc] = getRequiredComponents(node);
 
@@ -149,10 +149,13 @@ void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event
 void PlayerControlSystem::onEvent(NodeHandle target, const FallingEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	auto [ic, pcc, pc] = getRequiredComponents(node);
-	if (pcc->getCurrentState() != PState::airborne)
+	if (node.isLinkedWith(this))
 	{
-		transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
+		auto [ic, pcc, pc] = getRequiredComponents(node);
+		if (pcc->getCurrentState() != PState::airborne)
+		{
+			transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
+		}
 	}
 }
 

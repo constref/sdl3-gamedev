@@ -10,8 +10,8 @@
 
 SpriteRenderSystem::SpriteRenderSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler2<DirectionChangedEvent>(this);
-	services.eventQueue().dispatcher.registerHandler2<AnimationPlayEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<AnimationPlayEvent>(this);
 }
 
 void SpriteRenderSystem::update(Node &node)

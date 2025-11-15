@@ -205,10 +205,7 @@ public:
 
 	void processNodes(std::unique_ptr<SystemBase> &sys, Node &obj, World &world)
 	{
-		if (sys->hasRequiredComponents(obj))
-		{
-			sys->update(obj);
-		}
+		sys->update(obj);
 
 		auto &children = obj.getChildren();
 		for (NodeHandle &hChild : children)
