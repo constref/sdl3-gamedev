@@ -11,7 +11,7 @@
 
 struct QueuedEvent
 {
-	using HandlerFn = void(*)(EventDispatcher &dispatcher, NodeHandle handle, const EventBase &);
+	using HandlerFn = void(*)(EventDispatcher &, NodeHandle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch = nullptr;

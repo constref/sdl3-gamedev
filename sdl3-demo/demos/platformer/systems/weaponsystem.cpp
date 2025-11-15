@@ -15,6 +15,7 @@
 
 WeaponSystem::WeaponSystem(Services &services) : System(services)
 {
+	fireDirection = { 1, 0 };
 	services.eventQueue().dispatcher.registerHandler<CollisionEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<NodeRemovalEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<ShootBeginEvent>(this);
@@ -54,15 +55,12 @@ void WeaponSystem::update(Node &node)
 
 		auto &rndCmp = services.compSys().addComponent<SpriteComponent>(bullet, res.texBullet,
 			static_cast<float>(res.texBullet->h), static_cast<float>(res.texBullet->h));
-		//rndCmp.setDirection(playerDirection);
 
 		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
 		collCmp.setCollider(SDL_FRect{
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
 		});
-
-
 		services.compSys().addComponent<ProjectileComponent>(bullet);
 
 		// adjust bullet start position
@@ -83,19 +81,27 @@ void WeaponSystem::update(Node &node)
 
 void WeaponSystem::onEvent(NodeHandle target, const ShootBeginEvent &event)
 {
-	auto [wc, pc] = getRequiredComponents(services.world().getNode(target));
-	if (!wc->isShooting())
+	Node &node = services.world().getNode(target);
+	if (node.isLinkedWith(this))
 	{
-		wc->setIsShooting(true);
+		auto [wc, pc] = getRequiredComponents(node);
+		if (!wc->isShooting())
+		{
+			wc->setIsShooting(true);
+		}
 	}
 }
 
 void WeaponSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 {
-	auto [wc, pc] = getRequiredComponents(services.world().getNode(target));
-	if (wc->isShooting())
+	Node &node = services.world().getNode(target);
+	if (node.isLinkedWith(this))
 	{
-		wc->setIsShooting(false);
+		auto [wc, pc] = getRequiredComponents(node);
+		if (wc->isShooting())
+		{
+			wc->setIsShooting(false);
+		}
 	}
 }
 

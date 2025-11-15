@@ -57,8 +57,11 @@ void SpriteRenderSystem::update(Node &node)
 void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	auto [sc] = getRequiredComponents(node);
-	sc->setTexture(event.getTexture());
+	if (node.isLinkedWith(this))
+	{
+		auto [sc] = getRequiredComponents(node);
+		sc->setTexture(event.getTexture());
+	}
 }
 
 void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
@@ -66,7 +69,10 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent 
 	if (event.getDirection().x != 0)
 	{
 		Node &node = services.world().getNode(target);
-		auto [sc] = getRequiredComponents(node);
-		sc->setFlipMode(event.getDirection().x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+		if (node.isLinkedWith(this))
+		{
+			auto [sc] = getRequiredComponents(node);
+			sc->setFlipMode(event.getDirection().x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+		}
 	}
 }

@@ -162,71 +162,80 @@ void PlayerControlSystem::onEvent(NodeHandle target, const FallingEvent &event)
 void PlayerControlSystem::onEvent(NodeHandle target, const JumpEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	auto [ic, pcc, pc] = getRequiredComponents(node);
-	if (pcc->getCurrentState() != PState::airborne &&
-		pcc->getCurrentState() != PState::airborneShooting)
+	if (node.isLinkedWith(this))
 	{
-		transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
-		pc->addImpulse(glm::vec2(0, -250.0f));
+		auto [ic, pcc, pc] = getRequiredComponents(node);
+		if (pcc->getCurrentState() != PState::airborne &&
+			pcc->getCurrentState() != PState::airborneShooting)
+		{
+			transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
+			pc->addImpulse(glm::vec2(0, -250.0f));
+		}
 	}
 }
 
 void PlayerControlSystem::onEvent(NodeHandle target, const ShootBeginEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	auto [ic, pcc, pc] = getRequiredComponents(node);
-
-	pcc->setIsShooting(true);
-	switch (pcc->getCurrentState())
+	if (node.isLinkedWith(this))
 	{
-		case PState::idle:
+		auto [ic, pcc, pc] = getRequiredComponents(node);
+
+		pcc->setIsShooting(true);
+		switch (pcc->getCurrentState())
 		{
-			transitionState(node, PState::shooting);
-			break;
-		}
-		case PState::running:
-		{
-			transitionState(node, PState::runningShooting);
-			break;
-		}
-		case PState::airborne:
-		{
-			transitionState(node, PState::airborneShooting);
-			break;
-		}
-		case PState::sliding:
-		{
-			transitionState(node, PState::slidingShooting);
-			break;
+			case PState::idle:
+			{
+				transitionState(node, PState::shooting);
+				break;
+			}
+			case PState::running:
+			{
+				transitionState(node, PState::runningShooting);
+				break;
+			}
+			case PState::airborne:
+			{
+				transitionState(node, PState::airborneShooting);
+				break;
+			}
+			case PState::sliding:
+			{
+				transitionState(node, PState::slidingShooting);
+				break;
+			}
 		}
 	}
 }
 void PlayerControlSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	auto [ic, pcc, pc] = getRequiredComponents(node);
-
-	pcc->setIsShooting(false);
-	switch (pcc->getCurrentState())
+	if (node.isLinkedWith(this))
 	{
-		case PState::shooting:
+		auto [ic, pcc, pc] = getRequiredComponents(node);
+
+		pcc->setIsShooting(false);
+		switch (pcc->getCurrentState())
 		{
-			transitionState(node, PState::idle);
-			break;
-		}
-		case PState::runningShooting:
-		{
-			transitionState(node, PState::running);
-			break;
-		}
-		case PState::airborneShooting:
-		{
-			transitionState(node, PState::airborne);
-			break;
-		}
-		case PState::slidingShooting:
-		{
-			transitionState(node, PState::slidingShooting);
+			case PState::shooting:
+			{
+				transitionState(node, PState::idle);
+				break;
+			}
+			case PState::runningShooting:
+			{
+				transitionState(node, PState::running);
+				break;
+			}
+			case PState::airborneShooting:
+			{
+				transitionState(node, PState::airborne);
+				break;
+			}
+			case PState::slidingShooting:
+			{
+				transitionState(node, PState::slidingShooting);
+			}
 		}
 	}
 }

@@ -13,6 +13,7 @@ class NodeRemovalEvent;
 
 class WeaponSystem : public System<FrameStage::Gameplay, WeaponComponent, PhysicsComponent>
 {
+	glm::vec2 fireDirection;
 public:
 	WeaponSystem(Services &services);
 	void update(Node &node);
