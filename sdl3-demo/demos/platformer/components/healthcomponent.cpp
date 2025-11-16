@@ -13,11 +13,5 @@ void HealthComponent::onEvent(const DamageEvent &event)
 {
 	/*if (hp > 0)
 	{
-		hp -= event.getAmount();
-		if (hp <= 0)
-		{
-			hp = 0;
-			services.eventQueue().enqueue<DeathEvent>(owner.getHandle(), 0);
-		}
 	}*/
 }

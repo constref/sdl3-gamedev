@@ -1,6 +1,7 @@
 #include "projectilesystem.h"
 #include <messaging/messaging.h>
 #include <resources.h>
+#include "../events.h"
 
 ProjectileSystem::ProjectileSystem(Services &services) : System(services)
 {
@@ -18,8 +19,6 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 	if (node.isLinkedWith(this))
 	{
 		auto [rc, pc, cc] = getRequiredComponents(node);
-
-		//TODO: Remove the need to count, group contacts per - frame
 		if (!rc->hasHit())
 		{
 			rc->setHasHit(true);
@@ -29,7 +28,7 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 			services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
 				res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
 			cc->removeCollider();
-			//services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, owner.getParent(), 15); // damage source is the person firing the gun, not the projectile
+			services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
 			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 		}
 	}

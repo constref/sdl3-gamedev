@@ -17,6 +17,8 @@
 #include "systems/basiccamerasystem.h"
 #include "systems/weaponsystem.h"
 #include "systems/projectilesystem.h"
+#include "systems/damagesystem.h"
+#include "systems/enemysystem.h"
 #include "components/playercontrollercomponent.h"
 #include "components/weaponcomponent.h"
 #include "components/healthcomponent.h"
@@ -40,6 +42,8 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));
 	services.compSys().registerSystem(std::make_unique<ProjectileSystem>(services));
 	services.compSys().registerSystem(std::make_unique<BasicCameraSystem>(services, glm::vec2(state.logW, state.logH)));
+	services.compSys().registerSystem(std::make_unique<DamageSystem>(services));
+	services.compSys().registerSystem(std::make_unique<EnemySystem>(services));
 
 	struct LayerVisitor
 	{

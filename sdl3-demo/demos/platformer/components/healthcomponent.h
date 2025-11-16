@@ -6,8 +6,8 @@ class DamageEvent;
 
 class HealthComponent : public Component
 {
-	int hp;
 public:
+	int hp;
 	HealthComponent(Node &owner, int hp);
 	void onEvent(const DamageEvent &event);
 };

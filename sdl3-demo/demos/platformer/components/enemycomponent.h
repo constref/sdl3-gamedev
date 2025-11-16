@@ -4,8 +4,6 @@
 #include <timer.h>
 #include <nodehandle.h>
 
-class DamageEvent;
-class DeathEvent;
 class TimerOnTimeout;
 
 enum class EnemyState
@@ -24,13 +22,14 @@ class EnemyComponent : public Component
 {
 	EnemyState state;
 	const EnemyType type;
-	Timer timerDamaged;
+	Timer damagedTimer;
 	NodeHandle damageSource;
 
 public:
 	EnemyComponent(Node &owner, EnemyType type);
 
-	void onEvent(const DamageEvent &event);
-	void onEvent(const DeathEvent &event);
-	void onEvent(const TimerOnTimeout &event);
+	EnemyType getType() const { return type; }
+	EnemyState getState() const { return state; }
+	void setState(EnemyState state) { this->state = state; }
+	Timer &getDamagedTimer() { return damagedTimer; }
 };

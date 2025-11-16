@@ -31,7 +31,7 @@ void SpriteAnimationSystem::update(Node &node)
 		{
 			if (ac->getPlaybackMode() == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
 			{
-				currentAnimation = AnimationComponent::NO_ANIMATION;
+				ac->setAnimation(AnimationComponent::NO_ANIMATION);
 			}
 			else // continuous play, send out updated frameNumber (wrapped-around back to 0)
 			{
