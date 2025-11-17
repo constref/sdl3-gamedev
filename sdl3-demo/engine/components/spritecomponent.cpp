@@ -9,12 +9,14 @@ SpriteComponent::SpriteComponent(Node &owner, SDL_Texture *texture, float width,
 	: Component(owner, FrameStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;
-	this->shouldFlash = false;
+	shouldFlash = false;
 	this->width = width;
 	this->height = height;
-	this->scale = glm::vec2(1.0f, 1.0f);
-	this->frameNumber = 1;
+	scale = glm::vec2(1.0f, 1.0f);
+	rotation = 0;
+	frameNumber = 1;
 	viewportPos = { 0, 0 };
 	followViewport = 1;
 	flipMode = SDL_FLIP_NONE;
+	viewportSize = { 0, 0 };
 }

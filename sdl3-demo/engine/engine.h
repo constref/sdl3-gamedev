@@ -83,6 +83,9 @@ public:
 			float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
 			prevTime = nowTime;
 
+			SDLState &state = SDLState::global();
+			SDL_SetWindowTitle(state.window, std::format("Frame Time {}", actualDeltaTime).c_str());
+
 			float deltaTime = actualDeltaTime;
 			if constexpr (clampDeltaTime)
 			{
@@ -98,7 +101,6 @@ public:
 			ctx.globalTime = globalTime;
 			ctx.frameNumber = ++frameCount;
 
-			SDLState &state = SDLState::global();
 			World &world = services.world();
 			Node &root = world.getNode(app.getRoot());
 

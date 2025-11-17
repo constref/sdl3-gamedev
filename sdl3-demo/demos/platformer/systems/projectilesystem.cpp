@@ -11,6 +11,21 @@ ProjectileSystem::ProjectileSystem(Services &services) : System(services)
 
 void ProjectileSystem::update(Node &node)
 {
+	// TODO: Replace this with feature in anim system
+	auto *projComp = node.getComponent<ProjectileComponent>();
+	if (!projComp->hasHit())
+	{
+		const float maxLife = 0.5f;
+		float life = std::clamp(projComp->getLifeDuration() + FrameContext::dt(), 0.0f, maxLife);
+		projComp->setLifeDuration(life);
+
+		auto *spriteComp = node.getComponent<SpriteComponent>();
+		float norm = life / maxLife;
+
+		float s = 0.8f + (1.2f - 0.2f) * norm;
+		spriteComp->setScale(glm::vec2(s));
+		spriteComp->setRotation(SDL_rand(360));
+	}
 }
 
 void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
@@ -18,7 +33,7 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 	Node &node = services.world().getNode(target);
 	if (node.isLinkedWith(this))
 	{
-		auto [rc, pc, cc] = getRequiredComponents(node);
+		auto [rc, pc, cc, sc] = getRequiredComponents(node);
 		if (!rc->hasHit())
 		{
 			rc->setHasHit(true);
@@ -30,6 +45,7 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 			cc->removeCollider();
 			services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
 			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
+			sc->setRotation(0);
 		}
 	}
 }

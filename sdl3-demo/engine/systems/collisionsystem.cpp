@@ -17,7 +17,7 @@ void CollisionSystem::update(Node &node)
 {
 	auto [pc, cc] = getRequiredComponents(node);
 
-	if (pc->isDynamic())
+	//if (pc->isDynamic())
 	{
 		auto &prevContacts = cc->getPrevContacts();
 		std::array<bool, 4> contacts = { false }; // left, right, top, bottom

@@ -30,21 +30,21 @@ void SpriteRenderSystem::update(Node &node)
 	SDL_FRect dst{
 		.x = node.getPosition().x - RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(),
 		.y = node.getPosition().y - RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(),
-		.w = size.x,
-		.h = size.y
+		.w = size.x * sc->getScale().x,
+		.h = size.y * sc->getScale().y
 	};
 
 	SDL_Renderer *renderer = SDLState::global().renderer;
 
 	if (!sc->isShouldFlash())
 	{
-		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, 0, nullptr, sc->getFlipMode());
+		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
 	}
 	else
 	{
 		// flash object with a redish tint
 		SDL_SetTextureColorModFloat(sc->getTexture(), 2.5f, 1.0f, 1.0f);
-		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, 0, nullptr, sc->getFlipMode());
+		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
 		SDL_SetTextureColorModFloat(sc->getTexture(), 1.0f, 1.0f, 1.0f);
 
 		if (sc->getFlashTimer().step(FrameContext::dt()))

@@ -19,6 +19,7 @@ WeaponSystem::WeaponSystem(Services &services) : System(services)
 	fireDirection = { 1, 0 };
 	services.eventQueue().dispatcher.registerHandler<ShootBeginEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<ShootEndEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
 	//services.eventQueue().dispatcher.registerHandler<TimerOnTimeout>(this);
 }
 
@@ -29,11 +30,6 @@ void WeaponSystem::update(Node &node)
 	bool canFire = wc->getCooldownTimer().step(FrameContext::dt());
 	if (wc->isShooting() && canFire)
 	{
-		if (pc->getDirection().x != 0)
-		{
-			fireDirection = pc->getDirection();
-		}
-
 		// restart cooldown timer
 		wc->getCooldownTimer().reset();
 		canFire = false;
@@ -59,12 +55,13 @@ void WeaponSystem::update(Node &node)
 		auto &rndCmp = services.compSys().addComponent<SpriteComponent>(
 			bullet, res.texBullet, static_cast<float>(res.texBullet->h),
 			static_cast<float>(res.texBullet->h));
+		rndCmp.setFlipMode(fireDirection.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 
 		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
 		collCmp.setCollider(SDL_FRect{
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
-		});
+			});
 		services.compSys().addComponent<ProjectileComponent>(bullet);
 
 		// adjust bullet start position
@@ -106,5 +103,14 @@ void WeaponSystem::onEvent(NodeHandle target, const ShootEndEvent &event)
 		{
 			wc->setIsShooting(false);
 		}
+	}
+}
+
+void WeaponSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
+{
+	// we only care if we're turning
+	if (event.getDirection().x != 0)
+	{
+		fireDirection = event.getDirection();
 	}
 }

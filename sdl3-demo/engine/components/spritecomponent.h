@@ -14,6 +14,7 @@ protected:
 	float width;
 	float height;
 	glm::vec2 scale;
+	float rotation;
 	int frameNumber;
 	float followViewport;
 	glm::vec2 viewportPos;
@@ -38,5 +39,8 @@ public:
 	void setViewportPos(glm::vec2 viewportPos) { this->viewportPos = viewportPos; }
 	float getFollowViewport() const { return followViewport; }
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
-
+	glm::vec2 getScale() const { return scale; }
+	void setScale(const glm::vec2 &scale) { this->scale = scale; }
+	float getRotation() const { return rotation; }
+	void setRotation(float rotation) { this->rotation = rotation; }
 };

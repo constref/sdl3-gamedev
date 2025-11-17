@@ -23,10 +23,6 @@ Node::Node()
 
 Node::~Node()
 {
-	for (auto *comp : components)
-	{
-		delete comp;
-	}
 	components.clear();
 }
 
