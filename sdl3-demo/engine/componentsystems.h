@@ -2,9 +2,10 @@
 
 #include <components/componentstore.h>
 #include <systems/systemregistry.h>
+#include <typeindex>
 
-void addNodeComponent(Node &node, Component &comp);
-void removeNodeComponent(Node &node, const Component &comp);
+void addNodeComponent(Node &node, size_t typeId, Component &comp);
+void removeNodeComponent(Node &node, size_t typeId, const Component &comp);
 
 class ComponentSystems
 {
@@ -22,8 +23,8 @@ public:
 	T &addComponent(Node &node, Args... args)
 	{
 		// create and store component
-		T &comp = compStore.addComponent<T>(node, args...);
-		addNodeComponent(node, comp);
+		T &comp = compStore.addComponent<T>(node,  args...);
+		addNodeComponent(node, Component::typeId<T>(), comp);
 
 		for (auto &stageSystems : sysReg.getSystems())
 		{

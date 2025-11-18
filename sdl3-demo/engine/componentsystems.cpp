@@ -1,15 +1,19 @@
 #include <componentsystems.h>
 #include <logger.h>
 
-void addNodeComponent(Node &node, Component &comp)
+void addNodeComponent(Node &node, size_t typeId, Component &comp)
 {
-	node.components.push_back(&comp);
+	auto [itr, inserted] = node.components.insert({ typeId, &comp });
+	if (!inserted)
+	{
+		Logger::error(&node, "Tried adding an already existing component to this node.");
+	}
 }
 
-void removeNodeComponent(Node &node, const Component &comp)
+void removeNodeComponent(Node &node, size_t typeId, const Component &comp)
 {
-	auto itr = std::find(node.components.begin(), node.components.end(), &comp);
-	if (itr != node.components.end())
+	auto itr = node.components.find(typeId);
+	if (itr != node.components.end() && itr->second == &comp)
 	{
 		node.components.erase(itr);
 		delete &comp;

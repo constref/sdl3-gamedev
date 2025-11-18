@@ -28,7 +28,7 @@ public:
 	// TODO: Will remove static vector in favor of a spatial partitioning structure
 	static std::vector<NodeHandle> collidableNodes;
 
-	SDL_FRect getCollider() const { return collider; }
+	const SDL_FRect &getCollider() const { return collider; }
 	void setCollider(const SDL_FRect &collider) { this->collider = collider; }
 	auto &getPrevContacts() { return prevContacts; }
 

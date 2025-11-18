@@ -45,20 +45,6 @@ void Node::removeChild(NodeHandle childHandle)
 	}
 }
 
-void Node::removeComponent(const Component &comp)
-{
-	auto itr = std::find(components.begin(), components.end(), &comp);
-	if (itr != components.end())
-	{
-		components.erase(itr);
-		delete &comp;
-	}
-	else
-	{
-		Logger::error(this, "Couldn't remove component, address is invalid.");
-	}
-}
-
 bool Node::isLinkedWith(SystemBase *sys)
 {
 	auto &stageSys = linkedSystems[static_cast<size_t>(sys->getStage())];
