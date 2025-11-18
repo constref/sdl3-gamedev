@@ -6,12 +6,4 @@
 HealthComponent::HealthComponent(Node &owner, int hp) : Component(owner, FrameStage::Gameplay)
 {
 	this->hp = hp;
-	//owner.getEventDispatcher().registerHandler<DamageEvent>(this);
-}
-
-void HealthComponent::onEvent(const DamageEvent &event)
-{
-	/*if (hp > 0)
-	{
-	}*/
 }
