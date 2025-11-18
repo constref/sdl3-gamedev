@@ -56,6 +56,7 @@ void WeaponSystem::update(Node &node)
 			bullet, res.texBullet, static_cast<float>(res.texBullet->h),
 			static_cast<float>(res.texBullet->h));
 		rndCmp.setFlipMode(fireDirection.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+		rndCmp.setRotation(SDL_rand(360));
 
 		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
 		collCmp.setCollider(SDL_FRect{

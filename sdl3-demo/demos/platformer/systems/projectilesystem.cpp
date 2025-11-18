@@ -24,7 +24,6 @@ void ProjectileSystem::update(Node &node)
 
 		float s = 0.8f + (1.2f - 0.2f) * norm;
 		spriteComp->setScale(glm::vec2(s));
-		spriteComp->setRotation(SDL_rand(360));
 	}
 }
 
