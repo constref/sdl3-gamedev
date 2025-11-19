@@ -3,14 +3,15 @@
 #include <glm/glm.hpp>
 #include <array>
 #include <vector>
+#include <algorithm>
 #include <memory>
-#include <unordered_map>
-#include <typeindex>
 #include <components/component.h>
+#include <components/componententry.h>
 #include <messaging/commanddispatcher.h>
 #include <messaging/eventdispatcher.h>
 #include <nodehandle.h>
 #include <logger.h>
+#include <config.h>
 
 class NodeRemovalEvent;
 class SystemBase;
@@ -22,8 +23,7 @@ protected:
 	NodeHandle parent;
 	glm::vec2 position;
 	std::vector<NodeHandle> children;
-	//std::vector<Component *> components;
-	std::unordered_map<size_t, Component *> components;
+	std::vector<ComponentEntry> components;
 	std::array<std::vector<SystemBase *>, static_cast<size_t>(FrameStage::StageCount)> linkedSystems;
 	bool isInitialized;
 	int tag;
@@ -57,10 +57,29 @@ public:
 	template<typename T>
 	T *getComponent()
 	{
-		auto itr = components.find(Component::typeId<T>());
-		if (itr != components.end())
+		// use a linear for-loop search for debug builds
+		// otherwise compiler doesn't inline function
+		// call in std::find and tanks performance
+		if constexpr (Config::IsDebugBuild)
 		{
-			return static_cast<T *>(itr->second);
+			for (auto &entry : components)
+			{
+				if (entry.id == Component::typeId<T>())
+				{
+					return static_cast<T *>(entry.comp);
+				}
+			}
+		}
+		else
+		{
+			auto itr = std::find_if(components.begin(), components.end(), [](const ComponentEntry &e) {
+				return e.id == Component::typeId<T>();
+			});
+
+			if (itr != components.end())
+			{
+				return static_cast<T *>(itr->comp);
+			}
 		}
 		return nullptr;
 	}
@@ -68,7 +87,10 @@ public:
 	template<typename T>
 	void removeComponent(const Component &comp)
 	{
-		auto itr = components.find(Component::typeId<T>());
+		auto itr = std::find_if(components.begin(), components.end(), [](const ComponentEntry &e) {
+			return e.id == Component::typeId<T>();
+		});
+
 		if (itr != components.end())
 		{
 			components.erase(itr);

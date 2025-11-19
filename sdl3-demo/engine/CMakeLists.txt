@@ -65,7 +65,7 @@ add_library(engine STATIC
 	"systems/systemregistry.h"
 	"systems/basiccamerasystem.h"
 	"systems/basiccamerasystem.cpp"
-	"systems/context/rendercontext.h" "components/componentstore.h" "components/componentstore.cpp" "services.h" "componentsystems.h" "componentsystems.cpp")
+	"systems/context/rendercontext.h" "components/componentstore.h" "components/componentstore.cpp" "services.h" "componentsystems.h" "componentsystems.cpp" "components/componententry.h" "config.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

@@ -39,8 +39,8 @@ public:
 	static size_t typeId()
 	{
 		// returns a size_t casted address of the static typeId var for this specialization
-		//static size_t typeId = reinterpret_cast<size_t>(&typeId);
-		static size_t typeId = ++nextId;
+		static size_t typeId = reinterpret_cast<size_t>(&typeId);
+		//static size_t typeId = ++nextId;
 		return typeId;
 	}
 };
