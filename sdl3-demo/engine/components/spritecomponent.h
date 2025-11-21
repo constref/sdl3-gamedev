@@ -20,6 +20,7 @@ protected:
 	glm::vec2 viewportPos;
 	glm::vec2 viewportSize;
 	SDL_FlipMode flipMode;
+	float paralaxFactor;
 
 public:
 	SpriteComponent(Node &owner, SDL_Texture *texture, float width, float height);
@@ -43,4 +44,6 @@ public:
 	void setScale(const glm::vec2 &scale) { this->scale = scale; }
 	float getRotation() const { return rotation; }
 	void setRotation(float rotation) { this->rotation = rotation; }
+	float getParalaxFactor() const { return paralaxFactor; }
+	void setParalaxFactor(float factor) { paralaxFactor = factor; }
 };

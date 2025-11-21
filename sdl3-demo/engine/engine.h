@@ -172,7 +172,7 @@ public:
 			processSystems(FrameStage::Render, root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("FT: {:.3f}, N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} I: {} P: {} G: {} A: {} E: {}",
 				actualDeltaTime,
 				services.world().getFreeCount(),
 				services.eventQueue().getCount(FrameStage::Input),

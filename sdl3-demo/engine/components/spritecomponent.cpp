@@ -19,4 +19,5 @@ SpriteComponent::SpriteComponent(Node &owner, SDL_Texture *texture, float width,
 	followViewport = 1;
 	flipMode = SDL_FLIP_NONE;
 	viewportSize = { 0, 0 };
+	paralaxFactor = 0;
 }

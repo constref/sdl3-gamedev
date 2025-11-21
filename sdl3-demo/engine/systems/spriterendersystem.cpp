@@ -38,7 +38,21 @@ void SpriteRenderSystem::update(Node &node)
 
 	if (!sc->isShouldFlash())
 	{
-		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
+		if (sc->getParalaxFactor() == 0)
+		{
+			SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
+		}
+		else
+		{
+			SDL_FRect tiledDst = dst;
+			tiledDst.x -= std::fmod(RenderContext::shared().getCameraPosition().x * sc->getParalaxFactor(), dst.w);
+			tiledDst.x -= dst.w;
+			for (int i = 0; i < 3; ++i)
+			{
+				SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &tiledDst, sc->getRotation(), nullptr, sc->getFlipMode());
+				tiledDst.x += dst.w;
+			}
+		}
 	}
 	else
 	{

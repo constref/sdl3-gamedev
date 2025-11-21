@@ -206,20 +206,23 @@ bool Platformer::initialize(Services &services, SDLState &state)
 
 	NodeHandle hBG4 = world.createNode();
 	Node &bg4 = world.getNode(hBG4);
-	services.compSys().addComponent<SpriteComponent>(bg4, res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH))
-		.setFollowViewport(false);
+	auto &bg4Sc = services.compSys().addComponent<SpriteComponent>(bg4, res.texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH));
+	bg4Sc.setFollowViewport(false);
+	bg4Sc.setParalaxFactor(0.05f);
 	bgLayer.addChild(bg4);
 
 	NodeHandle hBG3 = world.createNode();
 	Node &bg3 = world.getNode(hBG3);
-	services.compSys().addComponent<SpriteComponent>(bg3, res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH))
-		.setFollowViewport(false);
+	auto &bg3Sc = services.compSys().addComponent<SpriteComponent>(bg3, res.texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH));
+	bg3Sc.setFollowViewport(false);
+	bg3Sc.setParalaxFactor(0.1f);
 	bgLayer.addChild(bg3);
 
 	NodeHandle hBG2 = world.createNode();
 	Node &bg2 = world.getNode(hBG2);
-	services.compSys().addComponent<SpriteComponent>(bg2, res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH))
-		.setFollowViewport(false);
+	auto &bg2Sc = services.compSys().addComponent<SpriteComponent>(bg2, res.texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH));
+	bg2Sc.setFollowViewport(false);
+	bg2Sc.setParalaxFactor(0.2f);
 	bgLayer.addChild(bg2);
 
 	root.addChild(bgLayer);
