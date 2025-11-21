@@ -95,15 +95,12 @@ public:
 			globalTime += deltaTime;
 
 			FrameContext &ctx = FrameContext::global();
-			ctx.deltaTime = fixedStep;
+			ctx.deltaTime = deltaTime;
 			ctx.globalTime = globalTime;
 			ctx.frameNumber = ++frameCount;
 
 			World &world = services.world();
 			Node &root = world.getNode(app.getRoot());
-
-			services.eventQueue().dispatch(FrameStage::Start);
-			processSystems(FrameStage::Start, root, world);
 
 			SDL_Event event{ 0 };
 			while (SDL_PollEvent(&event))
@@ -147,10 +144,15 @@ public:
 				}
 			}
 
+			services.eventQueue().dispatch(FrameStage::Start);
+			processSystems(FrameStage::Start, root, world);
+
 			// handle input every frame to avoid input lag
 			services.eventQueue().dispatch(FrameStage::Input);
 			processSystems(FrameStage::Input, root, world);
 
+			// fixed step systems
+			ctx.deltaTime = fixedStep;
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
@@ -165,6 +167,7 @@ public:
 			}
 
 			// drawing happens every single frame
+			ctx.deltaTime = deltaTime;
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
