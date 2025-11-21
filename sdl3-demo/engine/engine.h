@@ -76,15 +76,13 @@ public:
 		double globalTime = 0;
 
 		running = true;
+		SDLState &state = SDLState::global();
 		while (running)
 		{
 			// calculate deltaTime
 			uint64_t nowTime = SDL_GetTicks();
 			float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
 			prevTime = nowTime;
-
-			SDLState &state = SDLState::global();
-			SDL_SetWindowTitle(state.window, std::format("Frame Time {}", actualDeltaTime).c_str());
 
 			float deltaTime = actualDeltaTime;
 			if constexpr (clampDeltaTime)
@@ -174,7 +172,8 @@ public:
 			processSystems(FrameStage::Render, root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("FT: {:.3f}, N: {}, I: {}, P: {}, G: {}, A: {}, E: {}",
+				actualDeltaTime,
 				services.world().getFreeCount(),
 				services.eventQueue().getCount(FrameStage::Input),
 				services.eventQueue().getCount(FrameStage::Physics),
