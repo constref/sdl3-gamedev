@@ -152,7 +152,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 					auto &physicsComponent = services.compSys().addComponent<PhysicsComponent>(player);
 					physicsComponent.setAcceleration(glm::vec2(800, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(100, 300));
-					physicsComponent.setDynamic(true);
+					//physicsComponent.setDynamic(true);
 					auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(player);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 11, .y = 6,
@@ -174,7 +174,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 					auto &physicsComponent = services.compSys().addComponent<PhysicsComponent>(enemy);
 					physicsComponent.setAcceleration(glm::vec2(200, 0));
 					physicsComponent.setMaxSpeed(glm::vec2(50, 300));
-					physicsComponent.setDynamic(true);
+					//physicsComponent.setDynamic(true);
 					auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(enemy);
 					collisionComponent.setCollider(SDL_FRect{
 						.x = 10, .y = 4, .w = 12, .h = 28

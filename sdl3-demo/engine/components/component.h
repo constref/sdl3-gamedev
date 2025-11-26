@@ -10,7 +10,7 @@ static size_t nextId = 0;
 class Node;
 class CommandDispatcher;
 class EventDispatcher;
-class TimerOnTimeout;
+class TimerTimeoutEvent;
 
 using ComponentId = unsigned long;
 

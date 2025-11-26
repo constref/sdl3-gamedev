@@ -4,7 +4,7 @@
 #include <timer.h>
 #include <nodehandle.h>
 
-class TimerOnTimeout;
+class TimerTimeoutEvent;
 
 enum class EnemyState
 {

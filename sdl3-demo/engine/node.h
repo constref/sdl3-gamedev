@@ -28,6 +28,8 @@ protected:
 	bool isInitialized;
 	int tag;
 
+	void unlinkIncompatibleSystems();
+
 public:
 	Node(NodeHandle handle);
 	Node();
@@ -85,7 +87,7 @@ public:
 	}
 
 	template<typename T>
-	void removeComponent(const Component &comp)
+	void removeComponent()
 	{
 		auto itr = std::find_if(components.begin(), components.end(), [](const ComponentEntry &e) {
 			return e.id == Component::typeId<T>();
@@ -94,7 +96,7 @@ public:
 		if (itr != components.end())
 		{
 			components.erase(itr);
-			delete &comp;
+			unlinkIncompatibleSystems();
 		}
 		else
 		{

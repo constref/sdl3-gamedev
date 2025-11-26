@@ -20,7 +20,7 @@ WeaponSystem::WeaponSystem(Services &services) : System(services)
 	services.eventQueue().dispatcher.registerHandler<ShootBeginEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<ShootEndEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
-	//services.eventQueue().dispatcher.registerHandler<TimerOnTimeout>(this);
+	//services.eventQueue().dispatcher.registerHandler<TimerTimeoutEvent>(this);
 }
 
 void WeaponSystem::update(Node &node)
@@ -46,7 +46,7 @@ void WeaponSystem::update(Node &node)
 		const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
 		physCmp.setVelocity(glm::vec2(pc->getVelocity().x + 600.0f * fireDirection.x, yVelocity));
 		physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
-		physCmp.setDynamic(true);
+		//physCmp.setDynamic(true);
 		physCmp.setGravityFactor(0);
 		physCmp.setDamping(0);
 

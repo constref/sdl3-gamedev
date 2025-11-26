@@ -50,3 +50,18 @@ bool Node::isLinkedWith(SystemBase *sys)
 	auto &stageSys = linkedSystems[static_cast<size_t>(sys->getStage())];
 	return std::ranges::find(stageSys, sys) != stageSys.end();
 }
+
+void Node::unlinkIncompatibleSystems()
+{
+	for (auto &stageSys : linkedSystems)
+	{
+		std::erase_if(stageSys, [this](SystemBase *sys) {
+			if (!sys->hasRequiredComponents(*this))
+			{
+				sys->onUnlinked(*this);
+				return true;
+			}
+			return false;
+		});
+	}
+}

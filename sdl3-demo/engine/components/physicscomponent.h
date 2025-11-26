@@ -32,8 +32,8 @@ public:
 	void setMaxSpeed(const glm::vec2 &maxSpeed) { this->maxSpeed = maxSpeed; }
 	bool isGrounded() const { return grounded; }
 	void setGrounded(bool grounded) { this->grounded = grounded; }
-	bool isDynamic() const { return dynamic; }
-	void setDynamic(bool dynamic) { this->dynamic = dynamic; }
+	//bool isDynamic() const { return dynamic; }
+	//void setDynamic(bool dynamic) { this->dynamic = dynamic; }
 	float getGravityFactor() const { return gravityFactor; }
 	void setGravityFactor(float gravityFactor) { this->gravityFactor = gravityFactor; }
 	float getDamping() const { return damping; }

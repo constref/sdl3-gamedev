@@ -18,7 +18,7 @@ void Component::earlyUpdate()
 	//{
 	//	if (int timeouts = t->step(FrameContext::dt()); timeouts > 0)
 	//	{
-	//		services.eventQueue().enqueue<TimerOnTimeout>(owner.getHandle(), 0, timeouts);
+	//		services.eventQueue().enqueue<TimerTimeoutEvent>(owner.getHandle(), 0, timeouts);
 	//	}
 	//}
 }

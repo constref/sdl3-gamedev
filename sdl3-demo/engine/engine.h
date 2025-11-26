@@ -17,6 +17,7 @@
 #include <systems/spriteanimationsystem.h>
 #include <systems/physicssystem.h>
 #include <systems/collisionsystem.h>
+#include <systems/timersystem.h>
 
 template<Application AppType>
 class Engine
@@ -48,6 +49,7 @@ public:
 		if (state.initialize(1600, 900, logW, logH))
 		{
 			// core system registrations
+			services.compSys().registerSystem(std::make_unique<TimerSystem>(services));
 			services.compSys().registerSystem(std::make_unique<InputSystem>(services));
 			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
@@ -123,13 +125,13 @@ public:
 						// ignore repeat key-down signals while holding (prevent event spam)
 						if (!event.key.repeat)
 						{
-							services.eventQueue().enqueue<KeyboardEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::down);
+							services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
 						}
 						break;
 					}
 					case SDL_EVENT_KEY_UP:
 					{
-						services.eventQueue().enqueue<KeyboardEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode, KeyboardEvent::State::up);
+						services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
 						if (event.key.scancode == SDL_SCANCODE_F2)
 						{
 							debugMode = !debugMode;
@@ -144,24 +146,31 @@ public:
 				}
 			}
 
-			services.eventQueue().dispatch(FrameStage::Start);
-			processSystems(FrameStage::Start, root, world);
+			FrameContext::global().setStage(FrameStage::Start);
+			services.eventQueue().dispatch();
+			processSystems(root, world);
 
 			// handle input every frame to avoid input lag
-			services.eventQueue().dispatch(FrameStage::Input);
-			processSystems(FrameStage::Input, root, world);
+			FrameContext::global().setStage(FrameStage::Input);
+			services.eventQueue().dispatch();
+			processSystems(root, world);
 
 			// fixed step systems
 			ctx.deltaTime = fixedStep;
 			accumulator += deltaTime;
 			while (accumulator >= fixedStep)
 			{
-				services.eventQueue().dispatch(FrameStage::Physics);
-				processSystems(FrameStage::Physics, root, world);
-				services.eventQueue().dispatch(FrameStage::Gameplay);
-				processSystems(FrameStage::Gameplay, root, world);
-				services.eventQueue().dispatch(FrameStage::Animation);
-				processSystems(FrameStage::Animation, root, world);
+				FrameContext::global().setStage(FrameStage::Physics);
+				services.eventQueue().dispatch();
+				processSystems(root, world);
+
+				FrameContext::global().setStage(FrameStage::Gameplay);
+				services.eventQueue().dispatch();
+				processSystems(root, world);
+
+				FrameContext::global().setStage(FrameStage::Animation);
+				services.eventQueue().dispatch();
+				processSystems(root, world);
 
 				accumulator -= fixedStep;
 			}
@@ -171,30 +180,28 @@ public:
 			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
 			SDL_RenderClear(state.renderer);
 
-			services.eventQueue().dispatch(FrameStage::Render);
-			processSystems(FrameStage::Render, root, world);
+			FrameContext::global().setStage(FrameStage::Render);
+			services.eventQueue().dispatch();
+			processSystems(root, world);
 
 			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} I: {} P: {} G: {} A: {} E: {}",
+			SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
 				actualDeltaTime,
 				services.world().getFreeCount(),
-				services.eventQueue().getCount(FrameStage::Input),
-				services.eventQueue().getCount(FrameStage::Physics),
-				services.eventQueue().getCount(FrameStage::Gameplay),
-				services.eventQueue().getCount(FrameStage::Animation),
-				services.eventQueue().getCount(FrameStage::End)
+				services.eventQueue().getCount()
 			).c_str());
 
 			SDL_RenderPresent(state.renderer);
 
-			services.eventQueue().dispatch(FrameStage::End);
-			processSystems(FrameStage::End, root, world);
+			FrameContext::global().setStage(FrameStage::End);
+			services.eventQueue().dispatch();
+			processSystems( root, world);
 		}
 	}
 
-	void processSystems(FrameStage stage, Node &obj, World &world)
+	void processSystems(Node &obj, World &world)
 	{
-		auto &stageSystems = obj.getStageSystems(stage);
+		auto &stageSystems = obj.getStageSystems(FrameContext::currentStage());
 		for (auto &sys : stageSystems)
 		{
 			sys->update(obj);
@@ -203,7 +210,7 @@ public:
 		for (NodeHandle &hChild : children)
 		{
 			Node &child = world.getNode(hChild);
-			processSystems(stage, child, world);
+			processSystems(child, world);
 		}
 	}
 

@@ -14,6 +14,7 @@ public:
 	virtual bool hasRequiredComponents(Node &node) = 0;
 	virtual void update(Node &node) = 0;
 	virtual void onLinked(Node &node) {}
+	virtual void onUnlinked(Node &node) {}
 	FrameStage getStage() { return frameStage; }
 };
 

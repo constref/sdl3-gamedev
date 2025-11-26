@@ -41,10 +41,11 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 
 			services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
 				res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
-			cc->removeCollider();
 			services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
 			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 			sc->setRotation(0);
+
+			node.removeComponent<CollisionComponent>();
 		}
 	}
 }

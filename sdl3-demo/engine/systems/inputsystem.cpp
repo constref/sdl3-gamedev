@@ -7,21 +7,16 @@
 
 InputSystem::InputSystem(Services &services) : System(services)
 {
-	services.eventQueue().dispatcher.registerHandler<KeyboardEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<KeyUpEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<KeyDownEvent>(this);
 }
 
 void InputSystem::update(Node &node)
 {
 }
 
-void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
+void InputSystem::handleDirectionChange(NodeHandle target, InputState &state, InputComponent &inputComp)
 {
-	Node &node = services.world().getNode(hNode);
-	auto [ic] = getRequiredComponents(node);
-
-	auto &state = services.inputState();
-	state.setKeyState(event.scancode, event.state == KeyboardEvent::State::down);
-
 	glm::vec2 direction{ 0 };
 	if (state.isKeyPressed(SDL_SCANCODE_A))
 	{
@@ -39,34 +34,51 @@ void InputSystem::onEvent(NodeHandle hNode, const KeyboardEvent &event)
 	{
 		direction.y -= 1;
 	}
-	if (ic->getDirection() != direction)
+	if (inputComp.getDirection() != direction)
 	{
-		ic->setDirection(direction);
-		services.eventQueue().enqueue<DirectionChangedEvent>(hNode, 0, direction);
+		inputComp.setDirection(direction);
+		services.eventQueue().enqueue<DirectionChangedEvent>(target, 0, direction);
 	}
+}
 
-	Node &owner = services.world().getNode(hNode);
+void InputSystem::onEvent(NodeHandle target, const KeyDownEvent &event)
+{
+	Node &node = services.world().getNode(target);
+	auto [ic] = getRequiredComponents(node);
+
+	auto &state = services.inputState();
+	state.setKeyState(event.scancode, true);
+	handleDirectionChange(target, state, *ic);
+
 	switch (event.scancode)
 	{
 		case SDL_SCANCODE_K:
 		{
-			if (event.state == KeyboardEvent::State::down)
-			{
-				services.eventQueue().enqueue<JumpEvent>(owner.getHandle(), 0);
-			}
+			services.eventQueue().enqueue<JumpEvent>(node.getHandle(), 0);
 			break;
 		}
 		case SDL_SCANCODE_J:
 		{
-			if (event.state == KeyboardEvent::State::down)
-			{
-				services.eventQueue().enqueue<ShootBeginEvent>(owner.getHandle(), 0);
-			}
-			else
-			{
-				services.eventQueue().enqueue<ShootEndEvent>(owner.getHandle(), 0);
-			}
+			services.eventQueue().enqueue<ShootBeginEvent>(node.getHandle(), 0);
 			break;
+		}
+	}
+}
+
+void InputSystem::onEvent(NodeHandle target, const KeyUpEvent &event)
+{
+	Node &node = services.world().getNode(target);
+	auto [ic] = getRequiredComponents(node);
+
+	auto &state = services.inputState();
+	state.setKeyState(event.scancode, false);
+	handleDirectionChange(target, state, *ic);
+
+	switch (event.scancode)
+	{
+		case SDL_SCANCODE_J:
+		{
+			services.eventQueue().enqueue<ShootEndEvent>(node.getHandle(), 0);
 		}
 	}
 }

@@ -8,22 +8,26 @@
 
 struct SDL_Texture;
 
-class KeyboardEvent : public Event<KeyboardEvent, FrameStage::Input>
+class KeyUpEvent : public Event<KeyUpEvent, FrameStage::Input>
 {
 public:
-	enum class State
-	{
-		down,
-		up
-	};
+	const SDL_Scancode scancode;
+	KeyUpEvent(SDL_Scancode scancode) : scancode(scancode) { }
+};
 
-	SDL_Scancode scancode;
-	State state;
+class KeyDownEvent : public Event<KeyDownEvent, FrameStage::Input>
+{
+public:
+	const SDL_Scancode scancode;
+	KeyDownEvent(SDL_Scancode scancode) : scancode(scancode) { }
+};
 
-	KeyboardEvent(SDL_Scancode scancode, State state) :
-		scancode(scancode), state(state)
-	{
-	}
+class ComponentRemovalEvent : public Event<ComponentRemovalEvent, FrameStage::End>
+{
+	NodeHandle target;
+	Component *component;
+public:
+	ComponentRemovalEvent(NodeHandle target, Component *component) : target(target), component(component) {}
 };
 
 class DirectionChangedEvent : public Event<DirectionChangedEvent, FrameStage::Physics>
@@ -71,11 +75,25 @@ public:
 	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 
-class TimerOnTimeout : public Event<TimerOnTimeout, FrameStage::Gameplay>
+template<typename CallbackEvent>
+class AddTimerEvent : public Event<AddTimerEvent<CallbackEvent>, FrameStage::Start>
+{
+	float duration;
+	NodeHandle target;
+
+public:
+	AddTimerEvent(float duration, NodeHandle target)
+	{
+		this->duration = duration;
+		this->target = target;
+	}
+};
+
+class TimerTimeoutEvent : public Event<TimerTimeoutEvent, FrameStage::Gameplay>
 {
 	int timeouts;
 public:
-	TimerOnTimeout(int timeouts)
+	TimerTimeoutEvent(int timeouts)
 	{
 		this->timeouts = timeouts;
 	}

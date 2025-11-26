@@ -7,11 +7,12 @@
 #include <world.h>
 #include <messaging/event.h>
 #include <framecontext.h>
+#include <logger.h>
 
 
 struct QueuedEvent
 {
-	using HandlerFn = void(*)(EventDispatcher &, NodeHandle, const EventBase &);
+	using HandlerFn = bool(*)(EventDispatcher &, NodeHandle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch = nullptr;
@@ -21,78 +22,68 @@ struct QueuedEvent
 
 class EventQueue
 {
-	std::array<std::vector<QueuedEvent>, static_cast<size_t>(FrameStage::StageCount)> queues;
-	std::array<std::pair<size_t, size_t>, static_cast<size_t>(FrameStage::StageCount)> indices; // read,write pairs
+	std::vector<QueuedEvent> queue;
+	size_t rIdx, wIdx;
 
 public:
 	EventQueue()
 	{
-		for (int i = 0; i < static_cast<size_t>(FrameStage::StageCount); ++i)
-		{
-			// TODO: Reduce mem footprint here
-			queues[i].resize(5000);
-			indices[i].first = 0;
-			indices[i].second = 0;
-		}
+		queue.resize(5000);
+		rIdx = 0;
+		wIdx = 0;
 	}
 
 	EventDispatcher dispatcher;
-	auto &getQueue(FrameStage stage)
+	auto &getQueue()
 	{
-		return queues[static_cast<size_t>(stage)];
-	}
-	auto &getIndices(FrameStage stage)
-	{
-		return indices[static_cast<size_t>(stage)];
+		return queue;
 	}
 
 	template<typename EventType, typename... Args>
 	void enqueue(NodeHandle target, float delay, Args&&... args)
 	{
-		auto &queue = getQueue(EventType::stage);
-		auto &indices = getIndices(EventType::stage);
-
-		size_t wIdx = indices.second++;
-		queue[wIdx] = QueuedEvent
+		queue[wIdx++] = QueuedEvent
 		{
 			.target = target,
 			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
 			.dispatch = [](EventDispatcher &dispatcher, NodeHandle target, const EventBase &e)
 			{
-				dispatcher.send<EventType>(target, static_cast<const EventType &>(e));
+				size_t numHandlers = dispatcher.send<EventType>(target, static_cast<const EventType &>(e), FrameContext::currentStage());
+				if (numHandlers)
+				{
+					Logger::info(static_cast<const EventType *>(&e), std::format("Frame #{} : Dispatched to {} handlers.", FrameContext::global().frameNumber, numHandlers));
+				}
+				return numHandlers > 0;
 			},
 			.triggerTime = FrameContext::gt() + delay,
 			.processed = false
 		};
 	}
 
-	void dispatch(FrameStage stage)
+	void dispatch()
 	{
-		auto &queue = getQueue(stage);
-		auto &indices = getIndices(stage);
-
-		size_t rIdx = indices.first;
-		size_t numEvents = indices.second - indices.first;
-		int numDispatched = 0;
-		while (rIdx < indices.second)
+		size_t currRIdx = rIdx;
+		size_t numEvents = wIdx - rIdx;
+		size_t currWIdx = wIdx;
+		int numHandled = 0;
+		while (currRIdx < currWIdx)
 		{
-			QueuedEvent &item = queue[rIdx++];
-			if (!item.processed && item.triggerTime <= FrameContext::gt())
+			QueuedEvent &item = queue[currRIdx++];
+			if (!item.processed && FrameContext::gt() >= item.triggerTime)
 			{
-				item.dispatch(dispatcher, item.target, *item.event);
-				item.processed = true;
-				numDispatched++;
+				// item processed if it has handlers for the current frame stage
+				if (item.dispatch(dispatcher, item.target, *item.event))
+				{
+					item.processed = true;
+					numHandled++;
+				}
 			}
 		}
-		if (numEvents == numDispatched)
-		{
-			indices.first = rIdx;
-		}
+		if (numHandled == numEvents) rIdx = currRIdx;
 	}
 
-	size_t getCount(FrameStage stage)
+	size_t getCount()
 	{
-		auto &indices = getIndices(stage);
-		return indices.second;
+		return wIdx;
 	}
 };

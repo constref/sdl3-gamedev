@@ -16,12 +16,10 @@ void EnemySystem::onEvent(NodeHandle target, const DeathEvent &event)
 	{
 		auto [ec, pc, cc] = getRequiredComponents(node);
 
-		const Resources &res = Resources::get();
-		cc->removeCollider();
-		pc->setDynamic(false);
-
+		node.removeComponent<CollisionComponent>();
 		if (ec->getType() == EnemyType::creeper)
 		{
+			const Resources &res = Resources::get();
 			ec->setState(EnemyState::dead);
 			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, res.ANIM_ENEMY_DIE, res.texEnemyDie);
 		}

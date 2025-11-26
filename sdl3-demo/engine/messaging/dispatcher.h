@@ -10,14 +10,16 @@ class Dispatcher
 {
 	using HandlerFn = void(*)(RecipientBase *, NodeHandle target, const Base &);
 	using Handler = std::pair<RecipientBase *, HandlerFn>;
+	using StageHandlers = std::array<std::vector<Handler>, static_cast<size_t>(FrameStage::StageCount)>;
 
-	std::array<std::vector<Handler>, 25> deliverables;
+	std::array<StageHandlers, 64> deliverables;
 
 public:
 	template<typename Type, typename RecipientType>
 	void registerHandler(RecipientType *recipient)
 	{
-		auto &handlers = deliverables[Type::typeIndex()];
+		auto &stageHandlers = deliverables[Type::typeIndex()];
+		auto &handlers = stageHandlers[static_cast<size_t>(RecipientType::stage())];
 		handlers.emplace_back(recipient, [](RecipientBase *to, NodeHandle target, const Base &base)
 		{
 			Policy::invoke(static_cast<RecipientType *>(to), target, static_cast<const Type &>(base));
@@ -28,27 +30,35 @@ public:
 	{
 		for (int i = 0; i < deliverables.size(); ++i)
 		{
-			auto &handlers = deliverables[i];
-
-			if (handlers.size())
+			auto &stageHandlers = deliverables[i];
+			for (auto &stage : stageHandlers)
 			{
-				auto itr = std::find_if(handlers.begin(), handlers.end(),
-					[recipient](const Handler &handler) { return handler.first == recipient; });
-				if (itr != handlers.end())
+				for (auto &handlers : stage)
 				{
-					handlers.erase(itr);
+					if (handlers.size())
+					{
+						auto itr = std::find_if(handlers.begin(), handlers.end(),
+							[recipient](const Handler &handler) { return handler.first == recipient; });
+						if (itr != handlers.end())
+						{
+							handlers.erase(itr);
+						}
+					}
 				}
 			}
 		}
 	}
 
 	template<typename Type>
-	void send(NodeHandle target, const Type &obj)
+	size_t send(NodeHandle target, const Type &obj, FrameStage stage)
 	{
-		auto &handlers = deliverables[Type::typeIndex()];
-		for (auto &handler : handlers)
+		auto &stageHandlers = deliverables[Type::typeIndex()];
+		auto &handlerList = stageHandlers[static_cast<size_t>(stage)];
+
+		for (auto &handler : handlerList)
 		{
 			handler.second(handler.first, target, obj);
 		}
+		return handlerList.size();
 	}
 };
