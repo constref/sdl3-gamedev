@@ -7,8 +7,6 @@
 #include <world.h>
 #include <messaging/event.h>
 #include <framecontext.h>
-#include <logger.h>
-
 
 struct QueuedEvent
 {
@@ -45,10 +43,6 @@ public:
 			.dispatch = [](EventDispatcher &dispatcher, NodeHandle target, const EventBase &e)
 			{
 				size_t numHandlers = dispatcher.send<EventType>(target, static_cast<const EventType &>(e), FrameContext::currentStage());
-				if (numHandlers)
-				{
-					Logger::info(static_cast<const EventType *>(&e), std::format("Frame #{} : Dispatched to {} handlers.", FrameContext::global().frameNumber, numHandlers));
-				}
 				return numHandlers;
 			},
 			.triggerTime = FrameContext::gt() + delay,

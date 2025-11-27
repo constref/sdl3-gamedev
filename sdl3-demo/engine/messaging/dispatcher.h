@@ -4,6 +4,8 @@
 #include <vector>
 #include <array>
 #include <nodehandle.h>
+#include <logger.h>
+#include <framecontext.h>
 
 template<typename Base, typename RecipientBase, typename Policy>
 class Dispatcher
@@ -70,6 +72,8 @@ public:
 		for (auto &handler : handlerList)
 		{
 			handler.second(handler.first, target, obj);
+			//Logger::info(static_cast<const Type *>(&obj), std::format("During frame #{}:{} to {}",
+			//	FrameContext::global().frameNumber, static_cast<size_t>(stage), typeid(*handler.first).name()));
 		}
 		return handlerList.size();
 	}
