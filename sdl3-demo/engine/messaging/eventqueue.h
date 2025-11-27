@@ -34,10 +34,6 @@ public:
 	}
 
 	EventDispatcher dispatcher;
-	auto &getQueue()
-	{
-		return queue;
-	}
 
 	template<typename EventType, typename... Args>
 	void enqueue(NodeHandle target, float delay, Args&&... args)
@@ -60,28 +56,7 @@ public:
 		};
 	}
 
-	void dispatch()
-	{
-		size_t currRIdx = rIdx;
-		size_t numEvents = wIdx - rIdx;
-		size_t currWIdx = wIdx;
-		int eventsCompleted = 0;
-		while (currRIdx < currWIdx)
-		{
-			QueuedEvent &item = queue[currRIdx++];
-			if (item.remainingHandlers > 0 && FrameContext::gt() >= item.triggerTime)
-			{
-				// item processed if it has handlers for the current frame stage
-				size_t numHandlers = item.dispatch(dispatcher, item.target, *item.event);
-				if (numHandlers)
-				{
-					item.remainingHandlers -= numHandlers;
-					eventsCompleted++;
-				}
-			}
-		}
-		if (eventsCompleted == numEvents) rIdx = currRIdx;
-	}
+	void dispatch();
 
 	size_t getCount()
 	{

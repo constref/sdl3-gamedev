@@ -75,7 +75,7 @@ add_library(engine STATIC
 	"config.h"
 	
 	"systems/timersystem.h"
-	"systems/timersystem.cpp" )
+	"systems/timersystem.cpp"  "messaging/eventqueue.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
