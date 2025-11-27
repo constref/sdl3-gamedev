@@ -65,18 +65,3 @@ bool Node::isLinkedWith(SystemBase *sys)
 	return false;
 
 }
-
-void Node::unlinkIncompatibleSystems()
-{
-	for (auto &stageSys : linkedSystems)
-	{
-		std::erase_if(stageSys, [this](SystemBase *sys) {
-			if (!sys->hasRequiredComponents(*this))
-			{
-				sys->onUnlinked(*this);
-				return true;
-			}
-			return false;
-		});
-	}
-}

@@ -11,21 +11,22 @@ void addNodeComponent(Node &node, size_t typeId, Component &comp)
 	}
 }
 
-void removeNodeComponent(Node &node, size_t typeId, const Component &comp)
+void removeNodeComponent(Node &node, Component *comp)
 {
-	const auto &entry = std::find_if(node.components.begin(), node.components.end(), [typeId](const ComponentEntry &e) {
-		return e.id == typeId;
+	const auto &entry = std::find_if(node.components.begin(), node.components.end(), [comp](const ComponentEntry &e) {
+		return e.comp == comp;
 	});
 
-	if (entry != node.components.end() && entry->comp == &comp)
+	if (entry != node.components.end())
 	{
 		node.components.erase(entry);
-		delete &comp;
 	}
 	else
 	{
-		Logger::error(&node, "Couldn't remove component, address is invalid.");
+		Logger::error(&node, "Couldn't remove component, component type wasn't found in the Node.");
 	}
+
+	unlinkIncompatibleSystems(node);
 }
 
 void linkSystem(Node &node, SystemBase &sys)
@@ -35,5 +36,35 @@ void linkSystem(Node &node, SystemBase &sys)
 	{
 		stageSystems.push_back(&sys);
 		sys.onLinked(node);
+	}
+}
+
+void ComponentSystems::removeComponent(Node &node, Component &comp)
+{
+	scheduledRemovals.push(std::make_pair(&node, &comp));
+}
+
+void ComponentSystems::removeScheduled()
+{
+	for (; !scheduledRemovals.empty(); scheduledRemovals.pop())
+	{
+		auto &s = scheduledRemovals.front();
+		removeNodeComponent(*s.first, s.second);
+		compStore.remove(*s.second);
+	}
+}
+
+void unlinkIncompatibleSystems(Node &node)
+{
+	for (auto &stageSys : node.linkedSystems)
+	{
+		std::erase_if(stageSys, [&node](SystemBase *sys) {
+			if (!sys->hasRequiredComponents(node))
+			{
+				sys->onUnlinked(node);
+				return true;
+			}
+			return false;
+		});
 	}
 }

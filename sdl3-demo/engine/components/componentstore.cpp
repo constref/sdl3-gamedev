@@ -1,13 +1,13 @@
 #include <components/componentstore.h>
 #include <logger.h>
 
-void ComponentStore::removeComponent(const Component &comp)
+void ComponentStore::remove(const Component &comp)
 {
 	auto itr = std::find(components.begin(), components.end(), &comp);
 	if (itr != components.end())
 	{
+		comp.~Component();
 		components.erase(itr);
-		delete &comp;
 	}
 	else
 	{

@@ -17,10 +17,9 @@ public:
 	}
 
 	template<typename T, typename... Args>
-	T &addComponent(Node &node, Args... args)
+	T &add(Node &node, Args... args)
 	{
 		// create and store component
-		//T *comp = new T(node, args...);
 		T *comp = new (buffer + writeHead) T(node, args...);
 		writeHead += sizeof(T);
 		components.push_back(comp);
@@ -28,5 +27,5 @@ public:
 		return *comp;
 	}
 
-	void removeComponent(const Component &comp);
+	void remove(const Component &comp);
 };

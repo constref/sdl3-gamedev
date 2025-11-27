@@ -173,6 +173,7 @@ public:
 				processSystems(root, world);
 
 				accumulator -= fixedStep;
+				services.compSys().removeScheduled();
 			}
 
 			// drawing happens every single frame
@@ -195,7 +196,7 @@ public:
 
 			FrameContext::global().setStage(FrameStage::End);
 			services.eventQueue().dispatch();
-			processSystems( root, world);
+			processSystems(root, world);
 		}
 	}
 

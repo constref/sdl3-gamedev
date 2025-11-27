@@ -23,7 +23,7 @@ class CollisionComponent : public Component
 
 public:
 	CollisionComponent(Node &owner);
-	~CollisionComponent();
+	~CollisionComponent() override;
 
 	// TODO: Will remove static vector in favor of a spatial partitioning structure
 	static std::vector<NodeHandle> collidableNodes;

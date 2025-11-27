@@ -28,7 +28,10 @@ protected:
 	bool isInitialized;
 	int tag;
 
-	void unlinkIncompatibleSystems();
+	friend void unlinkIncompatibleSystems(Node &node);
+	friend void addNodeComponent(Node &node, size_t typeId, Component &comp);
+	friend void removeNodeComponent(Node &node, Component *comp);
+	friend void linkSystem(Node &node, SystemBase &sys);
 
 public:
 	Node(NodeHandle handle);
@@ -44,10 +47,6 @@ public:
 	void removeChild(NodeHandle childHandle);
 	int getTag() const { return tag; }
 	void setTag(int tag) { this->tag = tag; }
-
-	friend void addNodeComponent(Node &node, size_t typeId, Component &comp);
-	friend void removeNodeComponent(Node &node, size_t typeId, const Component &comp);
-	friend void linkSystem(Node &node, SystemBase &sys);
 
 	auto &getStageSystems(FrameStage stage)
 	{
@@ -86,21 +85,21 @@ public:
 		return nullptr;
 	}
 
-	template<typename T>
-	void removeComponent()
-	{
-		auto itr = std::find_if(components.begin(), components.end(), [](const ComponentEntry &e) {
-			return e.id == Component::typeId<T>();
-		});
+	//template<typename T>
+	//void removeComponent()
+	//{
+	//	auto itr = std::find_if(components.begin(), components.end(), [](const ComponentEntry &e) {
+	//		return e.id == Component::typeId<T>();
+	//	});
 
-		if (itr != components.end())
-		{
-			components.erase(itr);
-			unlinkIncompatibleSystems();
-		}
-		else
-		{
-			Logger::error(this, "Couldn't remove component, address is invalid.");
-		}
-	}
+	//	if (itr != components.end())
+	//	{
+	//		components.erase(itr);
+	//		unlinkIncompatibleSystems();
+	//	}
+	//	else
+	//	{
+	//		Logger::error(this, "Couldn't remove component, address is invalid.");
+	//	}
+	//}
 };

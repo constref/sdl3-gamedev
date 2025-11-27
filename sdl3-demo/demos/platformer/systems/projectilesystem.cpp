@@ -1,6 +1,7 @@
 #include "projectilesystem.h"
 #include <messaging/messaging.h>
 #include <resources.h>
+#include <componentsystems.h>
 #include "../events.h"
 
 ProjectileSystem::ProjectileSystem(Services &services) : System(services)
@@ -42,10 +43,10 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 			services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
 				res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
 			services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
-			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
 			sc->setRotation(0);
 
-			node.removeComponent<CollisionComponent>();
+			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
+			services.compSys().removeComponent(node, *cc);
 		}
 	}
 }
@@ -53,10 +54,7 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 void ProjectileSystem::onEvent(NodeHandle target, const NodeRemovalEvent &event)
 {
 	Node &node = services.world().getNode(target);
-	if (node.isLinkedWith(this))
-	{
-		Node &parent = services.world().getNode(node.getParent());
-		parent.removeChild(target);
-		services.world().free(target);
-	}
+	Node &parent = services.world().getNode(node.getParent());
+	parent.removeChild(target);
+	services.world().free(target);
 }

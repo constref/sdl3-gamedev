@@ -1,6 +1,7 @@
 #include "enemysystem.h"
 
 #include <messaging/messaging.h>
+#include <componentsystems.h>
 #include <resources.h>
 #include "../events.h"
 
@@ -16,7 +17,7 @@ void EnemySystem::onEvent(NodeHandle target, const DeathEvent &event)
 	{
 		auto [ec, pc, cc] = getRequiredComponents(node);
 
-		node.removeComponent<CollisionComponent>();
+		services.compSys().removeComponent(node, *cc);
 		if (ec->getType() == EnemyType::creeper)
 		{
 			const Resources &res = Resources::get();
