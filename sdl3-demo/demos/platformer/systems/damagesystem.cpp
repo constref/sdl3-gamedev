@@ -31,7 +31,8 @@ void DamageSystem::onEvent(NodeHandle target, const DamageEvent &event)
 	Node &node = services.world().getNode(target);
 	if (node.isLinkedWith(this))
 	{
-		auto [hc, sc] = getRequiredComponents(node);
+		auto [hc, pc, sc] = getRequiredComponents(node);
+		pc->addImpulse(glm::vec2(200, 0));
 
 		hc->hp -= event.getAmount();
 		if (hc->hp <= 0)
