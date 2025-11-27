@@ -50,6 +50,18 @@ public:
 	}
 
 	template<typename Type>
+	size_t getHandlerCount()
+	{
+		auto &stages = deliverables[Type::typeIndex()];
+		size_t handlerCount = 0;
+		for (auto &stage : stages)
+		{
+			handlerCount += stage.size();
+		}
+		return handlerCount;
+	}
+
+	template<typename Type>
 	size_t send(NodeHandle target, const Type &obj, FrameStage stage)
 	{
 		auto &stageHandlers = deliverables[Type::typeIndex()];

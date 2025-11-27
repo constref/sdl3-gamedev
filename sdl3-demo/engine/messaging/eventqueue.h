@@ -12,12 +12,12 @@
 
 struct QueuedEvent
 {
-	using HandlerFn = bool(*)(EventDispatcher &, NodeHandle, const EventBase &);
+	using HandlerFn = size_t(*)(EventDispatcher &, NodeHandle, const EventBase &);
 	NodeHandle target;
 	std::unique_ptr<EventBase> event;
 	HandlerFn dispatch = nullptr;
 	double triggerTime = 0;
-	bool processed = false;
+	size_t remainingHandlers = 0;
 };
 
 class EventQueue
@@ -53,10 +53,10 @@ public:
 				{
 					Logger::info(static_cast<const EventType *>(&e), std::format("Frame #{} : Dispatched to {} handlers.", FrameContext::global().frameNumber, numHandlers));
 				}
-				return numHandlers > 0;
+				return numHandlers;
 			},
 			.triggerTime = FrameContext::gt() + delay,
-			.processed = false
+			.remainingHandlers = dispatcher.getHandlerCount<EventType>()
 		};
 	}
 
@@ -65,21 +65,22 @@ public:
 		size_t currRIdx = rIdx;
 		size_t numEvents = wIdx - rIdx;
 		size_t currWIdx = wIdx;
-		int numHandled = 0;
+		int eventsCompleted = 0;
 		while (currRIdx < currWIdx)
 		{
 			QueuedEvent &item = queue[currRIdx++];
-			if (!item.processed && FrameContext::gt() >= item.triggerTime)
+			if (item.remainingHandlers > 0 && FrameContext::gt() >= item.triggerTime)
 			{
 				// item processed if it has handlers for the current frame stage
-				if (item.dispatch(dispatcher, item.target, *item.event))
+				size_t numHandlers = item.dispatch(dispatcher, item.target, *item.event);
+				if (numHandlers)
 				{
-					item.processed = true;
-					numHandled++;
+					item.remainingHandlers -= numHandlers;
+					eventsCompleted++;
 				}
 			}
 		}
-		if (numHandled == numEvents) rIdx = currRIdx;
+		if (eventsCompleted == numEvents) rIdx = currRIdx;
 	}
 
 	size_t getCount()
