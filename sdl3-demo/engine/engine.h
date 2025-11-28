@@ -150,7 +150,6 @@ public:
 			services.eventQueue().dispatch();
 			processSystems(root, world);
 
-			// handle input every frame to avoid input lag
 			FrameContext::global().setStage(FrameStage::Input);
 			services.eventQueue().dispatch();
 			processSystems(root, world);
@@ -158,22 +157,32 @@ public:
 			// fixed step systems
 			ctx.deltaTime = fixedStep;
 			accumulator += deltaTime;
+			const float accumulatorBackup = accumulator;
+
+			FrameContext::global().setStage(FrameStage::Physics);
+			services.eventQueue().dispatch();
 			while (accumulator >= fixedStep)
 			{
-				FrameContext::global().setStage(FrameStage::Physics);
-				services.eventQueue().dispatch();
 				processSystems(root, world);
-
-				FrameContext::global().setStage(FrameStage::Gameplay);
-				services.eventQueue().dispatch();
-				processSystems(root, world);
-
-				FrameContext::global().setStage(FrameStage::Animation);
-				services.eventQueue().dispatch();
-				processSystems(root, world);
-
 				accumulator -= fixedStep;
-				services.compSys().removeScheduled();
+			}
+
+			FrameContext::global().setStage(FrameStage::Gameplay);
+			services.eventQueue().dispatch();
+			accumulator = accumulatorBackup;
+			while (accumulator >= fixedStep)
+			{
+				processSystems(root, world);
+				accumulator -= fixedStep;
+			}
+
+			FrameContext::global().setStage(FrameStage::Animation);
+			services.eventQueue().dispatch();
+			accumulator = accumulatorBackup;
+			while (accumulator >= fixedStep)
+			{
+				processSystems(root, world);
+				accumulator -= fixedStep;
 			}
 
 			// drawing happens every single frame
@@ -197,6 +206,8 @@ public:
 			FrameContext::global().setStage(FrameStage::End);
 			services.eventQueue().dispatch();
 			processSystems(root, world);
+
+			services.compSys().removeScheduled();
 		}
 	}
 
