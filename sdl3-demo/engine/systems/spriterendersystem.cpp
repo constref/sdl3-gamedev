@@ -34,36 +34,39 @@ void SpriteRenderSystem::update(Node &node)
 		.h = size.y * sc->getScale().y
 	};
 
-	SDL_Renderer *renderer = SDLState::global().renderer;
-
-	if (!sc->isShouldFlash())
+	// avoid drawing sprites outside of the logical viewport
+	if (dst.x + dst.w > 0 && dst.x < SDLState::global().logW)
 	{
-		if (sc->getParalaxFactor() == 0)
+		SDL_Renderer *renderer = SDLState::global().renderer;
+		if (!sc->isShouldFlash())
 		{
-			SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
+			if (sc->getParalaxFactor() == 0)
+			{
+				SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
+			}
+			else
+			{
+				SDL_FRect tiledDst = dst;
+				tiledDst.x -= std::fmod(RenderContext::shared().getCameraPosition().x * sc->getParalaxFactor(), dst.w);
+				tiledDst.x -= dst.w;
+				for (int i = 0; i < 3; ++i)
+				{
+					SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &tiledDst, sc->getRotation(), nullptr, sc->getFlipMode());
+					tiledDst.x += dst.w;
+				}
+			}
 		}
 		else
 		{
-			SDL_FRect tiledDst = dst;
-			tiledDst.x -= std::fmod(RenderContext::shared().getCameraPosition().x * sc->getParalaxFactor(), dst.w);
-			tiledDst.x -= dst.w;
-			for (int i = 0; i < 3; ++i)
-			{
-				SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &tiledDst, sc->getRotation(), nullptr, sc->getFlipMode());
-				tiledDst.x += dst.w;
-			}
-		}
-	}
-	else
-	{
-		// flash object with a redish tint
-		SDL_SetTextureColorModFloat(sc->getTexture(), 2.5f, 1.0f, 1.0f);
-		SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
-		SDL_SetTextureColorModFloat(sc->getTexture(), 1.0f, 1.0f, 1.0f);
+			// flash object with a redish tint
+			SDL_SetTextureColorModFloat(sc->getTexture(), 2.5f, 1.0f, 1.0f);
+			SDL_RenderTextureRotated(renderer, sc->getTexture(), &src, &dst, sc->getRotation(), nullptr, sc->getFlipMode());
+			SDL_SetTextureColorModFloat(sc->getTexture(), 1.0f, 1.0f, 1.0f);
 
-		if (sc->getFlashTimer().step(FrameContext::dt()))
-		{
-			sc->setShouldFlash(false);
+			if (sc->getFlashTimer().step(FrameContext::dt()))
+			{
+				sc->setShouldFlash(false);
+			}
 		}
 	}
 }
