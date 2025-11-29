@@ -26,7 +26,7 @@ class EventQueue
 public:
 	EventQueue()
 	{
-		queue.resize(5000);
+		queue.resize(10000);
 		rIdx = 0;
 		wIdx = 0;
 	}
