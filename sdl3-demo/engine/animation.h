@@ -18,10 +18,16 @@ public:
 		return static_cast<int>(timer.getTime() / timer.getLength() * frameCount);
 	}
 
-	void step(float deltaTime)
+	bool step(float deltaTime)
 	{
-		timer.step(deltaTime);
+		int timeouts = timer.step(deltaTime);
+		return timeouts > 0;
 	}
 
-	bool isDone() const { return timer.isTimeout(); }
+	void reset()
+	{
+		timer.reset();
+	}
+
+	bool isDone() const { return timer.getTimeouts() > 0; }
 };

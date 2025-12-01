@@ -367,3 +367,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /CMakeUserPresets.json
 /build-em
+/.vscode/launch.json
