@@ -12,9 +12,7 @@ int main(int argc, char *argv[])
 	{
 		return 1;
 	}
-
 	engine.run();
-	engine.cleanup();
 
 	return 0;
 }

@@ -63,6 +63,8 @@ struct Resources
 
 	void load(SDL_Renderer *renderer)
 	{
+		const std::string prefix = "data/";
+
 		playerAnims.resize(6);
 		playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
 		playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
@@ -78,33 +80,33 @@ struct Resources
 		enemyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
 		enemyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
 
-		texIdle = loadTexture(renderer, "data/idle.png");
-		texRun = loadTexture(renderer, "data/run.png");
-		texSlide = loadTexture(renderer, "data/slide.png");
-		texBrick = loadTexture(renderer, "data/tiles/brick.png");
-		texGrass = loadTexture(renderer, "data/tiles/grass.png");
-		texGround = loadTexture(renderer, "data/tiles/ground.png");
-		texPanel = loadTexture(renderer, "data/tiles/panel.png");
-		texBg1 = loadTexture(renderer, "data/bg/bg_layer1.png");
-		texBg2 = loadTexture(renderer, "data/bg/bg_layer2.png");
-		texBg3 = loadTexture(renderer, "data/bg/bg_layer3.png");
-		texBg4 = loadTexture(renderer, "data/bg/bg_layer4.png");
-		texBullet = loadTexture(renderer, "data/bullet.png");
-		texBulletHit = loadTexture(renderer, "data/bullet_hit.png");
-		texShoot = loadTexture(renderer, "data/shoot.png");
-		texRunShoot = loadTexture(renderer, "data/shoot_run.png");
-		texSlideShoot = loadTexture(renderer, "data/slide_shoot.png");
-		texEnemy = loadTexture(renderer, "data/enemy.png");
-		texEnemyHit = loadTexture(renderer, "data/enemy_hit.png");
-		texEnemyDie = loadTexture(renderer, "data/enemy_die.png");
+		texIdle = loadTexture(renderer, prefix + "idle.png");
+		texRun = loadTexture(renderer, prefix + "run.png");
+		texSlide = loadTexture(renderer, prefix + "slide.png");
+		texBrick = loadTexture(renderer, prefix + "tiles/brick.png");
+		texGrass = loadTexture(renderer, prefix + "tiles/grass.png");
+		texGround = loadTexture(renderer, prefix + "tiles/ground.png");
+		texPanel = loadTexture(renderer, prefix + "tiles/panel.png");
+		texBg1 = loadTexture(renderer, prefix + "bg/bg_layer1.png");
+		texBg2 = loadTexture(renderer, prefix + "bg/bg_layer2.png");
+		texBg3 = loadTexture(renderer, prefix + "bg/bg_layer3.png");
+		texBg4 = loadTexture(renderer, prefix + "bg/bg_layer4.png");
+		texBullet = loadTexture(renderer, prefix + "bullet.png");
+		texBulletHit = loadTexture(renderer, prefix + "bullet_hit.png");
+		texShoot = loadTexture(renderer, prefix + "shoot.png");
+		texRunShoot = loadTexture(renderer, prefix + "shoot_run.png");
+		texSlideShoot = loadTexture(renderer, prefix + "slide_shoot.png");
+		texEnemy = loadTexture(renderer, prefix + "enemy.png");
+		texEnemyHit = loadTexture(renderer, prefix + "enemy_hit.png");
+		texEnemyDie = loadTexture(renderer, prefix + "enemy_die.png");
 
-		//audioShoot = loadAudio("data/audio/shoot.wav");
-		//audioShootHit = loadAudio("data/audio/wall_hit.wav");
-		//audioEnemyHit = loadAudio("data/audio/shoot_hit.wav");
-		//musicMain = loadAudio("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+		//audioShoot = loadAudio(prefix + "audio/shoot.wav");
+		//audioShootHit = loadAudio(prefix + "audio/wall_hit.wav");
+		//audioEnemyHit = loadAudio(prefix + "audio/shoot_hit.wav");
+		//musicMain = loadAudio(prefix + "audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
-		map = tmx::loadMap("data/maps/largemap.tmx");
+		map = tmx::loadMap(prefix + "maps/largemap.tmx");
 		for (tmx::TileSet &tileSet : map->tileSets)
 		{
 			TileSetTextures tst;
@@ -113,7 +115,7 @@ struct Resources
 
 			for (tmx::Tile &tile : tileSet.tiles)
 			{
-				const std::string imagePath = "data/tiles/" + std::filesystem::path(tile.image.source).filename().string();
+				const std::string imagePath = prefix + "tiles/" + std::filesystem::path(tile.image.source).filename().string();
 				tst.textures.push_back(loadTexture(renderer, imagePath));
 			}
 			tilesetTextures.push_back(std::move(tst));

@@ -19,6 +19,10 @@
 #include <systems/collisionsystem.h>
 #include <systems/timersystem.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 template<Application AppType>
 class Engine
 {
@@ -27,6 +31,12 @@ class Engine
 	bool debugMode;
 	bool running;
 	constexpr static bool clampDeltaTime = true;
+
+	const float fixedStep = 1.0f / 120.0f;
+	const float dtThreshold = 1.0f / 30.0f;
+	float accumulator;
+	long frameCount;
+	double globalTime;
 
 	// core services
 	ComponentSystems compSys;
@@ -41,6 +51,16 @@ public:
 		debugMode = false;
 		running = false;
 		prevTime = 0;
+		accumulator = 0;
+		frameCount = 0;
+		globalTime = 0;
+	}
+	~Engine()
+	{
+#ifdef __EMSCRIPTEN__
+		emscripten_cancel_main_loop();
+#endif
+		cleanup();
 	}
 
 	bool initialize(int logW, int logH)
@@ -70,145 +90,157 @@ public:
 
 	void run()
 	{
-		const float fixedStep = 1.0f / 120.0f;
-		const float dtThreshold = 1.0f / 30.0f;
-		float accumulator = 0;
 		prevTime = SDL_GetTicks();
-		long frameCount = 0;
-		double globalTime = 0;
-
 		running = true;
 		SDLState &state = SDLState::global();
+
+#ifdef __EMSCRIPTEN__
+		emscripten_set_main_loop_arg(emIterate, this, 0, true);
+#else
 		while (running)
 		{
-			// calculate deltaTime
-			uint64_t nowTime = SDL_GetTicks();
-			float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
-			prevTime = nowTime;
+			step();
+		}
+#endif
+	}
 
-			float deltaTime = actualDeltaTime;
-			if constexpr (clampDeltaTime)
+private:
+	static void emIterate(void *userData)
+	{
+		auto *engine = static_cast<Engine<AppType> *>(userData);
+		engine->step();
+	}
+
+	inline void step()
+	{
+		SDLState &state = SDLState::global();
+		// calculate deltaTime
+		uint64_t nowTime = SDL_GetTicks();
+		float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
+		prevTime = nowTime;
+
+		float deltaTime = actualDeltaTime;
+		if constexpr (clampDeltaTime)
+		{
+			// clamp actual delta time if too large due to
+			// breakpoint or major slow-down
+			deltaTime = std::min(deltaTime, dtThreshold);
+		}
+
+		globalTime += deltaTime;
+
+		FrameContext &ctx = FrameContext::global();
+		ctx.deltaTime = deltaTime;
+		ctx.globalTime = globalTime;
+		ctx.frameNumber = ++frameCount;
+
+		World &world = services.world();
+		Node &root = world.getNode(app.getRoot());
+
+		SDL_Event event{ 0 };
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
 			{
-				// clamp actual delta time if too large due to
-				// breakpoint or major slow-down
-				deltaTime = std::min(deltaTime, dtThreshold);
-			}
-
-			globalTime += deltaTime;
-
-			FrameContext &ctx = FrameContext::global();
-			ctx.deltaTime = deltaTime;
-			ctx.globalTime = globalTime;
-			ctx.frameNumber = ++frameCount;
-
-			World &world = services.world();
-			Node &root = world.getNode(app.getRoot());
-
-			SDL_Event event{ 0 };
-			while (SDL_PollEvent(&event))
-			{
-				switch (event.type)
+				case SDL_EVENT_QUIT:
 				{
-					case SDL_EVENT_QUIT:
+					running = false;
+					break;
+				}
+				case SDL_EVENT_WINDOW_RESIZED:
+				{
+					state.width = event.window.data1;
+					state.height = event.window.data2;
+					break;
+				}
+				case SDL_EVENT_KEY_DOWN:
+				{
+					// ignore repeat key-down signals while holding (prevent event spam)
+					if (!event.key.repeat)
 					{
-						running = false;
-						break;
+						services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
 					}
-					case SDL_EVENT_WINDOW_RESIZED:
+					break;
+				}
+				case SDL_EVENT_KEY_UP:
+				{
+					services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
+					if (event.key.scancode == SDL_SCANCODE_F2)
 					{
-						state.width = event.window.data1;
-						state.height = event.window.data2;
-						break;
+						debugMode = !debugMode;
 					}
-					case SDL_EVENT_KEY_DOWN:
+					else if (event.key.scancode == SDL_SCANCODE_F11)
 					{
-						// ignore repeat key-down signals while holding (prevent event spam)
-						if (!event.key.repeat)
-						{
-							services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
-						}
-						break;
+						state.fullscreen = !state.fullscreen;
+						SDL_SetWindowFullscreen(state.window, state.fullscreen);
 					}
-					case SDL_EVENT_KEY_UP:
-					{
-						services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
-						if (event.key.scancode == SDL_SCANCODE_F2)
-						{
-							debugMode = !debugMode;
-						}
-						else if (event.key.scancode == SDL_SCANCODE_F11)
-						{
-							state.fullscreen = !state.fullscreen;
-							SDL_SetWindowFullscreen(state.window, state.fullscreen);
-						}
-						break;
-					}
+					break;
 				}
 			}
-
-			FrameContext::global().setStage(FrameStage::Start);
-			services.eventQueue().dispatch();
-			processSystems(root, world);
-
-			FrameContext::global().setStage(FrameStage::Input);
-			services.eventQueue().dispatch();
-			processSystems(root, world);
-
-			// fixed step systems
-			ctx.deltaTime = fixedStep;
-			accumulator += deltaTime;
-			const float accumulatorBackup = accumulator;
-
-			FrameContext::global().setStage(FrameStage::Physics);
-			services.eventQueue().dispatch();
-			while (accumulator >= fixedStep)
-			{
-				processSystems(root, world);
-				accumulator -= fixedStep;
-			}
-
-			FrameContext::global().setStage(FrameStage::Gameplay);
-			services.eventQueue().dispatch();
-			accumulator = accumulatorBackup;
-			while (accumulator >= fixedStep)
-			{
-				processSystems(root, world);
-				accumulator -= fixedStep;
-			}
-
-			FrameContext::global().setStage(FrameStage::Animation);
-			services.eventQueue().dispatch();
-			accumulator = accumulatorBackup;
-			while (accumulator >= fixedStep)
-			{
-				processSystems(root, world);
-				accumulator -= fixedStep;
-			}
-
-			// drawing happens every single frame
-			ctx.deltaTime = deltaTime;
-			SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-			SDL_RenderClear(state.renderer);
-
-			FrameContext::global().setStage(FrameStage::Render);
-			services.eventQueue().dispatch();
-			processSystems(root, world);
-
-			SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-			SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
-				actualDeltaTime,
-				services.world().getFreeCount(),
-				services.eventQueue().getCount()
-			).c_str());
-
-			SDL_RenderPresent(state.renderer);
-
-			FrameContext::global().setStage(FrameStage::End);
-			services.eventQueue().dispatch();
-			processSystems(root, world);
-
-			services.compSys().removeScheduled();
 		}
+
+		FrameContext::global().setStage(FrameStage::Start);
+		services.eventQueue().dispatch();
+		processSystems(root, world);
+
+		FrameContext::global().setStage(FrameStage::Input);
+		services.eventQueue().dispatch();
+		processSystems(root, world);
+
+		// fixed step systems
+		ctx.deltaTime = fixedStep;
+		accumulator += deltaTime;
+		const float accumulatorBackup = accumulator;
+
+		FrameContext::global().setStage(FrameStage::Physics);
+		services.eventQueue().dispatch();
+		while (accumulator >= fixedStep)
+		{
+			processSystems(root, world);
+			accumulator -= fixedStep;
+		}
+
+		FrameContext::global().setStage(FrameStage::Gameplay);
+		services.eventQueue().dispatch();
+		accumulator = accumulatorBackup;
+		while (accumulator >= fixedStep)
+		{
+			processSystems(root, world);
+			accumulator -= fixedStep;
+		}
+
+		FrameContext::global().setStage(FrameStage::Animation);
+		services.eventQueue().dispatch();
+		accumulator = accumulatorBackup;
+		while (accumulator >= fixedStep)
+		{
+			processSystems(root, world);
+			accumulator -= fixedStep;
+		}
+
+		// drawing happens every single frame
+		ctx.deltaTime = deltaTime;
+		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+		SDL_RenderClear(state.renderer);
+
+		FrameContext::global().setStage(FrameStage::Render);
+		services.eventQueue().dispatch();
+		processSystems(root, world);
+
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
+			actualDeltaTime,
+			services.world().getFreeCount(),
+			services.eventQueue().getCount()
+		).c_str());
+
+		SDL_RenderPresent(state.renderer);
+
+		FrameContext::global().setStage(FrameStage::End);
+		services.eventQueue().dispatch();
+		processSystems(root, world);
+
+		services.compSys().removeScheduled();
 	}
 
 	void processSystems(Node &obj, World &world)

@@ -11,6 +11,8 @@ class SystemBase
 	FrameStage frameStage;
 public:
 	SystemBase(FrameStage frameStage) { this->frameStage = frameStage; }
+	virtual ~SystemBase() {}
+
 	virtual bool hasRequiredComponents(Node &node) = 0;
 	virtual void update(Node &node) = 0;
 	virtual void onLinked(Node &node) {}
