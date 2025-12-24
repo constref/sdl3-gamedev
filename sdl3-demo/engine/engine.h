@@ -257,16 +257,4 @@ private:
 			processSystems(child, world);
 		}
 	}
-
-	void processNodes(std::unique_ptr<SystemBase> &sys, Node &obj, World &world)
-	{
-		sys->update(obj);
-
-		auto &children = obj.getChildren();
-		for (NodeHandle &hChild : children)
-		{
-			Node &child = world.getNode(hChild);
-			processNodes(sys, child, world);
-		}
-	}
 };
