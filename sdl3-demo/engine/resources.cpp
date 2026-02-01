@@ -2,7 +2,7 @@
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 SDL_Texture *Resources::loadTexture(SDL_Renderer *renderer, const std::string &filepath)
 {

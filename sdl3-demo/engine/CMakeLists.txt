@@ -2,6 +2,7 @@
 find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -16,7 +17,6 @@ set(ENGINE_SOURCES
 	"resources.cpp"
 	"framecontext.h"
 	"inputstate.h"
-	"ext/stb/stb_image.h" 
 	"components/component.h"
 	"components/component.cpp"
 	"components/animationcomponent.h"
@@ -65,6 +65,8 @@ set(ENGINE_SOURCES
 	"systems/systemregistry.h"
 	"systems/basiccamerasystem.h"
 	"systems/basiccamerasystem.cpp"
+	"systems/vulkanrendersystem.cpp"
+	"systems/vulkanrendersystem.h"
 	"systems/context/rendercontext.h"
 	"components/componentstore.h"
 	"components/componentstore.cpp"
@@ -86,7 +88,15 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
 endif()
 
-target_link_libraries(engine PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer glm::glm tinyxml2::tinyxml2)
+target_link_libraries(engine PUBLIC
+	Vulkan::Vulkan
+	Vulkan::volk
+	Vulkan::shaderc_combined
+	SDL3::SDL3 SDL3_mixer::SDL3_mixer
+	glm::glm
+	tinyxml2::tinyxml2
+)
+
 target_include_directories(engine
 	PRIVATE "ext/"
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

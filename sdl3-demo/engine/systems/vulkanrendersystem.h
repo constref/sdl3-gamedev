@@ -1,0 +1,174 @@
+#pragma once
+
+#define VK_NO_PROTOTYPES
+#include <SDL3/SDL_vulkan.h>
+#include <string>
+#include <vulkan/vulkan.h>
+#include <vector>
+#include <array>
+#include <shaderc/shaderc.hpp>
+#include <glm/glm.hpp>
+
+#include <systems/system.h>
+#include <components/spritecomponent.h>
+
+struct SDL_Window;
+struct VmaAllocator_T;
+typedef struct VmaAllocator_T *VmaAllocator;
+struct VmaAllocation_T;
+typedef struct VmaAllocation_T *VmaAllocation;
+
+struct Pipeline
+{
+	VkPipelineLayout layout = nullptr;
+	VkPipeline handle = nullptr;
+};
+
+struct FrameResources
+{
+	uint32_t lastFrameId = 0;
+	VkCommandPool commandPool = nullptr;
+	VkCommandBuffer commandBuffer = nullptr;
+	VkSemaphore imageAcquiredSemaphore = nullptr;
+	VkSemaphore workCompleteSemaphore = nullptr;
+};
+
+namespace Renderer
+{
+	struct Buffer
+	{
+		VkBuffer buffer = nullptr;
+		VmaAllocation allocation = nullptr;
+	};
+
+	struct Image
+	{
+		VkImage handle = nullptr;
+		VkImageView view = nullptr;
+		VmaAllocation allocation = nullptr;
+	};
+
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+	};
+
+	struct SubMesh
+	{
+		size_t vertexStart = 0;
+		size_t vertexCount = 0;
+		size_t indexStart = 0;
+		size_t indexCount = 0;
+	};
+
+	struct Mesh
+	{
+		std::vector<SubMesh> subMeshes;
+	};
+
+	struct DrawConstants
+	{
+		uint64_t vertexBufferAddress = 0;
+		float globalTime = 0;
+		float padding = 0;
+		glm::mat4 mvp;
+	};
+}
+
+class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
+{
+	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
+	constexpr static uint32_t MaxFramesInFlight{ 2 };
+	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
+	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
+
+	uint64_t prevTime = 0;
+	uint64_t nowTime = 0;
+	double globalTime = 0;
+	SDL_Window *window = nullptr;
+	uint32_t width = 1280;
+	uint32_t height = 720;
+	bool running = false;
+	uint64_t frameCounter = 0;
+	uint64_t timelineValue = MaxFramesInFlight - 1; // subtract 1 to ensure wait-for-ID / frame resource index start at 0 during render, avoids if (frameId < MaxFramesInFlight) check
+
+	// vulkan core
+	VkInstance vulkanInstance = nullptr;
+	VkPhysicalDevice physicalDevice = nullptr;
+	VkDevice device = nullptr;
+	VkSurfaceKHR surface = nullptr;
+	VmaAllocator vmaAllocator = nullptr;
+
+	// queue related
+	uint32_t gfxQueueFamIdx = UINT32_MAX;
+	VkQueue gfxQueue = nullptr;
+	VkCommandPool commandPool = nullptr;
+
+	// swapchain related
+	VkSwapchainKHR swapchain = nullptr;
+	std::vector<VkImage> swapchainImages;
+	std::vector<VkImageView> swapchainImageViews;
+	std::vector<VkSemaphore> renderCompleteSemaphores;
+	bool requireSwapchainRecreate = false;
+	uint32_t swapchainWidth = 0;
+	uint32_t swapchainHeight = 0;
+
+	VkImage depthImage = nullptr;
+	VkImageView depthImageView = nullptr;
+	VmaAllocation depthImageAllocation = nullptr;
+
+	// graphics pipeline related
+	Pipeline pipeline;
+
+	// shader resources
+	VkShaderModule vertShader = nullptr;
+	VkShaderModule fragShader = nullptr;
+
+	// frame and synchronization resources
+	VkSemaphore timelineSemaphore = nullptr;
+	std::array<FrameResources, MaxFramesInFlight> frameResources;
+
+	// assets
+	std::vector<Renderer::Mesh> meshes;
+	std::vector<Renderer::Vertex> vertices;
+	std::vector<uint32_t> indices;
+	Renderer::Buffer vertexBuffer;
+	Renderer::Buffer indexBuffer;
+
+	std::vector<Renderer::Image> images;
+
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+		void *pUserData);
+	void showError(const std::string &errorMessasge) const;
+
+	bool initializeVulkan();
+	bool createVulkanInstance();
+	bool createSurface();
+	VkPhysicalDevice findPhysicalDevice();
+	bool findGraphicsQueue();
+	bool createDevice(VkPhysicalDevice physicalDevice);
+	bool initializeVMA();
+	bool createSwapchain(uint32_t width, uint32_t height);
+	void destroySwapchain();
+	VkShaderModule createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const;
+	bool createShaders();
+	Pipeline createGraphicsPipeline() const;
+	bool createSyncResources();
+	bool createCommandBuffers();
+	void render(float deltaTime);
+
+	void loadModel();
+
+	VkCommandBuffer startTransientCommandBuffer();
+	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer);
+	Renderer::Image createImage(std::vector<unsigned char> imageData, uint32_t width, uint32_t height, int components);
+
+public:
+	bool initialize();
+	void shutdown();
+	void run();
+};
