@@ -78,6 +78,11 @@ set(ENGINE_SOURCES
 	"systems/timersystem.h"
 	"systems/timersystem.cpp"
 	"messaging/eventqueue.cpp"
+	"ext/tiny_gltf.cc"
+	"shaders/shader.vert"
+	"shaders/shader.frag"
+	"shaders/sprite.vert"
+	"shaders/sprite.frag"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES})
@@ -87,6 +92,8 @@ add_library(engine STATIC ${ENGINE_SOURCES})
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)
 endif()
+
+target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
 
 target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan

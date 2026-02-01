@@ -36,7 +36,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	hRoot = world.createNode();
 
 	Resources &res = Resources::get();
-	res.load(state.renderer);
+	res.load();
 
 	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
 	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));

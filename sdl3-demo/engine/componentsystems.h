@@ -46,4 +46,8 @@ public:
 	void removeComponent(Node &node, Component &comp);
 	void removeScheduled();
 	auto &getSystemRegistry() { return sysReg; }
+	void shutdown()
+	{
+		sysReg.clear();
+	}
 };

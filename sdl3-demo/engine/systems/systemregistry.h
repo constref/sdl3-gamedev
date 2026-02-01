@@ -24,4 +24,15 @@ public:
 	{
 		return systems;
 	}
+
+	void clear()
+	{
+		for (auto &stage : systems)
+		{
+			for (auto &sys : stage)
+			{
+				sys.reset();
+			}
+		}
+	}
 };

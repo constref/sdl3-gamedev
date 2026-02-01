@@ -83,12 +83,14 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 
+	bool ownedWindow = true;
+	SDL_Window *window = nullptr;
+
 	uint64_t prevTime = 0;
 	uint64_t nowTime = 0;
 	double globalTime = 0;
-	SDL_Window *window = nullptr;
-	uint32_t width = 1280;
-	uint32_t height = 720;
+	uint32_t width = 0;
+	uint32_t height = 0;
 	bool running = false;
 	uint64_t frameCounter = 0;
 	uint64_t timelineValue = MaxFramesInFlight - 1; // subtract 1 to ensure wait-for-ID / frame resource index start at 0 during render, avoids if (frameId < MaxFramesInFlight) check
@@ -122,12 +124,15 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	Pipeline pipeline;
 
 	// shader resources
-	VkShaderModule vertShader = nullptr;
-	VkShaderModule fragShader = nullptr;
+	VkShaderModule vertShader = nullptr; VkShaderModule fragShader = nullptr;
 
 	// frame and synchronization resources
 	VkSemaphore timelineSemaphore = nullptr;
 	std::array<FrameResources, MaxFramesInFlight> frameResources;
+	uint32_t frameResIndex = 0;
+	uint64_t frameId = 0;
+	uint64_t waitForId = 0;
+	uint32_t imageIndex = 0;
 
 	// assets
 	std::vector<Renderer::Mesh> meshes;
@@ -168,7 +173,14 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	Renderer::Image createImage(std::vector<unsigned char> imageData, uint32_t width, uint32_t height, int components);
 
 public:
+	VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services);
+	~VulkanRenderSystem();
 	bool initialize();
 	void shutdown();
 	void run();
+	void beginFrame() override;
+	void endFrame() override;
+
+	// Inherited via System
+	void update(Node &node) override;
 };

@@ -9,15 +9,21 @@
 class SystemBase
 {
 	FrameStage frameStage;
+	bool initialized = false;
+
 public:
 	SystemBase(FrameStage frameStage) { this->frameStage = frameStage; }
 	virtual ~SystemBase() {}
 
+	virtual void beginFrame() {}
+	virtual void endFrame() {}
 	virtual bool hasRequiredComponents(Node &node) = 0;
 	virtual void update(Node &node) = 0;
 	virtual void onLinked(Node &node) {}
 	virtual void onUnlinked(Node &node) {}
 	FrameStage getStage() { return frameStage; }
+	bool setInitialized(bool initialized) { this->initialized = initialized; }
+	bool isInitialized() const { return initialized; }
 };
 
 template<FrameStage Stage, typename... Components>

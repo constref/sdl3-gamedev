@@ -51,7 +51,7 @@ struct Resources
 	std::vector<TileSetTextures> tilesetTextures;
 	std::unique_ptr<tmx::Map> map;
 
-	SDL_Texture *loadTexture(SDL_Renderer *renderer, const std::string &filepath);
+	SDL_Texture *loadTexture(const std::string &filepath);
 
 	//MIX_Audio *loadAudio(const std::string &filepath)
 	//{
@@ -61,7 +61,7 @@ struct Resources
 	//	return audio;
 	//}
 
-	void load(SDL_Renderer *renderer)
+	void load()
 	{
 		const std::string prefix = "data/";
 
@@ -80,25 +80,25 @@ struct Resources
 		enemyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
 		enemyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
 
-		texIdle = loadTexture(renderer, prefix + "idle.png");
-		texRun = loadTexture(renderer, prefix + "run.png");
-		texSlide = loadTexture(renderer, prefix + "slide.png");
-		texBrick = loadTexture(renderer, prefix + "tiles/brick.png");
-		texGrass = loadTexture(renderer, prefix + "tiles/grass.png");
-		texGround = loadTexture(renderer, prefix + "tiles/ground.png");
-		texPanel = loadTexture(renderer, prefix + "tiles/panel.png");
-		texBg1 = loadTexture(renderer, prefix + "bg/bg_layer1.png");
-		texBg2 = loadTexture(renderer, prefix + "bg/bg_layer2.png");
-		texBg3 = loadTexture(renderer, prefix + "bg/bg_layer3.png");
-		texBg4 = loadTexture(renderer, prefix + "bg/bg_layer4.png");
-		texBullet = loadTexture(renderer, prefix + "bullet.png");
-		texBulletHit = loadTexture(renderer, prefix + "bullet_hit.png");
-		texShoot = loadTexture(renderer, prefix + "shoot.png");
-		texRunShoot = loadTexture(renderer, prefix + "shoot_run.png");
-		texSlideShoot = loadTexture(renderer, prefix + "slide_shoot.png");
-		texEnemy = loadTexture(renderer, prefix + "enemy.png");
-		texEnemyHit = loadTexture(renderer, prefix + "enemy_hit.png");
-		texEnemyDie = loadTexture(renderer, prefix + "enemy_die.png");
+		texIdle = loadTexture(prefix + "idle.png");
+		texRun = loadTexture(prefix + "run.png");
+		texSlide = loadTexture(prefix + "slide.png");
+		texBrick = loadTexture(prefix + "tiles/brick.png");
+		texGrass = loadTexture(prefix + "tiles/grass.png");
+		texGround = loadTexture(prefix + "tiles/ground.png");
+		texPanel = loadTexture(prefix + "tiles/panel.png");
+		texBg1 = loadTexture(prefix + "bg/bg_layer1.png");
+		texBg2 = loadTexture(prefix + "bg/bg_layer2.png");
+		texBg3 = loadTexture(prefix + "bg/bg_layer3.png");
+		texBg4 = loadTexture(prefix + "bg/bg_layer4.png");
+		texBullet = loadTexture(prefix + "bullet.png");
+		texBulletHit = loadTexture(prefix + "bullet_hit.png");
+		texShoot = loadTexture(prefix + "shoot.png");
+		texRunShoot = loadTexture(prefix + "shoot_run.png");
+		texSlideShoot = loadTexture(prefix + "slide_shoot.png");
+		texEnemy = loadTexture(prefix + "enemy.png");
+		texEnemyHit = loadTexture(prefix + "enemy_hit.png");
+		texEnemyDie = loadTexture(prefix + "enemy_die.png");
 
 		//audioShoot = loadAudio(prefix + "audio/shoot.wav");
 		//audioShootHit = loadAudio(prefix + "audio/wall_hit.wav");
@@ -116,7 +116,7 @@ struct Resources
 			for (tmx::Tile &tile : tileSet.tiles)
 			{
 				const std::string imagePath = prefix + "tiles/" + std::filesystem::path(tile.image.source).filename().string();
-				tst.textures.push_back(loadTexture(renderer, imagePath));
+				tst.textures.push_back(loadTexture(imagePath));
 			}
 			tilesetTextures.push_back(std::move(tst));
 		}

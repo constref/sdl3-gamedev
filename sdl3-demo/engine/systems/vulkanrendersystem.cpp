@@ -7,6 +7,7 @@
 #include <vma/vk_mem_alloc.h>
 
 #include <iostream>
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
 #include <tiny_gltf.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,31 +32,29 @@ std::string readTextFile(const std::string &filePath)
 
 void VulkanRenderSystem::showError(const std::string &errorMessage) const
 {
-	//SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errorMessage.c_str(), window);
-	std::cerr << errorMessage << std::endl;
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errorMessage.c_str(), window);
+}
+
+VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services) : System(services), window(window)
+{
+	this->width = width;
+	this->height = height;
+	if (window)
+	{
+		ownedWindow = false;
+	}
+	initialize();
+}
+
+VulkanRenderSystem::~VulkanRenderSystem()
+{
+	shutdown();
 }
 
 bool VulkanRenderSystem::initialize()
 {
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO))
+	if (!initializeVulkan())
 	{
-		window = SDL_CreateWindow("Vulkan Learning", width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-		SDL_SetWindowMinimumSize(window, 320, 200);
-
-		if (!window)
-		{
-			showError("Error creating window");
-			return false;
-		}
-
-		if (!initializeVulkan())
-		{
-			return false;
-		}
-	}
-	else
-	{
-		showError("Unable to initialize SDL3");
 		return false;
 	}
 
@@ -139,12 +138,15 @@ void VulkanRenderSystem::shutdown()
 	}
 	volkFinalize();
 
-	// cleanup SDL
-	if (window)
+	// cleanup SDL if we own it
+	if (ownedWindow)
 	{
-		SDL_DestroyWindow(window);
+		if (window)
+		{
+			SDL_DestroyWindow(window);
+		}
+		SDL_Quit();
 	}
-	SDL_Quit();
 }
 
 void VulkanRenderSystem::run()
@@ -174,6 +176,299 @@ void VulkanRenderSystem::run()
 			}
 		}
 		render(deltaTime);
+	}
+}
+
+void VulkanRenderSystem::beginFrame()
+{
+	System::beginFrame();
+	// first check if our swapchain is still valid
+	if (requireSwapchainRecreate)
+	{
+		vkDeviceWaitIdle(device);
+		destroySwapchain();
+		if (!createSwapchain(width, height))
+		{
+			showError("Unable to recreate the swapchain");
+			running = false;
+			return;
+		}
+		requireSwapchainRecreate = false;
+	}
+
+	frameResIndex = frameCounter++ % MaxFramesInFlight;
+	// wait for frame using this frame's resources to complete
+	frameId = ++timelineValue; // this is our frame "ID", and what we're using to signal the end of this frame later
+	waitForId = frameId - MaxFramesInFlight; // frame N and frame N - MaxInFlight share resources (3 - 2 = 1 -- frame 3 and 1 share resources)
+
+	VkSemaphoreWaitInfo waitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
+		.semaphoreCount = 1,
+		.pSemaphores = &timelineSemaphore,
+		.pValues = &waitForId
+	};
+	vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
+
+	// now its safe to start recording commands
+	FrameResources &res = frameResources[frameResIndex];
+	vkResetCommandPool(device, res.commandPool, 0); // resets all buffers
+
+	// get the resources for this frame
+	VkSemaphore imageAcquireSemaphore = frameResources[frameResIndex].imageAcquiredSemaphore;
+
+	// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
+	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
+	// handle resize and out-of-date images, may need swapchain recreate
+
+	if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		requireSwapchainRecreate = true;
+		return;
+	}
+	else if (acquireResult == VK_SUBOPTIMAL_KHR)
+	{
+		// can render this frame, recreate next time around
+		requireSwapchainRecreate = true;
+	}
+
+	// begin recording commands
+	VkCommandBufferBeginInfo cmdBeginInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+	};
+	vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+
+	// transition the color and depth images
+	std::vector<VkImageMemoryBarrier2> layoutBarriers
+	{
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = 0,
+			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.image = swapchainImages[imageIndex],
+			.subresourceRange
+			{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			}
+		},
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			.dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			.image = depthImage,
+			.subresourceRange
+			{
+				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			}
+		}
+	};
+	VkDependencyInfo depInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+		.imageMemoryBarrierCount = static_cast<uint32_t>(layoutBarriers.size()),
+		.pImageMemoryBarriers = layoutBarriers.data()
+	};
+	vkCmdPipelineBarrier2(res.commandBuffer, &depInfo);
+
+	// setup the attachments (color and depth) and begin rendering (dynamic rendering)
+	VkRenderingAttachmentInfo colorAttachInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		.imageView = swapchainImageViews[imageIndex],
+		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the image
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // keep data for presentation
+		.clearValue{.color{0.0f, 0.0f, 0.0f, 1}}
+	};
+	VkRenderingAttachmentInfo depthAttachInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		.imageView = depthImageView,
+		.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the depth data
+		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, // don't care after rendering
+		.clearValue{.depthStencil{1.0f, 0}}
+	};
+	VkRenderingInfo renderingInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+		.renderArea
+		{
+			.offset{.x = 0, .y = 0},
+			.extent{.width = swapchainWidth, .height = swapchainHeight}
+		},
+		.layerCount = 1,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &colorAttachInfo,
+		.pDepthAttachment = &depthAttachInfo
+	};
+
+	// begin dynamic rendering
+	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
+}
+
+void VulkanRenderSystem::endFrame()
+{
+	FrameResources &res = frameResources[frameResIndex];
+	vkCmdEndRendering(res.commandBuffer);
+
+	// transition the image from color attachment to presentation so we can show it
+	VkImageMemoryBarrier2 presentLayoutBarrier
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+		.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+		.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+		.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+		.dstAccessMask = 0,
+		.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		.image = swapchainImages[imageIndex],
+		.subresourceRange
+		{
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		}
+	};
+	VkDependencyInfo presentDepInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+		.imageMemoryBarrierCount = 1,
+		.pImageMemoryBarriers = &presentLayoutBarrier
+	};
+	vkCmdPipelineBarrier2(res.commandBuffer, &presentDepInfo);
+
+	vkEndCommandBuffer(res.commandBuffer);
+
+	// signal that the image can be presented
+	std::vector<VkSemaphoreSubmitInfo> semaphoreSignals
+	{
+		{ // render work completion signal
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			.semaphore = renderCompleteSemaphores[imageIndex],
+			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
+		},
+		{ // entire frame is completed (timeline)
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			.semaphore = timelineSemaphore,
+			.value = frameId, // we're signalling our current frame ID is complete
+			.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
+		}
+	};
+	VkCommandBufferSubmitInfo cmdSubmitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+		.commandBuffer = res.commandBuffer,
+	};
+
+	// ensure swapchain image is actually vailable to start color output
+	VkSemaphoreSubmitInfo imageAcquireWaitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+		.semaphore = res.imageAcquiredSemaphore,
+		.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | // wait before drawing to image
+			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT // prevent depth buffer clearing before image is ready
+	};
+
+	VkSubmitInfo2 submitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+		.waitSemaphoreInfoCount = 1,
+		.pWaitSemaphoreInfos = &imageAcquireWaitInfo, // ensure the image is ready
+		.commandBufferInfoCount = 1,
+		.pCommandBufferInfos = &cmdSubmitInfo,
+		.signalSemaphoreInfoCount = static_cast<uint32_t>(semaphoreSignals.size()),
+		.pSignalSemaphoreInfos = semaphoreSignals.data()
+	};
+	vkQueueSubmit2(gfxQueue, 1, &submitInfo, VK_NULL_HANDLE);
+
+	// present the image
+	VkPresentInfoKHR presentInfo{
+		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &renderCompleteSemaphores[imageIndex], // render work completed semaphore
+		.swapchainCount = 1,
+		.pSwapchains = &swapchain,
+		.pImageIndices = &imageIndex,
+		.pResults = nullptr
+	};
+
+	vkQueuePresentKHR(gfxQueue, &presentInfo);
+}
+
+void VulkanRenderSystem::update(Node &node)
+{
+	FrameResources &res = frameResources[frameResIndex];
+
+	// set the viewpot and scissor state
+	VkViewport viewport
+	{
+		.x = 0, .y = 0,
+		.width = static_cast<float>(swapchainWidth),
+		.height = static_cast<float>(swapchainHeight),
+		.minDepth = 0,
+		.maxDepth = 1.0f,
+	};
+	vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor
+	{
+		.offset{.x = 0, .y = 0 },
+		.extent{.width = swapchainWidth, .height = swapchainHeight}
+	};
+	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+
+	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
+
+	constexpr float fov = glm::radians(45.0);
+	float aspect = static_cast<float>(width) / static_cast<float>(height);
+	float nearP = 0.1f;
+	float farP = 32.0f;
+
+	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
+	proj[1][1] *= -1;
+	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
+	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(0, -0.4, -1));
+	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f, 1.0f, 1.0f));
+	glm::mat4 transform = translate * rotation * scale;
+
+	// BDA Send Device Pointer
+	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
+	Renderer::DrawConstants pushConsts
+	{
+		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
+		.globalTime = static_cast<float>(globalTime),
+		.mvp = proj * transform
+	};
+	vkCmdPushConstants(res.commandBuffer, pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
+
+	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+	for (Renderer::Mesh &mesh : meshes)
+	{
+		for (Renderer::SubMesh &sub : mesh.subMeshes)
+		{
+			vkCmdDrawIndexed(res.commandBuffer, sub.indexCount, 1, sub.indexStart, sub.vertexStart, 0);
+		}
 	}
 }
 
@@ -670,7 +965,7 @@ void VulkanRenderSystem::destroySwapchain()
 VkShaderModule VulkanRenderSystem::createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const
 {
 	// read shader file from disk
-	const std::string shaderPath = "sdl3-demo/shaders/" + fileName;
+	const std::string shaderPath = "sdl3-demo/engine/shaders/" + fileName;
 	const std::string src = readTextFile(shaderPath);
 	if (src.empty())
 	{
@@ -1261,7 +1556,14 @@ void VulkanRenderSystem::loadModel()
 {
 	using namespace tinygltf;
 	Model model;
+
+	tinygltf::LoadImageDataFunction imageLoaderFunc = [](tinygltf::Image *image, const int imgIndex, std::string *err, std::string *warn, int reqWidth, int reqHeight, const unsigned char *bytes, int size, void *userData) -> bool
+	{
+		return false;
+	};
+
 	TinyGLTF loader;
+	loader.SetImageLoader(imageLoaderFunc, nullptr);
 
 	std::string err;
 	std::string warn;

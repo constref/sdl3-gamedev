@@ -18,6 +18,7 @@
 #include <systems/physicssystem.h>
 #include <systems/collisionsystem.h>
 #include <systems/timersystem.h>
+#include <systems/vulkanrendersystem.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -74,9 +75,7 @@ public:
 			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-			services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
-			services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
-			services.compSys().registerSystem(std::make_unique<SpriteRenderSystem>(services));
+			services.compSys().registerSystem(std::make_unique<VulkanRenderSystem>(state.window, state.width, state.height, services));
 
 			return app.initialize(services, state);
 		}
@@ -86,6 +85,7 @@ public:
 
 	void cleanup()
 	{
+		services.compSys().shutdown();
 		app.cleanup();
 		SDLState::global().cleanup();
 	}
@@ -222,21 +222,31 @@ private:
 
 		// drawing happens every single frame
 		ctx.deltaTime = deltaTime;
-		SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-		SDL_RenderClear(state.renderer);
+		//SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
+		//SDL_RenderClear(state.renderer);
 
+		// TODO: Make this better
 		FrameContext::global().setStage(FrameStage::Render);
+		auto &stageSystems = services.compSys().getSystemRegistry().getStageSystems(FrameContext::currentStage());
+		for (auto &sys : stageSystems)
+		{
+			sys->beginFrame();
+		}
 		services.eventQueue().dispatch();
 		processSystems(root, world);
+		for (auto &sys : stageSystems)
+		{
+			sys->endFrame();
+		}
 
-		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-		SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
-			actualDeltaTime,
-			services.world().getFreeCount(),
-			services.eventQueue().getCount()
-		).c_str());
+		//SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		//SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
+		//	actualDeltaTime,
+		//	services.world().getFreeCount(),
+		//	services.eventQueue().getCount()
+		//).c_str());
 
-		SDL_RenderPresent(state.renderer);
+		//SDL_RenderPresent(state.renderer);
 
 		FrameContext::global().setStage(FrameStage::End);
 		services.eventQueue().dispatch();

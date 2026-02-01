@@ -34,6 +34,7 @@ void SpriteRenderSystem::update(Node &node)
 		.h = size.y * sc->getScale().y
 	};
 
+	/*
 	SDL_Renderer *renderer = SDLState::global().renderer;
 
 	if (!sc->isShouldFlash())
@@ -66,6 +67,7 @@ void SpriteRenderSystem::update(Node &node)
 			sc->setShouldFlash(false);
 		}
 	}
+	*/
 }
 
 void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
