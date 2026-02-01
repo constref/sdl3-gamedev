@@ -74,6 +74,12 @@ namespace Renderer
 		float padding = 0;
 		glm::mat4 mvp;
 	};
+
+	struct ShaderSet
+	{
+		VkShaderModule vert = nullptr;
+		VkShaderModule frag = nullptr;
+	};
 }
 
 class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
@@ -122,9 +128,11 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 
 	// graphics pipeline related
 	Pipeline pipeline;
+	Pipeline spritePipeline;
 
 	// shader resources
-	VkShaderModule vertShader = nullptr; VkShaderModule fragShader = nullptr;
+	size_t regShader, spriteShader;
+	std::vector<std::unique_ptr<Renderer::ShaderSet>> shaders;
 
 	// frame and synchronization resources
 	VkSemaphore timelineSemaphore = nullptr;
@@ -160,8 +168,8 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool createSwapchain(uint32_t width, uint32_t height);
 	void destroySwapchain();
 	VkShaderModule createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const;
-	bool createShaders();
-	Pipeline createGraphicsPipeline() const;
+	Renderer::ShaderSet *createShaders(const std::string &shaderName);
+	Pipeline createGraphicsPipeline(const Renderer::ShaderSet &shaderSet) const;
 	bool createSyncResources();
 	bool createCommandBuffers();
 	void render(float deltaTime);

@@ -103,16 +103,24 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroyPipeline(device, pipeline.handle, nullptr);
 	}
+	if (spritePipeline.handle)
+	{
+		vkDestroyPipeline(device, pipeline.handle, nullptr);
+	}
 
 	// cleanup shaders
-	if (vertShader)
+	for (auto &set : shaders)
 	{
-		vkDestroyShaderModule(device, vertShader, nullptr);
+		if (set->vert)
+		{
+			vkDestroyShaderModule(device, set->vert, nullptr);
+		}
+		if (set->frag)
+		{
+			vkDestroyShaderModule(device, set->frag, nullptr);
+		}
 	}
-	if (fragShader)
-	{
-		vkDestroyShaderModule(device, fragShader, nullptr);
-	}
+	shaders.clear();
 
 	// cleanup swapchain
 	destroySwapchain();
@@ -516,13 +524,25 @@ bool VulkanRenderSystem::initializeVulkan()
 		return false;
 	}
 
-	if (!createShaders())
+	Renderer::ShaderSet *shaderRegular = createShaders("shader");
+	if (!shaderRegular)
+	{
+		showError("Error creating shader modules");
+		return false;
+	}
+	Renderer::ShaderSet *shaderSprite = createShaders("sprite");
+	if (!shaderSprite)
 	{
 		showError("Error creating shader modules");
 		return false;
 	}
 
-	if (pipeline = createGraphicsPipeline(); !pipeline.handle)
+	if (pipeline = createGraphicsPipeline(*shaderRegular); !pipeline.handle)
+	{
+		showError("Unable to initialize the graphics pipeline");
+		return false;
+	}
+	if (spritePipeline = createGraphicsPipeline(*shaderSprite); !spritePipeline.handle)
 	{
 		showError("Unable to initialize the graphics pipeline");
 		return false;
@@ -1006,21 +1026,23 @@ VkShaderModule VulkanRenderSystem::createShaderModule(const std::string &fileNam
 	return shaderModule;
 }
 
-bool VulkanRenderSystem::createShaders()
+Renderer::ShaderSet *VulkanRenderSystem::createShaders(const std::string &shaderName)
 {
+	auto shaderSet = std::make_unique<Renderer::ShaderSet>();
 	// create the shader modules that we'll need for the graphics pipeline
-	if (vertShader = createShaderModule("shader.vert", shaderc_vertex_shader); !vertShader)
+	shaderSet->vert = createShaderModule(std::format("{}.vert", shaderName), shaderc_vertex_shader);
+	shaderSet->frag = createShaderModule(std::format("{}.frag", shaderName), shaderc_fragment_shader);
+	Renderer::ShaderSet *result = shaderSet.get();
+	shaders.push_back(std::move(shaderSet));
+
+	if (result->vert == nullptr || result->frag == nullptr)
 	{
-		return false;
+		return nullptr;
 	}
-	if (fragShader = createShaderModule("shader.frag", shaderc_fragment_shader); !fragShader)
-	{
-		return false;
-	}
-	return true;
+	return result;
 }
 
-Pipeline VulkanRenderSystem::createGraphicsPipeline() const
+Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &shaderSet) const
 {
 	// configure the shader stages struct
 	const char *entryPoint = "main";
@@ -1029,13 +1051,13 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline() const
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 			.stage = VK_SHADER_STAGE_VERTEX_BIT,
-			.module = vertShader,
+			.module = shaderSet.vert,
 			.pName = entryPoint
 		},
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 			.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.module = fragShader,
+			.module = shaderSet.frag,
 			.pName = entryPoint
 		}
 	};
