@@ -103,9 +103,13 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroyPipeline(device, pipeline.handle, nullptr);
 	}
+	if (spritePipeline.layout)
+	{
+		vkDestroyPipelineLayout(device, spritePipeline.layout, nullptr);
+	}
 	if (spritePipeline.handle)
 	{
-		vkDestroyPipeline(device, pipeline.handle, nullptr);
+		vkDestroyPipeline(device, spritePipeline.handle, nullptr);
 	}
 
 	// cleanup shaders
