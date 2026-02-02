@@ -95,6 +95,12 @@ endif()
 
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
 
+# For MSVC, you often need the 'latest' flag specifically
+if(MSVC)
+    target_compile_options(engine PRIVATE /std:c++latest)
+    target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+endif()
+
 target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan
 	Vulkan::volk
