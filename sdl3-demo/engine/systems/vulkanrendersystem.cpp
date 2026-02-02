@@ -1,4 +1,6 @@
 #include "vulkanrendersystem.h"
+#include <systems/context/rendercontext.h>
+#include <print>
 
 #include <SDL3/SDL.h>
 #define VOLK_IMPLEMENTATION
@@ -58,7 +60,67 @@ bool VulkanRenderSystem::initialize()
 		return false;
 	}
 
-	loadModel();
+	//vertices.push_back(Renderer::Vertex{ .position = *pos });
+	std::vector < glm::vec3> quad;
+	quad.reserve(4);
+	quad.push_back({ -0.5, -0.5, 0.0 });
+	quad.push_back({ -0.5, 0.5, 0.0 });
+	quad.push_back({ 0.5,  -0.5, 0.0 });
+	quad.push_back({ 0.5,  0.5, 0.0 });
+
+	for (int i = 0; i < quad.size(); ++i)
+	{
+		vertices.push_back(Renderer::Vertex{ .position = quad[i], .uv = glm::vec2(0, 0) });
+		indices.push_back(i);
+	}
+
+	auto createBuffer = [](VmaAllocator &vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void *initData)
+	{
+		VkBufferCreateInfo buffInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			.size = byteSize,
+			.usage = usage,
+			.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+		};
+
+		VmaAllocationCreateInfo allocInfo
+		{
+			.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
+			.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
+		};
+
+		Renderer::Buffer newBuff;
+		if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
+		{
+			//showError("Error allocating buffer");
+		}
+
+		void *buffPtr = nullptr;
+		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
+		{
+			//showError("Unable to map buffer memory");
+		}
+		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
+		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
+		vmaUnmapMemory(vmaAllocator, newBuff.allocation);
+
+		return newBuff;
+	};
+
+	vertexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+		sizeof(Renderer::Vertex) * vertices.size(), vertices.data());
+	indexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+		sizeof(uint32_t) * indices.size(), indices.data());
+
+	Renderer::Mesh newMesh;
+	Renderer::SubMesh sm;
+	sm.vertexStart = 0;
+	sm.vertexCount = 4;
+	sm.indexCount = 4;
+	sm.indexStart = 0;
+	newMesh.subMeshes.push_back(sm);
+	meshes.push_back(newMesh);
 
 	return true;
 }
@@ -193,7 +255,6 @@ void VulkanRenderSystem::run()
 
 void VulkanRenderSystem::beginFrame()
 {
-	System::beginFrame();
 	// first check if our swapchain is still valid
 	if (requireSwapchainRecreate)
 	{
@@ -335,6 +396,24 @@ void VulkanRenderSystem::beginFrame()
 
 	// begin dynamic rendering
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
+
+	// set the viewpot and scissor state
+	VkViewport viewport
+	{
+		.x = 0, .y = 0,
+		.width = static_cast<float>(swapchainWidth),
+		.height = static_cast<float>(swapchainHeight),
+		.minDepth = 0,
+		.maxDepth = 1.0f,
+	};
+	vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor
+	{
+		.offset{.x = 0, .y = 0 },
+		.extent{.width = swapchainWidth, .height = swapchainHeight}
+	};
+	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
 }
 
 void VulkanRenderSystem::endFrame()
@@ -432,37 +511,24 @@ void VulkanRenderSystem::update(Node &node)
 {
 	FrameResources &res = frameResources[frameResIndex];
 
-	// set the viewpot and scissor state
-	VkViewport viewport
-	{
-		.x = 0, .y = 0,
-		.width = static_cast<float>(swapchainWidth),
-		.height = static_cast<float>(swapchainHeight),
-		.minDepth = 0,
-		.maxDepth = 1.0f,
-	};
-	vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
-
-	VkRect2D scissor
-	{
-		.offset{.x = 0, .y = 0 },
-		.extent{.width = swapchainWidth, .height = swapchainHeight}
-	};
-	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
-
-	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
+	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.handle);
 
 	constexpr float fov = glm::radians(45.0);
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	float nearP = 0.1f;
 	float farP = 32.0f;
 
-	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
+	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
+	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 1.0f, -1.0f);
 	proj[1][1] *= -1;
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(0, -0.4, -1));
-	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f, 1.0f, 1.0f));
+	rotation = glm::mat4(1);
+	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
+	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(32.0f, 32.0f, 32.0f));
 	glm::mat4 transform = translate * rotation * scale;
+	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(0, 300);
+	const glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(-camPos, 0.0f));
+	glm::mat4 mvp = proj * view * transform;
 
 	// BDA Send Device Pointer
 	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
@@ -470,9 +536,9 @@ void VulkanRenderSystem::update(Node &node)
 	{
 		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
 		.globalTime = static_cast<float>(globalTime),
-		.mvp = proj * transform
+		.mvp = mvp
 	};
-	vkCmdPushConstants(res.commandBuffer, pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
+	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
 
 	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	for (Renderer::Mesh &mesh : meshes)
@@ -541,12 +607,14 @@ bool VulkanRenderSystem::initializeVulkan()
 		return false;
 	}
 
-	if (pipeline = createGraphicsPipeline(*shaderRegular); !pipeline.handle)
+	Renderer::PipelineConfig pc1{};
+	if (pipeline = createGraphicsPipeline(*shaderRegular, pc1); !pipeline.handle)
 	{
 		showError("Unable to initialize the graphics pipeline");
 		return false;
 	}
-	if (spritePipeline = createGraphicsPipeline(*shaderSprite); !spritePipeline.handle)
+	Renderer::PipelineConfig pc2{ .topology = Renderer::Topology::triangle_strip };
+	if (spritePipeline = createGraphicsPipeline(*shaderSprite, pc2); !spritePipeline.handle)
 	{
 		showError("Unable to initialize the graphics pipeline");
 		return false;
@@ -1046,7 +1114,7 @@ Renderer::ShaderSet *VulkanRenderSystem::createShaders(const std::string &shader
 	return result;
 }
 
-Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &shaderSet) const
+Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &shaderSet, const Renderer::PipelineConfig &config) const
 {
 	// configure the shader stages struct
 	const char *entryPoint = "main";
@@ -1073,10 +1141,14 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	};
 
 	// input assembly, we'll be drawing triangle lists
+	std::array<VkPrimitiveTopology, 2> topologyMap{
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+	};
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+		.topology = topologyMap[static_cast<size_t>(config.topology)]
 	};
 
 	// depth/stencil configuration
@@ -1154,9 +1226,6 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 		.depthAttachmentFormat = depthFormat,
 	};
 
-	// Create the graphics pipeline
-	Pipeline pipeline;
-
 	// need to define a pipeline layout
 	VkPushConstantRange pushConstRange
 	{
@@ -1172,7 +1241,9 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges = &pushConstRange
 	};
-	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipeline.layout) != VK_SUCCESS)
+
+	VkPipelineLayout layout = nullptr;
+	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &layout) != VK_SUCCESS)
 	{
 		showError("Unable to create the pipeline layout");
 		return Pipeline{};
@@ -1192,15 +1263,17 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 		.pDepthStencilState = &depthStencilInfo,
 		.pColorBlendState = &blendInfo,
 		.pDynamicState = &dynamicStateInfo,
-		.layout = pipeline.layout,
+		.layout = layout,
 		.renderPass = VK_NULL_HANDLE,
 	};
-	if (vkCreateGraphicsPipelines(device, nullptr, 1, &pipelineInfo, nullptr, &pipeline.handle) != VK_SUCCESS)
+
+	VkPipeline pipeline = nullptr;
+	if (vkCreateGraphicsPipelines(device, nullptr, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
 	{
 		showError("Error creating the pipeline");
 		return Pipeline{};
 	}
-	return pipeline;
+	return Pipeline{ .layout = layout, .handle = pipeline };
 }
 
 bool VulkanRenderSystem::createSyncResources()

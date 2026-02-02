@@ -35,6 +35,17 @@ struct FrameResources
 
 namespace Renderer
 {
+	enum class Topology
+	{
+		triangle_list,
+		triangle_strip
+	};
+
+	struct PipelineConfig
+	{
+		Topology topology = Topology::triangle_list;
+	};
+
 	struct Buffer
 	{
 		VkBuffer buffer = nullptr;
@@ -169,7 +180,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	void destroySwapchain();
 	VkShaderModule createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const;
 	Renderer::ShaderSet *createShaders(const std::string &shaderName);
-	Pipeline createGraphicsPipeline(const Renderer::ShaderSet &shaderSet) const;
+	Pipeline createGraphicsPipeline(const Renderer::ShaderSet &shaderSet, const Renderer::PipelineConfig &config) const;
 	bool createSyncResources();
 	bool createCommandBuffers();
 	void render(float deltaTime);
