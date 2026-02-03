@@ -67,7 +67,7 @@ public:
 	bool initialize(int logW, int logH)
 	{
 		SDLState &state = SDLState::global();
-		if (state.initialize(1600, 900, logW, logH))
+		if (state.initialize(1920, 1080, logW, logH))
 		{
 			// core system registrations
 			services.compSys().registerSystem(std::make_unique<TimerSystem>(services));

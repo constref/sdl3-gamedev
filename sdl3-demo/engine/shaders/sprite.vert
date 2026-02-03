@@ -41,5 +41,5 @@ void main()
 		vec3(0.0, 1.0, 0.0), // Green
 		vec3(0.0, 0.0, 1.0)  // Blue
 	);
-    outColor = colors[gl_VertexIndex % 3];
+    outColor = colors[gl_InstanceIndex % 3];
 }

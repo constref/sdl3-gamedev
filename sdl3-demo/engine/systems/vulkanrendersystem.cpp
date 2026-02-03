@@ -1,5 +1,6 @@
 #include "vulkanrendersystem.h"
 #include <systems/context/rendercontext.h>
+#include <components/spritecomponent.h>
 #include <print>
 
 #include <SDL3/SDL.h>
@@ -64,8 +65,8 @@ bool VulkanRenderSystem::initialize()
 	std::vector < glm::vec3> quad;
 	quad.reserve(4);
 	quad.push_back({ -0.5, -0.5, 0.0 });
-	quad.push_back({ -0.5, 0.5, 0.0 });
 	quad.push_back({ 0.5,  -0.5, 0.0 });
+	quad.push_back({ -0.5, 0.5, 0.0 });
 	quad.push_back({ 0.5,  0.5, 0.0 });
 
 	for (int i = 0; i < quad.size(); ++i)
@@ -74,7 +75,7 @@ bool VulkanRenderSystem::initialize()
 		indices.push_back(i);
 	}
 
-	auto createBuffer = [](VmaAllocator &vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void *initData)
+	auto createBuffer = [this](VmaAllocator &vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void *initData)
 	{
 		VkBufferCreateInfo buffInfo
 		{
@@ -93,13 +94,13 @@ bool VulkanRenderSystem::initialize()
 		Renderer::Buffer newBuff;
 		if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
 		{
-			//showError("Error allocating buffer");
+			showError("Error allocating buffer");
 		}
 
 		void *buffPtr = nullptr;
 		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
 		{
-			//showError("Unable to map buffer memory");
+			showError("Unable to map buffer memory");
 		}
 		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
 		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
@@ -509,6 +510,7 @@ void VulkanRenderSystem::endFrame()
 
 void VulkanRenderSystem::update(Node &node)
 {
+	auto [sc] = getRequiredComponents(node);
 	FrameResources &res = frameResources[frameResIndex];
 
 	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.handle);
@@ -522,9 +524,8 @@ void VulkanRenderSystem::update(Node &node)
 	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 1.0f, -1.0f);
 	proj[1][1] *= -1;
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-	rotation = glm::mat4(1);
 	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
-	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(32.0f, 32.0f, 32.0f));
+	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(sc->getSize().x, sc->getSize().y, 0));
 	glm::mat4 transform = translate * rotation * scale;
 	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(0, 300);
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(-camPos, 0.0f));
@@ -799,7 +800,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures);
 
 	// check if what we need is supported
-	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 ||
+	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 || 
 		!supportedFeatures12.timelineSemaphore)
 	{
 		showError("Physical device doesn't meet the feature requirements");
@@ -825,7 +826,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		.pNext = &features13,
 		.scalarBlockLayout = VK_TRUE,
 		.timelineSemaphore = VK_TRUE,
-		.bufferDeviceAddress = VK_TRUE
+		.bufferDeviceAddress = VK_TRUE,
 	};
 	VkPhysicalDeviceFeatures2 features{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -1177,8 +1178,8 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.polygonMode = VK_POLYGON_MODE_FILL,
-		.cullMode = VK_CULL_MODE_NONE,
-		//.cullMode = VK_CULL_MODE_BACK_BIT,
+		//.cullMode = VK_CULL_MODE_NONE,
+		.cullMode = VK_CULL_MODE_BACK_BIT,
 		.frontFace = VK_FRONT_FACE_CLOCKWISE,
 		.lineWidth = 1.0f
 	};
