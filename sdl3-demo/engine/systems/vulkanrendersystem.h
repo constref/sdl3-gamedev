@@ -11,6 +11,7 @@
 
 #include <systems/system.h>
 #include <components/spritecomponent.h>
+#include <resourceid.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
@@ -22,6 +23,11 @@ struct Pipeline
 {
 	VkPipelineLayout layout = nullptr;
 	VkPipeline handle = nullptr;
+};
+
+struct Material
+{
+	Pipeline pipeline;
 };
 
 struct FrameResources
@@ -57,6 +63,9 @@ namespace Renderer
 		VkImage handle = nullptr;
 		VkImageView view = nullptr;
 		VmaAllocation allocation = nullptr;
+		uint32_t width = 0;
+		uint32_t height = 0;
+		uint32_t channels = 0;
 	};
 
 	struct Vertex
@@ -153,7 +162,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	uint64_t waitForId = 0;
 	uint32_t imageIndex = 0;
 
-	// assets
+	// resources
 	std::vector<Renderer::Mesh> meshes;
 	std::vector<Renderer::Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -189,7 +198,8 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 
 	VkCommandBuffer startTransientCommandBuffer();
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer);
-	Renderer::Image createImage(std::vector<unsigned char> imageData, uint32_t width, uint32_t height, int components);
+	ResourceId createImage(uint32_t width, uint32_t height, uint32_t channels);
+	void fillImage(VkImage image, unsigned char *pixelData);
 
 public:
 	VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services);
@@ -202,4 +212,6 @@ public:
 
 	// Inherited via System
 	void update(Node &node) override;
+
+	ResourceId loadTexture(const std::string &filepath);
 };

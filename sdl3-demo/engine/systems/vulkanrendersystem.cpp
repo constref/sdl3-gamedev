@@ -8,6 +8,8 @@
 #include <Volk/volk.h>
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #include <iostream>
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE
@@ -61,12 +63,11 @@ bool VulkanRenderSystem::initialize()
 		return false;
 	}
 
-	//vertices.push_back(Renderer::Vertex{ .position = *pos });
 	std::vector < glm::vec3> quad;
 	quad.reserve(4);
 	quad.push_back({ -0.5, -0.5, 0.0 });
-	quad.push_back({ 0.5,  -0.5, 0.0 });
 	quad.push_back({ -0.5, 0.5, 0.0 });
+	quad.push_back({ 0.5,  -0.5, 0.0 });
 	quad.push_back({ 0.5,  0.5, 0.0 });
 
 	for (int i = 0; i < quad.size(); ++i)
@@ -122,6 +123,8 @@ bool VulkanRenderSystem::initialize()
 	sm.indexStart = 0;
 	newMesh.subMeshes.push_back(sm);
 	meshes.push_back(newMesh);
+
+	//loadModel();
 
 	return true;
 }
@@ -1180,7 +1183,7 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 		.polygonMode = VK_POLYGON_MODE_FILL,
 		//.cullMode = VK_CULL_MODE_NONE,
 		.cullMode = VK_CULL_MODE_BACK_BIT,
-		.frontFace = VK_FRONT_FACE_CLOCKWISE,
+		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.lineWidth = 1.0f
 	};
 
@@ -1677,12 +1680,12 @@ void VulkanRenderSystem::loadModel()
 	{
 		for (const Image &image : model.images)
 		{
-			Renderer::Image newImage = createImage(image.image, image.width, image.height, image.component);
-			if (newImage.handle == nullptr)
+			ResourceId imageId = createImage(image.width, image.height, image.component);
+			if (!imageId.isValid())
 			{
+				showError("Image could not be loaded");
 				break;
 			}
-			images.push_back(newImage);
 		}
 	}
 	submitTransientCommandBuffer(commandBuffer);
@@ -1854,7 +1857,7 @@ void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuf
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-Renderer::Image VulkanRenderSystem::createImage(std::vector<unsigned char> imageData, uint32_t width, uint32_t height, int components)
+ResourceId VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
 {
 	VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
@@ -1873,11 +1876,11 @@ Renderer::Image VulkanRenderSystem::createImage(std::vector<unsigned char> image
 	};
 	VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_CPU_TO_GPU };
 
-	Renderer::Image image;
+	Renderer::Image image{ .width = width, .height = height, .channels = channels };
 	if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &image.handle, &image.allocation, nullptr) != VK_SUCCESS)
 	{
 		showError("Error creating image");
-		return Renderer::Image{};
+		return ResourceId{};
 	}
 
 	VkImageViewCreateInfo imgViewInfo
@@ -1897,10 +1900,12 @@ Renderer::Image VulkanRenderSystem::createImage(std::vector<unsigned char> image
 	if (vkCreateImageView(device, &imgViewInfo, nullptr, &image.view) != VK_SUCCESS)
 	{
 		showError("Error creating image view");
-		return Renderer::Image{};
+		return ResourceId{};
 	}
 
-	return image;
+	// TODO: this needs to be better
+	images.push_back(image);
+	return ResourceId(images.size() - 1, ResourceId::Type::texture);
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
@@ -1915,4 +1920,39 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
 	}
 
 	return VK_FALSE;
+} 
+
+void VulkanRenderSystem::fillImage(VkImage image, unsigned char *pixelData)
+{
 }
+
+ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath)
+{
+	// get pixel data and image info
+	int width = 0;
+	int height = 0;
+	int channels = 0;
+	stbi_uc *pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
+
+	auto img = createImage(width, height, channels);
+	if (!img.isValid())
+	{
+		showError("Error creating texture image");
+		return img;
+	}
+
+	auto &texImage = images[img.index()];
+
+	// create surface, copy copy into texture
+	//SDL_Surface *surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, pixData, width * 4);
+	//SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+	//textures.push_back(tex);
+	//SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
+
+	// free STB pixel data first, then destroy surface
+	stbi_image_free(pixData);
+	//SDL_DestroySurface(surface);
+
+	return img;
+}
+

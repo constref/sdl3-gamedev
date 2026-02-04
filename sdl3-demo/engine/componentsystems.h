@@ -18,9 +18,11 @@ class ComponentSystems
 
 public:
 	template<typename SysType>
-	void registerSystem(std::unique_ptr<SysType> &&sys)
+	SysType &registerSystem(std::unique_ptr<SysType> &&sys)
 	{
+		SysType &sysRef = *sys;
 		sysReg.registerSystem<SysType>(std::move(sys));
+		return sysRef;
 	}
 
 	template<typename T, typename... Args>

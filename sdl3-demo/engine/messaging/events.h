@@ -5,8 +5,7 @@
 #include <glm/glm.hpp>
 #include <nodehandle.h>
 #include <animationplaybackmode.h>
-
-struct SDL_Texture;
+#include <resourceid.h>
 
 class KeyUpEvent : public Event<KeyUpEvent, FrameStage::Input>
 {
@@ -59,11 +58,11 @@ public:
 class AnimationPlayEvent : public Event<AnimationPlayEvent, FrameStage::Animation>
 {
 	int animationIndex;
-	SDL_Texture *texture;
+	ResourceId texture;
 	AnimationPlaybackMode mode;
 
 public:
-	AnimationPlayEvent(int animationIndex, SDL_Texture *texture, AnimationPlaybackMode mode = AnimationPlaybackMode::oneShot)
+	AnimationPlayEvent(int animationIndex, ResourceId texture, AnimationPlaybackMode mode = AnimationPlaybackMode::oneShot)
 	{
 		this->animationIndex = animationIndex;
 		this->texture = texture;
@@ -71,7 +70,7 @@ public:
 	}
 
 	int getAnimationIndex() const { return animationIndex; }
-	SDL_Texture *getTexture() const { return texture; }
+	ResourceId getTexture() const { return texture; }
 	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 

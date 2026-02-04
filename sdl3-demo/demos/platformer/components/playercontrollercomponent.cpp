@@ -14,15 +14,10 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner)
 	shooting = false;
 	currentState = PState::idle;
 	idleAnimationIndex = 0;
-	idleTexture = nullptr;
 	runAnimationIndex = 0;
-	runTexture = nullptr;
 	jumpAnimationIndex = 0;
-	jumpTexture = nullptr;
 	slideAnimationIndex = 0;
-	slideTexture = nullptr;
 	shootAnimationIndex = 0;
-	shootTexture = nullptr;
 }
 
 void PlayerControllerComponent::onCommand(const UpdateVelocityCommand &msg)

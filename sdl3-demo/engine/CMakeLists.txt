@@ -78,6 +78,7 @@ set(ENGINE_SOURCES
 	"systems/timersystem.h"
 	"systems/timersystem.cpp"
 	"messaging/eventqueue.cpp"
+	"resourceid.h"
 	"ext/tiny_gltf.cc"
 	"shaders/shader.vert"
 	"shaders/shader.frag"

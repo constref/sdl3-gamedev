@@ -5,7 +5,7 @@
 #include <framecontext.h>
 #include <messaging/events.h>
 
-SpriteComponent::SpriteComponent(Node &owner, SDL_Texture *texture, float width, float height)
+SpriteComponent::SpriteComponent(Node &owner, ResourceId texture, float width, float height)
 	: Component(owner, FrameStage::Render), flashTimer(0.05f)
 {
 	this->texture = texture;
@@ -17,7 +17,7 @@ SpriteComponent::SpriteComponent(Node &owner, SDL_Texture *texture, float width,
 	frameNumber = 1;
 	viewportPos = { 0, 0 };
 	followViewport = 1;
-	flipMode = SDL_FLIP_NONE;
+	flipH = false;
 	viewportSize = { 0, 0 };
 	paralaxFactor = 0;
 }

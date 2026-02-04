@@ -1,9 +1,8 @@
 #include "resources.h"
 #include <iostream>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
+/*
 SDL_Texture *Resources::loadTexture(const std::string &filepath)
 {
 	// get pixel data and image info
@@ -24,3 +23,4 @@ SDL_Texture *Resources::loadTexture(const std::string &filepath)
 
 	return nullptr;
 }
+*/

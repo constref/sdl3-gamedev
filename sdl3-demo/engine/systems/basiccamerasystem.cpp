@@ -2,20 +2,22 @@
 #include <resources.h>
 #include <systems/context/rendercontext.h>
 
-BasicCameraSystem::BasicCameraSystem(Services &services, glm::vec2 viewportSize) : System(services)
+BasicCameraSystem::BasicCameraSystem(Services &services, glm::vec2 viewportSize, int tileWidth, int tileHeight, int mapWidth, int mapHeight) : System(services)
 {
 	this->viewportPosition = { 0, 0 };
 	this->viewportSize = viewportSize;
+	this->tileWidth = tileWidth;
+	this->mapWidth = mapWidth;
+	this->mapHeight = mapHeight;
 }
 
 void BasicCameraSystem::update(Node &node)
 {
 	auto [ic, bc] = getRequiredComponents(node);
-	const Resources &res = Resources::get();
 
 	glm::vec2 camPos {
-		(node.getPosition().x + res.map->tileWidth / 2) - viewportSize.x / 2,
-		res.map->mapHeight * res.map->tileHeight - viewportSize.y
+		(node.getPosition().x + tileWidth / 2) - viewportSize.x / 2,
+		mapHeight * tileHeight - viewportSize.y
 	};
 
 	RenderContext::shared().setCameraPosition(camPos);
