@@ -11,6 +11,8 @@
 #include <components/spritecomponent.h>
 #include <systems/systemregistry.h>
 #include <componentsystems.h>
+#include <prototypeinstancer.h>
+#include <systems/spriteanimationsystem.h>
 
 #include "systems/playercontrolsystem.h"
 #include "systems/basiccamerasystem.h"
@@ -31,10 +33,14 @@ Platformer::Platformer()
 	debugMode = false;
 }
 
-bool Platformer::initialize(Services &services, SDLState &state, VulkanRenderSystem &renderSys)
+bool Platformer::initialize(Services &services, SDLState &state)
 {
 	World &world = services.world();
 	hRoot = world.createNode();
+
+	SpriteAnimationSystem *animSys = services.compSys().getSystemRegistry().getSystem<SpriteAnimationSystem>();
+	animBulletMoving = animSys->createAnimation(4, 0.01f);
+	animBulletHit = animSys->createAnimation(4, 0.15f);
 
 	playerAnims.resize(6);
 	playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
@@ -43,9 +49,9 @@ bool Platformer::initialize(Services &services, SDLState &state, VulkanRenderSys
 	playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
 	playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
 	playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
-	bulletAnims.resize(2);
-	bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.01f);
-	bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
+	//bulletAnims.resize(2);
+	//bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.01f);
+	//bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
 	enemyAnims.resize(3);
 	enemyAnims[ANIM_ENEMY] = Animation(8, 1.0f);
 	enemyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
@@ -59,26 +65,28 @@ bool Platformer::initialize(Services &services, SDLState &state, VulkanRenderSys
 	//	return audio;
 	//}
 
+	VulkanRenderSystem *renderSys = services.compSys().getSystemRegistry().getSystem<VulkanRenderSystem>();
+
 	const std::string prefix = "data/";
-	texIdle = renderSys.loadTexture(prefix + "idle.png");
-	texRun = renderSys.loadTexture(prefix + "run.png");
-	texSlide = renderSys.loadTexture(prefix + "slide.png");
-	texBrick = renderSys.loadTexture(prefix + "tiles/brick.png");
-	texGrass = renderSys.loadTexture(prefix + "tiles/grass.png");
-	texGround = renderSys.loadTexture(prefix + "tiles/ground.png");
-	texPanel = renderSys.loadTexture(prefix + "tiles/panel.png");
-	texBg1 = renderSys.loadTexture(prefix + "bg/bg_layer1.png");
-	texBg2 = renderSys.loadTexture(prefix + "bg/bg_layer2.png");
-	texBg3 = renderSys.loadTexture(prefix + "bg/bg_layer3.png");
-	texBg4 = renderSys.loadTexture(prefix + "bg/bg_layer4.png");
-	texBullet = renderSys.loadTexture(prefix + "bullet.png");
-	texBulletHit = renderSys.loadTexture(prefix + "bullet_hit.png");
-	texShoot = renderSys.loadTexture(prefix + "shoot.png");
-	texRunShoot = renderSys.loadTexture(prefix + "shoot_run.png");
-	texSlideShoot = renderSys.loadTexture(prefix + "slide_shoot.png");
-	texEnemy = renderSys.loadTexture(prefix + "enemy.png");
-	texEnemyHit = renderSys.loadTexture(prefix + "enemy_hit.png");
-	texEnemyDie = renderSys.loadTexture(prefix + "enemy_die.png");
+	texIdle = renderSys->loadTexture(prefix + "idle.png");
+	texRun = renderSys->loadTexture(prefix + "run.png");
+	texSlide = renderSys->loadTexture(prefix + "slide.png");
+	texBrick = renderSys->loadTexture(prefix + "tiles/brick.png");
+	texGrass = renderSys->loadTexture(prefix + "tiles/grass.png");
+	texGround = renderSys->loadTexture(prefix + "tiles/ground.png");
+	texPanel = renderSys->loadTexture(prefix + "tiles/panel.png");
+	texBg1 = renderSys->loadTexture(prefix + "bg/bg_layer1.png");
+	texBg2 = renderSys->loadTexture(prefix + "bg/bg_layer2.png");
+	texBg3 = renderSys->loadTexture(prefix + "bg/bg_layer3.png");
+	texBg4 = renderSys->loadTexture(prefix + "bg/bg_layer4.png");
+	texBullet = renderSys->loadTexture(prefix + "bullet.png");
+	texBulletHit = renderSys->loadTexture(prefix + "bullet_hit.png");
+	texShoot = renderSys->loadTexture(prefix + "shoot.png");
+	texRunShoot = renderSys->loadTexture(prefix + "shoot_run.png");
+	texSlideShoot = renderSys->loadTexture(prefix + "slide_shoot.png");
+	texEnemy = renderSys->loadTexture(prefix + "enemy.png");
+	texEnemyHit = renderSys->loadTexture(prefix + "enemy_hit.png");
+	texEnemyDie = renderSys->loadTexture(prefix + "enemy_die.png");
 
 		//audioShoot = loadAudio(prefix + "audio/shoot.wav");
 		//audioShootHit = loadAudio(prefix + "audio/wall_hit.wav");
@@ -250,7 +258,14 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			ctrlComp.setShootTexture(texShoot);
 			ctrlComp.setRunShootAnimation(ANIM_PLAYER_RUN);
 			ctrlComp.setRunShootTexture(texRunShoot);
-			services.compSys().addComponent<WeaponComponent>(player);
+
+			// setup the player's weapon
+			WeaponComponent &wpnComp = services.compSys().addComponent<WeaponComponent>(player);
+			wpnComp.animProjectile = animBulletMoving;
+			wpnComp.animProjectileHit = animBulletHit;
+			wpnComp.texProjectile = texBullet;
+			wpnComp.texProjectileHit = texBulletHit;
+
 			auto &physicsComponent = services.compSys().addComponent<PhysicsComponent>(player);
 			physicsComponent.setAcceleration(glm::vec2(800, 0));
 			physicsComponent.setMaxSpeed(glm::vec2(100, 300));

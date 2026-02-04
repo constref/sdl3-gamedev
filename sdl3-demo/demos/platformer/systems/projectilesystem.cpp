@@ -40,13 +40,13 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 			Resources &res = Resources::get();
 			pc->setVelocity(glm::vec2(0));
 
-			services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
-				res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
-			services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
-			sc->setRotation(0);
+			//services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
+			//	res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);
+			//services.eventQueue().enqueue<DamageEvent>(event.getOther(), 0, node.getParent(), 15); // damage source is the person firing the gun, not the projectile
+			//sc->setRotation(0);
 
-			scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
-			services.compSys().removeComponent(node, *cc);
+			//scheduleDestroy(target, res.bulletAnims[res.ANIM_BULLET_HIT].getLength());
+			//services.compSys().removeComponent(node, *cc);
 		}
 	}
 }

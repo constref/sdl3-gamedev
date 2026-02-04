@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/component.h>
+#include <resourceid.h>
 #include <timer.h>
 #include <glm/glm.hpp>
 
@@ -19,4 +20,7 @@ public:
 	void setIsShooting(bool shooting) { this->shooting = shooting; }
 
 	Timer &getCooldownTimer() { return cooldownTimer; }
+
+	ResourceId animProjectile, animProjectileHit;
+	ResourceId texProjectile, texProjectileHit;
 };

@@ -48,16 +48,16 @@ void WeaponSystem::update(Node &node)
 		physCmp.setGravityFactor(0);
 		physCmp.setDamping(0);
 
-		auto &animCmp = services.compSys().addComponent<AnimationComponent>(bullet, bulletAnims);
-		animCmp.setAnimation(ANIM_BULLET_MOVING);
+		auto &animCmp = services.compSys().addComponent<AnimationComponent>(bullet);
+		//animCmp.setAnimation(ANIM_BULLET_MOVING);
 		//auto &rndCmp = services.compSys().addComponent<SpriteComponent>(
 		//	bullet, res.texBullet, static_cast<float>(res.texBullet->h),
 		//	static_cast<float>(res.texBullet->h));
-		auto &rndCmp = services.compSys().addComponent<SpriteComponent>(
-			bullet, texBullet, static_cast<float>(32),
-			static_cast<float>(32));
-		rndCmp.setFlipMode(fireDirection.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-		rndCmp.setRotation(static_cast<float>(SDL_rand(360)));
+		//auto &rndCmp = services.compSys().addComponent<SpriteComponent>(
+		//	bullet, texBullet, static_cast<float>(32),
+		//	static_cast<float>(32));
+		//rndCmp.setFlipMode(fireDirection.x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+		//rndCmp.setRotation(static_cast<float>(SDL_rand(360)));
 
 		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
 		collCmp.setCollider(SDL_FRect{

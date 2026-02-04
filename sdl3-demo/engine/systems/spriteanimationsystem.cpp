@@ -16,28 +16,29 @@ void SpriteAnimationSystem::update(Node &node)
 {
 	auto [ac, sc] = getRequiredComponents(node);
 
-	int currentAnimation = ac->getAnimation();
-	if (currentAnimation != AnimationComponent::NO_ANIMATION)
+	ResourceId animId = ac->getAnimationId();
+	if (!animId.isValid())
 	{
-		auto &animations = ac->getAnimations();
-		// check if animation has ended
-		int timeouts = animations[currentAnimation].step(FrameContext::dt());
-		if (!timeouts)
-		{
-			// if not, get frameNumber as usual
-			sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
-		}
-		else
-		{
-			if (ac->getPlaybackMode() == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
-			{
-				ac->setAnimation(AnimationComponent::NO_ANIMATION);
-			}
-			else // continuous play, send out updated frameNumber (wrapped-around back to 0)
-			{
-				sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
-			}
-		}
+		Animation &anim = animations[animId.index()];
+		//auto &animations = ac->getAnimations();
+		//// check if animation has ended
+		//int timeouts = animations[currentAnimation].step(FrameContext::dt());
+		//if (!timeouts)
+		//{
+		//	// if not, get frameNumber as usual
+		//	sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
+		//}
+		//else
+		//{
+		//	if (ac->getPlaybackMode() == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
+		//	{
+		//		ac->setAnimation(AnimationComponent::NO_ANIMATION);
+		//	}
+		//	else // continuous play, send out updated frameNumber (wrapped-around back to 0)
+		//	{
+		//		sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
+		//	}
+		//}
 	}
 }
 
@@ -50,6 +51,13 @@ void SpriteAnimationSystem::onEvent(NodeHandle target, const AnimationPlayEvent 
 	Node &node = services.world().getNode(target);
 	auto [ac, sc] = getRequiredComponents(node);
 
-	ac->setAnimation(event.getAnimationIndex());
+	ac->setTime(0);
+	ac->setAnimation(event.getAnimationId());
 	ac->setPlaybackMode(event.getPlaybackMode());
+}
+
+ResourceId SpriteAnimationSystem::createAnimation(int frameCount, float length)
+{
+	animations.push_back(Animation(frameCount, length));
+	return ResourceId(animations.size() - 1, ResourceId::Type::animation);
 }

@@ -1938,6 +1938,10 @@ ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath)
 	if (!img.isValid())
 	{
 		showError("Error creating texture image");
+		if (pixData)
+		{
+			stbi_image_free(pixData);
+		}
 		return img;
 	}
 

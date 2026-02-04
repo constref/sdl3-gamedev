@@ -39,6 +39,8 @@ class Platformer
 	const int ANIM_ENEMY_DIE = 2;
 	std::vector<Animation> enemyAnims;
 
+	ResourceId animBulletMoving, animBulletHit;
+
 	ResourceId texIdle, texRun, texBrick, texGrass,
 		texGround, texPanel, texSlide, texBg1, texBg2,
 		texBg3, texBg4, texBullet, texBulletHit, texShoot,
@@ -57,7 +59,7 @@ public:
 	Platformer();
 
 	NodeHandle getPlayerHandle() const { return hPlayer; }
-	bool initialize(Services &services, SDLState &state, VulkanRenderSystem &renderSys);
+	bool initialize(Services &services, SDLState &state);
 	void cleanup();
 	void onStart();
 	void update();

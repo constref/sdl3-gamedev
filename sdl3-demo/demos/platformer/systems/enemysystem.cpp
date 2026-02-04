@@ -5,9 +5,8 @@
 #include <resources.h>
 #include "../events.h"
 
-EnemySystem::EnemySystem(Services &services, int animEnemyDeath) : System(services)
+EnemySystem::EnemySystem(Services &services) : System(services)
 {
-	this->animEnemyDeath = animEnemyDeath;
 	services.eventQueue().dispatcher.registerHandler<DeathEvent>(this);
 }
 
@@ -23,7 +22,7 @@ void EnemySystem::onEvent(NodeHandle target, const DeathEvent &event)
 		{
 			const Resources &res = Resources::get();
 			ec->setState(EnemyState::dead);
-			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, animEnemyDeath, res.texEnemyDie);
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, ec->getDeathAnimation(), ec->getDeathTexture());
 		}
 	}
 }

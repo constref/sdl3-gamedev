@@ -57,20 +57,20 @@ public:
 
 class AnimationPlayEvent : public Event<AnimationPlayEvent, FrameStage::Animation>
 {
-	int animationIndex;
-	ResourceId texture;
+	ResourceId animationId;
+	ResourceId textureId;
 	AnimationPlaybackMode mode;
 
 public:
-	AnimationPlayEvent(int animationIndex, ResourceId texture, AnimationPlaybackMode mode = AnimationPlaybackMode::oneShot)
+	AnimationPlayEvent(ResourceId animationId, ResourceId textureId, AnimationPlaybackMode mode = AnimationPlaybackMode::oneShot)
 	{
-		this->animationIndex = animationIndex;
-		this->texture = texture;
+		this->animationId = animationId;
+		this->textureId = textureId;
 		this->mode = mode;
 	}
 
-	int getAnimationIndex() const { return animationIndex; }
-	ResourceId getTexture() const { return texture; }
+	ResourceId getAnimationId() const { return animationId; }
+	ResourceId getTextureId() const { return textureId; }
 	AnimationPlaybackMode getPlaybackMode() const { return mode; }
 };
 

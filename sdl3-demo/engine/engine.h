@@ -19,6 +19,7 @@
 #include <systems/collisionsystem.h>
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
+#include <prototypeinstancer.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -44,10 +45,11 @@ class Engine
 	EventQueue eventQueue;
 	World world;
 	InputState inputState;
+	PrototypeInstancer protoInstancer;
 	Services services;
 
 public:
-	Engine() : services(world, compSys, eventQueue, inputState)
+	Engine() : services(world, compSys, eventQueue, inputState, protoInstancer)
 	{
 		debugMode = false;
 		running = false;
@@ -75,9 +77,9 @@ public:
 			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-			VulkanRenderSystem &renderSys = services.compSys().registerSystem(std::make_unique<VulkanRenderSystem>(state.window, state.width, state.height, services));
+			services.compSys().registerSystem(std::make_unique<VulkanRenderSystem>(state.window, state.width, state.height, services));
 
-			return app.initialize(services, state, renderSys);
+			return app.initialize(services, state);
 		}
 
 		return false;

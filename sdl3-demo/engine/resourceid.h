@@ -8,7 +8,8 @@ public:
 	enum class Type
 	{
 		undefined,
-		texture
+		texture,
+		animation
 	};
 private:
 	unsigned int resourceIndex = UINT_MAX;
@@ -17,7 +18,7 @@ private:
 public:
 
 	ResourceId() = default;
-	ResourceId(unsigned int index, Type type) : resourceIndex(index) {}
+	ResourceId(unsigned int index, Type type) : resourceIndex(index), resourceType(type) {}
 	auto index() const { return resourceIndex; }
 	auto type() const { return resourceType; }
 	bool isValid() const { return index() != UINT_MAX && type() != Type::undefined; }

@@ -76,7 +76,7 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &ev
 	if (node.isLinkedWith(this))
 	{
 		auto [sc] = getRequiredComponents(node);
-		sc->setTexture(event.getTexture());
+		sc->setTexture(event.getTextureId());
 	}
 }
 

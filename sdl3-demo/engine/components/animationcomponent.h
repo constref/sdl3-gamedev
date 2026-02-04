@@ -2,33 +2,31 @@
 
 #include <vector>
 #include <animationplaybackmode.h>
+#include <resourceid.h>
 #include "component.h"
 
 class Animation;
 
 class AnimationComponent : public Component
 {
-	bool oneShot;
 	AnimationPlaybackMode playbackMode;
+	ResourceId currentAnimation;
+	float time;
 
 public:
-	static const int NO_ANIMATION = -1;
-
-	AnimationComponent(Node &owner, const std::vector<Animation> &animation);
+	AnimationComponent(Node &owner);
 	void update() override;
-	int getAnimation() const;
-	void setAnimation(int index);
+	ResourceId getAnimationId() const;
+	void setAnimation(ResourceId animId);
 	AnimationPlaybackMode getPlaybackMode() const { return playbackMode; }
 	void setPlaybackMode(AnimationPlaybackMode mode)
 	{
 		playbackMode = mode;
 	}
-
 	int getFrameNumber() const { return frameNumber; }
-	auto &getAnimations() { return animations; }
+	float getTime() const { return time; }
+	void setTime(float time) { this->time = time; }
 
 private:
-	int currentAnimation = NO_ANIMATION;
-	std::vector<Animation> animations;
 	int frameNumber;
 };

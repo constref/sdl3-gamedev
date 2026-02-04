@@ -6,9 +6,9 @@
 #include <framecontext.h>
 #include <cassert>
 
-AnimationComponent::AnimationComponent(Node &owner, const std::vector<Animation> &animations) : Component(owner, FrameStage::Animation)
+AnimationComponent::AnimationComponent(Node &owner) : Component(owner, FrameStage::Animation)
 {
-	this->animations = animations;
+	this->time = 0;
 	this->frameNumber = 1;
 	this->playbackMode = AnimationPlaybackMode::continuous;
 }
@@ -17,12 +17,12 @@ void AnimationComponent::update()
 {
 }
 
-int AnimationComponent::getAnimation() const
+ResourceId AnimationComponent::getAnimationId() const
 {
 	return currentAnimation;
 }
-void AnimationComponent::setAnimation(int index)
+
+void AnimationComponent::setAnimation(ResourceId animId)
 {
-	assert(index >= -1 && index < (int)animations.size());
-	currentAnimation = index;
+	currentAnimation = animId;
 }

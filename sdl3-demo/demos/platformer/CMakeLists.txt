@@ -34,6 +34,12 @@ set_target_properties(platformer PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 
+# For MSVC, you often need the 'latest' flag specifically
+if(MSVC)
+    target_compile_options(platformer PRIVATE /std:c++latest)
+    target_link_options(platformer PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+endif()
+
 set_target_properties(platformer PROPERTIES
     # This tells VS where the "root" of your source is for this project
     VS_PROJECT_IMPORT_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
