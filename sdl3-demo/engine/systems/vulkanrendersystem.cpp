@@ -76,43 +76,9 @@ bool VulkanRenderSystem::initialize()
 		indices.push_back(i);
 	}
 
-	auto createBuffer = [this](VmaAllocator &vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void *initData)
-	{
-		VkBufferCreateInfo buffInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			.size = byteSize,
-			.usage = usage,
-			.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-		};
-
-		VmaAllocationCreateInfo allocInfo
-		{
-			.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
-			.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
-		};
-
-		Renderer::Buffer newBuff;
-		if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
-		{
-			showError("Error allocating buffer");
-		}
-
-		void *buffPtr = nullptr;
-		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
-		{
-			showError("Unable to map buffer memory");
-		}
-		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
-		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
-		vmaUnmapMemory(vmaAllocator, newBuff.allocation);
-
-		return newBuff;
-	};
-
-	vertexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+	vertexBuffer = createBuffer(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		sizeof(Renderer::Vertex) * vertices.size(), vertices.data());
-	indexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+	indexBuffer = createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		sizeof(uint32_t) * indices.size(), indices.data());
 
 	Renderer::Mesh newMesh;
@@ -530,7 +496,7 @@ void VulkanRenderSystem::update(Node &node)
 	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(sc->getSize().x, sc->getSize().y, 0));
 	glm::mat4 transform = translate * rotation * scale;
-	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(-100, 650);
+	const glm::vec2 camPos = RenderContext::shared().getCameraPosition();
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(-camPos, 0.0f));
 	glm::mat4 mvp = proj * view * transform;
 
@@ -635,6 +601,8 @@ bool VulkanRenderSystem::initializeVulkan()
 		showError("Couldn't create command buffer objects");
 		return false;
 	}
+
+
 
 	return true;
 }
@@ -803,8 +771,8 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures);
 
 	// check if what we need is supported
-	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 || 
-		!supportedFeatures12.timelineSemaphore)
+	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 ||
+		!supportedFeatures12.timelineSemaphore || !supportedFeatures12.descriptorIndexing)
 	{
 		showError("Physical device doesn't meet the feature requirements");
 		return false;
@@ -827,9 +795,10 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
 		.pNext = &features13,
+		.descriptorIndexing = VK_TRUE,
 		.scalarBlockLayout = VK_TRUE,
 		.timelineSemaphore = VK_TRUE,
-		.bufferDeviceAddress = VK_TRUE,
+		.bufferDeviceAddress = VK_TRUE
 	};
 	VkPhysicalDeviceFeatures2 features{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -1360,6 +1329,78 @@ bool VulkanRenderSystem::createCommandBuffers()
 	return true;
 }
 
+bool VulkanRenderSystem::createDescriptorSet()
+{
+	std::array<VkDescriptorSetLayoutBinding, 2> bindings =
+	{ {
+		{
+			.binding = 0,
+			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = 1024,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+		}
+	} };
+
+	VkDescriptorBindingFlags flags =
+		VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+		VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT |
+		VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+
+	VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+		.bindingCount = 1,
+		.pBindingFlags = &flags
+	};
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = &flagsInfo,
+		.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+		.bindingCount = 1,
+		.pBindings = &binding
+	};
+
+	vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, );
+
+	return false;
+}
+
+Renderer::Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData)
+{
+	VkBufferCreateInfo buffInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = byteSize,
+		.usage = usage,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
+
+	VmaAllocationCreateInfo allocInfo
+	{
+		.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
+		.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
+	};
+
+	Renderer::Buffer newBuff;
+	if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
+	{
+		showError("Error allocating buffer");
+	}
+
+	void *buffPtr = nullptr;
+	if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
+	{
+		showError("Unable to map buffer memory");
+	}
+	std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
+	const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
+	vmaUnmapMemory(vmaAllocator, newBuff.allocation);
+
+	return newBuff;
+}
+
 void VulkanRenderSystem::render(float deltaTime)
 {
 	// first check if our swapchain is still valid
@@ -1680,7 +1721,7 @@ void VulkanRenderSystem::loadModel()
 	{
 		for (const Image &image : model.images)
 		{
-			ResourceId imageId = createImage(image.width, image.height, image.component);
+			auto [imageId, img] = createImage(image.width, image.height, image.component);
 			if (!imageId.isValid())
 			{
 				showError("Image could not be loaded");
@@ -1840,7 +1881,7 @@ VkCommandBuffer VulkanRenderSystem::startTransientCommandBuffer()
 	return commandBuffer;
 }
 
-void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuffer)
+void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence)
 {
 	vkEndCommandBuffer(commandBuffer);
 
@@ -1849,15 +1890,18 @@ void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuf
 	{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.commandBufferCount = 1,
-		.pCommandBuffers = &commandBuffer
+		.pCommandBuffers = &commandBuffer,
 	};
 
-	vkQueueSubmit(gfxQueue, 1, &submitInfo, nullptr);
-	vkQueueWaitIdle(gfxQueue);
+	vkQueueSubmit(gfxQueue, 1, &submitInfo, waitFence);
+	if (waitFence)
+	{
+		vkWaitForFences(device, 1, &waitFence, VK_TRUE, UINT64_MAX);
+	}
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-ResourceId VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
+std::tuple<ResourceId, Renderer::Image> VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
 {
 	VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
@@ -1880,7 +1924,7 @@ ResourceId VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint
 	if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &image.handle, &image.allocation, nullptr) != VK_SUCCESS)
 	{
 		showError("Error creating image");
-		return ResourceId{};
+		return std::make_tuple(ResourceId{}, image);
 	}
 
 	VkImageViewCreateInfo imgViewInfo
@@ -1900,12 +1944,12 @@ ResourceId VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint
 	if (vkCreateImageView(device, &imgViewInfo, nullptr, &image.view) != VK_SUCCESS)
 	{
 		showError("Error creating image view");
-		return ResourceId{};
+		return std::make_tuple(ResourceId{}, image);
 	}
 
 	// TODO: this needs to be better
 	images.push_back(image);
-	return ResourceId(images.size() - 1, ResourceId::Type::texture);
+	return std::make_tuple(ResourceId(images.size() - 1, ResourceId::Type::texture), image);
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
@@ -1920,7 +1964,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
 	}
 
 	return VK_FALSE;
-} 
+}
 
 void VulkanRenderSystem::fillImage(VkImage image, unsigned char *pixelData)
 {
@@ -1934,29 +1978,98 @@ ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath)
 	int channels = 0;
 	stbi_uc *pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 
-	auto img = createImage(width, height, channels);
-	if (!img.isValid())
+	auto [resId, img] = createImage(width, height, channels);
+	if (!resId.isValid())
 	{
 		showError("Error creating texture image");
 		if (pixData)
 		{
 			stbi_image_free(pixData);
 		}
-		return img;
+		return resId;
 	}
 
-	auto &texImage = images[img.index()];
+	// fence needed to wait for transfer operations
+	VkFenceCreateInfo fenceCreateInfo{ .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+	VkFence fence = nullptr;
+	if (vkCreateFence(device, &fenceCreateInfo, nullptr, &fence) != VK_SUCCESS)
+	{
+		showError("Unable to create texture transfer fence");
+		return ResourceId{};
+	}
 
-	// create surface, copy copy into texture
-	//SDL_Surface *surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, pixData, width * 4);
-	//SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
-	//textures.push_back(tex);
-	//SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
-
-	// free STB pixel data first, then destroy surface
+	// create a staging buffer for image data CPU side
+	Renderer::Buffer stagingBuffer = createBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, width * height * channels, pixData);
 	stbi_image_free(pixData);
-	//SDL_DestroySurface(surface);
 
-	return img;
+	VkCommandBuffer commandBuffer = startTransientCommandBuffer();
+	if (commandBuffer)
+	{
+		// transition the image as a transfer dst
+		VkImageMemoryBarrier2 barrierTransfer =
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+			.srcAccessMask = 0,
+			.dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.image = img.handle,
+			.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
+		};
+		VkDependencyInfo dependencyTransferInfo = {
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = &barrierTransfer
+		};
+		vkCmdPipelineBarrier2(commandBuffer, &dependencyTransferInfo);
+
+		// copy the image data
+		VkBufferImageCopy2 buffImgCopy
+		{
+			.sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+			.imageSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1 },
+			.imageExtent {.width = static_cast<uint32_t>(width), .height = static_cast<uint32_t>(height), .depth = 1}
+		};
+		VkCopyBufferToImageInfo2 copyBuffToImg
+		{
+			.sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+			.srcBuffer = stagingBuffer.buffer,
+			.dstImage = img.handle,
+			.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.regionCount = 1,
+			.pRegions = &buffImgCopy
+		};
+		vkCmdCopyBufferToImage2(commandBuffer, &copyBuffToImg);
+
+		// transition the image for sampling
+		VkImageMemoryBarrier2 barrierColor =
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			.image = img.handle,
+			.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
+		};
+		VkDependencyInfo dependencyColorInfo = {
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = &barrierColor
+		};
+		vkCmdPipelineBarrier2(commandBuffer, &dependencyColorInfo);
+	}
+	submitTransientCommandBuffer(commandBuffer, fence);
+	vmaDestroyBuffer(vmaAllocator, stagingBuffer.buffer, stagingBuffer.allocation);
+	if (fence)
+	{
+		vkDestroyFence(device, fence, nullptr);
+	}
+
+	return resId;
 }
 

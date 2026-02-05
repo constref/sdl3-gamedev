@@ -103,6 +103,14 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		tilesetTextures.push_back(std::move(tst));
 	}
 
+	// start up gameplay systems
+	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
+	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));
+	services.compSys().registerSystem(std::make_unique<ProjectileSystem>(services));
+	services.compSys().registerSystem(std::make_unique<BasicCameraSystem>(services, glm::vec2(state.logW, state.logH), map->tileWidth, map->tileHeight, map->mapWidth, map->mapHeight));
+	services.compSys().registerSystem(std::make_unique<DamageSystem>(services));
+	services.compSys().registerSystem(std::make_unique<EnemySystem>(services));
+
 	Node &root = world.getNode(hRoot);
 
 	// add the background elements
@@ -155,14 +163,6 @@ bool Platformer::initialize(Services &services, SDLState &state)
 			}
 		}
 	}
-
-	// start up gameplay systems
-	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
-	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));
-	services.compSys().registerSystem(std::make_unique<ProjectileSystem>(services));
-	services.compSys().registerSystem(std::make_unique<BasicCameraSystem>(services, glm::vec2(state.logW, state.logH), map->tileWidth, map->tileHeight, map->mapWidth, map->mapHeight));
-	services.compSys().registerSystem(std::make_unique<DamageSystem>(services));
-	services.compSys().registerSystem(std::make_unique<EnemySystem>(services));
 
 	return true;
 }
@@ -291,7 +291,7 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(enemy);
 			collisionComponent.setCollider(SDL_FRect{
 				.x = 10, .y = 4, .w = 12, .h = 28
-				});
+			});
 			services.compSys().addComponent<HealthComponent>(enemy, 300);
 			auto &animComponent = services.compSys().addComponent<AnimationComponent>(enemy);
 			animComponent.setAnimation(animEnemy);

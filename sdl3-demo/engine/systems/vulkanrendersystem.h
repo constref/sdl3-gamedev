@@ -169,6 +169,9 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	Renderer::Buffer vertexBuffer;
 	Renderer::Buffer indexBuffer;
 
+	VkDescriptorSetLayout descSetLayout = nullptr;
+	VkDescriptorSet descSet = nullptr;
+
 	std::vector<Renderer::Image> images;
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -192,13 +195,15 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	Pipeline createGraphicsPipeline(const Renderer::ShaderSet &shaderSet, const Renderer::PipelineConfig &config) const;
 	bool createSyncResources();
 	bool createCommandBuffers();
+	bool createDescriptorSet();
+	Renderer::Buffer createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData);
 	void render(float deltaTime);
 
 	void loadModel();
 
 	VkCommandBuffer startTransientCommandBuffer();
-	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer);
-	ResourceId createImage(uint32_t width, uint32_t height, uint32_t channels);
+	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);
+	std::tuple<ResourceId, Renderer::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
 	void fillImage(VkImage image, unsigned char *pixelData);
 
 public:
