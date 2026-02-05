@@ -103,6 +103,8 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		tilesetTextures.push_back(std::move(tst));
 	}
 
+	renderSys->updateTextures();
+
 	// start up gameplay systems
 	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
 	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));

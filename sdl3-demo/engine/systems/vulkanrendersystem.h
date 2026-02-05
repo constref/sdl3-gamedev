@@ -171,7 +171,9 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 
 	VkDescriptorSetLayout descSetLayout = nullptr;
 	VkDescriptorSet descSet = nullptr;
+	VkDescriptorPool descPool = nullptr;
 
+	VkSampler nearestSampler = nullptr;
 	std::vector<Renderer::Image> images;
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -204,7 +206,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VkCommandBuffer startTransientCommandBuffer();
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);
 	std::tuple<ResourceId, Renderer::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
-	void fillImage(VkImage image, unsigned char *pixelData);
+	VkSampler createSampler();
 
 public:
 	VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services);
@@ -219,4 +221,5 @@ public:
 	void update(Node &node) override;
 
 	ResourceId loadTexture(const std::string &filepath);
+	void updateTextures();
 };
