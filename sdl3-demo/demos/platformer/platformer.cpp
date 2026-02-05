@@ -39,23 +39,17 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	hRoot = world.createNode();
 
 	SpriteAnimationSystem *animSys = services.compSys().getSystemRegistry().getSystem<SpriteAnimationSystem>();
+	animPlayerIdle = animSys->createAnimation(8, 1.6f);
+	animPlayerRun = animSys->createAnimation(4, 0.5f);
+	animPlayerJump = animSys->createAnimation(4, 1.0f);
+	animPlayerSlide = animSys->createAnimation(1, 1.0f);
+	animPlayerShoot = animSys->createAnimation(4, 0.5f);
+	animPlayerSlideShoot = animSys->createAnimation(4, 0.5f);
 	animBulletMoving = animSys->createAnimation(4, 0.01f);
 	animBulletHit = animSys->createAnimation(4, 0.15f);
-
-	playerAnims.resize(6);
-	playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
-	playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
-	playerAnims[ANIM_PLAYER_JUMP] = Animation(4, 1.0f);
-	playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
-	playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
-	playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
-	//bulletAnims.resize(2);
-	//bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.01f);
-	//bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
-	enemyAnims.resize(3);
-	enemyAnims[ANIM_ENEMY] = Animation(8, 1.0f);
-	enemyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
-	enemyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
+	animEnemy = animSys->createAnimation(8, 1.0f);
+	animEnemyHit = animSys->createAnimation(8, 1.0f);
+	animEnemyDie = animSys->createAnimation(18, 2.0f);
 
 	//MIX_Audio *loadAudio(const std::string &filepath)
 	//{
@@ -104,9 +98,9 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		for (tmx::Tile &tile : tileSet.tiles)
 		{
 			const std::string imagePath = prefix + "tiles/" + std::filesystem::path(tile.image.source).filename().string();
-			//tst.textures.push_back(loadTexture(imagePath));
+			tst.textures.push_back(renderSys->loadTexture(imagePath));
 		}
-		//tilesetTextures.push_back(std::move(tst));
+		tilesetTextures.push_back(std::move(tst));
 	}
 
 	Node &root = world.getNode(hRoot);
@@ -152,10 +146,12 @@ bool Platformer::initialize(Services &services, SDLState &state)
 			case 0:
 			{
 				processLayer(root, services, std::get<tmx::Layer>(layer));
+				break;
 			}
 			case 1:
 			{
 				processLayer(root, services, std::get<tmx::ObjectGroup>(layer));
+				break;
 			}
 		}
 	}
@@ -244,19 +240,19 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			player.setPosition(objPos);
 			auto &inputComponent = services.compSys().addComponent<InputComponent>(player, hPlayer);
 			auto &ctrlComp = services.compSys().addComponent<PlayerControllerComponent>(player);
-			ctrlComp.setIdleAnimation(ANIM_PLAYER_IDLE);
+			ctrlComp.setIdleAnimation(animPlayerIdle);
 			ctrlComp.setIdleTexture(texIdle);
-			ctrlComp.setRunAnimation(ANIM_PLAYER_RUN);
+			ctrlComp.setRunAnimation(animPlayerRun);
 			ctrlComp.setRunTexture(texRun);
-			ctrlComp.setJumpAnimation(ANIM_PLAYER_JUMP);
+			ctrlComp.setJumpAnimation(animPlayerJump);
 			ctrlComp.setJumpTexture(texRun);
-			ctrlComp.setSlideAnimation(ANIM_PLAYER_SLIDE);
+			ctrlComp.setSlideAnimation(animPlayerSlide);
 			ctrlComp.setSlideTexture(texSlide);
-			ctrlComp.setSlideShootAnimation(ANIM_PLAYER_SLIDE_SHOOT);
+			ctrlComp.setSlideShootAnimation(animPlayerSlideShoot);
 			ctrlComp.setSlideShootTexture(texSlideShoot);
-			ctrlComp.setShootAnimation(ANIM_PLAYER_SHOOT);
+			ctrlComp.setShootAnimation(animPlayerShoot);
 			ctrlComp.setShootTexture(texShoot);
-			ctrlComp.setRunShootAnimation(ANIM_PLAYER_RUN);
+			ctrlComp.setRunShootAnimation(animPlayerRun);
 			ctrlComp.setRunShootTexture(texRunShoot);
 
 			// setup the player's weapon
@@ -275,7 +271,7 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 				.x = 11, .y = 6,
 				.w = 10, .h = 26
 				});
-			auto &animComponent = services.compSys().addComponent<AnimationComponent>(player, playerAnims);
+			auto &animComponent = services.compSys().addComponent<AnimationComponent>(player);
 			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(player, texIdle, map->tileWidth, map->tileHeight);
 			services.compSys().addComponent<BasicCameraComponent>(player);
 
@@ -297,10 +293,12 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 				.x = 10, .y = 4, .w = 12, .h = 28
 				});
 			services.compSys().addComponent<HealthComponent>(enemy, 300);
-			auto &animComponent = services.compSys().addComponent<AnimationComponent>(enemy, enemyAnims);
-			animComponent.setAnimation(ANIM_ENEMY);
+			auto &animComponent = services.compSys().addComponent<AnimationComponent>(enemy);
+			animComponent.setAnimation(animEnemy);
 			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(enemy, texEnemy, map->tileWidth, map->tileHeight);
-			services.compSys().addComponent<EnemyComponent>(enemy, EnemyType::creeper);
+			auto &enemyComponent = services.compSys().addComponent<EnemyComponent>(enemy, EnemyType::creeper);
+			enemyComponent.deathAnimation = animEnemyDie;
+			enemyComponent.deathTexture = texEnemyDie;
 
 			layerObject.addChild(enemy);
 		}

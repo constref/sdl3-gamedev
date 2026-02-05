@@ -8,7 +8,6 @@
 
 AnimationComponent::AnimationComponent(Node &owner) : Component(owner, FrameStage::Animation)
 {
-	this->time = 0;
 	this->frameNumber = 1;
 	this->playbackMode = AnimationPlaybackMode::continuous;
 }

@@ -24,22 +24,9 @@ class Platformer
 	NodeHandle hRoot;
 	NodeHandle hPlayer;
 
-	const int ANIM_PLAYER_IDLE = 0;
-	const int ANIM_PLAYER_RUN = 1;
-	const int ANIM_PLAYER_JUMP = 2;
-	const int ANIM_PLAYER_SLIDE = 3;
-	const int ANIM_PLAYER_SHOOT = 4;
-	const int ANIM_PLAYER_SLIDE_SHOOT = 5;
-	std::vector<Animation> playerAnims;
-	const int ANIM_BULLET_MOVING = 0;
-	const int ANIM_BULLET_HIT = 1;
-	std::vector<Animation> bulletAnims;
-	const int ANIM_ENEMY = 0;
-	const int ANIM_ENEMY_HIT = 1;
-	const int ANIM_ENEMY_DIE = 2;
-	std::vector<Animation> enemyAnims;
-
+	ResourceId animPlayerIdle, animPlayerRun, animPlayerJump, animPlayerSlide, animPlayerShoot, animPlayerSlideShoot;
 	ResourceId animBulletMoving, animBulletHit;
+	ResourceId animEnemy, animEnemyHit, animEnemyDie;
 
 	ResourceId texIdle, texRun, texBrick, texGrass,
 		texGround, texPanel, texSlide, texBg1, texBg2,

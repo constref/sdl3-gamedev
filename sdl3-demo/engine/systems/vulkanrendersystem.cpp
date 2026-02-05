@@ -530,7 +530,7 @@ void VulkanRenderSystem::update(Node &node)
 	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(sc->getSize().x, sc->getSize().y, 0));
 	glm::mat4 transform = translate * rotation * scale;
-	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(0, 300);
+	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(-100, 650);
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(-camPos, 0.0f));
 	glm::mat4 mvp = proj * view * transform;
 

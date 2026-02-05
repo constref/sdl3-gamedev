@@ -30,19 +30,19 @@ class PlayerControllerComponent : public Component
 	Timer slideTimer;
 
 	PState currentState;
-	int idleAnimationIndex;
+	ResourceId idleAnimationIndex;
 	ResourceId idleTexture;
-	int runAnimationIndex;
+	ResourceId runAnimationIndex;
 	ResourceId runTexture;
-	int jumpAnimationIndex;
+	ResourceId jumpAnimationIndex;
 	ResourceId jumpTexture;
-	int slideAnimationIndex;
+	ResourceId slideAnimationIndex;
 	ResourceId slideTexture;
-	int slideShootAnimationIndex;
+	ResourceId slideShootAnimationIndex;
 	ResourceId slideShootTexture;
-	int shootAnimationIndex;
+	ResourceId shootAnimationIndex;
 	ResourceId shootTexture;
-	int runShootAnimationIndex;
+	ResourceId runShootAnimationIndex;
 	ResourceId runShootTexture;
 
 public:
@@ -55,32 +55,32 @@ public:
 	PState getCurrentState() const{ return currentState; }
 	void setCurrentState(PState newState) { currentState = newState; }
 	Timer &getSlideTimer() { return slideTimer; }
-	int getIdleAnimation() const { return idleAnimationIndex; }
-	void setIdleAnimation(int index) { idleAnimationIndex = index; }
+	ResourceId getIdleAnimation() const { return idleAnimationIndex; }
+	void setIdleAnimation(ResourceId animId) { idleAnimationIndex = animId; }
 	ResourceId getIdleTexture() const { return idleTexture; }
 	void setIdleTexture(ResourceId tex) { idleTexture = tex; }
-	int  getRunAnimation() const { return runAnimationIndex; }
-	void setRunAnimation(int index) { runAnimationIndex = index; }
+	ResourceId  getRunAnimation() const { return runAnimationIndex; }
+	void setRunAnimation(ResourceId animId) { runAnimationIndex = animId; }
 	ResourceId getRunTexture() const { return runTexture; }
 	void setRunTexture(ResourceId tex) { runTexture = tex; }
-	int getJumpAnimation() const { return jumpAnimationIndex; }
-	void setJumpAnimation(int index) { jumpAnimationIndex = index; }
+	ResourceId getJumpAnimation() const { return jumpAnimationIndex; }
+	void setJumpAnimation(ResourceId animId) { jumpAnimationIndex = animId; }
 	ResourceId getJumpTexture() const { return jumpTexture; }
 	void setJumpTexture(ResourceId tex) { jumpTexture = tex; }
-	int getSlideAnimation() const { return slideAnimationIndex; }
-	void setSlideAnimation(int index) { slideAnimationIndex = index; }
+	ResourceId getSlideAnimation() const { return slideAnimationIndex; }
+	void setSlideAnimation(ResourceId animId) { slideAnimationIndex = animId; }
 	ResourceId getSlideTexture() const { return slideTexture; }
 	void setSlideTexture(ResourceId tex) { slideTexture = tex; }
-	int getSlideShootAnimation() const { return slideShootAnimationIndex; }
-	void setSlideShootAnimation(int index) { slideShootAnimationIndex = index; }
+	ResourceId getSlideShootAnimation() const { return slideShootAnimationIndex; }
+	void setSlideShootAnimation(ResourceId animId) { slideShootAnimationIndex = animId; }
 	ResourceId getSlideShootTexture() const { return slideShootTexture; }
 	void setSlideShootTexture(ResourceId tex) { slideShootTexture = tex; }
-	int getShootAnimation() const { return shootAnimationIndex; }
-	void setShootAnimation(int index) { shootAnimationIndex = index; }
+	ResourceId getShootAnimation() const { return shootAnimationIndex; }
+	void setShootAnimation(ResourceId animId) { shootAnimationIndex = animId; }
 	ResourceId getShootTexture() const { return shootTexture; }
 	void setShootTexture(ResourceId tex) { this->shootTexture = tex; }
-	int getRunShootAnimation() const { return runShootAnimationIndex; }
-	void setRunShootAnimation(int index) { runShootAnimationIndex = index; }
+	ResourceId getRunShootAnimation() const { return runShootAnimationIndex; }
+	void setRunShootAnimation(ResourceId animId) { runShootAnimationIndex = animId; }
 	ResourceId getRunShootTexture() const { return runShootTexture; }
 	void setRunShootTexture(ResourceId tex) { this->runShootTexture = tex; }
 };

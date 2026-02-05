@@ -22,7 +22,7 @@ void EnemySystem::onEvent(NodeHandle target, const DeathEvent &event)
 		{
 			const Resources &res = Resources::get();
 			ec->setState(EnemyState::dead);
-			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, ec->getDeathAnimation(), ec->getDeathTexture());
+			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, ec->deathAnimation, ec->deathTexture);
 		}
 	}
 }

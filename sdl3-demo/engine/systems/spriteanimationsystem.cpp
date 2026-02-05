@@ -17,28 +17,26 @@ void SpriteAnimationSystem::update(Node &node)
 	auto [ac, sc] = getRequiredComponents(node);
 
 	ResourceId animId = ac->getAnimationId();
-	if (!animId.isValid())
+	if (animId.isValid())
 	{
-		Animation &anim = animations[animId.index()];
-		//auto &animations = ac->getAnimations();
-		//// check if animation has ended
-		//int timeouts = animations[currentAnimation].step(FrameContext::dt());
-		//if (!timeouts)
-		//{
-		//	// if not, get frameNumber as usual
-		//	sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
-		//}
-		//else
-		//{
-		//	if (ac->getPlaybackMode() == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
-		//	{
-		//		ac->setAnimation(AnimationComponent::NO_ANIMATION);
-		//	}
-		//	else // continuous play, send out updated frameNumber (wrapped-around back to 0)
-		//	{
-		//		sc->setFrameNumber(animations[currentAnimation].currentFrame() + 1);
-		//	}
-		//}
+		// check if animation has ended
+		int timeouts = ac->animation.step(FrameContext::dt());
+		if (!timeouts)
+		{
+			// if not, get frameNumber as usual
+			sc->setFrameNumber(ac->animation.currentFrame() + 1);
+		}
+		else
+		{
+			if (ac->getPlaybackMode() == AnimationPlaybackMode::oneShot) // one-shot animation, remove the current animation
+			{
+				ac->setAnimation(ResourceId::invalid());
+			}
+			else // continuous play, send out updated frameNumber (wrapped-around back to 0)
+			{
+				sc->setFrameNumber(ac->animation.currentFrame() + 1);
+			}
+		}
 	}
 }
 
@@ -51,7 +49,8 @@ void SpriteAnimationSystem::onEvent(NodeHandle target, const AnimationPlayEvent 
 	Node &node = services.world().getNode(target);
 	auto [ac, sc] = getRequiredComponents(node);
 
-	ac->setTime(0);
+	ac->animation = animations[event.getAnimationId().index()];
+
 	ac->setAnimation(event.getAnimationId());
 	ac->setPlaybackMode(event.getPlaybackMode());
 }

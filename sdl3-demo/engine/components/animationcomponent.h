@@ -3,15 +3,13 @@
 #include <vector>
 #include <animationplaybackmode.h>
 #include <resourceid.h>
-#include "component.h"
-
-class Animation;
+#include <components/component.h>
+#include <animation.h>
 
 class AnimationComponent : public Component
 {
 	AnimationPlaybackMode playbackMode;
 	ResourceId currentAnimation;
-	float time;
 
 public:
 	AnimationComponent(Node &owner);
@@ -24,8 +22,8 @@ public:
 		playbackMode = mode;
 	}
 	int getFrameNumber() const { return frameNumber; }
-	float getTime() const { return time; }
-	void setTime(float time) { this->time = time; }
+
+	Animation animation;
 
 private:
 	int frameNumber;

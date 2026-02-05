@@ -22,4 +22,6 @@ public:
 	auto index() const { return resourceIndex; }
 	auto type() const { return resourceType; }
 	bool isValid() const { return index() != UINT_MAX && type() != Type::undefined; }
+
+	static ResourceId invalid() { return ResourceId{}; }
 };

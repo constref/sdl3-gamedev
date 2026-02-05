@@ -13,11 +13,6 @@ PlayerControllerComponent::PlayerControllerComponent(Node &owner)
 	grounded = false;
 	shooting = false;
 	currentState = PState::idle;
-	idleAnimationIndex = 0;
-	runAnimationIndex = 0;
-	jumpAnimationIndex = 0;
-	slideAnimationIndex = 0;
-	shootAnimationIndex = 0;
 }
 
 void PlayerControllerComponent::onCommand(const UpdateVelocityCommand &msg)

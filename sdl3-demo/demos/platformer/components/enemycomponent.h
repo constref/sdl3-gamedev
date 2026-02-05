@@ -25,8 +25,6 @@ class EnemyComponent : public Component
 	const EnemyType type;
 	Timer damagedTimer;
 	NodeHandle damageSource;
-	int deathAnimation;
-	ResourceId deathTexture;
 
 public:
 	EnemyComponent(Node &owner, EnemyType type);
@@ -35,6 +33,7 @@ public:
 	EnemyState getState() const { return state; }
 	void setState(EnemyState state) { this->state = state; }
 	Timer &getDamagedTimer() { return damagedTimer; }
-	int getDeathAnimation() const { return deathAnimation; }
-	ResourceId getDeathTexture() const { return deathTexture; }
+
+	ResourceId deathAnimation;
+	ResourceId deathTexture;
 };
