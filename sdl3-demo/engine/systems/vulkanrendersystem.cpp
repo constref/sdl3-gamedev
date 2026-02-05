@@ -100,6 +100,11 @@ void VulkanRenderSystem::shutdown()
 	// wait in case resources are in use
 	vkDeviceWaitIdle(device);
 
+	if (descSetLayout)
+	{
+		vkDestroyDescriptorSetLayout(device, descSetLayout, nullptr);
+	}
+
 	// clean up images
 	for (const Renderer::Image &image : images)
 	{
@@ -1358,11 +1363,11 @@ bool VulkanRenderSystem::createDescriptorSet()
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 		.pNext = &flagsInfo,
 		.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-		.bindingCount = 1,
-		.pBindings = &binding
+		.bindingCount = bindings.size(),
+		.pBindings = bindings.data()
 	};
 
-	vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, );
+	vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descSetLayout);
 
 	return false;
 }
@@ -1918,7 +1923,7 @@ std::tuple<ResourceId, Renderer::Image> VulkanRenderSystem::createImage(uint32_t
 		.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
 	};
-	VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_CPU_TO_GPU };
+	VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_AUTO };
 
 	Renderer::Image image{ .width = width, .height = height, .channels = channels };
 	if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &image.handle, &image.allocation, nullptr) != VK_SUCCESS)
