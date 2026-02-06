@@ -29,12 +29,16 @@ layout(push_constant, scalar) uniform DrawConstants
     float padding;
     mat4 mvp;
     uint textureIndex;
+    uint frameNumber;
+    uint frameCount;
+    uint width;
+    uint height;
 } drawConsts;
 
 void main()
 {
     VertexPtr vBuffer = VertexPtr(drawConsts.vertexAddress);
-    vec3 pos = vBuffer.vertices[gl_VertexIndex].position;
+    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(drawConsts.width, drawConsts.height, 1);
     vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
     gl_Position = drawConsts.mvp * vec4(pos, 1.0);
 
@@ -45,5 +49,5 @@ void main()
 		vec3(0.0, 0.0, 1.0)  // Blue
 	);
     outColor = colors[gl_InstanceIndex % 3];
-    outUV = vec2(uv.x / 4, uv.y);
+    outUV = vec2(uv.x, uv.y);
 }

@@ -94,6 +94,10 @@ namespace Renderer
 		float padding = 0;
 		glm::mat4 mvp;
 		uint32_t textureIndex = 0;
+		uint32_t frameNumber = 0;
+		uint32_t frameCount = 1;
+		uint32_t width = 0;
+		uint32_t height = 0;
 	};
 
 	struct ShaderSet

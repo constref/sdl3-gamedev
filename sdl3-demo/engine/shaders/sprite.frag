@@ -18,11 +18,14 @@ layout(push_constant, scalar) uniform DrawConstants
     float padding;
     mat4 mvp;
     uint textureIndex;
+    uint frameNumber;
+    uint frameCount;
+    uint width;
+    uint height;
 } drawConsts;
 
 void main()
 {
 	float brightness = 1.0 - gl_FragCoord.z;
-	//fragColor = vec4(inColor * brightness, 1.0);
 	fragColor = texture(textures[drawConsts.textureIndex], inUV);
 }
