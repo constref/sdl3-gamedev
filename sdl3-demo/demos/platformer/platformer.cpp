@@ -13,6 +13,7 @@
 #include <componentsystems.h>
 #include <prototypeinstancer.h>
 #include <systems/spriteanimationsystem.h>
+#include <messaging/events.h>
 
 #include "systems/playercontrolsystem.h"
 #include "systems/basiccamerasystem.h"
@@ -273,7 +274,8 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 				.x = 11, .y = 6,
 				.w = 10, .h = 26
 				});
-			auto &animComponent = services.compSys().addComponent<AnimationComponent>(player);
+			services.compSys().addComponent<AnimationComponent>(player);
+			services.eventQueue().enqueue<AnimationPlayEvent>(hPlayer, 0, animPlayerIdle, texIdle, AnimationPlaybackMode::continuous);
 			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(player, texIdle, map->tileWidth, map->tileHeight);
 			services.compSys().addComponent<BasicCameraComponent>(player);
 
@@ -296,7 +298,8 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			});
 			services.compSys().addComponent<HealthComponent>(enemy, 300);
 			auto &animComponent = services.compSys().addComponent<AnimationComponent>(enemy);
-			animComponent.setAnimation(animEnemy);
+			services.eventQueue().enqueue<AnimationPlayEvent>(hEnemy, 0, animEnemy, texEnemy, AnimationPlaybackMode::continuous);
+
 			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(enemy, texEnemy, map->tileWidth, map->tileHeight);
 			auto &enemyComponent = services.compSys().addComponent<EnemyComponent>(enemy, EnemyType::creeper);
 			enemyComponent.deathAnimation = animEnemyDie;

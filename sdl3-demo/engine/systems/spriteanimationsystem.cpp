@@ -53,6 +53,7 @@ void SpriteAnimationSystem::onEvent(NodeHandle target, const AnimationPlayEvent 
 
 	ac->setAnimation(event.getAnimationId());
 	ac->setPlaybackMode(event.getPlaybackMode());
+	sc->setFrameCount(ac->animation.getFrameCount());
 }
 
 ResourceId SpriteAnimationSystem::createAnimation(int frameCount, float length)

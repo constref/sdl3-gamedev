@@ -42,12 +42,10 @@ void main()
     vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
     gl_Position = drawConsts.mvp * vec4(pos, 1.0);
 
-	const vec3 colors[3] = vec3[]
-	(
-		vec3(1.0, 0.0, 0.0), // Red
-		vec3(0.0, 1.0, 0.0), // Green
-		vec3(0.0, 0.0, 1.0)  // Blue
-	);
-    outColor = colors[gl_InstanceIndex % 3];
-    outUV = vec2(uv.x, uv.y);
+    outColor = vec3(1, 1, 1);
+
+    float uPortion = 1.0 / drawConsts.frameCount;
+    float uStart = uPortion * (drawConsts.frameNumber - 1); // start position in spritesheet
+
+    outUV = vec2(uStart + uPortion * uv.x, uv.y);
 }

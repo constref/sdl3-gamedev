@@ -12,9 +12,12 @@ SpriteComponent::SpriteComponent(Node &owner, ResourceId texture, float width, f
 	shouldFlash = false;
 	this->width = width;
 	this->height = height;
+	this->spriteSheetWidth = width;
+	this->spriteSheetHeight = height;
 	scale = glm::vec2(1.0f, 1.0f);
 	rotation = 0;
 	frameNumber = 1;
+	frameCount = 1;
 	viewportPos = { 0, 0 };
 	followViewport = 1;
 	flipH = false;

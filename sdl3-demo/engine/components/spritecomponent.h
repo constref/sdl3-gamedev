@@ -13,9 +13,12 @@ protected:
 	bool shouldFlash;
 	float width;
 	float height;
+	float spriteSheetWidth;
+	float spriteSheetHeight;
 	glm::vec2 scale;
 	float rotation;
 	int frameNumber;
+	int frameCount;
 	float followViewport;
 	glm::vec2 viewportPos;
 	glm::vec2 viewportSize;
@@ -32,6 +35,8 @@ public:
 	void setTexture(ResourceId texture) { this->texture = texture; }
 	int getFrameNumber() const { return frameNumber; }
 	void setFrameNumber(int frameNumber) { this->frameNumber = frameNumber; }
+	int getFrameCount() const { return frameCount; }
+	void setFrameCount(int frameCount) { this->frameCount = frameCount; }
 	bool getFlipMode() const { return flipH; }
 	void setFlipMode(bool flipH) { this->flipH = flipH; }
 	Timer &getFlashTimer() { return flashTimer; }

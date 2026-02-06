@@ -17,6 +17,7 @@ public:
 	{
 		return static_cast<int>(timer.getTime() / timer.getLength() * frameCount);
 	}
+	int getFrameCount() const { return frameCount; }
 
 	bool step(float deltaTime)
 	{
