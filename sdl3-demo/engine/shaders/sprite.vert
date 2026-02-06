@@ -9,6 +9,7 @@
 #define M_2PI M_PI * 2
 
 layout (location = 0) out vec3 outColor;
+layout (location = 1) out vec2 outUV;
 
 struct Vertex
 {
@@ -27,12 +28,14 @@ layout(push_constant, scalar) uniform DrawConstants
     float globalTime;
     float padding;
     mat4 mvp;
+    uint textureIndex;
 } drawConsts;
 
 void main()
 {
     VertexPtr vBuffer = VertexPtr(drawConsts.vertexAddress);
     vec3 pos = vBuffer.vertices[gl_VertexIndex].position;
+    vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
     gl_Position = drawConsts.mvp * vec4(pos, 1.0);
 
 	const vec3 colors[3] = vec3[]
@@ -42,4 +45,5 @@ void main()
 		vec3(0.0, 0.0, 1.0)  // Blue
 	);
     outColor = colors[gl_InstanceIndex % 3];
+    outUV = vec2(uv.x / 4, uv.y);
 }

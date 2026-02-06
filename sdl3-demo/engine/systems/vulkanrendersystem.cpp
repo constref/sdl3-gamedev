@@ -63,16 +63,16 @@ bool VulkanRenderSystem::initialize()
 		return false;
 	}
 
-	std::vector < glm::vec3> quad;
+	std::vector<Renderer::Vertex> quad;
 	quad.reserve(4);
-	quad.push_back({ -0.5, -0.5, 0.0 });
-	quad.push_back({ -0.5, 0.5, 0.0 });
-	quad.push_back({ 0.5,  -0.5, 0.0 });
-	quad.push_back({ 0.5,  0.5, 0.0 });
+	quad.push_back(Renderer::Vertex{ .position = { -0.5, -0.5, 0.0 }, .uv = {0, 0} });
+	quad.push_back(Renderer::Vertex{ .position = { -0.5, 0.5, 0.0 }, .uv = {0, 1} });
+	quad.push_back(Renderer::Vertex{ .position = { 0.5,  -0.5, 0.0 }, .uv = {1, 0} });
+	quad.push_back(Renderer::Vertex{ .position = { 0.5,  0.5, 0.0 }, .uv = {1, 1} });
 
 	for (int i = 0; i < quad.size(); ++i)
 	{
-		vertices.push_back(Renderer::Vertex{ .position = quad[i], .uv = glm::vec2(0, 0) });
+		vertices.push_back(quad[i]);
 		indices.push_back(i);
 	}
 
@@ -511,7 +511,7 @@ void VulkanRenderSystem::update(Node& node)
 	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(sc->getSize().x, sc->getSize().y, 0));
 	glm::mat4 transform = translate * rotation * scale;
-	const glm::vec2 camPos = RenderContext::shared().getCameraPosition();
+	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(0, 1000);
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(-camPos, 0.0f));
 	glm::mat4 mvp = proj * view * transform;
 
@@ -521,9 +521,10 @@ void VulkanRenderSystem::update(Node& node)
 	{
 		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
 		.globalTime = static_cast<float>(globalTime),
-		.mvp = mvp
+		.mvp = mvp,
+		.textureIndex = sc->getTexture().index()
 	};
-	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
+	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
 
 	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	for (Renderer::Mesh& mesh : meshes)
@@ -798,7 +799,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 ||
 		!supportedFeatures12.timelineSemaphore || !supportedFeatures12.descriptorIndexing ||
 		!supportedFeatures12.descriptorBindingSampledImageUpdateAfterBind || !supportedFeatures12.descriptorBindingPartiallyBound ||
-		!supportedFeatures.features.samplerAnisotropy)
+		!supportedFeatures12.runtimeDescriptorArray || !supportedFeatures.features.samplerAnisotropy)
 	{
 		showError("Physical device doesn't meet the feature requirements");
 		return false;
@@ -824,6 +825,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		.descriptorIndexing = VK_TRUE,
 		.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE,
 		.descriptorBindingPartiallyBound = VK_TRUE,
+		.runtimeDescriptorArray = VK_TRUE,
 		.scalarBlockLayout = VK_TRUE,
 		.timelineSemaphore = VK_TRUE,
 		.bufferDeviceAddress = VK_TRUE
@@ -1234,7 +1236,7 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet& s
 	// need to define a pipeline layout
 	VkPushConstantRange pushConstRange
 	{
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
 		.size = sizeof(Renderer::DrawConstants)
 	};

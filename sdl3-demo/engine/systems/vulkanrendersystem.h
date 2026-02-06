@@ -93,6 +93,7 @@ namespace Renderer
 		float globalTime = 0;
 		float padding = 0;
 		glm::mat4 mvp;
+		uint32_t textureIndex = 0;
 	};
 
 	struct ShaderSet
