@@ -12,12 +12,15 @@
 #include <systems/system.h>
 #include <components/spritecomponent.h>
 #include <resourceid.h>
+#include <nodehandle.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
 typedef struct VmaAllocator_T *VmaAllocator;
 struct VmaAllocation_T;
 typedef struct VmaAllocation_T *VmaAllocation;
+class AnimationStopEvent;
+class AnimationPlayEvent;
 
 struct Pipeline
 {
@@ -227,4 +230,7 @@ public:
 
 	ResourceId loadTexture(const std::string &filepath);
 	void updateTextures();
+
+	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
+	void onEvent(NodeHandle target, const AnimationStopEvent &event);
 };

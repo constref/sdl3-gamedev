@@ -1,7 +1,7 @@
 #include "vulkanrendersystem.h"
 #include <systems/context/rendercontext.h>
 #include <components/spritecomponent.h>
-#include <print>
+#include <messaging/events.h>
 
 #include <SDL3/SDL.h>
 #define VOLK_IMPLEMENTATION
@@ -49,6 +49,9 @@ VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, int width, int height
 		ownedWindow = false;
 	}
 	initialize();
+
+	services.eventQueue().dispatcher.registerHandler<AnimationPlayEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<AnimationStopEvent>(this);
 }
 
 VulkanRenderSystem::~VulkanRenderSystem()
@@ -2092,6 +2095,17 @@ void VulkanRenderSystem::updateTextures()
 		.pImageInfo = descriptorWrites.data()
 	};
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
+}
+
+void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent& event)
+{
+	Node &node = services.world().getNode(target);
+	auto [sc] = getRequiredComponents(node);
+	sc->setTexture(event.getTextureId());
+}
+
+void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationStopEvent& event)
+{
 }
 
 ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath)
