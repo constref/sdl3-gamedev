@@ -24,6 +24,7 @@ protected:
 	glm::vec2 viewportSize;
 	bool flipH;
 	float paralaxFactor;
+	int layerIndex;
 
 public:
 	SpriteComponent(Node &owner, ResourceId texture, float width, float height);
@@ -37,8 +38,8 @@ public:
 	void setFrameNumber(int frameNumber) { this->frameNumber = frameNumber; }
 	int getFrameCount() const { return frameCount; }
 	void setFrameCount(int frameCount) { this->frameCount = frameCount; }
-	bool getFlipMode() const { return flipH; }
-	void setFlipMode(bool flipH) { this->flipH = flipH; }
+	bool getFlipH() const { return flipH; }
+	void setFlipH(bool flipH) { this->flipH = flipH; }
 	Timer &getFlashTimer() { return flashTimer; }
 
 	glm::vec2 getViewportPos() const { return viewportPos; }
@@ -51,4 +52,6 @@ public:
 	void setRotation(float rotation) { this->rotation = rotation; }
 	float getParalaxFactor() const { return paralaxFactor; }
 	void setParalaxFactor(float factor) { paralaxFactor = factor; }
+	int getLayerIndex() const { return layerIndex; }
+	void setLayerIndex(int index) { this->layerIndex = index; }
 };

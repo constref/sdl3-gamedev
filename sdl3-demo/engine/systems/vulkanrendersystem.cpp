@@ -1,7 +1,6 @@
 #include "vulkanrendersystem.h"
 #include <systems/context/rendercontext.h>
 #include <components/spritecomponent.h>
-#include <messaging/events.h>
 
 #include <SDL3/SDL.h>
 #define VOLK_IMPLEMENTATION
@@ -14,7 +13,6 @@
 #include <iostream>
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE
 #include <tiny_gltf.h>
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <fstream>
@@ -52,6 +50,7 @@ VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, int width, int height
 
 	services.eventQueue().dispatcher.registerHandler<AnimationPlayEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<AnimationStopEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
 }
 
 VulkanRenderSystem::~VulkanRenderSystem()
@@ -68,10 +67,10 @@ bool VulkanRenderSystem::initialize()
 
 	std::vector<Renderer::Vertex> quad;
 	quad.reserve(4);
-	quad.push_back(Renderer::Vertex{ .position = { -0.5, -0.5, 0.0 }, .uv = {0, 0} });
-	quad.push_back(Renderer::Vertex{ .position = { -0.5, 0.5, 0.0 }, .uv = {0, 1} });
-	quad.push_back(Renderer::Vertex{ .position = { 0.5,  -0.5, 0.0 }, .uv = {1, 0} });
-	quad.push_back(Renderer::Vertex{ .position = { 0.5,  0.5, 0.0 }, .uv = {1, 1} });
+	quad.push_back(Renderer::Vertex{ .position = { -0.5, -0.5, 0.0 }, .uv = {0, 1} });
+	quad.push_back(Renderer::Vertex{ .position = { -0.5, 0.5, 0.0 }, .uv = {0, 0} });
+	quad.push_back(Renderer::Vertex{ .position = { 0.5,  -0.5, 0.0 }, .uv = {1, 1} });
+	quad.push_back(Renderer::Vertex{ .position = { 0.5,  0.5, 0.0 }, .uv = {1, 0} });
 
 	for (int i = 0; i < quad.size(); ++i)
 	{
@@ -508,8 +507,8 @@ void VulkanRenderSystem::update(Node &node)
 	float farP = 32.0f;
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
-	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 1.0f, -1.0f);
-	proj[1][1] *= -1;
+	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, -100.0f, 100.0f);
+	proj[1][1] *= -1.0f;
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
 	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
@@ -530,6 +529,8 @@ void VulkanRenderSystem::update(Node &node)
 		.frameCount = static_cast<uint32_t>(sc->getFrameCount()),
 		.width = static_cast<uint32_t>(sc->getSize().x),
 		.height = static_cast<uint32_t>(sc->getSize().y),
+		.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
+		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
 	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
 
@@ -1191,8 +1192,8 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.polygonMode = VK_POLYGON_MODE_FILL,
-		//.cullMode = VK_CULL_MODE_NONE,
-		.cullMode = VK_CULL_MODE_BACK_BIT,
+		.cullMode = VK_CULL_MODE_NONE,
+		//.cullMode = VK_CULL_MODE_BACK_BIT,
 		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.lineWidth = 1.0f
 	};
@@ -1455,8 +1456,8 @@ Renderer::Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size
 
 	VmaAllocationCreateInfo allocInfo
 	{
-		.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
-		.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
+		.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+		.usage = VMA_MEMORY_USAGE_AUTO
 	};
 
 	Renderer::Buffer newBuff;
@@ -2108,12 +2109,26 @@ void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationStopEvent& ev
 {
 }
 
-ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath)
+void VulkanRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
+{
+	if (event.getDirection().x != 0)
+	{
+		Node &node = services.world().getNode(target);
+		if (node.isLinkedWith(this))
+		{
+			auto [sc] = getRequiredComponents(node);
+			sc->setFlipH(event.getDirection().x < 0 ? true : false);
+		}
+	}
+}
+
+ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath, bool flipY)
 {
 	// get pixel data and image info
 	int width = 0;
 	int height = 0;
 	int channels = 0;
+	stbi_set_flip_vertically_on_load(flipY);
 	stbi_uc *pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 
 	auto [resId, img] = createImage(width, height, channels);

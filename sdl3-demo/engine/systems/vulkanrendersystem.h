@@ -7,20 +7,20 @@
 #include <vector>
 #include <array>
 #include <shaderc/shaderc.hpp>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 #include <systems/system.h>
 #include <components/spritecomponent.h>
 #include <resourceid.h>
 #include <nodehandle.h>
+#include <messaging/events.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
 typedef struct VmaAllocator_T *VmaAllocator;
 struct VmaAllocation_T;
 typedef struct VmaAllocation_T *VmaAllocation;
-class AnimationStopEvent;
-class AnimationPlayEvent;
 
 struct Pipeline
 {
@@ -101,6 +101,8 @@ namespace Renderer
 		uint32_t frameCount = 1;
 		uint32_t width = 0;
 		uint32_t height = 0;
+		float flipH = 1.0f;
+		float layerIndex = 0;
 	};
 
 	struct ShaderSet
@@ -228,9 +230,10 @@ public:
 	// Inherited via System
 	void update(Node &node) override;
 
-	ResourceId loadTexture(const std::string &filepath);
+	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);
+	void onEvent(NodeHandle target, const DirectionChangedEvent &event);
 };

@@ -22,10 +22,12 @@ layout(push_constant, scalar) uniform DrawConstants
     uint frameCount;
     uint width;
     uint height;
-} drawConsts;
+    float flipH;
+    float layerIndex;
+} dc;
 
 void main()
 {
 	float brightness = 1.0 - gl_FragCoord.z;
-	fragColor = texture(textures[drawConsts.textureIndex], inUV);
+	fragColor = texture(textures[dc.textureIndex], inUV);
 }

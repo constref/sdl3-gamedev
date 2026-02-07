@@ -33,19 +33,22 @@ layout(push_constant, scalar) uniform DrawConstants
     uint frameCount;
     uint width;
     uint height;
-} drawConsts;
+    float flipH;
+    float layerIndex;
+} dc;
 
 void main()
 {
-    VertexPtr vBuffer = VertexPtr(drawConsts.vertexAddress);
-    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(drawConsts.width, drawConsts.height, 1);
+    VertexPtr vBuffer = VertexPtr(dc.vertexAddress);
+    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(dc.width, dc.height, 1);
     vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
-    gl_Position = drawConsts.mvp * vec4(pos, 1.0);
+    gl_Position = dc.mvp * vec4(pos, dc.layerIndex);
+    gl_Position = dc.mvp * vec4(pos, 1);
 
     outColor = vec3(1, 1, 1);
 
-    float uPortion = 1.0 / drawConsts.frameCount;
-    float uStart = uPortion * (drawConsts.frameNumber - 1); // start position in spritesheet
+    float uPortion = dc.flipH * (1.0 / dc.frameCount);
+    float uStart = uPortion * (dc.frameNumber - 1); // start position in spritesheet
 
     outUV = vec2(uStart + uPortion * uv.x, uv.y);
 }

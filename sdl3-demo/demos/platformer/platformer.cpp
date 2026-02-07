@@ -63,25 +63,25 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	VulkanRenderSystem *renderSys = services.compSys().getSystemRegistry().getSystem<VulkanRenderSystem>();
 
 	const std::string prefix = "data/";
-	texIdle = renderSys->loadTexture(prefix + "idle.png");
-	texRun = renderSys->loadTexture(prefix + "run.png");
-	texSlide = renderSys->loadTexture(prefix + "slide.png");
-	texBrick = renderSys->loadTexture(prefix + "tiles/brick.png");
-	texGrass = renderSys->loadTexture(prefix + "tiles/grass.png");
-	texGround = renderSys->loadTexture(prefix + "tiles/ground.png");
-	texPanel = renderSys->loadTexture(prefix + "tiles/panel.png");
-	texBg1 = renderSys->loadTexture(prefix + "bg/bg_layer1.png");
-	texBg2 = renderSys->loadTexture(prefix + "bg/bg_layer2.png");
-	texBg3 = renderSys->loadTexture(prefix + "bg/bg_layer3.png");
-	texBg4 = renderSys->loadTexture(prefix + "bg/bg_layer4.png");
-	texBullet = renderSys->loadTexture(prefix + "bullet.png");
-	texBulletHit = renderSys->loadTexture(prefix + "bullet_hit.png");
-	texShoot = renderSys->loadTexture(prefix + "shoot.png");
-	texRunShoot = renderSys->loadTexture(prefix + "shoot_run.png");
-	texSlideShoot = renderSys->loadTexture(prefix + "slide_shoot.png");
-	texEnemy = renderSys->loadTexture(prefix + "enemy.png");
-	texEnemyHit = renderSys->loadTexture(prefix + "enemy_hit.png");
-	texEnemyDie = renderSys->loadTexture(prefix + "enemy_die.png");
+	texIdle = renderSys->loadTexture(prefix + "idle.png", true);
+	texRun = renderSys->loadTexture(prefix + "run.png", true);
+	texSlide = renderSys->loadTexture(prefix + "slide.png", true);
+	texBrick = renderSys->loadTexture(prefix + "tiles/brick.png", true);
+	texGrass = renderSys->loadTexture(prefix + "tiles/grass.png", true);
+	texGround = renderSys->loadTexture(prefix + "tiles/ground.png", true);
+	texPanel = renderSys->loadTexture(prefix + "tiles/panel.png", true);
+	texBg1 = renderSys->loadTexture(prefix + "bg/bg_layer1.png", true);
+	texBg2 = renderSys->loadTexture(prefix + "bg/bg_layer2.png", true);
+	texBg3 = renderSys->loadTexture(prefix + "bg/bg_layer3.png", true);
+	texBg4 = renderSys->loadTexture(prefix + "bg/bg_layer4.png", true);
+	texBullet = renderSys->loadTexture(prefix + "bullet.png", true);
+	texBulletHit = renderSys->loadTexture(prefix + "bullet_hit.png", true);
+	texShoot = renderSys->loadTexture(prefix + "shoot.png", true);
+	texRunShoot = renderSys->loadTexture(prefix + "shoot_run.png", true);
+	texSlideShoot = renderSys->loadTexture(prefix + "slide_shoot.png", true);
+	texEnemy = renderSys->loadTexture(prefix + "enemy.png", true);
+	texEnemyHit = renderSys->loadTexture(prefix + "enemy_hit.png", true);
+	texEnemyDie = renderSys->loadTexture(prefix + "enemy_die.png", true);
 
 		//audioShoot = loadAudio(prefix + "audio/shoot.wav");
 		//audioShootHit = loadAudio(prefix + "audio/wall_hit.wav");
@@ -99,7 +99,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		for (tmx::Tile &tile : tileSet.tiles)
 		{
 			const std::string imagePath = prefix + "tiles/" + std::filesystem::path(tile.image.source).filename().string();
-			tst.textures.push_back(renderSys->loadTexture(imagePath));
+			tst.textures.push_back(renderSys->loadTexture(imagePath, true));
 		}
 		tilesetTextures.push_back(std::move(tst));
 	}
@@ -150,18 +150,18 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	root.addChild(bgLayer);
 
 	// load the map layers
-	for (auto &layer : map->layers)
+	for (int idx = 0; auto &layer : map->layers)
 	{
 		switch (layer.index())
 		{
 			case 0:
 			{
-				processLayer(root, services, std::get<tmx::Layer>(layer));
+				processLayer(root, services, std::get<tmx::Layer>(layer), idx++);
 				break;
 			}
 			case 1:
 			{
-				processLayer(root, services, std::get<tmx::ObjectGroup>(layer));
+				processLayer(root, services, std::get<tmx::ObjectGroup>(layer), idx++);
 				break;
 			}
 		}
@@ -181,7 +181,7 @@ auto Platformer::createObject(Services &services, int r, int c)
 		r * map->tileHeight));
 	return newObjHandle;
 }
-void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer) // Tile layers
+void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer, int index) // Tile layers
 {
 	World &world = services.world();
 	NodeHandle hLayer = world.createNode();
@@ -204,8 +204,10 @@ void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer)
 				NodeHandle hTile = createObject(services, r, c);
 				Node &tile = world.getNode(hTile);
 				tile.setTag(1);
-				auto &renderComponent = services.compSys().addComponent<SpriteComponent>(tile, texEnemy, map->tileWidth, map->tileHeight);
-				renderComponent.setTexture(tex);
+				auto &spriteComponent = services.compSys().addComponent<SpriteComponent>(tile, texEnemy, map->tileWidth, map->tileHeight);
+				spriteComponent.setTexture(tex);
+				spriteComponent.setLayerIndex(index);
+
 				// only level tiles get a collision component
 				if (layer.name == "Level")
 				{
@@ -223,7 +225,7 @@ void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer)
 	}
 	root.addChild(layerObject);
 }
-void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup) // Object layers
+void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup, int index) // Object layers
 {
 	World &world = services.world();
 	NodeHandle hLayer = world.createNode();

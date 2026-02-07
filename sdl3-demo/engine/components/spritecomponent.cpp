@@ -23,4 +23,5 @@ SpriteComponent::SpriteComponent(Node &owner, ResourceId texture, float width, f
 	flipH = false;
 	viewportSize = { 0, 0 };
 	paralaxFactor = 0;
+	layerIndex = 0;
 }

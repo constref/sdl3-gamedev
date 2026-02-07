@@ -39,8 +39,8 @@ class Platformer
 	std::unique_ptr<tmx::Map> map;
 	std::vector<TileSetTextures> tilesetTextures;
 	auto createObject(Services &services, int r, int c);
-	void processLayer(Node &root, Services &services, tmx::Layer &layer);
-	void processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup);
+	void processLayer(Node &root, Services &services, tmx::Layer &layer, int index);
+	void processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup, int index);
 
 public:
 	Platformer();

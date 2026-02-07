@@ -82,13 +82,4 @@ void SpriteRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &ev
 
 void SpriteRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
 {
-	if (event.getDirection().x != 0)
-	{
-		Node &node = services.world().getNode(target);
-		if (node.isLinkedWith(this))
-		{
-			auto [sc] = getRequiredComponents(node);
-			sc->setFlipMode(event.getDirection().x < 0 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
-		}
-	}
 }
