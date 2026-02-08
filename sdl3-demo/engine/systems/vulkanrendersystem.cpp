@@ -510,7 +510,7 @@ void VulkanRenderSystem::update(Node &node)
 	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, -100.0f, 100.0f);
 	proj[1][1] *= -1.0f;
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f) + glm::vec3(-16, -16, 0));
+	glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(node.getPosition().x, node.getPosition().y, 0.0f)); //+ glm::vec3(-16, -16, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
 	glm::mat4 transform = translate * rotation * scale;
 	const glm::vec2 camPos = RenderContext::shared().getCameraPosition() + glm::vec2(0, 1000);
@@ -1209,13 +1209,18 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	// attachment info and write mask
 	VkPipelineColorBlendAttachmentState attachState
 	{
-		.blendEnable = VK_FALSE,
-		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-			VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		.blendEnable = VK_TRUE,
+		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+		.alphaBlendOp = VK_BLEND_OP_ADD,
+		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 	};
 	VkPipelineColorBlendStateCreateInfo blendInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.logicOpEnable = VK_FALSE,
 		.attachmentCount = 1,
 		.pAttachments = &attachState
 	};

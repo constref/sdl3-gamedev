@@ -42,8 +42,7 @@ void main()
     VertexPtr vBuffer = VertexPtr(dc.vertexAddress);
     vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(dc.width, dc.height, 1);
     vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
-    gl_Position = dc.mvp * vec4(pos, dc.layerIndex);
-    gl_Position = dc.mvp * vec4(pos, 1);
+    gl_Position = dc.mvp * vec4(pos.x, pos.y, dc.layerIndex, 1);
 
     outColor = vec3(1, 1, 1);
 

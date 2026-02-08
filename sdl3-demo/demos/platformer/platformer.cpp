@@ -278,7 +278,8 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 				});
 			services.compSys().addComponent<AnimationComponent>(player);
 			services.eventQueue().enqueue<AnimationPlayEvent>(hPlayer, 0, animPlayerIdle, texIdle, AnimationPlaybackMode::continuous);
-			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(player, texIdle, map->tileWidth, map->tileHeight);
+			auto &spriteComp = services.compSys().addComponent<SpriteComponent>(player, texIdle, map->tileWidth, map->tileHeight);
+			spriteComp.setLayerIndex(index);
 			services.compSys().addComponent<BasicCameraComponent>(player);
 
 			layerObject.addChild(player);
@@ -302,7 +303,8 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			auto &animComponent = services.compSys().addComponent<AnimationComponent>(enemy);
 			services.eventQueue().enqueue<AnimationPlayEvent>(hEnemy, 0, animEnemy, texEnemy, AnimationPlaybackMode::continuous);
 
-			auto &renderComponent = services.compSys().addComponent<SpriteComponent>(enemy, texEnemy, map->tileWidth, map->tileHeight);
+			auto &spriteComp = services.compSys().addComponent<SpriteComponent>(enemy, texEnemy, map->tileWidth, map->tileHeight);
+			spriteComp.setLayerIndex(index);
 			auto &enemyComponent = services.compSys().addComponent<EnemyComponent>(enemy, EnemyType::creeper);
 			enemyComponent.deathAnimation = animEnemyDie;
 			enemyComponent.deathTexture = texEnemyDie;
