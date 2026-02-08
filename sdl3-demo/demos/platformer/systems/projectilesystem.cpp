@@ -24,7 +24,7 @@ void ProjectileSystem::update(Node &node)
 		float norm = life / maxLife;
 
 		float s = 0.8f + (1.2f - 0.2f) * norm;
-		spriteComp->setScale(glm::vec2(s));
+		spriteComp->setScale(glm::vec3(s));
 	}
 }
 
@@ -38,7 +38,7 @@ void ProjectileSystem::onEvent(NodeHandle target, const CollisionEvent &event)
 		{
 			rc->setHasHit(true);
 			Resources &res = Resources::get();
-			pc->setVelocity(glm::vec2(0));
+			pc->setVelocity(glm::vec3(0));
 
 			//services.eventQueue().enqueue<AnimationPlayEvent>(target, 0,
 			//	res.ANIM_BULLET_HIT, res.texBulletHit, AnimationPlaybackMode::oneShot);

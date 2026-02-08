@@ -16,7 +16,7 @@ Node::Node()
 {
 	handle = NodeHandle(0, 0);
 	parent = NodeHandle(0, 0);
-	position = glm::vec2(0);
+	position = glm::vec3(0);
 	isInitialized = false;
 	tag = 0;
 }

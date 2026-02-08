@@ -17,7 +17,7 @@ void InputSystem::update(Node &node)
 
 void InputSystem::handleDirectionChange(NodeHandle target, InputState &state, InputComponent &inputComp)
 {
-	glm::vec2 direction{ 0 };
+	glm::vec3 direction{ 0 };
 	if (state.isKeyPressed(SDL_SCANCODE_A))
 	{
 		direction.x += -1;

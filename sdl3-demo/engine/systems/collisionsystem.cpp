@@ -7,6 +7,7 @@ enum class Axis : int
 {
 	X = 0,
 	Y = 1,
+	Z = 2
 };
 
 CollisionSystem::CollisionSystem(Services &services) : System(services)
@@ -20,7 +21,7 @@ void CollisionSystem::update(Node &node)
 	auto &prevContacts = cc->getPrevContacts();
 	std::array<bool, 4> contacts = { false }; // left, right, top, bottom
 
-	const auto checkCollisions = [this, &node, &contacts, &prevContacts, pc, cc](glm::vec2 &position, Axis axis) {
+	const auto checkCollisions = [this, &node, &contacts, &prevContacts, pc, cc](glm::vec3 &position, Axis axis) {
 		for (NodeHandle handle : CollisionComponent::collidableNodes)
 		{
 			SDL_FRect rectA{
@@ -41,7 +42,7 @@ void CollisionSystem::update(Node &node)
 					.h = comp->getCollider().h
 				};
 
-				glm::vec2 overlap{ 0 };
+				glm::vec3 overlap{ 0 };
 				if (intersectAABB(rectA, rectB, overlap))
 				{
 					// found intersection, respond accordingly
@@ -54,7 +55,7 @@ void CollisionSystem::update(Node &node)
 							if (!prevContacts[0])
 							{
 								services.eventQueue().enqueue<CollisionEvent>(node.getHandle(), 0,
-									otherOwner.getHandle(), overlap, glm::vec2(-1, 0));
+									otherOwner.getHandle(), overlap, glm::vec3(-1, 0, 0));
 							}
 						}
 						else if (pc->getVelocity().x < 0) // from right
@@ -64,10 +65,10 @@ void CollisionSystem::update(Node &node)
 							if (!prevContacts[1])
 							{
 								services.eventQueue().enqueue<CollisionEvent>(node.getHandle(), 0,
-									otherOwner.getHandle(), overlap, glm::vec2(1, 0));
+									otherOwner.getHandle(), overlap, glm::vec3(1, 0, 0));
 							}
 						}
-						pc->setVelocity(pc->getVelocity() * glm::vec2(0, 1));
+						pc->setVelocity(pc->getVelocity() * glm::vec3(0, 1, 1));
 					}
 					else if (axis == Axis::Y && overlap.y)
 					{
@@ -78,7 +79,7 @@ void CollisionSystem::update(Node &node)
 							if (!prevContacts[2])
 							{
 								services.eventQueue().enqueue<CollisionEvent>(node.getHandle(), 0,
-									otherOwner.getHandle(), overlap, glm::vec2(0, 1));
+									otherOwner.getHandle(), overlap, glm::vec3(0, 1, 0));
 							}
 						}
 						else if (pc->getVelocity().y < 0) // from bottom
@@ -88,21 +89,23 @@ void CollisionSystem::update(Node &node)
 							if (!prevContacts[3])
 							{
 								services.eventQueue().enqueue<CollisionEvent>(node.getHandle(), 0,
-									otherOwner.getHandle(), overlap, glm::vec2(0, -1));
+									otherOwner.getHandle(), overlap, glm::vec3(0, -1, 0));
 							}
 						}
-						pc->setVelocity(pc->getVelocity() * glm::vec2(1, 0));
+						pc->setVelocity(pc->getVelocity() * glm::vec3(1, 0, 1));
 					}
 				}
 			}
 		}
 	};
 
-	glm::vec2 tentativePos = node.getPosition();
+	glm::vec3 tentativePos = node.getPosition();
 	tentativePos.x += pc->getDelta().x;
 	checkCollisions(tentativePos, Axis::X);
 	tentativePos.y += pc->getDelta().y;
 	checkCollisions(tentativePos, Axis::Y);
+	tentativePos.z += pc->getDelta().z;
+	checkCollisions(tentativePos, Axis::Z);
 
 	node.setPosition(tentativePos);
 
@@ -117,7 +120,7 @@ void CollisionSystem::update(Node &node)
 	}
 }
 
-bool CollisionSystem::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
+bool CollisionSystem::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
 {
 	const float minXA = a.x;
 	const float maxXA = a.x + a.w;

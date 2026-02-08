@@ -7,19 +7,19 @@
 
 PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, FrameStage::Physics)
 {
-	direction = { 0, 0 };
-	maxSpeed = { 0, 0 };
-	velocity = { 0, 0 };
-	acceleration = { 0, 0 };
+	direction = { 0, 0, 0 };
+	maxSpeed = { 0, 0, 0 };
+	velocity = { 0, 0, 0 };
+	acceleration = { 0, 0, 0 };
 	grounded = false;
-	netForce = { 0, 0 };
+	netForce = { 0, 0, 0 };
 	dynamic = false;
 	gravityFactor = 1.0f;
 	damping = 10.0f;
-	delta = { 0, 0 };
+	delta = { 0, 0, 0 };
 }
 
-void PhysicsComponent::setVelocity(const glm::vec2 &vel)
+void PhysicsComponent::setVelocity(const glm::vec3 &vel)
 {
 	this->velocity = vel;
 	//owner.sendCommand(UpdateVelocityCommand{ vel });
@@ -32,7 +32,7 @@ void PhysicsComponent::setVelocity(const glm::vec2 &vel)
 //	setVelocity(vel);
 //}
 //
-void PhysicsComponent::addImpulse(const glm::vec2 &impulse)
+void PhysicsComponent::addImpulse(const glm::vec3 &impulse)
 {
 	velocity += impulse;
 }

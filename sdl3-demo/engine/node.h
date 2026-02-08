@@ -21,7 +21,7 @@ class Node
 protected:
 	NodeHandle handle;
 	NodeHandle parent;
-	glm::vec2 position;
+	glm::vec3 position;
 	std::vector<NodeHandle> children;
 	std::vector<ComponentEntry> components;
 	std::array<std::vector<SystemBase *>, static_cast<size_t>(FrameStage::StageCount)> linkedSystems;
@@ -39,8 +39,8 @@ public:
 	virtual ~Node();
 
 	NodeHandle getHandle() const { return handle; }
-	glm::vec2 getPosition() const { return position; }
-	void setPosition(const glm::vec2 position) { this->position = position; }
+	glm::vec3 getPosition() const { return position; }
+	void setPosition(const glm::vec3 position) { this->position = position; }
 	auto &getParent() const { return parent; }
 	auto &getChildren() { return children; }
 	void addChild(Node &child);

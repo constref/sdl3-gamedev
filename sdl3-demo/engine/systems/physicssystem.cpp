@@ -15,20 +15,20 @@ PhysicsSystem::PhysicsSystem(Services &services) : System(services)
 void PhysicsSystem::update(Node &node)
 {
 	auto [pc, cc] = getRequiredComponents(node);
-	glm::vec2 vel = pc->getVelocity();
+	glm::vec3 vel = pc->getVelocity();
 
-	glm::vec2 netForce{ 0 };
+	glm::vec3 netForce{ 0 };
 	netForce += pc->getDirection() * pc->getAcceleration();
 
 	// gravity
-	const glm::vec2 gravity(0, 600);
+	const glm::vec3 gravity(0, 600, 0);
 	netForce += gravity * pc->getGravityFactor();
 
 	// apply forces
 	vel += netForce * FrameContext::dt();
 
 	const float absVelX = std::abs(vel.x);
-	glm::vec2 maxSpeed = pc->getMaxSpeed();
+	glm::vec3 maxSpeed = pc->getMaxSpeed();
 	if (absVelX > maxSpeed.x)
 	{
 		const float xDir = vel.x / absVelX;

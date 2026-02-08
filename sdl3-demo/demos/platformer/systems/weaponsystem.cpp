@@ -42,8 +42,8 @@ void WeaponSystem::update(Node &node)
 		auto &physCmp = services.compSys().addComponent<PhysicsComponent>(bullet);
 		const int yVariation = 40;
 		const float yVelocity = SDL_rand(yVariation) - yVariation / 2.0f;
-		physCmp.setVelocity(glm::vec2(pc->getVelocity().x + 600.0f * fireDirection.x, yVelocity));
-		physCmp.setMaxSpeed(glm::vec2(1000.0f, 100.0f));
+		physCmp.setVelocity(glm::vec3(pc->getVelocity().x + 600.0f * fireDirection.x, yVelocity, 0));
+		physCmp.setMaxSpeed(glm::vec3(1000.0f, 100.0f, 0));
 		//physCmp.setDynamic(true);
 		physCmp.setGravityFactor(0);
 		physCmp.setDamping(0);
@@ -69,9 +69,10 @@ void WeaponSystem::update(Node &node)
 		const float t = (fireDirection.x + 1) / 2.0f; // results in a value of 0..1
 		const float xOffset = left + (right - left) * t; // LERP between left and right based on direction
 
-		bullet.setPosition(glm::vec2(
+		bullet.setPosition(glm::vec3(
 			node.getPosition().x + xOffset,
-			node.getPosition().y + 32 / 2
+			node.getPosition().y + 32 / 2,
+			0
 		));
 
 		node.addChild(bullet);

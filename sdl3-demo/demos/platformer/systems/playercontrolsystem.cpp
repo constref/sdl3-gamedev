@@ -129,8 +129,8 @@ void PlayerControlSystem::onEvent(NodeHandle target, const CollisionEvent &event
 	{
 		auto [ic, pcc, pc] = getRequiredComponents(node);
 
-		float dotY = glm::dot(event.getNormal(), glm::vec2(0, 1));
-		float dotX = glm::dot(event.getNormal(), glm::vec2(1, 0));
+		float dotY = glm::dot(event.getNormal(), glm::vec3(0, 1, 0));
+		float dotX = glm::dot(event.getNormal(), glm::vec3(1, 0, 0));
 
 		if (dotY == 1.0f)
 		{
@@ -169,7 +169,7 @@ void PlayerControlSystem::onEvent(NodeHandle target, const JumpEvent &event)
 			pcc->getCurrentState() != PState::airborneShooting)
 		{
 			transitionState(node, !pcc->isShooting() ? PState::airborne : PState::airborneShooting);
-			pc->addImpulse(glm::vec2(0, -250.0f));
+			pc->addImpulse(glm::vec3(0, -250.0f, 0));
 		}
 	}
 }

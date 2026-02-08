@@ -13,5 +13,5 @@ public:
 	CollisionSystem(Services &services);
 	void update(Node &node) override;
 
-	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
+	bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap);
 };

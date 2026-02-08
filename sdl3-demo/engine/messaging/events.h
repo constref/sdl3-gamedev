@@ -31,28 +31,28 @@ public:
 
 class DirectionChangedEvent : public Event<DirectionChangedEvent, FrameStage::Physics>
 {
-	glm::vec2 direction;
+	glm::vec3 direction;
 public:
-	DirectionChangedEvent(glm::vec2 direction) : direction(direction) {}
+	DirectionChangedEvent(glm::vec3 direction) : direction(direction) {}
 
-	glm::vec2 getDirection() const { return direction; }
+	glm::vec3 getDirection() const { return direction; }
 };
 
 class CollisionEvent : public Event<CollisionEvent, FrameStage::Physics>
 {
 	NodeHandle other;
-	glm::vec2 overlap;
-	glm::vec2 normal;
+	glm::vec3 overlap;
+	glm::vec3 normal;
 
 public:
-	CollisionEvent(NodeHandle other, const glm::vec2 &overlap, const glm::vec2 &normal) :
+	CollisionEvent(NodeHandle other, const glm::vec3 &overlap, const glm::vec3 &normal) :
 		other(other), overlap(overlap), normal(normal)
 	{
 	}
 
 	NodeHandle getOther() const { return other; }
-	const glm::vec2 &getOverlap() const { return overlap; }
-	const glm::vec2 &getNormal() const { return normal; }
+	const glm::vec3 &getOverlap() const { return overlap; }
+	const glm::vec3 &getNormal() const { return normal; }
 };
 
 class AnimationPlayEvent : public Event<AnimationPlayEvent, FrameStage::Animation>

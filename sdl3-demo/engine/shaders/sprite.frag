@@ -29,5 +29,8 @@ layout(push_constant, scalar) uniform DrawConstants
 void main()
 {
 	float brightness = 1.0 - gl_FragCoord.z;
-	fragColor = texture(textures[dc.textureIndex], inUV);
+    vec4 s = texture(textures[dc.textureIndex], inUV);
+    if (s.a < 0.1) discard;
+
+	fragColor = s;
 }

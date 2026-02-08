@@ -1209,7 +1209,7 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	// attachment info and write mask
 	VkPipelineColorBlendAttachmentState attachState
 	{
-		.blendEnable = VK_TRUE,
+		.blendEnable = VK_FALSE,
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
 		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
