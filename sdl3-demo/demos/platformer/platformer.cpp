@@ -124,7 +124,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	Node &bg1 = world.getNode(hBG1);
 	auto &spriteComp1 = services.compSys().addComponent<SpriteComponent>(bg1, texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	spriteComp1.setFollowViewport(false);
-	spriteComp1.setLayerIndex(-3);
+	spriteComp1.setLayerIndex(-13);
 	bgLayer.addChild(bg1);
 
 	NodeHandle hBG4 = world.createNode();
@@ -132,7 +132,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	auto &bg4Sc = services.compSys().addComponent<SpriteComponent>(bg4, texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg4Sc.setFollowViewport(false);
 	bg4Sc.setParalaxFactor(0.05f);
-	bg4Sc.setLayerIndex(-2);
+	bg4Sc.setLayerIndex(-12);
 	bgLayer.addChild(bg4);
 
 	NodeHandle hBG3 = world.createNode();
@@ -140,7 +140,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	auto &bg3Sc = services.compSys().addComponent<SpriteComponent>(bg3, texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg3Sc.setFollowViewport(false);
 	bg3Sc.setParalaxFactor(0.1f);
-	bg3Sc.setLayerIndex(-1);
+	bg3Sc.setLayerIndex(-11);
 	bgLayer.addChild(bg3);
 
 	NodeHandle hBG2 = world.createNode();
@@ -148,24 +148,24 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	auto &bg2Sc = services.compSys().addComponent<SpriteComponent>(bg2, texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg2Sc.setFollowViewport(false);
 	bg2Sc.setParalaxFactor(0.2f);
-	bg2Sc.setLayerIndex(0);
+	bg2Sc.setLayerIndex(-10);
 	bgLayer.addChild(bg2);
 
 	root.addChild(bgLayer);
 
 	// load the map layers
-	for (int idx = 0; auto &layer : map->layers)
+	for (int idx = -map->layers.size(); auto &layer : map->layers)
 	{
 		switch (layer.index())
 		{
 			case 0:
 			{
-				//processLayer(root, services, std::get<tmx::Layer>(layer), idx++);
+				processLayer(root, services, std::get<tmx::Layer>(layer), idx++);
 				break;
 			}
 			case 1:
 			{
-				//processLayer(root, services, std::get<tmx::ObjectGroup>(layer), idx++);
+				processLayer(root, services, std::get<tmx::ObjectGroup>(layer), idx++);
 				break;
 			}
 		}
