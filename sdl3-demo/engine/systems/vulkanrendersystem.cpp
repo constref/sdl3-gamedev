@@ -38,10 +38,12 @@ void VulkanRenderSystem::showError(const std::string &errorMessage) const
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errorMessage.c_str(), window);
 }
 
-VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services) : System(services), window(window)
+VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services) : System(services), window(window)
 {
 	this->width = width;
 	this->height = height;
+	this->logW = logW;
+	this->logH = logH;
 	if (window)
 	{
 		ownedWindow = false;
@@ -386,9 +388,9 @@ void VulkanRenderSystem::beginFrame()
 	// set the viewpot and scissor state
 	VkViewport viewport
 	{
-		.x = 0, .y = static_cast<float>(swapchainHeight),
-		.width = static_cast<float>(swapchainWidth),
-		.height = -static_cast<float>(swapchainHeight),
+		.x = 0, .y = static_cast<float>(logH),
+		.width = static_cast<float>(logW),
+		.height = -static_cast<float>(logH),
 		.minDepth = 0,
 		.maxDepth = 1.0f,
 	};
@@ -508,7 +510,7 @@ void VulkanRenderSystem::update(Node &node)
 
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
-	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 0.0f, 100.0f);
+	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
 	glm::mat4 translate = glm::translate(glm::mat4(1), node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
@@ -1629,23 +1631,23 @@ void VulkanRenderSystem::render(float deltaTime)
 	// begin dynamic rendering
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 	{
-		// set the viewpot and scissor state
-		VkViewport viewport
-		{
-			.x = 0, .y = 0,
-			.width = static_cast<float>(swapchainWidth),
-			.height = static_cast<float>(swapchainHeight),
-			.minDepth = 0,
-			.maxDepth = 1.0f,
-		};
-		vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+		// set the viewport and scissor state
+		//VkViewport viewport
+		//{
+		//	.x = 0, .y = 0,
+		//	.width = static_cast<float>(logW),
+		//	.height = static_cast<float>(logH),
+		//	.minDepth = 0,
+		//	.maxDepth = 1.0f,
+		//};
+		//vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
 
-		VkRect2D scissor
-		{
-			.offset{.x = 0, .y = 0 },
-			.extent{.width = swapchainWidth, .height = swapchainHeight}
-		};
-		vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+		//VkRect2D scissor
+		//{
+		//	.offset{.x = 0, .y = 0 },
+		//	.extent{.width = logW, .height = logH}
+		//};
+		//vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
 
 		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
 

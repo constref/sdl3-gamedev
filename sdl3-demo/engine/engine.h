@@ -77,7 +77,7 @@ public:
 			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-			services.compSys().registerSystem(std::make_unique<VulkanRenderSystem>(state.window, state.width, state.height, services));
+			services.compSys().registerSystem(std::make_unique<VulkanRenderSystem>(state.window, state.width, state.height, state.logW, state.logH, services));
 
 			return app.initialize(services, state);
 		}

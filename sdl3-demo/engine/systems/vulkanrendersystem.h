@@ -127,6 +127,8 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	double globalTime = 0;
 	uint32_t width = 0;
 	uint32_t height = 0;
+	uint32_t logW = 0;
+	uint32_t logH = 0;
 	bool running = false;
 	uint64_t frameCounter = 0;
 	uint64_t timelineValue = MaxFramesInFlight - 1; // subtract 1 to ensure wait-for-ID / frame resource index start at 0 during render, avoids if (frameId < MaxFramesInFlight) check
@@ -219,7 +221,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VkSampler createSampler();
 
 public:
-	VulkanRenderSystem(SDL_Window *window, int width, int height, Services &services);
+	VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services);
 	~VulkanRenderSystem();
 	bool initialize();
 	void shutdown();
