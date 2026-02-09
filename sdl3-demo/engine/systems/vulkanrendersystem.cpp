@@ -388,9 +388,9 @@ void VulkanRenderSystem::beginFrame()
 	// set the viewpot and scissor state
 	VkViewport viewport
 	{
-		.x = 0, .y = static_cast<float>(logH),
-		.width = static_cast<float>(logW),
-		.height = -static_cast<float>(logH),
+		.x = 0, .y = static_cast<float>(swapchainHeight),
+		.width = static_cast<float>(swapchainWidth),
+		.height = -static_cast<float>(swapchainHeight),
 		.minDepth = 0,
 		.maxDepth = 1.0f,
 	};
@@ -510,7 +510,7 @@ void VulkanRenderSystem::update(Node &node)
 
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
-	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
+	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
 	glm::mat4 translate = glm::translate(glm::mat4(1), node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
@@ -1212,7 +1212,7 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	// attachment info and write mask
 	VkPipelineColorBlendAttachmentState attachState
 	{
-		.blendEnable = VK_FALSE,
+		.blendEnable = VK_TRUE,
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
 		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
@@ -2062,6 +2062,40 @@ VkSampler VulkanRenderSystem::createSampler()
 		return nullptr;
 	}
 	return sampler;
+}
+
+void VulkanRenderSystem::transitionImage(VkCommandBuffer commandBuffer, VkImage image,
+	VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
+	VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess,
+	VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+	// transition the image from color attachment to presentation so we can show it
+	VkImageMemoryBarrier2 barrier
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+		.srcStageMask = srcStage,
+		.srcAccessMask = srcAccess,
+		.dstStageMask = dstStage,
+		.dstAccessMask = dstAccess,
+		.oldLayout = oldLayout,
+		.newLayout = newLayout,
+		.image = image,
+		.subresourceRange
+		{
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		}
+	};
+	VkDependencyInfo depInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+		.imageMemoryBarrierCount = 1,
+		.pImageMemoryBarriers = &barrier
+	};
+	vkCmdPipelineBarrier2(commandBuffer, &depInfo);
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(

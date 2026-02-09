@@ -30,7 +30,5 @@ void main()
 {
 	float brightness = 1.0 - gl_FragCoord.z;
     vec4 s = texture(textures[dc.textureIndex], inUV);
-    if (s.a < 0.1) discard;
-
 	fragColor = s;
 }

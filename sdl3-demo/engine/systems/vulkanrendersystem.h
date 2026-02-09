@@ -220,6 +220,11 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	std::tuple<ResourceId, Renderer::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
 	VkSampler createSampler();
 
+	void transitionImage(VkCommandBuffer commandBuffer, VkImage image,
+		VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
+		VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess,
+		VkImageLayout oldLayout, VkImageLayout newLayout);
+
 public:
 	VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services);
 	~VulkanRenderSystem();
