@@ -60,7 +60,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	//	return audio;
 	//}
 
-	VulkanRenderSystem *renderSys = services.compSys().getSystemRegistry().getSystem<VulkanRenderSystem>();
+	vks::VulkanRenderSystem *renderSys = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
 
 	const std::string prefix = "data/";
 	texIdle = renderSys->loadTexture(prefix + "idle.png", true);
@@ -122,14 +122,14 @@ bool Platformer::initialize(Services &services, SDLState &state)
 
 	NodeHandle hBG1 = world.createNode();
 	Node &bg1 = world.getNode(hBG1);
-	auto &spriteComp1 = services.compSys().addComponent<SpriteComponent>(bg1, texBg1, static_cast<float>(state.width), static_cast<float>(state.height));
+	auto &spriteComp1 = services.compSys().addComponent<SpriteComponent>(bg1, texBg1, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	spriteComp1.setFollowViewport(false);
 	spriteComp1.setLayerIndex(-13);
 	bgLayer.addChild(bg1);
 
 	NodeHandle hBG4 = world.createNode();
 	Node &bg4 = world.getNode(hBG4);
-	auto &bg4Sc = services.compSys().addComponent<SpriteComponent>(bg4, texBg4, static_cast<float>(state.width), static_cast<float>(state.height));
+	auto &bg4Sc = services.compSys().addComponent<SpriteComponent>(bg4, texBg4, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg4Sc.setFollowViewport(false);
 	bg4Sc.setParalaxFactor(0.05f);
 	bg4Sc.setLayerIndex(-12);
@@ -137,7 +137,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 
 	NodeHandle hBG3 = world.createNode();
 	Node &bg3 = world.getNode(hBG3);
-	auto &bg3Sc = services.compSys().addComponent<SpriteComponent>(bg3, texBg3, static_cast<float>(state.width), static_cast<float>(state.height));
+	auto &bg3Sc = services.compSys().addComponent<SpriteComponent>(bg3, texBg3, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg3Sc.setFollowViewport(false);
 	bg3Sc.setParalaxFactor(0.1f);
 	bg3Sc.setLayerIndex(-11);
@@ -145,7 +145,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 
 	NodeHandle hBG2 = world.createNode();
 	Node &bg2 = world.getNode(hBG2);
-	auto &bg2Sc = services.compSys().addComponent<SpriteComponent>(bg2, texBg2, static_cast<float>(state.width), static_cast<float>(state.height));
+	auto &bg2Sc = services.compSys().addComponent<SpriteComponent>(bg2, texBg2, static_cast<float>(state.logW), static_cast<float>(state.logH));
 	bg2Sc.setFollowViewport(false);
 	bg2Sc.setParalaxFactor(0.2f);
 	bg2Sc.setLayerIndex(-10);

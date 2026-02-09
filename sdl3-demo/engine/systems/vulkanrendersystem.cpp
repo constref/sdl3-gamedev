@@ -32,6 +32,7 @@ std::string readTextFile(const std::string &filePath)
 	return std::string();
 }
 
+using namespace vks;
 
 void VulkanRenderSystem::showError(const std::string &errorMessage) const
 {
@@ -67,12 +68,12 @@ bool VulkanRenderSystem::initialize()
 		return false;
 	}
 
-	std::vector<Renderer::Vertex> quad;
+	std::vector<Vertex> quad;
 	quad.reserve(4);
-	quad.push_back(Renderer::Vertex{ .position = { -0.5, -0.5, 0.0 }, .uv = {0, 1} });
-	quad.push_back(Renderer::Vertex{ .position = { -0.5, 0.5, 0.0 }, .uv = {0, 0} });
-	quad.push_back(Renderer::Vertex{ .position = { 0.5,  -0.5, 0.0 }, .uv = {1, 1} });
-	quad.push_back(Renderer::Vertex{ .position = { 0.5,  0.5, 0.0 }, .uv = {1, 0} });
+	quad.push_back(Vertex{ .position = { -0.5, -0.5, 0.0 }, .uv = {0, 1} });
+	quad.push_back(Vertex{ .position = { -0.5, 0.5, 0.0 }, .uv = {0, 0} });
+	quad.push_back(Vertex{ .position = { 0.5,  -0.5, 0.0 }, .uv = {1, 1} });
+	quad.push_back(Vertex{ .position = { 0.5,  0.5, 0.0 }, .uv = {1, 0} });
 
 	for (int i = 0; i < quad.size(); ++i)
 	{
@@ -81,12 +82,12 @@ bool VulkanRenderSystem::initialize()
 	}
 
 	vertexBuffer = createBuffer(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		sizeof(Renderer::Vertex) * vertices.size(), vertices.data());
+		sizeof(Vertex) * vertices.size(), vertices.data());
 	indexBuffer = createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		sizeof(uint32_t) * indices.size(), indices.data());
 
-	Renderer::Mesh newMesh;
-	Renderer::SubMesh sm;
+	Mesh newMesh;
+	SubMesh sm;
 	sm.vertexStart = 0;
 	sm.vertexCount = 4;
 	sm.indexCount = 4;
@@ -119,7 +120,7 @@ void VulkanRenderSystem::shutdown()
 	}
 
 	// clean up images
-	for (const Renderer::Image &image : images)
+	for (const Image &image : images)
 	{
 		vmaDestroyImage(vmaAllocator, image.handle, image.allocation);
 		vkDestroyImageView(device, image.view, nullptr);
@@ -142,6 +143,24 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroySemaphore(device, res.imageAcquiredSemaphore, nullptr);
 		vkDestroyCommandPool(device, res.commandPool, nullptr); // destroys buffers implicitly
+
+		// cleanup internal render targets
+		if (res.renderTarget.view)
+		{
+			vkDestroyImageView(device, res.renderTarget.view, nullptr);
+		}
+		if (res.renderTarget.handle)
+		{
+			vmaDestroyImage(vmaAllocator, res.renderTarget.handle, res.renderTarget.allocation);
+		}
+	}
+
+	// destroy the depth buffer along with the swapchain
+	if (depthImageView)
+	{
+		vkDestroyImageView(device, depthImageView, nullptr);
+		vmaDestroyImage(vmaAllocator, depthImage, depthImageAllocation);
+		depthImageView = nullptr;
 	}
 
 	// pipeline cleanup
@@ -211,36 +230,6 @@ void VulkanRenderSystem::shutdown()
 	}
 }
 
-void VulkanRenderSystem::run()
-{
-	running = true;
-	prevTime = SDL_GetTicks();
-	while (running)
-	{
-		nowTime = SDL_GetTicks();
-		float deltaTime = (nowTime - prevTime) / 1000.0f;
-		prevTime = nowTime;
-		globalTime += deltaTime;
-
-		SDL_Event event{ 0 };
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_EVENT_QUIT)
-			{
-				running = false;
-				break;
-			}
-			else if (event.type == SDL_EVENT_WINDOW_RESIZED)
-			{
-				width = event.window.data1;
-				height = event.window.data2;
-				break;
-			}
-		}
-		render(deltaTime);
-	}
-}
-
 void VulkanRenderSystem::beginFrame()
 {
 	// first check if our swapchain is still valid
@@ -275,24 +264,6 @@ void VulkanRenderSystem::beginFrame()
 	FrameResources &res = frameResources[frameResIndex];
 	vkResetCommandPool(device, res.commandPool, 0); // resets all buffers
 
-	// get the resources for this frame
-	VkSemaphore imageAcquireSemaphore = frameResources[frameResIndex].imageAcquiredSemaphore;
-
-	// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
-	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
-	// handle resize and out-of-date images, may need swapchain recreate
-
-	if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		requireSwapchainRecreate = true;
-		return;
-	}
-	else if (acquireResult == VK_SUBOPTIMAL_KHR)
-	{
-		// can render this frame, recreate next time around
-		requireSwapchainRecreate = true;
-	}
-
 	// begin recording commands
 	VkCommandBufferBeginInfo cmdBeginInfo
 	{
@@ -305,7 +276,7 @@ void VulkanRenderSystem::beginFrame()
 	std::array<Barrier, 2> layoutBarriers
 	{
 		Barrier {
-			.image = swapchainImages[imageIndex],
+			.image = res.renderTarget.handle,
 			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 			.srcAccessMask = 0,
 			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -330,7 +301,7 @@ void VulkanRenderSystem::beginFrame()
 	VkRenderingAttachmentInfo colorAttachInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.imageView = swapchainImageViews[imageIndex],
+		.imageView = res.renderTarget.view,
 		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the image
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // keep data for presentation
@@ -351,7 +322,7 @@ void VulkanRenderSystem::beginFrame()
 		.renderArea
 		{
 			.offset{.x = 0, .y = 0},
-			.extent{.width = swapchainWidth, .height = swapchainHeight}
+			.extent{.width = logW, .height = logH}
 		},
 		.layerCount = 1,
 		.colorAttachmentCount = 1,
@@ -365,9 +336,9 @@ void VulkanRenderSystem::beginFrame()
 	// set the viewpot and scissor state
 	VkViewport viewport
 	{
-		.x = 0, .y = static_cast<float>(swapchainHeight),
-		.width = static_cast<float>(swapchainWidth),
-		.height = -static_cast<float>(swapchainHeight),
+		.x = 0, .y = static_cast<float>(logH),
+		.width = static_cast<float>(logW),
+		.height = -static_cast<float>(logH),
 		.minDepth = 0,
 		.maxDepth = 1.0f,
 	};
@@ -376,7 +347,7 @@ void VulkanRenderSystem::beginFrame()
 	VkRect2D scissor
 	{
 		.offset{.x = 0, .y = 0 },
-		.extent{.width = swapchainWidth, .height = swapchainHeight}
+		.extent{.width = logW, .height = logH}
 	};
 	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
 }
@@ -384,18 +355,88 @@ void VulkanRenderSystem::beginFrame()
 void VulkanRenderSystem::endFrame()
 {
 	FrameResources &res = frameResources[frameResIndex];
+	// end internal texture pass
 	vkCmdEndRendering(res.commandBuffer);
 
-	// transition the image from color attachment to presentation so we can show it
+	// start the swapchain render pass
+	VkSemaphore imageAcquireSemaphore = res.imageAcquiredSemaphore;
+	// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
+	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
+	// handle resize and out-of-date images, may need swapchain recreate
+
+	if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		requireSwapchainRecreate = true;
+		return;
+	}
+	else if (acquireResult == VK_SUBOPTIMAL_KHR)
+	{
+		// can render this frame, recreate next time around
+		requireSwapchainRecreate = true;
+	}
+
+	// transition the internal render target for blitting onto the swapchain
+	std::array<Barrier, 2> rtReadTransition
+	{
+		Barrier {
+			.image = res.renderTarget.handle,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_BLIT_BIT,
+			.dstAccessMask = VK_ACCESS_2_TRANSFER_READ_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+		},
+		{
+			.image = swapchainImages[imageIndex],
+			.srcStageMask = VK_PIPELINE_STAGE_2_NONE,
+			.srcAccessMask = 0,
+			.dstStageMask = VK_PIPELINE_STAGE_2_BLIT_BIT,
+			.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		}
+	};
+	transitionImages(res.commandBuffer, rtReadTransition);
+
+	const int32_t scale = std::min(swapchainWidth / logW, swapchainHeight / logH);
+	const int32_t xScaled = logW * scale;
+	const int32_t yScaled = logH * scale;
+	const int32_t xOffset = (swapchainWidth - xScaled) / 2;
+	const int32_t yOffset = (swapchainHeight - yScaled) / 2;
+
+	// blit the internal texture onto the swapchain
+	VkImageBlit2 blitRegion
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2,
+		.srcSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
+		.srcOffsets = {{.x = 0, .y = 0, .z = 0}, {.x = static_cast<int32_t>(logW), .y = static_cast<int32_t>(logH), .z = 1} },
+		.dstSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
+		.dstOffsets = {{.x = 0, .y = 0, .z = 0}, {.x = int32_t(swapchainWidth), .y = int32_t(swapchainHeight), .z = 1}}
+	};
+	VkBlitImageInfo2 blitInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2,
+		.srcImage = res.renderTarget.handle,
+		.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		.dstImage = swapchainImages[imageIndex],
+		.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.regionCount = 1,
+		.pRegions = &blitRegion,
+		.filter = VK_FILTER_NEAREST,
+	};
+	vkCmdBlitImage2(res.commandBuffer, &blitInfo);
+
+	// transition the swapchain image from blit DST to presentation
 	std::array<Barrier, 1> barriers
 	{
 		Barrier {
 			.image = swapchainImages[imageIndex],
-			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			.srcStageMask = VK_PIPELINE_STAGE_2_BLIT_BIT,
+			.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
 			.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
 			.dstAccessMask = 0,
-			.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		}
 	};
@@ -468,24 +509,24 @@ void VulkanRenderSystem::update(Node &node)
 	vkCmdBindDescriptorSets(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.layout, 0, 1, &descSet, 0, nullptr);
 
 	constexpr float fov = glm::radians(45.0);
-	float aspect = static_cast<float>(width) / static_cast<float>(height);
+	float aspect = static_cast<float>(logW) / static_cast<float>(logH);
 	float nearP = 0.1f;
 	float farP = 32.0f;
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
-	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 0.0f, 100.0f);
+	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
 	glm::mat4 translate = glm::translate(glm::mat4(1), node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
 	glm::mat4 transform = translate * rotation * scale;
-	//glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
-	glm::vec3 camPos(0, 0, 0);
+	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
+	//glm::vec3 camPos(0, 0, 0);
 	const glm::mat4 view = glm::translate(glm::mat4(1), -camPos);
 	glm::mat4 mvp = proj * view * transform;
 
 	// BDA Send Device Pointer
 	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
-	Renderer::DrawConstants pushConsts
+	DrawConstants pushConsts
 	{
 		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
 		.globalTime = static_cast<float>(globalTime),
@@ -498,12 +539,12 @@ void VulkanRenderSystem::update(Node &node)
 		.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
 		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
-	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
+	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DrawConstants), &pushConsts);
 
 	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-	for (Renderer::Mesh &mesh : meshes)
+	for (Mesh &mesh : meshes)
 	{
-		for (Renderer::SubMesh &sub : mesh.subMeshes)
+		for (SubMesh &sub : mesh.subMeshes)
 		{
 			vkCmdDrawIndexed(res.commandBuffer, sub.indexCount, 1, sub.indexStart, sub.vertexStart, 0);
 		}
@@ -554,13 +595,15 @@ bool VulkanRenderSystem::initializeVulkan()
 		return false;
 	}
 
-	Renderer::ShaderSet *shaderRegular = createShaders("shader");
+	createInternalTargets();
+
+	ShaderSet *shaderRegular = createShaders("shader");
 	if (!shaderRegular)
 	{
 		showError("Error creating shader modules");
 		return false;
 	}
-	Renderer::ShaderSet *shaderSprite = createShaders("sprite");
+	ShaderSet *shaderSprite = createShaders("sprite");
 	if (!shaderSprite)
 	{
 		showError("Error creating shader modules");
@@ -572,13 +615,13 @@ bool VulkanRenderSystem::initializeVulkan()
 		return false;
 	}
 
-	Renderer::PipelineConfig pc1{};
+	PipelineConfig pc1{};
 	if (pipeline = createGraphicsPipeline(*shaderRegular, pc1); !pipeline.handle)
 	{
 		showError("Unable to initialize the graphics pipeline");
 		return false;
 	}
-	Renderer::PipelineConfig pc2{ .topology = Renderer::Topology::triangle_strip };
+	PipelineConfig pc2{ .topology = Topology::triangle_strip };
 	if (spritePipeline = createGraphicsPipeline(*shaderSprite, pc2); !spritePipeline.handle)
 	{
 		showError("Unable to initialize the graphics pipeline");
@@ -905,7 +948,7 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 		.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR,
 		.imageExtent{.width = swapchainWidth, .height = swapchainHeight },
 		.imageArrayLayers = 1,
-		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 		.preTransform = surfaceCaps.currentTransform,
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = VK_PRESENT_MODE_FIFO_KHR
@@ -962,46 +1005,6 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 		}
 	}
 
-	// create depth image
-	VkImageCreateInfo depthCreateInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-		.imageType = VK_IMAGE_TYPE_2D,
-		.format = depthFormat,
-		.extent{.width = swapchainWidth, .height = swapchainHeight, .depth = 1 },
-		.mipLevels = 1,
-		.arrayLayers = 1,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.tiling = VK_IMAGE_TILING_OPTIMAL,
-		.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-	};
-
-	VmaAllocationCreateInfo allocInfo
-	{
-		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO
-	};
-	if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
-	{
-		showError("Error allocating depth image");
-		return false;
-	}
-
-	VkImageViewCreateInfo depthImgViewInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-		.image = depthImage,
-		.viewType = VK_IMAGE_VIEW_TYPE_2D,
-		.format = depthFormat,
-		.subresourceRange{.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT, .levelCount = 1, .layerCount = 1}
-	};
-	if (vkCreateImageView(device, &depthImgViewInfo, nullptr, &depthImageView) != VK_SUCCESS)
-	{
-		showError("Error creating depth image view");
-		return false;
-	}
-
 	return true;
 }
 
@@ -1024,14 +1027,6 @@ void VulkanRenderSystem::destroySwapchain()
 	{
 		vkDestroySwapchainKHR(device, swapchain, nullptr);
 		swapchain = nullptr;
-	}
-
-	// destroy the depth buffer along with the swapchain
-	if (depthImageView)
-	{
-		vkDestroyImageView(device, depthImageView, nullptr);
-		vmaDestroyImage(vmaAllocator, depthImage, depthImageAllocation);
-		depthImageView = nullptr;
 	}
 }
 
@@ -1079,13 +1074,13 @@ VkShaderModule VulkanRenderSystem::createShaderModule(const std::string &fileNam
 	return shaderModule;
 }
 
-Renderer::ShaderSet *VulkanRenderSystem::createShaders(const std::string &shaderName)
+ShaderSet *VulkanRenderSystem::createShaders(const std::string &shaderName)
 {
-	auto shaderSet = std::make_unique<Renderer::ShaderSet>();
+	auto shaderSet = std::make_unique<ShaderSet>();
 	// create the shader modules that we'll need for the graphics pipeline
 	shaderSet->vert = createShaderModule(std::format("{}.vert", shaderName), shaderc_vertex_shader);
 	shaderSet->frag = createShaderModule(std::format("{}.frag", shaderName), shaderc_fragment_shader);
-	Renderer::ShaderSet *result = shaderSet.get();
+	ShaderSet *result = shaderSet.get();
 	shaders.push_back(std::move(shaderSet));
 
 	if (result->vert == nullptr || result->frag == nullptr)
@@ -1095,7 +1090,7 @@ Renderer::ShaderSet *VulkanRenderSystem::createShaders(const std::string &shader
 	return result;
 }
 
-Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &shaderSet, const Renderer::PipelineConfig &config) const
+Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet &shaderSet, const PipelineConfig &config) const
 {
 	// configure the shader stages struct
 	const char *entryPoint = "main";
@@ -1217,7 +1212,7 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const Renderer::ShaderSet &s
 	{
 		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
-		.size = sizeof(Renderer::DrawConstants)
+		.size = sizeof(DrawConstants)
 	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo
@@ -1415,7 +1410,7 @@ bool VulkanRenderSystem::createDescriptorSet()
 	return true;
 }
 
-Renderer::Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData)
+Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData)
 {
 	VkBufferCreateInfo buffInfo
 	{
@@ -1431,7 +1426,7 @@ Renderer::Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size
 		.usage = VMA_MEMORY_USAGE_AUTO
 	};
 
-	Renderer::Buffer newBuff;
+	Buffer newBuff;
 	if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
 	{
 		showError("Error allocating buffer");
@@ -1449,289 +1444,93 @@ Renderer::Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size
 	return newBuff;
 }
 
-void VulkanRenderSystem::render(float deltaTime)
+bool vks::VulkanRenderSystem::createInternalTargets()
 {
-	// first check if our swapchain is still valid
-	if (requireSwapchainRecreate)
+	for (auto &res : frameResources)
 	{
-		vkDeviceWaitIdle(device);
-		destroySwapchain();
-		if (!createSwapchain(width, height))
+		VkImageCreateInfo imageInfo
 		{
-			showError("Unable to recreate the swapchain");
-			running = false;
-			return;
+			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+			.imageType = VK_IMAGE_TYPE_2D,
+			.format = swapchainFormat,
+			.extent {.width = logW, .height = logH, .depth = 1},
+			.mipLevels = 1,
+			.arrayLayers = 1,
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.tiling = VK_IMAGE_TILING_OPTIMAL,
+			.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+		};
+		VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_AUTO };
+
+		if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &res.renderTarget.handle, &res.renderTarget.allocation, nullptr) != VK_SUCCESS)
+		{
+			showError("Error internal render target image");
+			return false;
 		}
-		requireSwapchainRecreate = false;
-	}
 
-	const uint32_t frameResIndex = frameCounter++ % MaxFramesInFlight;
-	// wait for frame using this frame's resources to complete
-	uint64_t frameId = ++timelineValue; // this is our frame "ID", and what we're using to signal the end of this frame later
-	uint64_t waitForId = frameId - MaxFramesInFlight; // frame N and frame N - MaxInFlight share resources (3 - 2 = 1 -- frame 3 and 1 share resources)
-
-	VkSemaphoreWaitInfo waitInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
-		.semaphoreCount = 1,
-		.pSemaphores = &timelineSemaphore,
-		.pValues = &waitForId
-	};
-	vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
-
-	// now its safe to start recording commands
-	FrameResources &res = frameResources[frameResIndex];
-	vkResetCommandPool(device, res.commandPool, 0); // resets all buffers
-
-	// get the resources for this frame
-	VkSemaphore imageAcquireSemaphore = frameResources[frameResIndex].imageAcquiredSemaphore;
-
-	// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
-	uint32_t imageIndex = 0;
-	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
-	// handle resize and out-of-date images, may need swapchain recreate
-
-	if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		requireSwapchainRecreate = true;
-		return;
-	}
-	else if (acquireResult == VK_SUBOPTIMAL_KHR)
-	{
-		// can render this frame, recreate next time around
-		requireSwapchainRecreate = true;
-	}
-
-	// begin recording commands
-	VkCommandBufferBeginInfo cmdBeginInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-	};
-	vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
-
-	// transition the color and depth images
-	std::vector<VkImageMemoryBarrier2> layoutBarriers
-	{
+		VkImageViewCreateInfo imgViewInfo
 		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = 0,
-			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			.image = swapchainImages[imageIndex],
+			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.image = res.renderTarget.handle,
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = swapchainFormat,
 			.subresourceRange
 			{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0,
 				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
+				.layerCount = 1
 			}
-		},
-		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
-			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
-			.dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			.image = depthImage,
-			.subresourceRange
-			{
-				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			}
-		}
-	};
-	VkDependencyInfo depInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-		.imageMemoryBarrierCount = static_cast<uint32_t>(layoutBarriers.size()),
-		.pImageMemoryBarriers = layoutBarriers.data()
-	};
-	vkCmdPipelineBarrier2(res.commandBuffer, &depInfo);
-
-	// setup the attachments (color and depth) and begin rendering (dynamic rendering)
-	VkRenderingAttachmentInfo colorAttachInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.imageView = swapchainImageViews[imageIndex],
-		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the image
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // keep data for presentation
-		.clearValue{.color{0.0f, 0.0f, 0.0f, 1}}
-	};
-	VkRenderingAttachmentInfo depthAttachInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.imageView = depthImageView,
-		.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the depth data
-		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, // don't care after rendering
-		.clearValue{.depthStencil{1.0f, 0}}
-	};
-	VkRenderingInfo renderingInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-		.renderArea
-		{
-			.offset{.x = 0, .y = 0},
-			.extent{.width = swapchainWidth, .height = swapchainHeight}
-		},
-		.layerCount = 1,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &colorAttachInfo,
-		.pDepthAttachment = &depthAttachInfo
-	};
-
-	// begin dynamic rendering
-	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
-	{
-		// set the viewport and scissor state
-		//VkViewport viewport
-		//{
-		//	.x = 0, .y = 0,
-		//	.width = static_cast<float>(logW),
-		//	.height = static_cast<float>(logH),
-		//	.minDepth = 0,
-		//	.maxDepth = 1.0f,
-		//};
-		//vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
-
-		//VkRect2D scissor
-		//{
-		//	.offset{.x = 0, .y = 0 },
-		//	.extent{.width = logW, .height = logH}
-		//};
-		//vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
-
-		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
-
-		constexpr float fov = glm::radians(45.0);
-		float aspect = static_cast<float>(width) / static_cast<float>(height);
-		float nearP = 0.1f;
-		float farP = 32.0f;
-
-		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
-		proj[1][1] *= -1;
-		glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-		glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(0, -0.4, -1));
-		glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f, 1.0f, 1.0f));
-		glm::mat4 transform = translate * rotation * scale;
-
-		// BDA Send Device Pointer
-		VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
-		Renderer::DrawConstants pushConsts
-		{
-			.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
-			.globalTime = static_cast<float>(globalTime),
-			.mvp = proj * transform
 		};
-		vkCmdPushConstants(res.commandBuffer, pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Renderer::DrawConstants), &pushConsts);
 
-		vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-		for (Renderer::Mesh &mesh : meshes)
+		if (vkCreateImageView(device, &imgViewInfo, nullptr, &res.renderTarget.view) != VK_SUCCESS)
 		{
-			for (Renderer::SubMesh &sub : mesh.subMeshes)
-			{
-				vkCmdDrawIndexed(res.commandBuffer, sub.indexCount, 1, sub.indexStart, sub.vertexStart, 0);
-			}
+			showError("Error creating render target image view");
+			return false;
 		}
 	}
-	// end dynamic rendering
-	vkCmdEndRendering(res.commandBuffer);
 
-	// transition the image from color attachment to presentation so we can show it
-	VkImageMemoryBarrier2 presentLayoutBarrier
+	// create depth image
+	VkImageCreateInfo depthCreateInfo
 	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-		.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-		.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-		.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-		.dstAccessMask = 0,
-		.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		.image = swapchainImages[imageIndex],
-		.subresourceRange
-		{
-			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1,
-		}
+		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		.imageType = VK_IMAGE_TYPE_2D,
+		.format = depthFormat,
+		.extent{.width = logW, .height = logH, .depth = 1 },
+		.mipLevels = 1,
+		.arrayLayers = 1,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.tiling = VK_IMAGE_TILING_OPTIMAL,
+		.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
 	};
-	VkDependencyInfo presentDepInfo
+
+	VmaAllocationCreateInfo allocInfo
 	{
-		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &presentLayoutBarrier
+		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+		.usage = VMA_MEMORY_USAGE_AUTO
 	};
-	vkCmdPipelineBarrier2(res.commandBuffer, &presentDepInfo);
-
-	vkEndCommandBuffer(res.commandBuffer);
-
-	// signal that the image can be presented
-	std::vector<VkSemaphoreSubmitInfo> semaphoreSignals
+	if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
 	{
-		{ // render work completion signal
-			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = renderCompleteSemaphores[imageIndex],
-			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
-		},
-		{ // entire frame is completed (timeline)
-			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = timelineSemaphore,
-			.value = frameId, // we're signalling our current frame ID is complete
-			.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
-		}
-	};
-	VkCommandBufferSubmitInfo cmdSubmitInfo
+		showError("Error allocating depth image");
+		return false;
+	}
+
+	VkImageViewCreateInfo depthImgViewInfo
 	{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
-		.commandBuffer = res.commandBuffer,
+		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		.image = depthImage,
+		.viewType = VK_IMAGE_VIEW_TYPE_2D,
+		.format = depthFormat,
+		.subresourceRange{.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT, .levelCount = 1, .layerCount = 1}
 	};
-
-	// ensure swapchain image is actually vailable to start color output
-	VkSemaphoreSubmitInfo imageAcquireWaitInfo
+	if (vkCreateImageView(device, &depthImgViewInfo, nullptr, &depthImageView) != VK_SUCCESS)
 	{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-		.semaphore = imageAcquireSemaphore,
-		.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | // wait before drawing to image
-			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT // prevent depth buffer clearing before image is ready
-	};
+		showError("Error creating depth image view");
+		return false;
+	}
 
-	VkSubmitInfo2 submitInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-		.waitSemaphoreInfoCount = 1,
-		.pWaitSemaphoreInfos = &imageAcquireWaitInfo, // ensure the image is ready
-		.commandBufferInfoCount = 1,
-		.pCommandBufferInfos = &cmdSubmitInfo,
-		.signalSemaphoreInfoCount = static_cast<uint32_t>(semaphoreSignals.size()),
-		.pSignalSemaphoreInfos = semaphoreSignals.data()
-	};
-	vkQueueSubmit2(gfxQueue, 1, &submitInfo, VK_NULL_HANDLE);
-
-	// present the image
-	VkPresentInfoKHR presentInfo{
-		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &renderCompleteSemaphores[imageIndex], // render work completed semaphore
-		.swapchainCount = 1,
-		.pSwapchains = &swapchain,
-		.pImageIndices = &imageIndex,
-		.pResults = nullptr
-	};
-
-	vkQueuePresentKHR(gfxQueue, &presentInfo);
+	return true;
 }
 
 void loadNode(tinygltf::Node &node, tinygltf::Model &model)
@@ -1767,7 +1566,7 @@ void VulkanRenderSystem::loadModel()
 	VkCommandBuffer commandBuffer = startTransientCommandBuffer();
 	if (commandBuffer)
 	{
-		for (const Image &image : model.images)
+		for (const tinygltf::Image &image : model.images)
 		{
 			auto [imageId, img] = createImage(image.width, image.height, image.component);
 			if (!imageId.isValid())
@@ -1780,12 +1579,12 @@ void VulkanRenderSystem::loadModel()
 	submitTransientCommandBuffer(commandBuffer);
 
 	// load all meshes first
-	for (const Mesh &mesh : model.meshes)
+	for (const tinygltf::Mesh &mesh : model.meshes)
 	{
-		Renderer::Mesh newMesh;
+		vks::Mesh newMesh;
 		for (const Primitive &primitive : mesh.primitives)
 		{
-			Renderer::SubMesh subMesh;
+			SubMesh subMesh;
 			subMesh.vertexStart = vertices.size();
 			subMesh.indexStart = indices.size();
 
@@ -1803,7 +1602,7 @@ void VulkanRenderSystem::loadModel()
 					{
 						size_t offset = bv.byteOffset + access.byteOffset + i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(glm::vec3));
 						const glm::vec3 *pos = reinterpret_cast<const glm::vec3 *>(buffer.data.data() + offset);
-						vertices.push_back(Renderer::Vertex{ .position = *pos });
+						vertices.push_back(Vertex{ .position = *pos });
 						subMesh.vertexCount++;
 					}
 				}
@@ -1872,7 +1671,7 @@ void VulkanRenderSystem::loadModel()
 			.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
 		};
 
-		Renderer::Buffer newBuff;
+		vks::Buffer newBuff;
 		if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
 		{
 			//showError("Error allocating buffer");
@@ -1891,7 +1690,7 @@ void VulkanRenderSystem::loadModel()
 	};
 
 	vertexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		sizeof(Renderer::Vertex) * vertices.size(), vertices.data());
+		sizeof(Vertex) * vertices.size(), vertices.data());
 	indexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		sizeof(uint32_t) * indices.size(), indices.data());
 }
@@ -1949,7 +1748,7 @@ void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuf
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-std::tuple<ResourceId, Renderer::Image> VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
+std::tuple<ResourceId, Image> VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
 {
 	VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
@@ -1968,7 +1767,7 @@ std::tuple<ResourceId, Renderer::Image> VulkanRenderSystem::createImage(uint32_t
 	};
 	VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_AUTO };
 
-	Renderer::Image image{ .width = width, .height = height, .channels = channels };
+	Image image{ .width = width, .height = height, .channels = channels };
 	if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &image.handle, &image.allocation, nullptr) != VK_SUCCESS)
 	{
 		showError("Error creating image");
@@ -2084,15 +1883,13 @@ void VulkanRenderSystem::updateTextures()
 {
 	std::vector<VkDescriptorImageInfo> descriptorWrites;
 	descriptorWrites.reserve(images.size());
-	for (Renderer::Image &img : images)
+	for (Image &img : images)
 	{
-		descriptorWrites.push_back(
-			{
-				.sampler = nearestSampler,
-				.imageView = img.view,
-				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			}
-			);
+		descriptorWrites.push_back({
+			.sampler = nearestSampler,
+			.imageView = img.view,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			});
 	}
 
 	VkWriteDescriptorSet writes
@@ -2162,7 +1959,7 @@ ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath, bool fli
 	}
 
 	// create a staging buffer for image data CPU side
-	Renderer::Buffer stagingBuffer = createBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, width * height * channels, pixData);
+	Buffer stagingBuffer = createBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, width * height * channels, pixData);
 	stbi_image_free(pixData);
 
 	VkCommandBuffer commandBuffer = startTransientCommandBuffer();

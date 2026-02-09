@@ -23,6 +23,76 @@ typedef struct VmaAllocator_T *VmaAllocator;
 struct VmaAllocation_T;
 typedef struct VmaAllocation_T *VmaAllocation;
 
+namespace vks
+{
+
+enum class Topology
+{
+	triangle_list,
+	triangle_strip
+};
+
+struct PipelineConfig
+{
+	Topology topology = Topology::triangle_list;
+};
+
+struct Buffer
+{
+	VkBuffer buffer = nullptr;
+	VmaAllocation allocation = nullptr;
+};
+
+struct Image
+{
+	VkImage handle = nullptr;
+	VkImageView view = nullptr;
+	VmaAllocation allocation = nullptr;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t channels = 0;
+};
+
+struct Vertex
+{
+	glm::vec3 position;
+	glm::vec2 uv;
+};
+
+struct SubMesh
+{
+	size_t vertexStart = 0;
+	size_t vertexCount = 0;
+	size_t indexStart = 0;
+	size_t indexCount = 0;
+};
+
+struct Mesh
+{
+	std::vector<SubMesh> subMeshes;
+};
+
+struct DrawConstants
+{
+	uint64_t vertexBufferAddress = 0;
+	float globalTime = 0;
+	float padding = 0;
+	glm::mat4 mvp;
+	uint32_t textureIndex = 0;
+	uint32_t frameNumber = 0;
+	uint32_t frameCount = 1;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	float flipH = 1.0f;
+	float layerIndex = 0;
+};
+
+struct ShaderSet
+{
+	VkShaderModule vert = nullptr;
+	VkShaderModule frag = nullptr;
+};
+
 struct Pipeline
 {
 	VkPipelineLayout layout = nullptr;
@@ -41,6 +111,7 @@ struct FrameResources
 	VkCommandBuffer commandBuffer = nullptr;
 	VkSemaphore imageAcquiredSemaphore = nullptr;
 	VkSemaphore workCompleteSemaphore = nullptr;
+	Image renderTarget;
 };
 
 struct Barrier
@@ -54,76 +125,6 @@ struct Barrier
 	VkImageLayout newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
 };
-
-namespace Renderer
-{
-	enum class Topology
-	{
-		triangle_list,
-		triangle_strip
-	};
-
-	struct PipelineConfig
-	{
-		Topology topology = Topology::triangle_list;
-	};
-
-	struct Buffer
-	{
-		VkBuffer buffer = nullptr;
-		VmaAllocation allocation = nullptr;
-	};
-
-	struct Image
-	{
-		VkImage handle = nullptr;
-		VkImageView view = nullptr;
-		VmaAllocation allocation = nullptr;
-		uint32_t width = 0;
-		uint32_t height = 0;
-		uint32_t channels = 0;
-	};
-
-	struct Vertex
-	{
-		glm::vec3 position;
-		glm::vec2 uv;
-	};
-
-	struct SubMesh
-	{
-		size_t vertexStart = 0;
-		size_t vertexCount = 0;
-		size_t indexStart = 0;
-		size_t indexCount = 0;
-	};
-
-	struct Mesh
-	{
-		std::vector<SubMesh> subMeshes;
-	};
-
-	struct DrawConstants
-	{
-		uint64_t vertexBufferAddress = 0;
-		float globalTime = 0;
-		float padding = 0;
-		glm::mat4 mvp;
-		uint32_t textureIndex = 0;
-		uint32_t frameNumber = 0;
-		uint32_t frameCount = 1;
-		uint32_t width = 0;
-		uint32_t height = 0;
-		float flipH = 1.0f;
-		float layerIndex = 0;
-	};
-
-	struct ShaderSet
-	{
-		VkShaderModule vert = nullptr;
-		VkShaderModule frag = nullptr;
-	};
-}
 
 class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
@@ -172,34 +173,34 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VmaAllocation depthImageAllocation = nullptr;
 
 	// graphics pipeline related
-	Pipeline pipeline;
-	Pipeline spritePipeline;
+	vks::Pipeline pipeline;
+	vks::Pipeline spritePipeline;
 
 	// shader resources
 	size_t regShader, spriteShader;
-	std::vector<std::unique_ptr<Renderer::ShaderSet>> shaders;
+	std::vector<std::unique_ptr<vks::ShaderSet>> shaders;
 
 	// frame and synchronization resources
 	VkSemaphore timelineSemaphore = nullptr;
-	std::array<FrameResources, MaxFramesInFlight> frameResources;
+	std::array<vks::FrameResources, MaxFramesInFlight> frameResources;
 	uint32_t frameResIndex = 0;
 	uint64_t frameId = 0;
 	uint64_t waitForId = 0;
 	uint32_t imageIndex = 0;
 
 	// resources
-	std::vector<Renderer::Mesh> meshes;
-	std::vector<Renderer::Vertex> vertices;
+	std::vector<vks::Mesh> meshes;
+	std::vector<vks::Vertex> vertices;
 	std::vector<uint32_t> indices;
-	Renderer::Buffer vertexBuffer;
-	Renderer::Buffer indexBuffer;
+	vks::Buffer vertexBuffer;
+	vks::Buffer indexBuffer;
 
 	VkDescriptorSetLayout descSetLayout = nullptr;
 	VkDescriptorSet descSet = nullptr;
 	VkDescriptorPool descPool = nullptr;
 
 	VkSampler nearestSampler = nullptr;
-	std::vector<Renderer::Image> images;
+	std::vector<vks::Image> images;
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -218,33 +219,29 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool createSwapchain(uint32_t width, uint32_t height);
 	void destroySwapchain();
 	VkShaderModule createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const;
-	Renderer::ShaderSet *createShaders(const std::string &shaderName);
-	Pipeline createGraphicsPipeline(const Renderer::ShaderSet &shaderSet, const Renderer::PipelineConfig &config) const;
+	vks::ShaderSet *createShaders(const std::string &shaderName);
+	vks::Pipeline createGraphicsPipeline(const vks::ShaderSet &shaderSet, const vks::PipelineConfig &config) const;
 	bool createSyncResources();
 	bool createCommandBuffers();
 	bool createDescriptorSet();
-	Renderer::Buffer createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData);
-	void render(float deltaTime);
+	VkSampler createSampler();
+	vks::Buffer createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData);
+	bool createInternalTargets();
 
 	void loadModel();
-
 	VkCommandBuffer startTransientCommandBuffer();
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);
-	std::tuple<ResourceId, Renderer::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
-	VkSampler createSampler();
-	void transitionImages(VkCommandBuffer commandBuffer, const std::span<Barrier> &barriers);
+	std::tuple<ResourceId, vks::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
+	void transitionImages(VkCommandBuffer commandBuffer, const std::span<vks::Barrier> &barriers);
 
 public:
 	VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services);
 	~VulkanRenderSystem();
 	bool initialize();
 	void shutdown();
-	void run();
 	void beginFrame() override;
-	void endFrame() override;
-
-	// Inherited via System
 	void update(Node &node) override;
+	void endFrame() override;
 
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
@@ -253,3 +250,5 @@ public:
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);
 	void onEvent(NodeHandle target, const DirectionChangedEvent &event);
 };
+
+}
