@@ -46,11 +46,10 @@ struct FrameResources
 struct Barrier
 {
 	VkImage image = nullptr;
-	VkPipelineStageFlags2 srcStage = 0;
-	VkAccessFlags2 srcAccess = 0;
-
-	VkPipelineStageFlags2 dstStage = 0;
-	VkAccessFlags2 dstAccess = 0;
+	VkPipelineStageFlags2 srcStageMask = 0;
+	VkAccessFlags2 srcAccessMask = 0;
+	VkPipelineStageFlags2 dstStageMask = 0;
+	VkAccessFlags2 dstAccessMask = 0;
 	VkImageLayout oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageLayout newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
