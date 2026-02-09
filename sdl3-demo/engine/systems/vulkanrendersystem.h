@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <array>
+#include <span>
 #include <shaderc/shaderc.hpp>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -40,6 +41,19 @@ struct FrameResources
 	VkCommandBuffer commandBuffer = nullptr;
 	VkSemaphore imageAcquiredSemaphore = nullptr;
 	VkSemaphore workCompleteSemaphore = nullptr;
+};
+
+struct Barrier
+{
+	VkImage image = nullptr;
+	VkPipelineStageFlags2 srcStage = 0;
+	VkAccessFlags2 srcAccess = 0;
+
+	VkPipelineStageFlags2 dstStage = 0;
+	VkAccessFlags2 dstAccess = 0;
+	VkImageLayout oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	VkImageLayout newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
 };
 
 namespace Renderer
@@ -219,11 +233,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);
 	std::tuple<ResourceId, Renderer::Image> createImage(uint32_t width, uint32_t height, uint32_t channels);
 	VkSampler createSampler();
-
-	void transitionImage(VkCommandBuffer commandBuffer, VkImage image,
-		VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
-		VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess,
-		VkImageLayout oldLayout, VkImageLayout newLayout);
+	void transitionImages(VkCommandBuffer commandBuffer, const std::span<Barrier> &barriers);
 
 public:
 	VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services);

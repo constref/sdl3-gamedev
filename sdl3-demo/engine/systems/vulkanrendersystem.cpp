@@ -302,52 +302,29 @@ void VulkanRenderSystem::beginFrame()
 	vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
 
 	// transition the color and depth images
-	std::vector<VkImageMemoryBarrier2> layoutBarriers
+	std::array<Barrier, 2> layoutBarriers
 	{
-		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = 0,
-			.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+		Barrier {
+			.image = swapchainImages[imageIndex],
+			.srcStage = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccess = 0,
+			.dstStage = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.dstAccess = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
 			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 			.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			.image = swapchainImages[imageIndex],
-			.subresourceRange
-			{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			}
 		},
 		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
-			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
-			.dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.image = depthImage,
+			.srcStage = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			.srcAccess = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			.dstStage = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			.dstAccess = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 			.newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			.image = depthImage,
-			.subresourceRange
-			{
-				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			}
+			.imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT
 		}
 	};
-	VkDependencyInfo depInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-		.imageMemoryBarrierCount = static_cast<uint32_t>(layoutBarriers.size()),
-		.pImageMemoryBarriers = layoutBarriers.data()
-	};
-	vkCmdPipelineBarrier2(res.commandBuffer, &depInfo);
+	transitionImages(res.commandBuffer, layoutBarriers);
 
 	// setup the attachments (color and depth) and begin rendering (dynamic rendering)
 	VkRenderingAttachmentInfo colorAttachInfo
@@ -410,32 +387,19 @@ void VulkanRenderSystem::endFrame()
 	vkCmdEndRendering(res.commandBuffer);
 
 	// transition the image from color attachment to presentation so we can show it
-	VkImageMemoryBarrier2 presentLayoutBarrier
+	std::array<Barrier, 1> barriers
 	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-		.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-		.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-		.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-		.dstAccessMask = 0,
-		.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		.image = swapchainImages[imageIndex],
-		.subresourceRange
-		{
-			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1,
+		Barrier {
+			.image = swapchainImages[imageIndex],
+			.srcStage = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccess = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			.dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+			.dstAccess = 0,
+			.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		}
 	};
-	VkDependencyInfo presentDepInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &presentLayoutBarrier
-	};
-	vkCmdPipelineBarrier2(res.commandBuffer, &presentDepInfo);
+	transitionImages(res.commandBuffer, barriers);
 
 	vkEndCommandBuffer(res.commandBuffer);
 
@@ -507,7 +471,6 @@ void VulkanRenderSystem::update(Node &node)
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	float nearP = 0.1f;
 	float farP = 32.0f;
-
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
 	glm::mat4 proj = glm::ortho(float(0), float(width), float(height), 0.0f, 0.0f, 100.0f);
@@ -2049,7 +2012,7 @@ VkSampler VulkanRenderSystem::createSampler()
 		.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		.anisotropyEnable = VK_TRUE,
-		.maxAnisotropy = 16.0f, // Check limites
+		.maxAnisotropy = 16.0f, // Check limits
 		.compareEnable = VK_FALSE,
 		.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
 		.unnormalizedCoordinates = VK_FALSE
@@ -2064,36 +2027,41 @@ VkSampler VulkanRenderSystem::createSampler()
 	return sampler;
 }
 
-void VulkanRenderSystem::transitionImage(VkCommandBuffer commandBuffer, VkImage image,
-	VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
-	VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess,
-	VkImageLayout oldLayout, VkImageLayout newLayout)
+void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const std::span<Barrier> &barriers)
 {
-	// transition the image from color attachment to presentation so we can show it
-	VkImageMemoryBarrier2 barrier
+	const size_t maxTransitions = 5;
+	assert(maxTransitions >= barriers.size());
+	std::array<VkImageMemoryBarrier2, maxTransitions> vkBarriers;
+
+	for (int i = 0; i < barriers.size(); ++i)
 	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-		.srcStageMask = srcStage,
-		.srcAccessMask = srcAccess,
-		.dstStageMask = dstStage,
-		.dstAccessMask = dstAccess,
-		.oldLayout = oldLayout,
-		.newLayout = newLayout,
-		.image = image,
-		.subresourceRange
+		const Barrier &b = barriers[i];
+		vkBarriers[i] =
 		{
-			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1,
-		}
-	};
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = b.srcStage,
+			.srcAccessMask = b.srcAccess,
+			.dstStageMask = b.dstStage,
+			.dstAccessMask = b.dstAccess,
+			.oldLayout = b.oldLayout,
+			.newLayout = b.newLayout,
+			.image = b.image,
+			.subresourceRange
+			{
+				.aspectMask = b.imageAspect,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			}
+		};
+	}
+
 	VkDependencyInfo depInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &barrier
+		.imageMemoryBarrierCount = static_cast<uint32_t>(barriers.size()),
+		.pImageMemoryBarriers = vkBarriers.data()
 	};
 	vkCmdPipelineBarrier2(commandBuffer, &depInfo);
 }
