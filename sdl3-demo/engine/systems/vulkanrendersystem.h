@@ -163,7 +163,6 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VkSwapchainKHR swapchain = nullptr;
 	std::vector<VkImage> swapchainImages;
 	std::vector<VkImageView> swapchainImageViews;
-	std::vector<VkSemaphore> renderCompleteSemaphores;
 	bool requireSwapchainRecreate = false;
 	uint32_t swapchainWidth = 0;
 	uint32_t swapchainHeight = 0;

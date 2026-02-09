@@ -142,6 +142,7 @@ void VulkanRenderSystem::shutdown()
 	for (auto &res : frameResources)
 	{
 		vkDestroySemaphore(device, res.imageAcquiredSemaphore, nullptr);
+		vkDestroySemaphore(device, res.workCompleteSemaphore, nullptr);
 		vkDestroyCommandPool(device, res.commandPool, nullptr); // destroys buffers implicitly
 
 		// cleanup internal render targets
@@ -399,7 +400,7 @@ void VulkanRenderSystem::endFrame()
 	};
 	transitionImages(res.commandBuffer, rtReadTransition);
 
-	const int32_t scale = std::min(swapchainWidth / logW, swapchainHeight / logH);
+	const float scale = std::floor(std::min(swapchainWidth / static_cast<float>(logW), swapchainHeight / static_cast<float>(logH)));
 	const int32_t xScaled = logW * scale;
 	const int32_t yScaled = logH * scale;
 	const int32_t xOffset = (swapchainWidth - xScaled) / 2;
@@ -412,7 +413,7 @@ void VulkanRenderSystem::endFrame()
 		.srcSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
 		.srcOffsets = {{.x = 0, .y = 0, .z = 0}, {.x = static_cast<int32_t>(logW), .y = static_cast<int32_t>(logH), .z = 1} },
 		.dstSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
-		.dstOffsets = {{.x = 0, .y = 0, .z = 0}, {.x = int32_t(swapchainWidth), .y = int32_t(swapchainHeight), .z = 1}}
+		.dstOffsets = {{.x = xOffset, .y = yOffset, .z = 0}, {.x =static_cast<int32_t>(xScaled), .y = static_cast<int32_t>(yScaled), .z = 1}}
 	};
 	VkBlitImageInfo2 blitInfo
 	{
@@ -449,7 +450,7 @@ void VulkanRenderSystem::endFrame()
 	{
 		{ // render work completion signal
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = renderCompleteSemaphores[imageIndex],
+			.semaphore = res.workCompleteSemaphore,
 			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
 		},
 		{ // entire frame is completed (timeline)
@@ -490,7 +491,7 @@ void VulkanRenderSystem::endFrame()
 	VkPresentInfoKHR presentInfo{
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &renderCompleteSemaphores[imageIndex], // render work completed semaphore
+		.pWaitSemaphores = &res.workCompleteSemaphore, // render work completed semaphore
 		.swapchainCount = 1,
 		.pSwapchains = &swapchain,
 		.pImageIndices = &imageIndex,
@@ -993,18 +994,6 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 		}
 	}
 
-	// semaphores used to signal render completion
-	renderCompleteSemaphores.resize(swapchainImages.size());
-	for (VkSemaphore &semaphore : renderCompleteSemaphores)
-	{
-		VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphore) != VK_SUCCESS)
-		{
-			showError("Error creating the render-complete semaphore");
-			return false;
-		}
-	}
-
 	return true;
 }
 
@@ -1015,13 +1004,6 @@ void VulkanRenderSystem::destroySwapchain()
 		vkDestroyImageView(device, swapchainImgView, nullptr);
 	}
 	swapchainImageViews.clear();
-
-	// destroy render-complete ssemaphores
-	for (VkSemaphore &semaphore : renderCompleteSemaphores)
-	{
-		vkDestroySemaphore(device, semaphore, nullptr);
-	}
-	renderCompleteSemaphores.clear();
 
 	if (swapchain)
 	{
@@ -1283,6 +1265,11 @@ bool VulkanRenderSystem::createSyncResources()
 		// create the binary semaphores
 		VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS)
+		{
+			showError("Error creating the per-frame image-acquire semaphore");
+			return false;
+		}
+		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.workCompleteSemaphore) != VK_SUCCESS)
 		{
 			showError("Error creating the per-frame image-acquire semaphore");
 			return false;

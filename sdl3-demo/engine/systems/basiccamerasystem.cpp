@@ -17,7 +17,8 @@ void BasicCameraSystem::update(Node &node)
 
 	glm::vec2 camPos {
 		(node.getPosition().x + tileWidth / 2) - viewportSize.x / 2,
-		mapHeight * tileHeight - viewportSize.y + 640
+		node.getPosition().y - viewportSize.y / 2
+		//mapHeight * tileHeight - viewportSize.y + 640
 	};
 
 	RenderContext::shared().setCameraPosition(camPos);
