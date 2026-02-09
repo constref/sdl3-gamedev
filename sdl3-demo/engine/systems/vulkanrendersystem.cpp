@@ -466,13 +466,12 @@ void VulkanRenderSystem::endFrame()
 		.commandBuffer = res.commandBuffer,
 	};
 
-	// ensure swapchain image is actually vailable to start color output
+	// ensure swapchain image is actually available to start color output
 	VkSemaphoreSubmitInfo imageAcquireWaitInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
 		.semaphore = res.imageAcquiredSemaphore,
-		.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | // wait before drawing to image
-			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT // prevent depth buffer clearing before image is ready
+		.stageMask = VK_PIPELINE_STAGE_2_BLIT_BIT
 	};
 
 	VkSubmitInfo2 submitInfo
@@ -517,12 +516,11 @@ void VulkanRenderSystem::update(Node &node)
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
 	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-	glm::mat4 translate = glm::translate(glm::mat4(1), node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
+	glm::mat4 translate = glm::translate(glm::mat4(1), glm::floor(node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0)));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
 	glm::mat4 transform = translate * rotation * scale;
 	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
-	//glm::vec3 camPos(0, 0, 0);
-	const glm::mat4 view = glm::translate(glm::mat4(1), -camPos);
+	const glm::mat4 view = glm::translate(glm::mat4(1), glm::floor(-camPos));
 	glm::mat4 mvp = proj * view * transform;
 
 	// BDA Send Device Pointer
