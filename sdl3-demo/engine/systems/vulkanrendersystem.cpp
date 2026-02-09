@@ -377,7 +377,7 @@ void VulkanRenderSystem::endFrame()
 	}
 
 	// transition the internal render target for blitting onto the swapchain
-	std::array<Barrier, 2> rtReadTransition
+	std::array<Barrier, 2> blitToSwapTransitions
 	{
 		Barrier {
 			.image = res.renderTarget.handle,
@@ -398,7 +398,7 @@ void VulkanRenderSystem::endFrame()
 			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		}
 	};
-	transitionImages(res.commandBuffer, rtReadTransition);
+	transitionImages(res.commandBuffer, blitToSwapTransitions);
 
 	const float scale = std::floor(std::min(swapchainWidth / static_cast<float>(logW), swapchainHeight / static_cast<float>(logH)));
 	const int32_t xScaled = logW * scale;
@@ -413,7 +413,7 @@ void VulkanRenderSystem::endFrame()
 		.srcSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
 		.srcOffsets = {{.x = 0, .y = 0, .z = 0}, {.x = static_cast<int32_t>(logW), .y = static_cast<int32_t>(logH), .z = 1} },
 		.dstSubresource {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .layerCount = 1},
-		.dstOffsets = {{.x = xOffset, .y = yOffset, .z = 0}, {.x =static_cast<int32_t>(xScaled), .y = static_cast<int32_t>(yScaled), .z = 1}}
+		.dstOffsets = {{.x = xOffset, .y = yOffset, .z = 0}, {.x = xOffset + xScaled, .y = yOffset + yScaled, .z = 1}}
 	};
 	VkBlitImageInfo2 blitInfo
 	{
