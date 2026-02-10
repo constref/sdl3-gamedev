@@ -77,12 +77,20 @@ public:
 			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-			services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(state.window, state.width, state.height, state.logW, state.logH, services));
+			auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(state.window, state.width, state.height, state.logW, state.logH, services));
+			if (!renderSys.initialize())
+			{
+				return false;
+			}
 
-			return app.initialize(services, state);
+			// initialize and start the app
+			if (!app.initialize(services, state))
+			{
+				return false;
+			}
+			app.onStart(services, state);
 		}
-
-		return false;
+		return true;
 	}
 
 	void cleanup()

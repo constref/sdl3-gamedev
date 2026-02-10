@@ -10,6 +10,7 @@
 
 layout (location = 0) out vec3 outColor;
 layout (location = 1) out vec2 outUV;
+layout (location = 2) out flat uint instanceIndex;
 
 struct Vertex
 {
@@ -22,11 +23,11 @@ layout(buffer_reference, scalar) readonly buffer VertexPtr
     Vertex vertices[];
 };
 
-layout(push_constant, scalar) uniform DrawConstants
+struct InstanceData
 {
     uint64_t vertexAddress;
     float globalTime;
-    float padding;
+    uint pad1;
     mat4 mvp;
     uint textureIndex;
     uint frameNumber;
@@ -35,19 +36,27 @@ layout(push_constant, scalar) uniform DrawConstants
     uint height;
     float flipH;
     float layerIndex;
-} dc;
+    uint pad2;
+};
+
+layout(set = 1, binding = 0) readonly buffer InstanceBuffer
+{
+	InstanceData instances[];
+};
 
 void main()
 {
-    VertexPtr vBuffer = VertexPtr(dc.vertexAddress);
-    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(dc.width, dc.height, 1);
+	InstanceData inst = instances[gl_InstanceIndex];
+    VertexPtr vBuffer = VertexPtr(inst.vertexAddress);
+    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(inst.width, inst.height, 1);
     vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
-    gl_Position = dc.mvp * vec4(pos.x, pos.y, dc.layerIndex, 1);
+    gl_Position = inst.mvp * vec4(pos.x, pos.y, inst.layerIndex, 1);
 
     outColor = vec3(1, 1, 1);
 
-    float uPortion = dc.flipH * (1.0 / dc.frameCount);
-    float uStart = uPortion * (dc.frameNumber - 1); // start position in spritesheet
+    float uPortion = inst.flipH * (1.0 / inst.frameCount);
+    float uStart = uPortion * (inst.frameNumber - 1); // start position in spritesheet
 
     outUV = vec2(uStart + uPortion * uv.x, uv.y);
+    instanceIndex = gl_InstanceIndex;
 }

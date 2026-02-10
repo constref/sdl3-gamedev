@@ -49,7 +49,6 @@ VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, uint32_t width, uint3
 	{
 		ownedWindow = false;
 	}
-	initialize();
 
 	services.eventQueue().dispatcher.registerHandler<AnimationPlayEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<AnimationStopEvent>(this);
@@ -110,9 +109,13 @@ void VulkanRenderSystem::shutdown()
 		vkDestroySampler(device, nearestSampler, nullptr);
 	}
 
-	if (descSetLayout)
+	if (globalDSLayout)
 	{
-		vkDestroyDescriptorSetLayout(device, descSetLayout, nullptr);
+		vkDestroyDescriptorSetLayout(device, globalDSLayout, nullptr);
+	}
+	if (frameDSLayout)
+	{
+		vkDestroyDescriptorSetLayout(device, frameDSLayout, nullptr);
 	}
 	if (descPool)
 	{
@@ -153,6 +156,18 @@ void VulkanRenderSystem::shutdown()
 		if (res.renderTarget.handle)
 		{
 			vmaDestroyImage(vmaAllocator, res.renderTarget.handle, res.renderTarget.allocation);
+		}
+
+		// draw and instance data cleanup
+		if (res.indirectDraws.buffer)
+		{
+			vmaUnmapMemory(vmaAllocator, res.indirectDraws.allocation);
+			vmaDestroyBuffer(vmaAllocator, res.indirectDraws.buffer, res.indirectDraws.allocation);
+		}
+		if (res.instanceData.buffer)
+		{
+			vmaUnmapMemory(vmaAllocator, res.instanceData.allocation);
+			vmaDestroyBuffer(vmaAllocator, res.instanceData.buffer, res.instanceData.allocation);
 		}
 	}
 
@@ -263,6 +278,9 @@ void VulkanRenderSystem::beginFrame()
 
 	// now its safe to start recording commands
 	FrameResources &res = frameResources[frameResIndex];
+	res.numDraws = 0;
+	res.numInstances = 0;
+
 	vkResetCommandPool(device, res.commandPool, 0); // resets all buffers
 
 	// begin recording commands
@@ -351,11 +369,20 @@ void VulkanRenderSystem::beginFrame()
 		.extent{.width = logW, .height = logH}
 	};
 	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+
+	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.handle);
+
+	std::array<VkDescriptorSet, 2> sets{ globalDescSet, res.descSet };
+	vkCmdBindDescriptorSets(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.layout, 0, sets.size(), sets.data(), 0, nullptr);
 }
 
 void VulkanRenderSystem::endFrame()
 {
 	FrameResources &res = frameResources[frameResIndex];
+
+	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+	vkCmdDrawIndexedIndirect(res.commandBuffer, res.indirectDraws.buffer, 0, res.numDraws, sizeof(VkDrawIndexedIndirectCommand));
+
 	// end internal texture pass
 	vkCmdEndRendering(res.commandBuffer);
 
@@ -505,9 +532,6 @@ void VulkanRenderSystem::update(Node &node)
 	auto [sc] = getRequiredComponents(node);
 	FrameResources &res = frameResources[frameResIndex];
 
-	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.handle);
-	vkCmdBindDescriptorSets(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.layout, 0, 1, &descSet, 0, nullptr);
-
 	constexpr float fov = glm::radians(45.0);
 	float aspect = static_cast<float>(logW) / static_cast<float>(logH);
 	float nearP = 0.1f;
@@ -525,8 +549,23 @@ void VulkanRenderSystem::update(Node &node)
 
 	// BDA Send Device Pointer
 	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
-	DrawConstants pushConsts
-	{
+	//DrawConstants pushConsts
+	//{
+	//	.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
+	//	.globalTime = static_cast<float>(globalTime),
+	//	.mvp = mvp,
+	//	.textureIndex = sc->getTexture().index(),
+	//	.frameNumber = static_cast<uint32_t>(sc->getFrameNumber()),
+	//	.frameCount = static_cast<uint32_t>(sc->getFrameCount()),
+	//	.width = static_cast<uint32_t>(sc->getSize().x),
+	//	.height = static_cast<uint32_t>(sc->getSize().y),
+	//	.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
+	//	.layerIndex = static_cast<float>(sc->getLayerIndex())
+	//};
+	//vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DrawConstants), &pushConsts);
+
+	const size_t instanceIdx = res.numInstances++;
+	res.instances[instanceIdx] = {
 		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
 		.globalTime = static_cast<float>(globalTime),
 		.mvp = mvp,
@@ -538,14 +577,17 @@ void VulkanRenderSystem::update(Node &node)
 		.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
 		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
-	vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DrawConstants), &pushConsts);
 
-	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	for (Mesh &mesh : meshes)
 	{
 		for (SubMesh &sub : mesh.subMeshes)
 		{
-			vkCmdDrawIndexed(res.commandBuffer, sub.indexCount, 1, sub.indexStart, sub.vertexStart, 0);
+			VkDrawIndexedIndirectCommand &cmd = res.drawCommands[res.numDraws++];
+			cmd.firstIndex = sub.indexStart;
+			cmd.indexCount = sub.indexCount;
+			cmd.firstInstance = instanceIdx;
+			cmd.instanceCount = 1;
+			cmd.vertexOffset = sub.vertexStart;
 		}
 	}
 }
@@ -609,8 +651,9 @@ bool VulkanRenderSystem::initializeVulkan()
 		return false;
 	}
 
-	if (!createDescriptorSet())
+	if (!createDescriptorSets())
 	{
+		showError("Error creating descriptor sets");
 		return false;
 	}
 
@@ -642,6 +685,17 @@ bool VulkanRenderSystem::initializeVulkan()
 	if (nearestSampler = createSampler(); !nearestSampler)
 	{
 		showError("Unable to create nearest sampler");
+		return false;
+	}
+
+	if (!createIndirectDrawBuffers())
+	{
+		showError("Unable to create indirect/instanced drawing buffers");
+		return false;
+	}
+	if (!updatePerFrameDescriptors())
+	{
+		showError("Unable to update the per-frame descriptor sets");
 		return false;
 	}
 
@@ -815,7 +869,8 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 ||
 		!supportedFeatures12.timelineSemaphore || !supportedFeatures12.descriptorIndexing ||
 		!supportedFeatures12.descriptorBindingSampledImageUpdateAfterBind || !supportedFeatures12.descriptorBindingPartiallyBound ||
-		!supportedFeatures12.runtimeDescriptorArray || !supportedFeatures.features.samplerAnisotropy)
+		!supportedFeatures12.runtimeDescriptorArray || !supportedFeatures.features.samplerAnisotropy ||
+		!supportedFeatures.features.multiDrawIndirect)
 	{
 		showError("Physical device doesn't meet the feature requirements");
 		return false;
@@ -851,6 +906,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		.pNext = &features12,
 		.features
 		{
+			.multiDrawIndirect = VK_TRUE,
 			.samplerAnisotropy = VK_TRUE,
 			.shaderInt64 = VK_TRUE
 		}
@@ -1195,11 +1251,13 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet &shaderSet, 
 		.size = sizeof(DrawConstants)
 	};
 
+	std::array<VkDescriptorSetLayout, 2> dsLayouts{ globalDSLayout, frameDSLayout };
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = 1,
-		.pSetLayouts = &descSetLayout,
+		.setLayoutCount = dsLayouts.size(),
+		.pSetLayouts = dsLayouts.data(),
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges = &pushConstRange
 	};
@@ -1323,57 +1381,19 @@ bool VulkanRenderSystem::createCommandBuffers()
 	return true;
 }
 
-bool VulkanRenderSystem::createDescriptorSet()
+bool VulkanRenderSystem::createDescriptorSets()
 {
-	constexpr int maxTextures = 1024;
-	std::array<VkDescriptorSetLayoutBinding, 1> bindings =
+	// create a pool to accomodate all descriptor sets
+	std::array<VkDescriptorPoolSize, 2> poolSizes
 	{
-		VkDescriptorSetLayoutBinding
-		{
-			.binding = 0,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.descriptorCount = maxTextures,
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-		}
+		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = MaxTextures},
+		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = 1 * MaxFramesInFlight}
 	};
-
-	VkDescriptorBindingFlags flags =
-		VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
-		VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-	//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
-
-	VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindingFlags = &flags
-	};
-
-	VkDescriptorSetLayoutCreateInfo layoutInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.pNext = &flagsInfo,
-		.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-		.bindingCount = bindings.size(),
-		.pBindings = bindings.data()
-	};
-
-	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descSetLayout) != VK_SUCCESS)
-	{
-		showError("Unable to create descriptor set layout");
-		return false;
-	}
-
-	std::array<VkDescriptorPoolSize, 1> poolSizes
-	{
-		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = 1024}
-	};
-
 	VkDescriptorPoolCreateInfo poolInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 		.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
-		.maxSets = 1,
+		.maxSets = 3,
 		.poolSizeCount = poolSizes.size(),
 		.pPoolSizes = poolSizes.data()
 	};
@@ -1383,19 +1403,119 @@ bool VulkanRenderSystem::createDescriptorSet()
 		return false;
 	}
 
-	VkDescriptorSetAllocateInfo descSetAllocInfo
+	// global descriptor set
 	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.descriptorPool = descPool,
-		.descriptorSetCount = 1,
-		.pSetLayouts = &descSetLayout,
-	};
-	vkAllocateDescriptorSets(device, &descSetAllocInfo, &descSet);
+		std::array<VkDescriptorSetLayoutBinding, 1> bindings =
+		{
+			VkDescriptorSetLayoutBinding
+			{
+				.binding = 0,
+				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.descriptorCount = MaxTextures,
+				.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+			}
+		};
+		std::array<VkDescriptorBindingFlags, 1> flags;
+		flags[0] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+
+		VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+			.bindingCount = flags.size(),
+			.pBindingFlags = flags.data()
+		};
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.pNext = &flagsInfo,
+			.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+			.bindingCount = bindings.size(),
+			.pBindings = bindings.data()
+		};
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &globalDSLayout) != VK_SUCCESS)
+		{
+			showError("Unable to create descriptor set layout");
+			return false;
+		}
+
+		// create the actual descriptor sets
+		VkDescriptorSetAllocateInfo descSetAllocInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = descPool,
+			.descriptorSetCount = 1,
+			.pSetLayouts = &globalDSLayout,
+		};
+		if (vkAllocateDescriptorSets(device, &descSetAllocInfo, &globalDescSet) != VK_SUCCESS)
+		{
+			showError("Unable to allocate descriptor set");
+			return false;
+		}
+	}
+
+	// frame descriptor set
+	{
+		std::array<VkDescriptorSetLayoutBinding, 1> bindings =
+		{
+			VkDescriptorSetLayoutBinding
+			{
+				.binding = 0,
+				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+			}
+		};
+
+		std::array<VkDescriptorBindingFlags, 1> flags;
+		flags[0] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+
+		VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+			.bindingCount = flags.size(),
+			.pBindingFlags = flags.data()
+		};
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.pNext = &flagsInfo,
+			.flags = 0,
+			.bindingCount = bindings.size(),
+			.pBindings = bindings.data()
+		};
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &frameDSLayout) != VK_SUCCESS)
+		{
+			showError("Unable to create descriptor set layout");
+			return false;
+		}
+
+		// per-frame descriptor set creation
+		VkDescriptorSetAllocateInfo descSetAllocInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = descPool,
+			.descriptorSetCount = 1,
+			.pSetLayouts = &frameDSLayout,
+		};
+
+		for (auto &res : frameResources)
+		{
+			if (vkAllocateDescriptorSets(device, &descSetAllocInfo, &res.descSet) != VK_SUCCESS)
+			{
+				showError("Unable to allocate descriptor set");
+				return false;
+			}
+		}
+	}
 
 	return true;
 }
 
-Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData)
+Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData = nullptr)
 {
 	VkBufferCreateInfo buffInfo
 	{
@@ -1417,14 +1537,18 @@ Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSiz
 		showError("Error allocating buffer");
 	}
 
-	void *buffPtr = nullptr;
-	if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
+	// write init data if provided
+	if (initData)
 	{
-		showError("Unable to map buffer memory");
+		void *buffPtr = nullptr;
+		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
+		{
+			showError("Unable to map buffer memory");
+		}
+		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
+		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
+		vmaUnmapMemory(vmaAllocator, newBuff.allocation);
 	}
-	std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
-	const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
-	vmaUnmapMemory(vmaAllocator, newBuff.allocation);
 
 	return newBuff;
 }
@@ -1515,6 +1639,64 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 		return false;
 	}
 
+	return true;
+}
+
+bool vks::VulkanRenderSystem::createIndirectDrawBuffers()
+{
+	const size_t indirectBuffSize = MaxDrawCommands * sizeof(VkDrawIndexedIndirectCommand);
+	const size_t instanceBuffSize = MaxInstances * sizeof(InstanceData);
+	for (auto &res : frameResources)
+	{
+		// create buffer for the draw commands
+		res.indirectDraws = createBuffer(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, indirectBuffSize);
+		if (res.indirectDraws.buffer == nullptr)
+		{
+			return false;
+		}
+		// buffer for instance data
+		res.instanceData = createBuffer(VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT, instanceBuffSize);
+		if (res.instanceData.buffer == nullptr)
+		{
+			return false;
+		}
+
+		// keep both buffers mapped
+		if (vmaMapMemory(vmaAllocator, res.indirectDraws.allocation, reinterpret_cast<void **>(&res.drawCommands)) != VK_SUCCESS)
+		{
+			return false;
+		}
+		if (vmaMapMemory(vmaAllocator, res.instanceData.allocation, reinterpret_cast<void **>(&res.instances)) != VK_SUCCESS)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool vks::VulkanRenderSystem::updatePerFrameDescriptors()
+{
+	for (auto &res : frameResources)
+	{
+		VkDescriptorBufferInfo dsWrite
+		{
+			.buffer = res.instanceData.buffer,
+			.offset = 0,
+			.range = VK_WHOLE_SIZE
+		};
+
+		VkWriteDescriptorSet writes
+		{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = res.descSet,
+			.dstBinding = 0,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.pBufferInfo = &dsWrite
+		};
+		vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
+	}
 	return true;
 }
 
@@ -1880,7 +2062,7 @@ void VulkanRenderSystem::updateTextures()
 	VkWriteDescriptorSet writes
 	{
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = descSet,
+		.dstSet = globalDescSet,
 		.dstBinding = 0,
 		.dstArrayElement = 0,
 		.descriptorCount = static_cast<uint32_t>(descriptorWrites.size()),

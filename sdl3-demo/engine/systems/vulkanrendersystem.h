@@ -87,6 +87,21 @@ struct DrawConstants
 	float layerIndex = 0;
 };
 
+struct InstanceData
+{
+	uint64_t vertexBufferAddress = 0;
+	float globalTime = 0;
+	float padding = 0;
+	glm::mat4 mvp;
+	uint32_t textureIndex = 0;
+	uint32_t frameNumber = 0;
+	uint32_t frameCount = 1;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	float flipH = 1.0f;
+	float layerIndex = 0;
+};
+
 struct ShaderSet
 {
 	VkShaderModule vert = nullptr;
@@ -112,6 +127,13 @@ struct FrameResources
 	VkSemaphore imageAcquiredSemaphore = nullptr;
 	VkSemaphore workCompleteSemaphore = nullptr;
 	Image renderTarget;
+	Buffer indirectDraws;
+	VkDrawIndexedIndirectCommand *drawCommands = nullptr;
+	uint32_t numDraws = 0;
+	Buffer instanceData;
+	InstanceData *instances = nullptr;
+	uint32_t numInstances = 0;
+	VkDescriptorSet descSet = nullptr;
 };
 
 struct Barrier
@@ -132,6 +154,9 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	constexpr static uint32_t MaxFramesInFlight{ 2 };
 	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
+	constexpr static size_t MaxTextures = 1024;
+	constexpr static size_t MaxDrawCommands = 5000;
+	constexpr static size_t MaxInstances = 5000;
 
 	bool ownedWindow = true;
 	SDL_Window *window = nullptr;
@@ -194,8 +219,9 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	vks::Buffer vertexBuffer;
 	vks::Buffer indexBuffer;
 
-	VkDescriptorSetLayout descSetLayout = nullptr;
-	VkDescriptorSet descSet = nullptr;
+	VkDescriptorSetLayout globalDSLayout = nullptr;
+	VkDescriptorSetLayout frameDSLayout = nullptr;
+	VkDescriptorSet globalDescSet = nullptr;
 	VkDescriptorPool descPool = nullptr;
 
 	VkSampler nearestSampler = nullptr;
@@ -222,10 +248,12 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	vks::Pipeline createGraphicsPipeline(const vks::ShaderSet &shaderSet, const vks::PipelineConfig &config) const;
 	bool createSyncResources();
 	bool createCommandBuffers();
-	bool createDescriptorSet();
+	bool createDescriptorSets();
 	VkSampler createSampler();
 	vks::Buffer createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData);
 	bool createInternalTargets();
+	bool createIndirectDrawBuffers();
+	bool updatePerFrameDescriptors();
 
 	void loadModel();
 	VkCommandBuffer startTransientCommandBuffer();

@@ -36,6 +36,19 @@ Platformer::Platformer()
 
 bool Platformer::initialize(Services &services, SDLState &state)
 {
+	// start up gameplay systems
+	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
+	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));
+	services.compSys().registerSystem(std::make_unique<ProjectileSystem>(services));
+	services.compSys().registerSystem(std::make_unique<BasicCameraSystem>(services));
+	services.compSys().registerSystem(std::make_unique<DamageSystem>(services));
+	services.compSys().registerSystem(std::make_unique<EnemySystem>(services));
+
+	return true;
+}
+
+void Platformer::onStart(Services &services, SDLState &state)
+{
 	World &world = services.world();
 	hRoot = world.createNode();
 
@@ -89,7 +102,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		//musicMain = loadAudio(prefix + "audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 	// load the map XML and preload image(s)
-	map = tmx::loadMap(prefix + "maps/smallmap.tmx");
+	map = tmx::loadMap(prefix + "maps/largemap.tmx");
 	for (tmx::TileSet &tileSet : map->tileSets)
 	{
 		TileSetTextures tst;
@@ -105,14 +118,6 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	}
 
 	renderSys->updateTextures();
-
-	// start up gameplay systems
-	services.compSys().registerSystem(std::make_unique<PlayerControlSystem>(services));
-	services.compSys().registerSystem(std::make_unique<WeaponSystem>(services));
-	services.compSys().registerSystem(std::make_unique<ProjectileSystem>(services));
-	services.compSys().registerSystem(std::make_unique<BasicCameraSystem>(services, glm::vec2(state.logW, state.logH), map->tileWidth, map->tileHeight, map->mapWidth, map->mapHeight));
-	services.compSys().registerSystem(std::make_unique<DamageSystem>(services));
-	services.compSys().registerSystem(std::make_unique<EnemySystem>(services));
 
 	Node &root = world.getNode(hRoot);
 
@@ -160,18 +165,16 @@ bool Platformer::initialize(Services &services, SDLState &state)
 		{
 			case 0:
 			{
-				processLayer(root, services, std::get<tmx::Layer>(layer), idx++);
+				processLayer(root, services, state, std::get<tmx::Layer>(layer), idx++);
 				break;
 			}
 			case 1:
 			{
-				processLayer(root, services, std::get<tmx::ObjectGroup>(layer), idx++);
+				processLayer(root, services, state, std::get<tmx::ObjectGroup>(layer), idx++);
 				break;
 			}
 		}
 	}
-
-	return true;
 }
 
 auto Platformer::createObject(Services &services, int r, int c)
@@ -186,7 +189,7 @@ auto Platformer::createObject(Services &services, int r, int c)
 		0));
 	return newObjHandle;
 }
-void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer, int index) // Tile layers
+void Platformer::processLayer(Node &root, Services &services, SDLState &state, tmx::Layer &layer, int index) // Tile layers
 {
 	World &world = services.world();
 	NodeHandle hLayer = world.createNode();
@@ -230,7 +233,7 @@ void Platformer::processLayer(Node &root, Services &services, tmx::Layer &layer,
 	}
 	root.addChild(layerObject);
 }
-void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup, int index) // Object layers
+void Platformer::processLayer(Node &root, Services &services, SDLState &state,  tmx::ObjectGroup &objectGroup, int index) // Object layers
 {
 	World &world = services.world();
 	NodeHandle hLayer = world.createNode();
@@ -285,7 +288,7 @@ void Platformer::processLayer(Node &root, Services &services, tmx::ObjectGroup &
 			services.eventQueue().enqueue<AnimationPlayEvent>(hPlayer, 0, animPlayerIdle, texIdle, AnimationPlaybackMode::continuous);
 			auto &spriteComp = services.compSys().addComponent<SpriteComponent>(player, texIdle, map->tileWidth, map->tileHeight);
 			spriteComp.setLayerIndex(index);
-			services.compSys().addComponent<BasicCameraComponent>(player);
+			auto &camComp = services.compSys().addComponent<BasicCameraComponent>(player, glm::vec2(state.logW, state.logH), map->tileWidth, map->tileHeight, map->mapWidth, map->mapHeight);
 
 			layerObject.addChild(player);
 		}

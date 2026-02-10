@@ -39,8 +39,8 @@ class Platformer
 	std::unique_ptr<tmx::Map> map;
 	std::vector<TileSetTextures> tilesetTextures;
 	auto createObject(Services &services, int r, int c);
-	void processLayer(Node &root, Services &services, tmx::Layer &layer, int index);
-	void processLayer(Node &root, Services &services, tmx::ObjectGroup &objectGroup, int index);
+	void processLayer(Node &root, Services &services, SDLState &state, tmx::Layer &layer, int index);
+	void processLayer(Node &root, Services &services, SDLState &state, tmx::ObjectGroup &objectGroup, int index);
 
 public:
 	Platformer();
@@ -48,7 +48,7 @@ public:
 	NodeHandle getPlayerHandle() const { return hPlayer; }
 	bool initialize(Services &services, SDLState &state);
 	void cleanup();
-	void onStart();
+	void onStart(Services &services, SDLState &state);
 	void update();
 
 	auto getRoot() const
