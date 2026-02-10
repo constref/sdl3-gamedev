@@ -18,6 +18,8 @@
 #include <fstream>
 #include <sstream>
 
+constexpr bool debugging = true;
+
 std::string readTextFile(const std::string &filePath)
 {
 	std::ifstream infile(filePath);
@@ -79,11 +81,9 @@ bool VulkanRenderSystem::initialize()
 		vertices.push_back(quad[i]);
 		indices.push_back(i);
 	}
-
 	vertexBuffer = createBuffer(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		sizeof(Vertex) * vertices.size(), vertices.data());
-	indexBuffer = createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		sizeof(uint32_t) * indices.size(), indices.data());
+		0, sizeof(Vertex) * vertices.size(), vertices.data());
+	indexBuffer = createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 0, sizeof(uint32_t) * indices.size(), indices.data());
 
 	Mesh newMesh;
 	SubMesh sm;
@@ -281,6 +281,10 @@ void VulkanRenderSystem::beginFrame()
 	res.numDraws = 0;
 	res.numInstances = 0;
 
+	// BDA Send Device Pointer
+	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
+	res.vertBufferAddr = vkGetBufferDeviceAddress(device, &vertBdaInfo);
+
 	vkResetCommandPool(device, res.commandPool, 0); // resets all buffers
 
 	// begin recording commands
@@ -316,6 +320,27 @@ void VulkanRenderSystem::beginFrame()
 	};
 	transitionImages(res.commandBuffer, layoutBarriers);
 
+	std::array<VkDescriptorSet, 2> sets{ globalDescSet, res.descSet };
+	vkCmdBindDescriptorSets(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.layout, 0, sets.size(), sets.data(), 0, nullptr);
+}
+
+void VulkanRenderSystem::endFrame()
+{
+	FrameResources &res = frameResources[frameResIndex];
+
+	// ensure indirect draw and instance data has been flushed to VRAM
+	VkMemoryBarrier barrier
+	{
+		.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+		.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT | VK_ACCESS_SHADER_READ_BIT
+	};
+	vkCmdPipelineBarrier(res.commandBuffer,
+		VK_PIPELINE_STAGE_HOST_BIT,
+		VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0, 1, &barrier, 0, nullptr, 0, nullptr
+	);
+
 	// setup the attachments (color and depth) and begin rendering (dynamic rendering)
 	VkRenderingAttachmentInfo colorAttachInfo
 	{
@@ -348,7 +373,6 @@ void VulkanRenderSystem::beginFrame()
 		.pColorAttachments = &colorAttachInfo,
 		.pDepthAttachment = &depthAttachInfo
 	};
-
 	// begin dynamic rendering
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 
@@ -372,14 +396,6 @@ void VulkanRenderSystem::beginFrame()
 
 	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.handle);
 
-	std::array<VkDescriptorSet, 2> sets{ globalDescSet, res.descSet };
-	vkCmdBindDescriptorSets(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, spritePipeline.layout, 0, sets.size(), sets.data(), 0, nullptr);
-}
-
-void VulkanRenderSystem::endFrame()
-{
-	FrameResources &res = frameResources[frameResIndex];
-
 	vkCmdBindIndexBuffer(res.commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	vkCmdDrawIndexedIndirect(res.commandBuffer, res.indirectDraws.buffer, 0, res.numDraws, sizeof(VkDrawIndexedIndirectCommand));
 
@@ -387,9 +403,8 @@ void VulkanRenderSystem::endFrame()
 	vkCmdEndRendering(res.commandBuffer);
 
 	// start the swapchain render pass
-	VkSemaphore imageAcquireSemaphore = res.imageAcquiredSemaphore;
 	// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
-	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
+	VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, res.imageAcquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
 	// handle resize and out-of-date images, may need swapchain recreate
 
 	if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
@@ -434,6 +449,17 @@ void VulkanRenderSystem::endFrame()
 	const int32_t yOffset = (swapchainHeight - yScaled) / 2;
 
 	// blit the internal texture onto the swapchain
+	VkClearColorValue clearColor{ 0, 0, 0, 1 };
+	VkImageSubresourceRange range
+	{
+		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+		.baseMipLevel = 0,
+		.levelCount = 1,
+		.baseArrayLayer = 0,
+		.layerCount = 1,
+	};
+	vkCmdClearColorImage(res.commandBuffer, swapchainImages[imageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
+
 	VkImageBlit2 blitRegion
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2,
@@ -453,6 +479,7 @@ void VulkanRenderSystem::endFrame()
 		.pRegions = &blitRegion,
 		.filter = VK_FILTER_NEAREST,
 	};
+
 	vkCmdBlitImage2(res.commandBuffer, &blitInfo);
 
 	// transition the swapchain image from blit DST to presentation
@@ -498,7 +525,7 @@ void VulkanRenderSystem::endFrame()
 	{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
 		.semaphore = res.imageAcquiredSemaphore,
-		.stageMask = VK_PIPELINE_STAGE_2_BLIT_BIT
+		.stageMask = VK_PIPELINE_STAGE_2_BLIT_BIT | VK_PIPELINE_STAGE_2_CLEAR_BIT
 	};
 
 	VkSubmitInfo2 submitInfo
@@ -551,8 +578,6 @@ void VulkanRenderSystem::update(Node &node)
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::floor(-camPos));
 	glm::mat4 mvp = proj * view * transform;
 
-	// BDA Send Device Pointer
-	VkBufferDeviceAddressInfo vertBdaInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = vertexBuffer.buffer };
 	//DrawConstants pushConsts
 	//{
 	//	.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
@@ -570,7 +595,7 @@ void VulkanRenderSystem::update(Node &node)
 
 	const size_t instanceIdx = res.numInstances++;
 	res.instances[instanceIdx] = {
-		.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
+		.vertexBufferAddress = res.vertBufferAddr,
 		.globalTime = static_cast<float>(globalTime),
 		.mvp = mvp,
 		.textureIndex = sc->getTexture().index(),
@@ -584,6 +609,7 @@ void VulkanRenderSystem::update(Node &node)
 
 	for (Mesh &mesh : meshes)
 	{
+		assert(mesh.subMeshes.size() == 1);
 		for (SubMesh &sub : mesh.subMeshes)
 		{
 			VkDrawIndexedIndirectCommand &cmd = res.drawCommands[res.numDraws++];
@@ -874,7 +900,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		!supportedFeatures12.timelineSemaphore || !supportedFeatures12.descriptorIndexing ||
 		!supportedFeatures12.descriptorBindingSampledImageUpdateAfterBind || !supportedFeatures12.descriptorBindingPartiallyBound ||
 		!supportedFeatures12.runtimeDescriptorArray || !supportedFeatures.features.samplerAnisotropy ||
-		!supportedFeatures.features.multiDrawIndirect)
+		!supportedFeatures.features.multiDrawIndirect || !supportedFeatures12.bufferDeviceAddress)
 	{
 		showError("Physical device doesn't meet the feature requirements");
 		return false;
@@ -903,7 +929,8 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		.runtimeDescriptorArray = VK_TRUE,
 		.scalarBlockLayout = VK_TRUE,
 		.timelineSemaphore = VK_TRUE,
-		.bufferDeviceAddress = VK_TRUE
+		.bufferDeviceAddress = VK_TRUE,
+		//.bufferDeviceAddressCaptureReplay = (debugging) ? VK_TRUE : VK_FALSE
 	};
 	VkPhysicalDeviceFeatures2 features{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -912,7 +939,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 		{
 			.multiDrawIndirect = VK_TRUE,
 			.samplerAnisotropy = VK_TRUE,
-			.shaderInt64 = VK_TRUE
+			.shaderInt64 = VK_TRUE,
 		}
 	};
 
@@ -1519,11 +1546,12 @@ bool VulkanRenderSystem::createDescriptorSets()
 	return true;
 }
 
-Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData = nullptr)
+Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreateFlags flags, size_t byteSize, void *initData = nullptr)
 {
 	VkBufferCreateInfo buffInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.flags = flags,
 		.size = byteSize,
 		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
@@ -1653,13 +1681,13 @@ bool vks::VulkanRenderSystem::createIndirectDrawBuffers()
 	for (auto &res : frameResources)
 	{
 		// create buffer for the draw commands
-		res.indirectDraws = createBuffer(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, indirectBuffSize);
+		res.indirectDraws = createBuffer(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, 0, indirectBuffSize);
 		if (res.indirectDraws.buffer == nullptr)
 		{
 			return false;
 		}
 		// buffer for instance data
-		res.instanceData = createBuffer(VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT, instanceBuffSize);
+		res.instanceData = createBuffer(VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT, 0, instanceBuffSize);
 		if (res.instanceData.buffer == nullptr)
 		{
 			return false;
@@ -2130,7 +2158,7 @@ ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath, bool fli
 	}
 
 	// create a staging buffer for image data CPU side
-	Buffer stagingBuffer = createBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, width * height * channels, pixData);
+	Buffer stagingBuffer = createBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0, width * height * channels, pixData);
 	stbi_image_free(pixData);
 
 	VkCommandBuffer commandBuffer = startTransientCommandBuffer();

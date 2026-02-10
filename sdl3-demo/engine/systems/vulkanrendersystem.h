@@ -134,6 +134,7 @@ struct FrameResources
 	InstanceData *instances = nullptr;
 	uint32_t numInstances = 0;
 	VkDescriptorSet descSet = nullptr;
+	uint64_t vertBufferAddr = 0;
 };
 
 struct Barrier
@@ -250,7 +251,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool createCommandBuffers();
 	bool createDescriptorSets();
 	VkSampler createSampler();
-	vks::Buffer createBuffer(VkBufferUsageFlags usage, size_t byteSize, void *initData);
+	vks::Buffer createBuffer(VkBufferUsageFlags usage, VkBufferCreateFlags flags, size_t byteSize, void *initData);
 	bool createInternalTargets();
 	bool createIndirectDrawBuffers();
 	bool updatePerFrameDescriptors();

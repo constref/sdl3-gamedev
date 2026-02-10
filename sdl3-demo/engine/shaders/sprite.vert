@@ -25,7 +25,7 @@ layout(buffer_reference, scalar) readonly buffer VertexPtr
 
 struct InstanceData
 {
-    uint64_t vertexAddress;
+    VertexPtr vertexAddress;
     float globalTime;
     uint pad1;
     mat4 mvp;
@@ -39,7 +39,7 @@ struct InstanceData
     uint pad2;
 };
 
-layout(set = 1, binding = 0) readonly buffer InstanceBuffer
+layout(set = 1, binding = 0, scalar) readonly buffer InstanceBuffer
 {
 	InstanceData instances[];
 };
@@ -47,9 +47,9 @@ layout(set = 1, binding = 0) readonly buffer InstanceBuffer
 void main()
 {
 	InstanceData inst = instances[gl_InstanceIndex];
-    VertexPtr vBuffer = VertexPtr(inst.vertexAddress);
-    vec3 pos = vBuffer.vertices[gl_VertexIndex].position * vec3(inst.width, inst.height, 1);
-    vec2 uv = vBuffer.vertices[gl_VertexIndex].uv;
+    //VertexPtr vBuffer = VertexPtr(inst.vertexAddress);
+    vec3 pos = inst.vertexAddress.vertices[gl_VertexIndex].position * vec3(inst.width, inst.height, 1);
+    vec2 uv = inst.vertexAddress.vertices[gl_VertexIndex].uv;
     gl_Position = inst.mvp * vec4(pos.x, pos.y, inst.layerIndex, 1);
 
     outColor = vec3(1, 1, 1);
