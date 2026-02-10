@@ -47,7 +47,6 @@ layout(set = 1, binding = 0, scalar) readonly buffer InstanceBuffer
 void main()
 {
 	InstanceData inst = instances[gl_InstanceIndex];
-    //VertexPtr vBuffer = VertexPtr(inst.vertexAddress);
     vec3 pos = inst.vertexAddress.vertices[gl_VertexIndex].position * vec3(inst.width, inst.height, 1);
     vec2 uv = inst.vertexAddress.vertices[gl_VertexIndex].uv;
     gl_Position = inst.mvp * vec4(pos.x, pos.y, inst.layerIndex, 1);
