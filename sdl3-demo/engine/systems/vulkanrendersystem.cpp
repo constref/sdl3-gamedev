@@ -432,7 +432,7 @@ void VulkanRenderSystem::endFrame()
 		},
 		{
 			.image = swapchainImages[imageIndex],
-			.srcStageMask = VK_PIPELINE_STAGE_2_NONE,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 			.srcAccessMask = 0,
 			.dstStageMask = VK_PIPELINE_STAGE_2_BLIT_BIT,
 			.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
@@ -442,7 +442,9 @@ void VulkanRenderSystem::endFrame()
 	};
 	transitionImages(res.commandBuffer, blitToSwapTransitions);
 
-	const float scale = std::floor(std::min(swapchainWidth / static_cast<float>(logW), swapchainHeight / static_cast<float>(logH)));
+	const bool isIntegerScale = false;
+	const float scale = isIntegerScale ? std::floor(std::min(swapchainWidth / static_cast<float>(logW), swapchainHeight / static_cast<float>(logH)))
+		: std::min(swapchainWidth / static_cast<float>(logW), swapchainHeight / static_cast<float>(logH));
 	const int32_t xScaled = logW * scale;
 	const int32_t yScaled = logH * scale;
 	const int32_t xOffset = (swapchainWidth - xScaled) / 2;
