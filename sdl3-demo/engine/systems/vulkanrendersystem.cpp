@@ -20,7 +20,7 @@
 
 constexpr bool debugging = true;
 
-std::string readTextFile(const std::string &filePath)
+std::string readTextFile(const std::string& filePath)
 {
 	std::ifstream infile(filePath);
 	if (infile.is_open())
@@ -36,12 +36,12 @@ std::string readTextFile(const std::string &filePath)
 
 using namespace vks;
 
-void VulkanRenderSystem::showError(const std::string &errorMessage) const
+void VulkanRenderSystem::showError(const std::string& errorMessage) const
 {
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errorMessage.c_str(), window);
 }
 
-VulkanRenderSystem::VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services) : System(services), window(window)
+VulkanRenderSystem::VulkanRenderSystem(SDL_Window* window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services& services) : System(services), window(window)
 {
 	this->width = width;
 	this->height = height;
@@ -123,7 +123,7 @@ void VulkanRenderSystem::shutdown()
 	}
 
 	// clean up images
-	for (const Image &image : images)
+	for (const Image& image : images)
 	{
 		vmaDestroyImage(vmaAllocator, image.handle, image.allocation);
 		vkDestroyImageView(device, image.view, nullptr);
@@ -142,10 +142,9 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroySemaphore(device, timelineSemaphore, nullptr);
 	}
-	for (auto &res : frameResources)
+	for (auto& res : frameResources)
 	{
 		vkDestroySemaphore(device, res.imageAcquiredSemaphore, nullptr);
-		vkDestroySemaphore(device, res.workCompleteSemaphore, nullptr);
 		vkDestroyCommandPool(device, res.commandPool, nullptr); // destroys buffers implicitly
 
 		// cleanup internal render targets
@@ -198,7 +197,7 @@ void VulkanRenderSystem::shutdown()
 	}
 
 	// cleanup shaders
-	for (auto &set : shaders)
+	for (auto& set : shaders)
 	{
 		if (set->vert)
 		{
@@ -277,7 +276,7 @@ void VulkanRenderSystem::beginFrame()
 	vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
 
 	// now its safe to start recording commands
-	FrameResources &res = frameResources[frameResIndex];
+	FrameResources& res = frameResources[frameResIndex];
 	res.numDraws = 0;
 	res.numInstances = 0;
 
@@ -326,7 +325,7 @@ void VulkanRenderSystem::beginFrame()
 
 void VulkanRenderSystem::endFrame()
 {
-	FrameResources &res = frameResources[frameResIndex];
+	FrameResources& res = frameResources[frameResIndex];
 
 	// ensure indirect draw and instance data has been flushed to VRAM
 	VkMemoryBarrier barrier
@@ -507,7 +506,7 @@ void VulkanRenderSystem::endFrame()
 	{
 		{ // render work completion signal
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-			.semaphore = res.workCompleteSemaphore,
+			.semaphore = workCompleteSemaphores[imageIndex],
 			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
 		},
 		{ // entire frame is completed (timeline)
@@ -547,7 +546,7 @@ void VulkanRenderSystem::endFrame()
 	VkPresentInfoKHR presentInfo{
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &res.workCompleteSemaphore, // render work completed semaphore
+		.pWaitSemaphores = &workCompleteSemaphores[imageIndex], // render work completed semaphore
 		.swapchainCount = 1,
 		.pSwapchains = &swapchain,
 		.pImageIndices = &imageIndex,
@@ -557,10 +556,10 @@ void VulkanRenderSystem::endFrame()
 	vkQueuePresentKHR(gfxQueue, &presentInfo);
 }
 
-void VulkanRenderSystem::update(Node &node)
+void VulkanRenderSystem::update(Node& node)
 {
 	auto [sc] = getRequiredComponents(node);
-	FrameResources &res = frameResources[frameResIndex];
+	FrameResources& res = frameResources[frameResIndex];
 
 	constexpr float fov = glm::radians(45.0);
 	float aspect = static_cast<float>(logW) / static_cast<float>(logH);
@@ -610,12 +609,12 @@ void VulkanRenderSystem::update(Node &node)
 		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
 
-	for (Mesh &mesh : meshes)
+	for (Mesh& mesh : meshes)
 	{
 		assert(mesh.subMeshes.size() == 1);
-		for (SubMesh &sub : mesh.subMeshes)
+		for (SubMesh& sub : mesh.subMeshes)
 		{
-			VkDrawIndexedIndirectCommand &cmd = res.drawCommands[res.numDraws++];
+			VkDrawIndexedIndirectCommand& cmd = res.drawCommands[res.numDraws++];
 			cmd.firstIndex = sub.indexStart;
 			cmd.indexCount = sub.indexCount;
 			cmd.firstInstance = instanceIdx;
@@ -671,13 +670,13 @@ bool VulkanRenderSystem::initializeVulkan()
 
 	createInternalTargets();
 
-	ShaderSet *shaderRegular = createShaders("shader");
+	ShaderSet* shaderRegular = createShaders("shader");
 	if (!shaderRegular)
 	{
 		showError("Error creating shader modules");
 		return false;
 	}
-	ShaderSet *shaderSprite = createShaders("sprite");
+	ShaderSet* shaderSprite = createShaders("sprite");
 	if (!shaderSprite)
 	{
 		showError("Error creating shader modules");
@@ -754,8 +753,8 @@ bool VulkanRenderSystem::createVulkanInstance()
 
 	// find the required extensions for the platform and add debug for ourselves
 	uint32_t instExtCount = 0;
-	const char *const *extensions = SDL_Vulkan_GetInstanceExtensions(&instExtCount);
-	std::vector<const char *> requestedExtensions
+	const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&instExtCount);
+	std::vector<const char*> requestedExtensions
 	{
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 	};
@@ -766,7 +765,7 @@ bool VulkanRenderSystem::createVulkanInstance()
 
 
 	// we'll also need to enable the validation layer for error checking and reporting
-	std::vector<const char *> requestedLayers
+	std::vector<const char*> requestedLayers
 	{
 		"VK_LAYER_KHRONOS_validation"
 	};
@@ -826,7 +825,7 @@ VkPhysicalDevice VulkanRenderSystem::findPhysicalDevice()
 		// if you have issues, you can always just hardcode a GPU index while learning
 		physicalDevice = physicalDevices[0]; // default to first GPU
 		// look through list and see if a dGPU exists
-		for (auto &pDev : physicalDevices)
+		for (auto& pDev : physicalDevices)
 		{
 			VkPhysicalDeviceProperties props{};
 			vkGetPhysicalDeviceProperties(pDev, &props);
@@ -845,7 +844,7 @@ VkPhysicalDevice VulkanRenderSystem::findPhysicalDevice()
 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data());
 
 	bool formatSupported = false;
-	for (const VkSurfaceFormatKHR &surfFormat : surfaceFormats)
+	for (const VkSurfaceFormatKHR& surfFormat : surfaceFormats)
 	{
 		if (surfFormat.format == swapchainFormat)
 		{
@@ -877,7 +876,7 @@ bool VulkanRenderSystem::findGraphicsQueue()
 		VkBool32 hasPresentSupport = VK_FALSE;
 		vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, currentFamIdx, surface, &hasPresentSupport);
 
-		const auto &props = queueFamProps[currentFamIdx];
+		const auto& props = queueFamProps[currentFamIdx];
 		// ensure this is a GRAPHICS queue with presentation support
 		if (props.queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT && hasPresentSupport)
 		{
@@ -957,7 +956,7 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	};
 
 	// device specific extensions
-	const std::vector<const char *> deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	const std::vector<const char*> deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	VkDeviceCreateInfo devCreateInfo
 	{
@@ -1082,6 +1081,17 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 		}
 	}
 
+	workCompleteSemaphores.resize(imageCount);
+	for (int i = 0; i < imageCount; ++i)
+	{
+		VkSemaphoreCreateInfo semaphoreInfo { .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO, };
+		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &workCompleteSemaphores[i]) != VK_SUCCESS)
+		{
+			showError("Unable to create semaphore");
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -1098,9 +1108,14 @@ void VulkanRenderSystem::destroySwapchain()
 		vkDestroySwapchainKHR(device, swapchain, nullptr);
 		swapchain = nullptr;
 	}
+
+	for (VkSemaphore semaphore : workCompleteSemaphores)
+	{
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
 }
 
-VkShaderModule VulkanRenderSystem::createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const
+VkShaderModule VulkanRenderSystem::createShaderModule(const std::string& fileName, shaderc_shader_kind kind) const
 {
 	// read shader file from disk
 	const std::string shaderPath = "sdl3-demo/engine/shaders/" + fileName;
@@ -1144,13 +1159,13 @@ VkShaderModule VulkanRenderSystem::createShaderModule(const std::string &fileNam
 	return shaderModule;
 }
 
-ShaderSet *VulkanRenderSystem::createShaders(const std::string &shaderName)
+ShaderSet* VulkanRenderSystem::createShaders(const std::string& shaderName)
 {
 	auto shaderSet = std::make_unique<ShaderSet>();
 	// create the shader modules that we'll need for the graphics pipeline
 	shaderSet->vert = createShaderModule(std::format("{}.vert", shaderName), shaderc_vertex_shader);
 	shaderSet->frag = createShaderModule(std::format("{}.frag", shaderName), shaderc_fragment_shader);
-	ShaderSet *result = shaderSet.get();
+	ShaderSet* result = shaderSet.get();
 	shaders.push_back(std::move(shaderSet));
 
 	if (result->vert == nullptr || result->frag == nullptr)
@@ -1160,10 +1175,10 @@ ShaderSet *VulkanRenderSystem::createShaders(const std::string &shaderName)
 	return result;
 }
 
-Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet &shaderSet, const PipelineConfig &config) const
+Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet& shaderSet, const PipelineConfig& config) const
 {
 	// configure the shader stages struct
-	const char *entryPoint = "main";
+	const char* entryPoint = "main";
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages
 	{
 		{
@@ -1350,16 +1365,11 @@ bool VulkanRenderSystem::createSyncResources()
 	}
 
 	// per-frame image-acquire semaphores
-	for (FrameResources &res : frameResources)
+	for (FrameResources& res : frameResources)
 	{
 		// create the binary semaphores
 		VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS)
-		{
-			showError("Error creating the per-frame image-acquire semaphore");
-			return false;
-		}
-		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.workCompleteSemaphore) != VK_SUCCESS)
 		{
 			showError("Error creating the per-frame image-acquire semaphore");
 			return false;
@@ -1383,7 +1393,7 @@ bool VulkanRenderSystem::createCommandBuffers()
 		return false;
 	}
 
-	for (FrameResources &res : frameResources)
+	for (FrameResources& res : frameResources)
 	{
 		// we'll give each frame its own pool, faster cmd buffer resets this way
 		VkCommandPoolCreateInfo poolInfo
@@ -1536,7 +1546,7 @@ bool VulkanRenderSystem::createDescriptorSets()
 			.pSetLayouts = &frameDSLayout,
 		};
 
-		for (auto &res : frameResources)
+		for (auto& res : frameResources)
 		{
 			if (vkAllocateDescriptorSets(device, &descSetAllocInfo, &res.descSet) != VK_SUCCESS)
 			{
@@ -1549,7 +1559,7 @@ bool VulkanRenderSystem::createDescriptorSets()
 	return true;
 }
 
-Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreateFlags flags, size_t byteSize, void *initData = nullptr)
+Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreateFlags flags, size_t byteSize, void* initData = nullptr)
 {
 	VkBufferCreateInfo buffInfo
 	{
@@ -1575,13 +1585,13 @@ Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreate
 	// write init data if provided
 	if (initData)
 	{
-		void *buffPtr = nullptr;
+		void* buffPtr = nullptr;
 		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
 		{
 			showError("Unable to map buffer memory");
 		}
-		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
-		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
+		std::memcpy(static_cast<char*>(buffPtr), initData, buffInfo.size);
+		const glm::vec3* vec3Ptr = reinterpret_cast<const glm::vec3*>(buffPtr);
 		vmaUnmapMemory(vmaAllocator, newBuff.allocation);
 	}
 
@@ -1590,7 +1600,7 @@ Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreate
 
 bool vks::VulkanRenderSystem::createInternalTargets()
 {
-	for (auto &res : frameResources)
+	for (auto& res : frameResources)
 	{
 		VkImageCreateInfo imageInfo
 		{
@@ -1681,7 +1691,7 @@ bool vks::VulkanRenderSystem::createIndirectDrawBuffers()
 {
 	const size_t indirectBuffSize = MaxDrawCommands * sizeof(VkDrawIndexedIndirectCommand);
 	const size_t instanceBuffSize = MaxInstances * sizeof(InstanceData);
-	for (auto &res : frameResources)
+	for (auto& res : frameResources)
 	{
 		// create buffer for the draw commands
 		res.indirectDraws = createBuffer(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT, 0, indirectBuffSize);
@@ -1697,11 +1707,11 @@ bool vks::VulkanRenderSystem::createIndirectDrawBuffers()
 		}
 
 		// keep both buffers mapped
-		if (vmaMapMemory(vmaAllocator, res.indirectDraws.allocation, reinterpret_cast<void **>(&res.drawCommands)) != VK_SUCCESS)
+		if (vmaMapMemory(vmaAllocator, res.indirectDraws.allocation, reinterpret_cast<void**>(&res.drawCommands)) != VK_SUCCESS)
 		{
 			return false;
 		}
-		if (vmaMapMemory(vmaAllocator, res.instanceData.allocation, reinterpret_cast<void **>(&res.instances)) != VK_SUCCESS)
+		if (vmaMapMemory(vmaAllocator, res.instanceData.allocation, reinterpret_cast<void**>(&res.instances)) != VK_SUCCESS)
 		{
 			return false;
 		}
@@ -1711,7 +1721,7 @@ bool vks::VulkanRenderSystem::createIndirectDrawBuffers()
 
 bool vks::VulkanRenderSystem::updatePerFrameDescriptors()
 {
-	for (auto &res : frameResources)
+	for (auto& res : frameResources)
 	{
 		VkDescriptorBufferInfo dsWrite
 		{
@@ -1735,7 +1745,7 @@ bool vks::VulkanRenderSystem::updatePerFrameDescriptors()
 	return true;
 }
 
-void loadNode(tinygltf::Node &node, tinygltf::Model &model)
+void loadNode(tinygltf::Node& node, tinygltf::Model& model)
 {
 	using namespace tinygltf;
 
@@ -1750,10 +1760,10 @@ void VulkanRenderSystem::loadModel()
 	using namespace tinygltf;
 	Model model;
 
-	tinygltf::LoadImageDataFunction imageLoaderFunc = [](tinygltf::Image *image, const int imgIndex, std::string *err, std::string *warn, int reqWidth, int reqHeight, const unsigned char *bytes, int size, void *userData) -> bool
-	{
-		return false;
-	};
+	tinygltf::LoadImageDataFunction imageLoaderFunc = [](tinygltf::Image* image, const int imgIndex, std::string* err, std::string* warn, int reqWidth, int reqHeight, const unsigned char* bytes, int size, void* userData) -> bool
+		{
+			return false;
+		};
 
 	TinyGLTF loader;
 	loader.SetImageLoader(imageLoaderFunc, nullptr);
@@ -1768,7 +1778,7 @@ void VulkanRenderSystem::loadModel()
 	VkCommandBuffer commandBuffer = startTransientCommandBuffer();
 	if (commandBuffer)
 	{
-		for (const tinygltf::Image &image : model.images)
+		for (const tinygltf::Image& image : model.images)
 		{
 			auto [imageId, img] = createImage(image.width, image.height, image.component);
 			if (!imageId.isValid())
@@ -1781,48 +1791,48 @@ void VulkanRenderSystem::loadModel()
 	submitTransientCommandBuffer(commandBuffer);
 
 	// load all meshes first
-	for (const tinygltf::Mesh &mesh : model.meshes)
+	for (const tinygltf::Mesh& mesh : model.meshes)
 	{
 		vks::Mesh newMesh;
-		for (const Primitive &primitive : mesh.primitives)
+		for (const Primitive& primitive : mesh.primitives)
 		{
 			SubMesh subMesh;
 			subMesh.vertexStart = vertices.size();
 			subMesh.indexStart = indices.size();
 
 			// load primitive vertices into sub-mesh
-			if (const auto &itr = primitive.attributes.find("POSITION"); itr != primitive.attributes.end())
+			if (const auto& itr = primitive.attributes.find("POSITION"); itr != primitive.attributes.end())
 			{
-				const auto &[name, index] = *itr;
-				const Accessor &access = model.accessors[index];
-				const BufferView &bv = model.bufferViews[access.bufferView];
-				const tinygltf::Buffer &buffer = model.buffers[bv.buffer];
+				const auto& [name, index] = *itr;
+				const Accessor& access = model.accessors[index];
+				const BufferView& bv = model.bufferViews[access.bufferView];
+				const tinygltf::Buffer& buffer = model.buffers[bv.buffer];
 
 				if (access.type == TINYGLTF_TYPE_VEC3)
 				{
 					for (int i = 0; i < access.count; ++i)
 					{
 						size_t offset = bv.byteOffset + access.byteOffset + i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(glm::vec3));
-						const glm::vec3 *pos = reinterpret_cast<const glm::vec3 *>(buffer.data.data() + offset);
+						const glm::vec3* pos = reinterpret_cast<const glm::vec3*>(buffer.data.data() + offset);
 						vertices.push_back(Vertex{ .position = *pos });
 						subMesh.vertexCount++;
 					}
 				}
 			}
 			// load primitive vertices into sub-mesh
-			if (const auto &itr = primitive.attributes.find("TEXCOORD_0"); itr != primitive.attributes.end())
+			if (const auto& itr = primitive.attributes.find("TEXCOORD_0"); itr != primitive.attributes.end())
 			{
-				const auto &[name, index] = *itr;
-				const Accessor &access = model.accessors[index];
-				const BufferView &bv = model.bufferViews[access.bufferView];
-				const tinygltf::Buffer &buffer = model.buffers[bv.buffer];
+				const auto& [name, index] = *itr;
+				const Accessor& access = model.accessors[index];
+				const BufferView& bv = model.bufferViews[access.bufferView];
+				const tinygltf::Buffer& buffer = model.buffers[bv.buffer];
 
 				if (access.type == TINYGLTF_TYPE_VEC2)
 				{
 					for (int i = 0; i < access.count; ++i)
 					{
 						size_t offset = bv.byteOffset + access.byteOffset + i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(glm::vec2));
-						const glm::vec2 *uv = reinterpret_cast<const glm::vec2 *>(buffer.data.data() + offset);
+						const glm::vec2* uv = reinterpret_cast<const glm::vec2*>(buffer.data.data() + offset);
 						vertices[subMesh.vertexStart + i].uv = *uv;
 					}
 				}
@@ -1830,16 +1840,16 @@ void VulkanRenderSystem::loadModel()
 			// indices
 			if (primitive.indices != -1)
 			{
-				const Accessor &access = model.accessors[primitive.indices];
-				const BufferView &bv = model.bufferViews[access.bufferView];
-				const tinygltf::Buffer &buffer = model.buffers[bv.buffer];
+				const Accessor& access = model.accessors[primitive.indices];
+				const BufferView& bv = model.bufferViews[access.bufferView];
+				const tinygltf::Buffer& buffer = model.buffers[bv.buffer];
 				subMesh.indexCount = access.count;
 
 				if (access.type == TINYGLTF_TYPE_SCALAR && access.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 				{
 					for (int i = 0; i < access.count; ++i)
 					{
-						const uint32_t *idx = reinterpret_cast<const uint32_t *>(buffer.data.data() + bv.byteOffset + access.byteOffset) + i;
+						const uint32_t* idx = reinterpret_cast<const uint32_t*>(buffer.data.data() + bv.byteOffset + access.byteOffset) + i;
 						indices.push_back(*idx);
 					}
 				}
@@ -1847,7 +1857,7 @@ void VulkanRenderSystem::loadModel()
 				{
 					for (int i = 0; i < access.count; ++i)
 					{
-						const uint16_t *idx = reinterpret_cast<const uint16_t *>(buffer.data.data() + bv.byteOffset + access.byteOffset) + i;
+						const uint16_t* idx = reinterpret_cast<const uint16_t*>(buffer.data.data() + bv.byteOffset + access.byteOffset) + i;
 						indices.push_back(*idx);
 					}
 				}
@@ -1857,39 +1867,39 @@ void VulkanRenderSystem::loadModel()
 		meshes.push_back(newMesh);
 	}
 
-	auto createBuffer = [](VmaAllocator &vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void *initData)
-	{
-		VkBufferCreateInfo buffInfo
+	auto createBuffer = [](VmaAllocator& vmaAllocator, VkBufferUsageFlags usage, size_t byteSize, void* initData)
 		{
-			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			.size = byteSize,
-			.usage = usage,
-			.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+			VkBufferCreateInfo buffInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+				.size = byteSize,
+				.usage = usage,
+				.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+			};
+
+			VmaAllocationCreateInfo allocInfo
+			{
+				.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
+				.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
+			};
+
+			vks::Buffer newBuff;
+			if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
+			{
+				//showError("Error allocating buffer");
+			}
+
+			void* buffPtr = nullptr;
+			if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
+			{
+				//showError("Unable to map buffer memory");
+			}
+			std::memcpy(static_cast<char*>(buffPtr), initData, buffInfo.size);
+			const glm::vec3* vec3Ptr = reinterpret_cast<const glm::vec3*>(buffPtr);
+			vmaUnmapMemory(vmaAllocator, newBuff.allocation);
+
+			return newBuff;
 		};
-
-		VmaAllocationCreateInfo allocInfo
-		{
-			.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
-			.usage = VMA_MEMORY_USAGE_CPU_TO_GPU
-		};
-
-		vks::Buffer newBuff;
-		if (vmaCreateBuffer(vmaAllocator, &buffInfo, &allocInfo, &newBuff.buffer, &newBuff.allocation, nullptr) != VK_SUCCESS)
-		{
-			//showError("Error allocating buffer");
-		}
-
-		void *buffPtr = nullptr;
-		if (vmaMapMemory(vmaAllocator, newBuff.allocation, &buffPtr) != VK_SUCCESS)
-		{
-			//showError("Unable to map buffer memory");
-		}
-		std::memcpy(static_cast<char *>(buffPtr), initData, buffInfo.size);
-		const glm::vec3 *vec3Ptr = reinterpret_cast<const glm::vec3 *>(buffPtr);
-		vmaUnmapMemory(vmaAllocator, newBuff.allocation);
-
-		return newBuff;
-	};
 
 	vertexBuffer = createBuffer(vmaAllocator, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		sizeof(Vertex) * vertices.size(), vertices.data());
@@ -2028,7 +2038,7 @@ VkSampler VulkanRenderSystem::createSampler()
 	return sampler;
 }
 
-void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const std::span<Barrier> &barriers)
+void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const std::span<Barrier>& barriers)
 {
 	const size_t maxTransitions = 5;
 	assert(maxTransitions >= barriers.size());
@@ -2036,7 +2046,7 @@ void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const s
 
 	for (int i = 0; i < barriers.size(); ++i)
 	{
-		const Barrier &b = barriers[i];
+		const Barrier& b = barriers[i];
 		vkBarriers[i] =
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -2070,8 +2080,8 @@ void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const s
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-	void *pUserData)
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
 {
 	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 	{
@@ -2085,7 +2095,7 @@ void VulkanRenderSystem::updateTextures()
 {
 	std::vector<VkDescriptorImageInfo> descriptorWrites;
 	descriptorWrites.reserve(images.size());
-	for (Image &img : images)
+	for (Image& img : images)
 	{
 		descriptorWrites.push_back({
 			.sampler = nearestSampler,
@@ -2107,22 +2117,22 @@ void VulkanRenderSystem::updateTextures()
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
 }
 
-void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
+void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent& event)
 {
-	Node &node = services.world().getNode(target);
+	Node& node = services.world().getNode(target);
 	auto [sc] = getRequiredComponents(node);
 	sc->setTexture(event.getTextureId());
 }
 
-void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationStopEvent &event)
+void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationStopEvent& event)
 {
 }
 
-void VulkanRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
+void VulkanRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent& event)
 {
 	if (event.getDirection().x != 0)
 	{
-		Node &node = services.world().getNode(target);
+		Node& node = services.world().getNode(target);
 		if (node.isLinkedWith(this))
 		{
 			auto [sc] = getRequiredComponents(node);
@@ -2131,14 +2141,14 @@ void VulkanRenderSystem::onEvent(NodeHandle target, const DirectionChangedEvent 
 	}
 }
 
-ResourceId VulkanRenderSystem::loadTexture(const std::string &filepath, bool flipY)
+ResourceId VulkanRenderSystem::loadTexture(const std::string& filepath, bool flipY)
 {
 	// get pixel data and image info
 	int width = 0;
 	int height = 0;
 	int channels = 0;
 	stbi_set_flip_vertically_on_load(flipY);
-	stbi_uc *pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
+	stbi_uc* pixData = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
 
 	auto [resId, img] = createImage(width, height, channels);
 	if (!resId.isValid())

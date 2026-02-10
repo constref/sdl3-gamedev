@@ -125,7 +125,6 @@ struct FrameResources
 	VkCommandPool commandPool = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
 	VkSemaphore imageAcquiredSemaphore = nullptr;
-	VkSemaphore workCompleteSemaphore = nullptr;
 	Image renderTarget;
 	Buffer indirectDraws;
 	VkDrawIndexedIndirectCommand *drawCommands = nullptr;
@@ -189,6 +188,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VkSwapchainKHR swapchain = nullptr;
 	std::vector<VkImage> swapchainImages;
 	std::vector<VkImageView> swapchainImageViews;
+	std::vector<VkSemaphore> workCompleteSemaphores;
 	bool requireSwapchainRecreate = false;
 	uint32_t swapchainWidth = 0;
 	uint32_t swapchainHeight = 0;
