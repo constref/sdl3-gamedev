@@ -14,7 +14,7 @@ SpriteComponent::SpriteComponent(Node &owner, ResourceId texture, float width, f
 	this->height = height;
 	this->spriteSheetWidth = width;
 	this->spriteSheetHeight = height;
-	scale = glm::vec2(1.0f, 1.0f);
+	scale = glm::vec3(1.0f, 1.0f, 1.0f);
 	rotation = 0;
 	frameNumber = 1;
 	frameCount = 1;

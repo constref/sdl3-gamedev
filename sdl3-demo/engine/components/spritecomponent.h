@@ -15,7 +15,7 @@ protected:
 	float height;
 	float spriteSheetWidth;
 	float spriteSheetHeight;
-	glm::vec2 scale;
+	glm::vec3 scale;
 	float rotation;
 	int frameNumber;
 	int frameCount;
@@ -46,8 +46,8 @@ public:
 	void setViewportPos(glm::vec2 viewportPos) { this->viewportPos = viewportPos; }
 	float getFollowViewport() const { return followViewport; }
 	void setFollowViewport(bool shouldFollow) { followViewport = shouldFollow ? 1.0f : 0.0f; }
-	glm::vec2 getScale() const { return scale; }
-	void setScale(const glm::vec2 &scale) { this->scale = scale; }
+	glm::vec3 getScale() const { return scale; }
+	void setScale(const glm::vec3 &scale) { this->scale = scale; }
 	float getRotation() const { return rotation; }
 	void setRotation(float rotation) { this->rotation = rotation; }
 	float getParalaxFactor() const { return paralaxFactor; }

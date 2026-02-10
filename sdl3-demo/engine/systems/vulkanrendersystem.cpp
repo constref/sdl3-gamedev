@@ -576,25 +576,10 @@ void VulkanRenderSystem::update(Node& node)
 	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::mat4(1);
 	glm::mat4 translate = glm::translate(glm::mat4(1), nodePos);
-	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
+	glm::mat4 scale = glm::scale(glm::mat4(1), sc->getScale());
 	glm::mat4 transform = translate * rotation * scale;
 	const glm::mat4 view = glm::translate(glm::mat4(1), -camPos);
 	glm::mat4 mvp = proj * view * transform;
-
-	//DrawConstants pushConsts
-	//{
-	//	.vertexBufferAddress = vkGetBufferDeviceAddress(device, &vertBdaInfo),
-	//	.globalTime = static_cast<float>(globalTime),
-	//	.mvp = mvp,
-	//	.textureIndex = sc->getTexture().index(),
-	//	.frameNumber = static_cast<uint32_t>(sc->getFrameNumber()),
-	//	.frameCount = static_cast<uint32_t>(sc->getFrameCount()),
-	//	.width = static_cast<uint32_t>(sc->getSize().x),
-	//	.height = static_cast<uint32_t>(sc->getSize().y),
-	//	.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
-	//	.layerIndex = static_cast<float>(sc->getLayerIndex())
-	//};
-	//vkCmdPushConstants(res.commandBuffer, spritePipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DrawConstants), &pushConsts);
 
 	const size_t instanceIdx = res.numInstances++;
 	res.instances[instanceIdx] = {
@@ -606,15 +591,9 @@ void VulkanRenderSystem::update(Node& node)
 		.frameCount = static_cast<uint32_t>(sc->getFrameCount()),
 		.width = static_cast<uint32_t>(sc->getSize().x),
 		.height = static_cast<uint32_t>(sc->getSize().y),
-		//.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
 		.flipH = static_cast<float>(sc->getFlipH()),
 		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
-
-	if (node.getTag() == 2)
-	{
-		std::cout << res.instances[instanceIdx].flipH << std::endl;
-	}
 
 	for (Mesh& mesh : meshes)
 	{
