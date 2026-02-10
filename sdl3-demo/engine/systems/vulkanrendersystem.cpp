@@ -537,13 +537,17 @@ void VulkanRenderSystem::update(Node &node)
 	float nearP = 0.1f;
 	float farP = 32.0f;
 
+	glm::vec3 nodePos = glm::floor(node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
+	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
+	glm::vec3 camNodePos = nodePos - camPos;
+	if (camNodePos.x > logW + sc->getSize().x || camNodePos.x < -sc->getSize().x) return;
+
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
 	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
 	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
-	glm::mat4 translate = glm::translate(glm::mat4(1), glm::floor(node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0)));
+	glm::mat4 translate = glm::translate(glm::mat4(1), nodePos);
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
 	glm::mat4 transform = translate * rotation * scale;
-	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
 	const glm::mat4 view = glm::translate(glm::mat4(1), glm::floor(-camPos));
 	glm::mat4 mvp = proj * view * transform;
 
