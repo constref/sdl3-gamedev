@@ -53,9 +53,9 @@ void main()
 
     outColor = vec3(1, 1, 1);
 
-    float uPortion = inst.flipH * (1.0 / inst.frameCount);
+    float uPortion = 1.0 / inst.frameCount;
     float uStart = uPortion * (inst.frameNumber - 1); // start position in spritesheet
+	outUV = vec2((uStart + uPortion * inst.flipH) + (1 - (2 * inst.flipH)) * (uPortion * uv.x), uv.y);
 
-    outUV = vec2(uStart + uPortion * uv.x, uv.y);
     instanceIndex = gl_InstanceIndex;
 }

@@ -566,18 +566,19 @@ void VulkanRenderSystem::update(Node& node)
 	float nearP = 0.1f;
 	float farP = 32.0f;
 
-	glm::vec3 nodePos = glm::floor(node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0));
-	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(), RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
+	glm::vec3 nodePos = node.getPosition() + glm::vec3(sc->getSize().x / 2.0f, sc->getSize().y / 2.0f, 0);
+	glm::vec3 camPos(RenderContext::shared().getCameraPosition().x * sc->getFollowViewport(),
+		RenderContext::shared().getCameraPosition().y * sc->getFollowViewport(), 0);
 	glm::vec3 camNodePos = nodePos - camPos;
 	if (camNodePos.x > logW + sc->getSize().x || camNodePos.x < -sc->getSize().x) return;
 
 	//glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, nearP, farP);
 	glm::mat4 proj = glm::ortho(float(0), float(logW), float(logH), 0.0f, 0.0f, 100.0f);
-	glm::mat4 rotation = glm::rotate(glm::mat4(1), static_cast<float>(globalTime), glm::vec3(0, 1, 0));
+	glm::mat4 rotation = glm::mat4(1);
 	glm::mat4 translate = glm::translate(glm::mat4(1), nodePos);
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
 	glm::mat4 transform = translate * rotation * scale;
-	const glm::mat4 view = glm::translate(glm::mat4(1), glm::floor(-camPos));
+	const glm::mat4 view = glm::translate(glm::mat4(1), -camPos);
 	glm::mat4 mvp = proj * view * transform;
 
 	//DrawConstants pushConsts
@@ -605,9 +606,15 @@ void VulkanRenderSystem::update(Node& node)
 		.frameCount = static_cast<uint32_t>(sc->getFrameCount()),
 		.width = static_cast<uint32_t>(sc->getSize().x),
 		.height = static_cast<uint32_t>(sc->getSize().y),
-		.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
+		//.flipH = 1.0f - static_cast<uint32_t>(sc->getFlipH()) * 2.0f,
+		.flipH = static_cast<float>(sc->getFlipH()),
 		.layerIndex = static_cast<float>(sc->getLayerIndex())
 	};
+
+	if (node.getTag() == 2)
+	{
+		std::cout << res.instances[instanceIdx].flipH << std::endl;
+	}
 
 	for (Mesh& mesh : meshes)
 	{
@@ -2019,9 +2026,9 @@ VkSampler VulkanRenderSystem::createSampler()
 		.magFilter = VK_FILTER_NEAREST,
 		.minFilter = VK_FILTER_NEAREST,
 		.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-		.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 		.anisotropyEnable = VK_TRUE,
 		.maxAnisotropy = 16.0f, // Check limits
 		.compareEnable = VK_FALSE,
