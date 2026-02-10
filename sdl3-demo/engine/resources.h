@@ -18,11 +18,6 @@ struct Resources
 		return instance;
 	}
 
-	std::vector<SDL_Texture *> textures;
-	SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
-		*texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
-		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
-
 	//std::vector<MIX_Audio *> audioBuffers;
 	//MIX_Audio *audioShoot, *audioShootHit, *audioEnemyHit;
 	//MIX_Audio *musicMain;
@@ -70,11 +65,6 @@ struct Resources
 
 	void unload()
 	{
-		for (SDL_Texture *tex : textures)
-		{
-			SDL_DestroyTexture(tex);
-		}
-
 		//for (MIX_Audio *audio : audioBuffers)
 		//{
 		//	MIX_DestroyAudio(audio);

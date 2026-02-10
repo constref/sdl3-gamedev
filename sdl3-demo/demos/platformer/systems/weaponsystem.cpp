@@ -60,7 +60,9 @@ void WeaponSystem::update(Node &node)
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
 			});
-		services.compSys().addComponent<ProjectileComponent>(bullet);
+		auto &projComp = services.compSys().addComponent<ProjectileComponent>(bullet);
+		projComp.animProjectileHitId = wc->animProjectileHit;
+		projComp.texProjectileHitId = wc->texProjectileHit;
 
 		// adjust bullet start position
 		SDL_FRect collider = collCmp.getCollider();

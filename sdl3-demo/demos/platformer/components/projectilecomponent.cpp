@@ -4,6 +4,7 @@ ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, FrameSt
 {
 	hit = false;
 	lifeDuration = 0;
+	deathTime = 0;
 }
 
 
