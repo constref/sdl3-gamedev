@@ -3,6 +3,7 @@
 #include <format>
 #include <memory>
 #include <array>
+#include <SDL3/SDL.h>
 #include <sdlstate.h>
 #include <inputstate.h>
 #include <framecontext.h>
@@ -20,16 +21,16 @@
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
 #include <prototypeinstancer.h>
+#include <applicationmodule.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-template<Application AppType>
 class Engine
 {
+	ApplicationModule *appModule;
 	uint64_t prevTime;
-	AppType app;
 	bool debugMode;
 	bool running;
 	constexpr static bool clampDeltaTime = true;
@@ -47,10 +48,12 @@ class Engine
 	InputState inputState;
 	PrototypeInstancer protoInstancer;
 	Services services;
+	SDLState sdlState;
 
 public:
-	Engine() : services(world, compSys, eventQueue, inputState, protoInstancer)
+	Engine() : services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
 	{
+		appModule = nullptr;
 		debugMode = false;
 		running = false;
 		prevTime = 0;
@@ -66,45 +69,72 @@ public:
 		cleanup();
 	}
 
-	bool initialize(int logW, int logH)
+	bool initialize(ApplicationModule *appModule, int logW, int logH)
 	{
-		SDLState &state = SDLState::global();
-		if (state.initialize(1920, 1080, logW, logH))
-		{
-			// core system registrations
-			services.compSys().registerSystem(std::make_unique<TimerSystem>(services));
-			services.compSys().registerSystem(std::make_unique<InputSystem>(services));
-			services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
-			services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
-			services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-			auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(state.window, state.width, state.height, state.logW, state.logH, services));
-			if (!renderSys.initialize())
-			{
-				return false;
-			}
+		sdlState.width = 1920;
+		sdlState.height = 1080;
+		sdlState.logW = logW;
+		sdlState.logH = logH;
 
-			// initialize and start the app
-			if (!app.initialize(services, state))
-			{
-				return false;
-			}
-			app.onStart(services, state);
+		if (!SDL_Init(SDL_INIT_VIDEO))
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
+			return false;
 		}
+
+		SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+		if (!window)
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
+			cleanup();
+			return false;
+		}
+		sdlState.window = window;
+		SDL_SetWindowFullscreen(window, sdlState.fullscreen);
+
+		// core system registrations
+		services.compSys().registerSystem(std::make_unique<TimerSystem>(services));
+		services.compSys().registerSystem(std::make_unique<InputSystem>(services));
+		services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
+		services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
+		services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
+		auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH, services));
+		if (!renderSys.initialize())
+		{
+			return false;
+		}
+
+		// initialize and start the app
+		if (!appModule->initialize(services, sdlState))
+		{
+			return false;
+		}
+
+		this->appModule = appModule;
+		appModule->start(services, sdlState);
+
+		// TODO: This should move
+		renderSys.updateTextures();
+
 		return true;
 	}
 
 	void cleanup()
 	{
 		services.compSys().shutdown();
-		app.cleanup();
-		SDLState::global().cleanup();
+		if (appModule)
+		{
+			appModule->cleanup();
+		}
+
+		SDL_DestroyWindow(sdlState.window);
+		SDL_Quit();
 	}
 
 	void run()
 	{
 		prevTime = SDL_GetTicks();
 		running = true;
-		SDLState &state = SDLState::global();
 
 #ifdef __EMSCRIPTEN__
 		emscripten_set_main_loop_arg(emIterate, this, 0, true);
@@ -119,13 +149,12 @@ public:
 private:
 	static void emIterate(void *userData)
 	{
-		auto *engine = static_cast<Engine<AppType> *>(userData);
+		auto *engine = static_cast<Engine*>(userData);
 		engine->step();
 	}
 
 	inline void step()
 	{
-		SDLState &state = SDLState::global();
 		// calculate deltaTime
 		uint64_t nowTime = SDL_GetTicks();
 		float actualDeltaTime = (nowTime - prevTime) / 1000.0f;
@@ -147,7 +176,7 @@ private:
 		ctx.frameNumber = ++frameCount;
 
 		World &world = services.world();
-		Node &root = world.getNode(app.getRoot());
+		Node &root = world.getNode(appModule->getRoot());
 
 		SDL_Event event{};
 		while (SDL_PollEvent(&event))
@@ -161,8 +190,8 @@ private:
 				}
 				case SDL_EVENT_WINDOW_RESIZED:
 				{
-					state.width = event.window.data1;
-					state.height = event.window.data2;
+					sdlState.width = event.window.data1;
+					sdlState.height = event.window.data2;
 					break;
 				}
 				case SDL_EVENT_KEY_DOWN:
@@ -183,8 +212,8 @@ private:
 					}
 					else if (event.key.scancode == SDL_SCANCODE_F11)
 					{
-						state.fullscreen = !state.fullscreen;
-						SDL_SetWindowFullscreen(state.window, state.fullscreen);
+						sdlState.fullscreen = !sdlState.fullscreen;
+						SDL_SetWindowFullscreen(sdlState.window, sdlState.fullscreen);
 					}
 					break;
 				}

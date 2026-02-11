@@ -12,8 +12,8 @@
 #include <systems/systemregistry.h>
 #include <componentsystems.h>
 #include <prototypeinstancer.h>
-#include <systems/spriteanimationsystem.h>
 #include <messaging/events.h>
+#include <resourceloader.h>
 
 #include "systems/playercontrolsystem.h"
 #include "systems/basiccamerasystem.h"
@@ -47,23 +47,25 @@ bool Platformer::initialize(Services &services, SDLState &state)
 	return true;
 }
 
-void Platformer::onStart(Services &services, SDLState &state)
+void Platformer::start(Services &services, SDLState &state)
 {
 	World &world = services.world();
 	hRoot = world.createNode();
 
-	SpriteAnimationSystem *animSys = services.compSys().getSystemRegistry().getSystem<SpriteAnimationSystem>();
-	animPlayerIdle = animSys->createAnimation(8, 1.6f);
-	animPlayerRun = animSys->createAnimation(4, 0.5f);
-	animPlayerJump = animSys->createAnimation(4, 1.0f);
-	animPlayerSlide = animSys->createAnimation(1, 1.0f);
-	animPlayerShoot = animSys->createAnimation(4, 0.5f);
-	animPlayerSlideShoot = animSys->createAnimation(4, 0.5f);
-	animBulletMoving = animSys->createAnimation(4, 0.01f);
-	animBulletHit = animSys->createAnimation(4, 0.15f);
-	animEnemy = animSys->createAnimation(8, 1.0f);
-	animEnemyHit = animSys->createAnimation(8, 1.0f);
-	animEnemyDie = animSys->createAnimation(18, 2.0f);
+	// TODO: Make it more obvious this is a throwaway object, it holds onto pointers to systems
+	ResourceLoader loader(services);
+
+	animPlayerIdle = loader.createAnimation(8, 1.6f);
+	animPlayerRun = loader.createAnimation(4, 0.5f);
+	animPlayerJump = loader.createAnimation(4, 1.0f);
+	animPlayerSlide = loader.createAnimation(1, 1.0f);
+	animPlayerShoot = loader.createAnimation(4, 0.5f);
+	animPlayerSlideShoot = loader.createAnimation(4, 0.5f);
+	animBulletMoving = loader.createAnimation(4, 0.01f);
+	animBulletHit = loader.createAnimation(4, 0.15f);
+	animEnemy = loader.createAnimation(8, 1.0f);
+	animEnemyHit = loader.createAnimation(8, 1.0f);
+	animEnemyDie = loader.createAnimation(18, 2.0f);
 
 	//MIX_Audio *loadAudio(const std::string &filepath)
 	//{
@@ -73,28 +75,26 @@ void Platformer::onStart(Services &services, SDLState &state)
 	//	return audio;
 	//}
 
-	vks::VulkanRenderSystem *renderSys = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
-
 	const std::string prefix = "data/";
-	texIdle = renderSys->loadTexture(prefix + "idle.png", true);
-	texRun = renderSys->loadTexture(prefix + "run.png", true);
-	texSlide = renderSys->loadTexture(prefix + "slide.png", true);
-	texBrick = renderSys->loadTexture(prefix + "tiles/brick.png", true);
-	texGrass = renderSys->loadTexture(prefix + "tiles/grass.png", true);
-	texGround = renderSys->loadTexture(prefix + "tiles/ground.png", true);
-	texPanel = renderSys->loadTexture(prefix + "tiles/panel.png", true);
-	texBg1 = renderSys->loadTexture(prefix + "bg/bg_layer1.png", true);
-	texBg2 = renderSys->loadTexture(prefix + "bg/bg_layer2.png", true);
-	texBg3 = renderSys->loadTexture(prefix + "bg/bg_layer3.png", true);
-	texBg4 = renderSys->loadTexture(prefix + "bg/bg_layer4.png", true);
-	texBullet = renderSys->loadTexture(prefix + "bullet.png", true);
-	texBulletHit = renderSys->loadTexture(prefix + "bullet_hit.png", true);
-	texShoot = renderSys->loadTexture(prefix + "shoot.png", true);
-	texRunShoot = renderSys->loadTexture(prefix + "shoot_run.png", true);
-	texSlideShoot = renderSys->loadTexture(prefix + "slide_shoot.png", true);
-	texEnemy = renderSys->loadTexture(prefix + "enemy.png", true);
-	texEnemyHit = renderSys->loadTexture(prefix + "enemy_hit.png", true);
-	texEnemyDie = renderSys->loadTexture(prefix + "enemy_die.png", true);
+	texIdle = loader.loadTexture(prefix + "idle.png", true);
+	texRun = loader.loadTexture(prefix + "run.png", true);
+	texSlide = loader.loadTexture(prefix + "slide.png", true);
+	texBrick = loader.loadTexture(prefix + "tiles/brick.png", true);
+	texGrass = loader.loadTexture(prefix + "tiles/grass.png", true);
+	texGround = loader.loadTexture(prefix + "tiles/ground.png", true);
+	texPanel = loader.loadTexture(prefix + "tiles/panel.png", true);
+	texBg1 = loader.loadTexture(prefix + "bg/bg_layer1.png", true);
+	texBg2 = loader.loadTexture(prefix + "bg/bg_layer2.png", true);
+	texBg3 = loader.loadTexture(prefix + "bg/bg_layer3.png", true);
+	texBg4 = loader.loadTexture(prefix + "bg/bg_layer4.png", true);
+	texBullet = loader.loadTexture(prefix + "bullet.png", true);
+	texBulletHit = loader.loadTexture(prefix + "bullet_hit.png", true);
+	texShoot = loader.loadTexture(prefix + "shoot.png", true);
+	texRunShoot = loader.loadTexture(prefix + "shoot_run.png", true);
+	texSlideShoot = loader.loadTexture(prefix + "slide_shoot.png", true);
+	texEnemy = loader.loadTexture(prefix + "enemy.png", true);
+	texEnemyHit = loader.loadTexture(prefix + "enemy_hit.png", true);
+	texEnemyDie = loader.loadTexture(prefix + "enemy_die.png", true);
 
 		//audioShoot = loadAudio(prefix + "audio/shoot.wav");
 		//audioShootHit = loadAudio(prefix + "audio/wall_hit.wav");
@@ -112,12 +112,10 @@ void Platformer::onStart(Services &services, SDLState &state)
 		for (tmx::Tile &tile : tileSet.tiles)
 		{
 			const std::string imagePath = prefix + "tiles/" + std::filesystem::path(tile.image.source).filename().string();
-			tst.textures.push_back(renderSys->loadTexture(imagePath, true));
+			tst.textures.push_back(loader.loadTexture(imagePath, true));
 		}
 		tilesetTextures.push_back(std::move(tst));
 	}
-
-	renderSys->updateTextures();
 
 	Node &root = world.getNode(hRoot);
 
@@ -220,7 +218,7 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state, t
 				if (layer.name == "Level")
 				{
 					auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(tile);
-					collisionComponent.setCollider(SDL_FRect{
+					collisionComponent.setCollider(Collider{
 						.x = 0, .y = 0,
 						.w = static_cast<float>(map->tileWidth),
 						.h = static_cast<float>(map->tileHeight)
@@ -280,7 +278,7 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 			physicsComponent.setAcceleration(glm::vec3(800, 0, 0));
 			physicsComponent.setMaxSpeed(glm::vec3(100, 300, 0));
 			auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(player);
-			collisionComponent.setCollider(SDL_FRect{
+			collisionComponent.setCollider(Collider{
 				.x = 11, .y = 6,
 				.w = 10, .h = 26
 				});
@@ -303,7 +301,7 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 			physicsComponent.setAcceleration(glm::vec3(200, 0, 0));
 			physicsComponent.setMaxSpeed(glm::vec3(50, 300, 0));
 			auto &collisionComponent = services.compSys().addComponent<CollisionComponent>(enemy);
-			collisionComponent.setCollider(SDL_FRect{
+			collisionComponent.setCollider(Collider{
 				.x = 10, .y = 4, .w = 12, .h = 28
 			});
 			services.compSys().addComponent<HealthComponent>(enemy, 300);
@@ -324,4 +322,9 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 
 void Platformer::cleanup()
 {
+}
+
+extern "C" __declspec(dllexport) ApplicationModule *CreateApplicationModule()
+{
+	return new Platformer();
 }

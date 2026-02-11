@@ -4,8 +4,8 @@
 #include <animation.h>
 #include <tmx.h>
 #include <memory>
-// TODO: Don't want to access render sys directly for asset loading
-#include <systems/vulkanrendersystem.h>
+#include <applicationmodule.h>
+#include <resourceid.h>
 
 struct SDLState;
 struct FrameContext;
@@ -19,7 +19,7 @@ struct TileSetTextures
 };
 
 
-class Platformer
+class Platformer : public ApplicationModule
 {
 	NodeHandle hRoot;
 	NodeHandle hPlayer;
@@ -46,12 +46,11 @@ public:
 	Platformer();
 
 	NodeHandle getPlayerHandle() const { return hPlayer; }
-	bool initialize(Services &services, SDLState &state);
-	void cleanup();
-	void onStart(Services &services, SDLState &state);
-	void update();
+	bool initialize(Services &services, SDLState &state) override;
+	void start(Services &services, SDLState &state) override;
+	void cleanup() override;
 
-	auto getRoot() const
+	NodeHandle getRoot() const override
 	{
 		return hRoot;
 	}

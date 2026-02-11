@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 #include <filesystem>
-#include <SDL3/SDL.h>
-#include <SDL3_mixer/SDL_mixer.h>
 
 #include "sdlstate.h"
 #include "animation.h"
@@ -21,8 +19,6 @@ struct Resources
 	//std::vector<MIX_Audio *> audioBuffers;
 	//MIX_Audio *audioShoot, *audioShootHit, *audioEnemyHit;
 	//MIX_Audio *musicMain;
-
-	SDL_Texture *loadTexture(const std::string &filepath);
 
 	//MIX_Audio *loadAudio(const std::string &filepath)
 	//{

@@ -1,33 +1,35 @@
 #pragma once
-#include <SDL3/SDL.h>
 #include <deque>
 #include <cassert>
 #include <nodehandle.h>
+#define SCANCODE_COUNT 512
+
+using Scancode = uint16_t;
 
 struct KeyEvent
 {
-	SDL_Scancode scancode;
+	Scancode scancode;
 	bool pressed;
 };
 
 class InputState
 {
-	bool keys[SDL_SCANCODE_COUNT]{ false };
+	bool keys[SCANCODE_COUNT]{ false };
 	std::deque<KeyEvent> keyEvents;
 	NodeHandle focusTarget;
 
 public:
-	void setKeyState(SDL_Scancode scancode, bool pressed)
+	void setKeyState(Scancode scancode, bool pressed)
 	{
-		assert(scancode >= 0 && scancode < SDL_SCANCODE_COUNT);
+		assert(scancode >= 0 && scancode < SCANCODE_COUNT);
 		keys[scancode] = pressed;
 	}
-	bool isKeyPressed(SDL_Scancode scancode) const
+	bool isKeyPressed(uint16_t scancode) const
 	{
-		assert(scancode >= 0 && scancode < SDL_SCANCODE_COUNT);
+		assert(scancode >= 0 && scancode < SCANCODE_COUNT);
 		return keys[scancode];
 	}
-	void addEvent(SDL_Scancode scancode, bool pressed)
+	void addEvent(Scancode scancode, bool pressed)
 	{
 		keyEvents.push_back(KeyEvent{ scancode, pressed });
 	}
