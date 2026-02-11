@@ -12,12 +12,12 @@ ResourceLoader::ResourceLoader(Services &services)
 
 ResourceId ResourceLoader::loadTexture(const std::string &texturePath, bool flip)
 {
-	vks::VulkanRenderSystem *renderSys = reinterpret_cast<vks::VulkanRenderSystem *>(textureLoader);
+	vks::VulkanRenderSystem *renderSys = static_cast<vks::VulkanRenderSystem *>(textureLoader);
 	return renderSys->loadTexture(texturePath, flip);
 }
 
 ResourceId ResourceLoader::createAnimation(uint32_t numFrames, float length)
 {
-	SpriteAnimationSystem *animSys = reinterpret_cast<SpriteAnimationSystem *>(textureLoader);
+	SpriteAnimationSystem *animSys = static_cast<SpriteAnimationSystem *>(animLoader);
 	return animSys->createAnimation(numFrames, length);
 }
