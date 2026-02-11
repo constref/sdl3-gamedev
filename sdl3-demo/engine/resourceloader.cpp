@@ -6,8 +6,8 @@
 
 ResourceLoader::ResourceLoader(Services &services)
 {
-	textureLoader = reinterpret_cast<Loader *>(services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>());
-	animLoader = reinterpret_cast<Loader *>(services.compSys().getSystemRegistry().getSystem<SpriteAnimationSystem>());
+	textureLoader = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
+	animLoader = services.compSys().getSystemRegistry().getSystem<SpriteAnimationSystem>();
 }
 
 ResourceId ResourceLoader::loadTexture(const std::string &texturePath, bool flip)

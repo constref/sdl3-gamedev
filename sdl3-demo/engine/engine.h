@@ -21,15 +21,16 @@
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
 #include <prototypeinstancer.h>
-#include <applicationmodule.h>
+#include <application.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
+template<Application App>
 class Engine
 {
-	ApplicationModule *appModule;
+	App app;
 	uint64_t prevTime;
 	bool debugMode;
 	bool running;
@@ -53,7 +54,6 @@ class Engine
 public:
 	Engine() : services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
 	{
-		appModule = nullptr;
 		debugMode = false;
 		running = false;
 		prevTime = 0;
@@ -69,7 +69,7 @@ public:
 		cleanup();
 	}
 
-	bool initialize(ApplicationModule *appModule, int logW, int logH)
+	bool initialize(int logW, int logH)
 	{
 		sdlState.width = 1920;
 		sdlState.height = 1080;
@@ -105,13 +105,12 @@ public:
 		}
 
 		// initialize and start the app
-		if (!appModule->initialize(services, sdlState))
+		if (!app.initialize(services, sdlState))
 		{
 			return false;
 		}
 
-		this->appModule = appModule;
-		appModule->start(services, sdlState);
+		app.start(services, sdlState);
 
 		// TODO: This should move
 		renderSys.updateTextures();
@@ -121,11 +120,8 @@ public:
 
 	void cleanup()
 	{
+		app.cleanup();
 		services.compSys().shutdown();
-		if (appModule)
-		{
-			appModule->cleanup();
-		}
 
 		SDL_DestroyWindow(sdlState.window);
 		SDL_Quit();
@@ -176,7 +172,7 @@ private:
 		ctx.frameNumber = ++frameCount;
 
 		World &world = services.world();
-		Node &root = world.getNode(appModule->getRoot());
+		Node &root = world.getNode(app.getRoot());
 
 		SDL_Event event{};
 		while (SDL_PollEvent(&event))

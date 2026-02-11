@@ -56,7 +56,7 @@ void WeaponSystem::update(Node &node)
 		rndCmp.setRotation(static_cast<float>(SDL_rand(360)));
 
 		auto &collCmp = services.compSys().addComponent<CollisionComponent>(bullet);
-		collCmp.setCollider(SDL_FRect{
+		collCmp.setCollider(Collider {
 			.x = 0, .y = 0,
 			.w = 4, .h = 4
 			});
@@ -65,7 +65,7 @@ void WeaponSystem::update(Node &node)
 		projComp.texProjectileHitId = wc->texProjectileHit;
 
 		// adjust bullet start position
-		SDL_FRect collider = collCmp.getCollider();
+		Collider collider = collCmp.getCollider();
 		const float left = -6;
 		const float right = 33;
 		const float t = (fireDirection.x + 1) / 2.0f; // results in a value of 0..1

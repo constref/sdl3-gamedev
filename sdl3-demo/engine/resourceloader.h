@@ -2,15 +2,13 @@
 
 #include <resourceid.h>
 #include <string>
-#include <engineapi.h>
 
 class Services;
-class Loader;
 
-class ENGINE_API ResourceLoader
+class ResourceLoader
 {
-	Loader *textureLoader;
-	Loader *animLoader;
+	void *textureLoader;
+	void *animLoader;
 
 public:
 	ResourceLoader(Services &services);

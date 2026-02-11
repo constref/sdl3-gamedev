@@ -323,8 +323,3 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 void Platformer::cleanup()
 {
 }
-
-extern "C" __declspec(dllexport) ApplicationModule *CreateApplicationModule()
-{
-	return new Platformer();
-}
