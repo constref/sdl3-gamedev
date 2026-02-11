@@ -24,7 +24,7 @@ void CollisionSystem::update(Node &node)
 	const auto checkCollisions = [this, &node, &contacts, &prevContacts, pc, cc](glm::vec3 &position, Axis axis) {
 		for (NodeHandle handle : CollisionComponent::collidableNodes)
 		{
-			SDL_FRect rectA{
+			Collider rectA{
 				.x = position.x + cc->getCollider().x,
 				.y = position.y + cc->getCollider().y,
 				.w = cc->getCollider().w,
@@ -35,7 +35,7 @@ void CollisionSystem::update(Node &node)
 			CollisionComponent *comp = otherOwner.getComponent<CollisionComponent>();
 			if (comp != cc)
 			{
-				SDL_FRect rectB{
+				Collider rectB{
 					.x = otherOwner.getPosition().x + comp->getCollider().x,
 					.y = otherOwner.getPosition().y + comp->getCollider().y,
 					.w = comp->getCollider().w,
@@ -120,7 +120,7 @@ void CollisionSystem::update(Node &node)
 	}
 }
 
-bool CollisionSystem::intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
+bool CollisionSystem::intersectAABB(const Collider &a, const Collider &b, glm::vec3 &overlap)
 {
 	const float minXA = a.x;
 	const float maxXA = a.x + a.w;

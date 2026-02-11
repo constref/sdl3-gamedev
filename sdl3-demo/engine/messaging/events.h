@@ -1,7 +1,6 @@
 #pragma once
 
 #include <messaging/event.h>
-#include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 #include <nodehandle.h>
 #include <animationplaybackmode.h>
@@ -10,15 +9,15 @@
 class KeyUpEvent : public Event<KeyUpEvent, FrameStage::Input>
 {
 public:
-	const SDL_Scancode scancode;
-	KeyUpEvent(SDL_Scancode scancode) : scancode(scancode) { }
+	const uint16_t scancode;
+	KeyUpEvent(uint16_t scancode) : scancode(scancode) { }
 };
 
 class KeyDownEvent : public Event<KeyDownEvent, FrameStage::Input>
 {
 public:
-	const SDL_Scancode scancode;
-	KeyDownEvent(SDL_Scancode scancode) : scancode(scancode) { }
+	const uint16_t scancode;
+	KeyDownEvent(uint16_t scancode) : scancode(scancode) { }
 };
 
 class ComponentRemovalEvent : public Event<ComponentRemovalEvent, FrameStage::End>

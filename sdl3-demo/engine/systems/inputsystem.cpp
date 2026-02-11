@@ -1,4 +1,5 @@
 #include <systems/inputsystem.h>
+#include <SDL3/SDL.h>
 #include <messaging/events.h>
 #include <messaging/eventqueue.h>
 #include <messaging/commands.h>
