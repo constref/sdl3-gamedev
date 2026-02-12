@@ -323,3 +323,4 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 void Platformer::cleanup()
 {
 }
+

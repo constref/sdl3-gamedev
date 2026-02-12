@@ -142,13 +142,6 @@ public:
 #endif
 	}
 
-private:
-	static void emIterate(void *userData)
-	{
-		auto *engine = static_cast<Engine*>(userData);
-		engine->step();
-	}
-
 	inline void step()
 	{
 		// calculate deltaTime
@@ -255,11 +248,7 @@ private:
 			accumulator -= fixedStep;
 		}
 
-		// drawing happens every single frame
 		ctx.deltaTime = deltaTime;
-		//SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
-		//SDL_RenderClear(state.renderer);
-
 		// TODO: Make this better
 		FrameContext::global().setStage(FrameStage::Render);
 		auto &stageSystems = services.compSys().getSystemRegistry().getStageSystems(FrameContext::currentStage());
@@ -274,20 +263,18 @@ private:
 			sys->endFrame();
 		}
 
-		//SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-		//SDL_RenderDebugText(state.renderer, 5, 5, std::format("{:.3f} N: {} E: {}",
-		//	actualDeltaTime,
-		//	services.world().getFreeCount(),
-		//	services.eventQueue().getCount()
-		//).c_str());
-
-		//SDL_RenderPresent(state.renderer);
-
 		FrameContext::global().setStage(FrameStage::End);
 		services.eventQueue().dispatch();
 		processSystems(root, world);
 
 		services.compSys().removeScheduled();
+	}
+
+private:
+	static void emIterate(void *userData)
+	{
+		auto *engine = static_cast<Engine*>(userData);
+		engine->step();
 	}
 
 	void processSystems(Node &obj, World &world)

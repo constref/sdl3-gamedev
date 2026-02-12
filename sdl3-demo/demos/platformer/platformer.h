@@ -6,6 +6,12 @@
 #include <memory>
 #include <resourceid.h>
 
+#ifdef ENGINE_EXPORTS
+#define ENGINE_API __declspec(dllexport)
+#else
+#define ENGINE_API __declspec(dllimport)
+#endif
+
 struct SDLState;
 struct FrameContext;
 class Services;
@@ -16,7 +22,6 @@ struct TileSetTextures
 	int firstGid;
 	std::vector<ResourceId> textures;
 };
-
 
 class Platformer
 {

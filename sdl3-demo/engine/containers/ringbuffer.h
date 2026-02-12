@@ -17,7 +17,6 @@ public:
 			return false;
 		}
 		elements[wIdx] = item;
-		writeIndex.store((wIdx + 1) % Capacity);
 		wIdx = (wIdx + 1) % Capacity;
 
 		return true;
