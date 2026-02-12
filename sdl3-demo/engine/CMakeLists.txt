@@ -1,5 +1,5 @@
 ﻿find_package(SDL3 REQUIRED)
-find_package(SDL3_mixer REQUIRED)
+#find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
@@ -118,7 +118,8 @@ target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan
 	Vulkan::volk
 	Vulkan::shaderc_combined
-	SDL3::SDL3 SDL3_mixer::SDL3_mixer
+	SDL3::SDL3
+	#SDL3_mixer::SDL3_mixer
 	glm::glm
 	tinyxml2::tinyxml2
 )

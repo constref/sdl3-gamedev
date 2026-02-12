@@ -3,7 +3,7 @@
 #include "platformer.h"
 #include <engine.h>
 
-int StartGame()
+int StartAppStandalone()
 {
 	Engine<Platformer> engine;
 	if (!engine.initialize(512, 288))
@@ -12,5 +12,10 @@ int StartGame()
 	}
 	engine.run();
 
+	return 0;
+}
+
+int StartAppTooling()
+{
 	return 0;
 }

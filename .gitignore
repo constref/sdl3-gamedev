@@ -368,3 +368,4 @@ FodyWeavers.xsd
 /CMakeUserPresets.json
 /.vscode/launch.json
 /build*
+/vcpkg_installed

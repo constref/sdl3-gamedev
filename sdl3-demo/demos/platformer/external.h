@@ -6,4 +6,13 @@
 #define ENGINE_API __declspec(dllimport)
 #endif
 
-int ENGINE_API StartGame();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int ENGINE_API StartAppStandalone();
+int ENGINE_API StartAppTooling();
+
+#ifdef __cplusplus
+}
+#endif
