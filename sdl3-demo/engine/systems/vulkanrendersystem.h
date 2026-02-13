@@ -10,6 +10,7 @@
 #include <shaderc/shaderc.hpp>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <ext/vk_mem_alloc.h>
 
 #include <systems/system.h>
 #include <components/spritecomponent.h>
@@ -134,6 +135,7 @@ struct FrameResources
 	uint32_t numInstances = 0;
 	VkDescriptorSet descSet = nullptr;
 	uint64_t vertBufferAddr = 0;
+	VmaPool vmaExportPool = nullptr;
 };
 
 struct Barrier
@@ -153,6 +155,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
 	constexpr static uint32_t MaxFramesInFlight{ 2 };
 	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
+	constexpr static VkFormat exportFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 	constexpr static size_t MaxTextures = 1024;
 	constexpr static size_t MaxDrawCommands = 5000;
@@ -274,6 +277,8 @@ public:
 
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
+
+	intptr_t getSharedRenderTarget();
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);

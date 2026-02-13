@@ -68,10 +68,10 @@ public:
 		cleanup();
 	}
 
-	bool initialize(int logW, int logH)
+	bool initialize(int logW, int logH, int width, int height)
 	{
-		sdlState.width = 1920;
-		sdlState.height = 1080;
+		sdlState.width = width;
+		sdlState.height = height;
 		sdlState.logW = logW;
 		sdlState.logH = logH;
 
@@ -119,6 +119,12 @@ public:
 		renderSys.updateTextures();
 
 		return true;
+	}
+
+	intptr_t getSharedRenderTarget()
+	{
+		auto *renderer = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
+		return renderer->getSharedRenderTarget();
 	}
 
 	void cleanup()

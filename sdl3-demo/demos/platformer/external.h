@@ -1,17 +1,19 @@
 #pragma once
 
-#ifdef ENGINE_EXPORTS
-#define ENGINE_API __declspec(dllexport)
-#else
-#define ENGINE_API __declspec(dllimport)
-#endif
+#include <engineapi.h>
+#include <stdint.h>
+#include <tooling/engineworker.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+class EngineWorker;
+
 int ENGINE_API StartAppStandalone();
-int ENGINE_API StartAppTooling();
+ENGINE_API EngineWorker *StartAppTooling(int logW, int logH, int width, int height);
+void ENGINE_API StartWorker(EngineWorker *worker, InitCallback callback);
+uint64_t ENGINE_API GetSharedRenderTarget(EngineWorker *worker);
 
 #ifdef __cplusplus
 }

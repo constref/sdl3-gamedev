@@ -6,31 +6,31 @@
 
 #include <application.h>
 #include <engine.h>
+#include <memory>
 #include "containers/ringbuffer.h"
 #include "platformevents.h"
 
-typedef void(__stdcall InitReadCallback)(bool);
+typedef void(__stdcall InitCallback)(intptr_t);
 
 class EngineWorker
 {
-	Engine<App> engine;
-	int x, y, width, height;
-	HWND hWnd;
+	std::unique_ptr<Engine> engine;
+	int logW, logH, width, height;
+
 	bool shouldRun;
 	RingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread workThread;
-	uint64_t *sharedRenderTarget;
+	intptr_t sharedRenderTarget;
 
 public:
-	EngineWorker(HWND hWnd, int x, int y, int width, int height)
+	EngineWorker(std::unique_ptr<Engine> engine, int logW, int logH, int width, int height) : engine(std::move(engine))
 	{
-		this->hWnd = hWnd;
-		this->x = x;
-		this->y = y;
+		this->logW = logW;
+		this->logH = logH;
 		this->width = width;
 		this->height = height;
 		this->shouldRun = false;
-		this->sharedRenderTarget = nullptr;
+		this->sharedRenderTarget = 0;
 	}
 
 	~EngineWorker()
@@ -43,21 +43,29 @@ public:
 	}
 
 
-	void start(InitReadCallback callback)
+	void start(InitCallback callback)
 	{
 		workThread = std::thread([this, callback]()
 		{
 			shouldRun = true;
-			if (!engine.initialize(512, 288))
+			if (!engine->initialize(logW, logH, width, height))
 			{
 				shouldRun = false;
 				return 1;
 			}
 
+			if (callback)
+			{
+				sharedRenderTarget = engine->getSharedRenderTarget();
+				callback(sharedRenderTarget);
+			}
+
 			while (shouldRun)
 			{
-				engine.step();
+				engine->step();
 			}
+
+			return 0;
 		});
 	}
 
@@ -108,7 +116,7 @@ public:
 	{
 		eventBuffer.add(event);
 	}
-	uint64_t *getSharedRenderTarget() const
+	uint64_t getSharedRenderTarget() const
 	{
 		return sharedRenderTarget;
 	}

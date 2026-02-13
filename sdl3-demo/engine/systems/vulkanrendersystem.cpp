@@ -6,7 +6,13 @@
 #define VOLK_IMPLEMENTATION
 #include <Volk/volk.h>
 #define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
+#include <ext/vk_mem_alloc.h>
+
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -167,6 +173,10 @@ void VulkanRenderSystem::shutdown()
 		{
 			vmaUnmapMemory(vmaAllocator, res.instanceData.allocation);
 			vmaDestroyBuffer(vmaAllocator, res.instanceData.buffer, res.instanceData.allocation);
+		}
+		if (res.vmaExportPool)
+		{
+			vmaDestroyPool(vmaAllocator, res.vmaExportPool);
 		}
 	}
 
@@ -504,6 +514,23 @@ void VulkanRenderSystem::endFrame()
 		};
 		transitionImages(res.commandBuffer, barriers);
 	}
+	else
+	{
+		// transition the internal render target for sanpling by the tooling renderer
+		std::array blitToSwapTransitions
+		{
+			Barrier {
+				.image = res.renderTarget.handle,
+				.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+				.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
+				.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			},
+		};
+		transitionImages(res.commandBuffer, blitToSwapTransitions);
+	}
 
 	vkEndCommandBuffer(res.commandBuffer);
 
@@ -803,6 +830,11 @@ bool VulkanRenderSystem::createVulkanInstance()
 			requestedExtensions.push_back(extensions[i]);
 		}
 	}
+	else
+	{
+		// need external caps to get shared handle for render targets
+		requestedExtensions.push_back(VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME);
+	}
 
 
 	// we'll also need to enable the validation layer for error checking and reporting
@@ -1007,6 +1039,11 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	if constexpr (Config::IsStandaloneMode())
 	{
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	}
+	else
+	{
+		deviceExtensions.push_back(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME);
+		deviceExtensions.push_back(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
 	}
 
 	VkDeviceCreateInfo devCreateInfo
@@ -1340,11 +1377,12 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet &shaderSet, 
 	};
 
 	// structure required for dynamic rendering
+	VkFormat format = Config::ExecSelect(swapchainFormat, exportFormat);
 	VkPipelineRenderingCreateInfo renderInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 		.colorAttachmentCount = 1,
-		.pColorAttachmentFormats = &swapchainFormat,
+		.pColorAttachmentFormats = &format,
 		.depthAttachmentFormat = depthFormat,
 	};
 
@@ -1656,31 +1694,54 @@ Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreate
 
 bool vks::VulkanRenderSystem::createInternalTargets()
 {
+	VkExternalMemoryImageCreateInfo externalImageInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
+		.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT
+	};
+	VkExportMemoryAllocateInfo exportAllocInfo{
+		.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+		.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT
+	};
+
+	VkImageCreateInfo imageInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		.pNext = Config::ExecSelect(nullptr, &externalImageInfo),
+		.imageType = VK_IMAGE_TYPE_2D,
+		.format = Config::ExecSelect(swapchainFormat, exportFormat),
+		.extent {.width = logW, .height = logH, .depth = 1},
+		.mipLevels = 1,
+		.arrayLayers = 1,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.tiling = VK_IMAGE_TILING_OPTIMAL,
+		.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+	};
+
+	VmaAllocationCreateInfo allocInfo{
+		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+		.usage = VMA_MEMORY_USAGE_AUTO
+	};
+	uint32_t memoryTypeIndex;
+	vmaFindMemoryTypeIndexForImageInfo(vmaAllocator, &imageInfo, &allocInfo, &memoryTypeIndex);
+
+	VmaPoolCreateInfo poolCreateInfo
+	{
+		.memoryTypeIndex = memoryTypeIndex,
+		.blockSize = 0,    // Let VMA decide block size (or set strictly if needed)
+		.maxBlockCount = 1,// Force this pool to only hold this one allocation (Optional but safe)
+		.pMemoryAllocateNext = &exportAllocInfo // <--- THIS IS THE FIELD YOU WERE LOOKING FOR
+	};
+
 	for (auto &res : frameResources)
 	{
-		VkExternalMemoryImageCreateInfo externalImageInfo
+		if (vmaCreatePool(vmaAllocator, &poolCreateInfo, &res.vmaExportPool) != VK_SUCCESS)
 		{
-			.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
-			.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT
-		};
-
-		VkImageCreateInfo imageInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-			.pNext = Config::ExecSelect(nullptr, &externalImageInfo),
-			.imageType = VK_IMAGE_TYPE_2D,
-			.format = swapchainFormat,
-			.extent {.width = logW, .height = logH, .depth = 1},
-			.mipLevels = 1,
-			.arrayLayers = 1,
-			.samples = VK_SAMPLE_COUNT_1_BIT,
-			.tiling = VK_IMAGE_TILING_OPTIMAL,
-			.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		};
-		VmaAllocationCreateInfo allocInfo{
-			.usage = VMA_MEMORY_USAGE_AUTO,
-		};
+			showError("Unable to create VMA export memory pool");
+			return false;
+		}
+		allocInfo.pool = Config::ExecSelect(nullptr, res.vmaExportPool);
 
 		if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &res.renderTarget.handle, &res.renderTarget.allocation, nullptr) != VK_SUCCESS)
 		{
@@ -1693,7 +1754,7 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = res.renderTarget.handle,
 			.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			.format = swapchainFormat,
+			.format = Config::ExecSelect(swapchainFormat, exportFormat),
 			.subresourceRange
 			{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1724,12 +1785,12 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
 	};
 
-	VmaAllocationCreateInfo allocInfo
+	VmaAllocationCreateInfo depthAllocInfo
 	{
 		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO
+		.usage = VMA_MEMORY_USAGE_AUTO,
 	};
-	if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
+	if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &depthAllocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
 	{
 		showError("Error allocating depth image");
 		return false;
@@ -2180,6 +2241,33 @@ void VulkanRenderSystem::updateTextures()
 		.pImageInfo = descriptorWrites.data()
 	};
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
+}
+
+intptr_t vks::VulkanRenderSystem::getSharedRenderTarget()
+{
+	//for (auto &res : frameResources)
+	//{
+	//	//res.renderTarget.
+	//	VmaAllocationInfo memInfo;
+	//vmaGetAllocationInfo(vmaAllocator, res., &memInfo);
+	//}
+	VmaAllocationInfo memInfo{};
+	auto &res = frameResources[0];
+	vmaGetAllocationInfo(vmaAllocator, res.renderTarget.allocation, &memInfo);
+
+	VkMemoryGetWin32HandleInfoKHR getHandleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
+	getHandleInfo.memory = memInfo.deviceMemory; // The private block VMA allocated
+	getHandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT;
+
+	HANDLE targetHandle = 0;
+	auto fpGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetMemoryWin32HandleKHR");
+	if (!fpGetMemoryWin32HandleKHR || fpGetMemoryWin32HandleKHR(device, &getHandleInfo, &targetHandle) != VK_SUCCESS)
+	{
+		showError("Unable to acquire HANDLE for renter target");
+		return 0;
+	}
+
+	return reinterpret_cast<intptr_t>(targetHandle);
 }
 
 void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
