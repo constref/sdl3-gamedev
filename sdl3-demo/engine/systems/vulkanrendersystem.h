@@ -243,6 +243,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool createDevice(VkPhysicalDevice physicalDevice);
 	bool initializeVMA();
 	bool createSwapchain(uint32_t width, uint32_t height);
+	bool createWorkSemaphores();
 	void destroySwapchain();
 	VkShaderModule createShaderModule(const std::string &fileName, shaderc_shader_kind kind) const;
 	vks::ShaderSet *createShaders(const std::string &shaderName);

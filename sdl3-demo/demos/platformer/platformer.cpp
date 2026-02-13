@@ -50,7 +50,7 @@ bool Platformer::initialize(Services &services, SDLState &state)
 void Platformer::start(Services &services, SDLState &state)
 {
 	World &world = services.world();
-	hRoot = world.createNode();
+	setRoot(world.createNode());
 
 	// TODO: Make it more obvious this is a throwaway object, it holds onto pointers to systems
 	ResourceLoader loader(services);
@@ -117,7 +117,7 @@ void Platformer::start(Services &services, SDLState &state)
 		tilesetTextures.push_back(std::move(tst));
 	}
 
-	Node &root = world.getNode(hRoot);
+	Node &root = world.getNode(getRoot());
 
 	// add the background elements
 	NodeHandle hBgLayer = world.createNode();
@@ -319,8 +319,3 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 	}
 	root.addChild(layerObject);
 }
-
-void Platformer::cleanup()
-{
-}
-

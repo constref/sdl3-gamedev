@@ -7,11 +7,16 @@
 struct SDLState;
 class Services;
 
-template<typename T>
-concept Application = requires(T a, Services &services, SDLState &state)
+class Application
 {
-	{ a.initialize(services, state) } -> std::same_as<bool>;
-	{ a.start(services, state) } -> std::same_as<void>;
-	{ a.getRoot() } -> std::same_as<NodeHandle>;
-	{ a.cleanup() } -> std::same_as<void>;
+	NodeHandle root;
+protected:
+	void setRoot(NodeHandle root) { this->root = root; }
+
+public:
+	NodeHandle getRoot() const { return root; }
+	virtual bool initialize(Services &services, SDLState &state) = 0;
+	virtual void start(Services &services, SDLState &state) = 0;
+	virtual void cleanup() {}
+
 };

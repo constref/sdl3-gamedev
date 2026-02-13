@@ -11,7 +11,6 @@
 
 typedef void(__stdcall InitReadCallback)(bool);
 
-template<Application App>
 class EngineWorker
 {
 	Engine<App> engine;

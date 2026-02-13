@@ -21,16 +21,15 @@
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
 #include <prototypeinstancer.h>
-#include <application.h>
+#include <executionmode.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-template<Application App>
 class Engine
 {
-	App app;
+	std::unique_ptr<Application> app;
 	uint64_t prevTime;
 	bool debugMode;
 	bool running;
@@ -52,7 +51,7 @@ class Engine
 	SDLState sdlState;
 
 public:
-	Engine() : services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
+	Engine(std::unique_ptr<Application> app) : app(std::move(app)), services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
 	{
 		debugMode = false;
 		running = false;
@@ -76,22 +75,25 @@ public:
 		sdlState.logW = logW;
 		sdlState.logH = logH;
 
-		if (!SDL_Init(SDL_INIT_VIDEO))
+		if constexpr (Config::IsStandaloneMode())
 		{
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
-			return false;
-		}
+			if (!SDL_Init(SDL_INIT_VIDEO))
+			{
+				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
+				return false;
+			}
 
-		SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-		if (!window)
-		{
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(), nullptr);
-			cleanup();
-			return false;
+			SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+			if (!window)
+			{
+				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
+				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(), nullptr);
+				cleanup();
+				return false;
+			}
+			sdlState.window = window;
+			SDL_SetWindowFullscreen(window, sdlState.fullscreen);
 		}
-		sdlState.window = window;
-		SDL_SetWindowFullscreen(window, sdlState.fullscreen);
 
 		// core system registrations
 		services.compSys().registerSystem(std::make_unique<TimerSystem>(services));
@@ -106,12 +108,12 @@ public:
 		}
 
 		// initialize and start the app
-		if (!app.initialize(services, sdlState))
+		if (!app->initialize(services, sdlState))
 		{
 			return false;
 		}
 
-		app.start(services, sdlState);
+		app->start(services, sdlState);
 
 		// TODO: This should move
 		renderSys.updateTextures();
@@ -121,11 +123,14 @@ public:
 
 	void cleanup()
 	{
-		app.cleanup();
+		app->cleanup();
 		services.compSys().shutdown();
 
-		SDL_DestroyWindow(sdlState.window);
-		SDL_Quit();
+		if constexpr (Config::IsStandaloneMode())
+		{
+			SDL_DestroyWindow(sdlState.window);
+			SDL_Quit();
+		}
 	}
 
 	void run()
@@ -166,7 +171,7 @@ public:
 		ctx.frameNumber = ++frameCount;
 
 		World &world = services.world();
-		Node &root = world.getNode(app.getRoot());
+		Node &root = world.getNode(app->getRoot());
 
 		SDL_Event event{};
 		while (SDL_PollEvent(&event))
@@ -274,7 +279,7 @@ public:
 private:
 	static void emIterate(void *userData)
 	{
-		auto *engine = static_cast<Engine*>(userData);
+		auto *engine = static_cast<Engine *>(userData);
 		engine->step();
 	}
 

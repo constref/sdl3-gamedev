@@ -11,7 +11,9 @@ set(ENGINE_SOURCES
 	"timer.h"
 	"animation.h"
 	"engine.h"
+	"engineapi.h"
 	"application.h"
+	"executionmode.h"
 	"sdlstate.h"
 	"resources.h"
 	"resources.cpp"
@@ -107,6 +109,11 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
+if (EXECUTION_MODE STREQUAL "TOOLING")
+	message(STATUS "Configuring Tooling Build")
+	target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
+endif()
+
 
 # For MSVC, you often need the 'latest' flag specifically
 if(MSVC)

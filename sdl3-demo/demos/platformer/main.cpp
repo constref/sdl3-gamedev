@@ -1,5 +1,6 @@
 ﻿#include <SDL3/SDL_main.h>
 #include "external.h"
+#include <config.h>
 
 using namespace std;
 

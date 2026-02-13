@@ -5,16 +5,9 @@
 #include <tmx.h>
 #include <memory>
 #include <resourceid.h>
+#include <application.h>
 
-#ifdef ENGINE_EXPORTS
-#define ENGINE_API __declspec(dllexport)
-#else
-#define ENGINE_API __declspec(dllimport)
-#endif
-
-struct SDLState;
 struct FrameContext;
-class Services;
 class Node;
 
 struct TileSetTextures
@@ -23,11 +16,9 @@ struct TileSetTextures
 	std::vector<ResourceId> textures;
 };
 
-class Platformer
+class Platformer : public Application
 {
-	NodeHandle hRoot;
 	NodeHandle hPlayer;
-
 	ResourceId animPlayerIdle, animPlayerRun, animPlayerJump, animPlayerSlide, animPlayerShoot, animPlayerSlideShoot;
 	ResourceId animBulletMoving, animBulletHit;
 	ResourceId animEnemy, animEnemyHit, animEnemyDie;
@@ -50,12 +41,6 @@ public:
 	Platformer();
 
 	NodeHandle getPlayerHandle() const { return hPlayer; }
-	bool initialize(Services &services, SDLState &state);
-	void start(Services &services, SDLState &state);
-	void cleanup();
-
-	NodeHandle getRoot() const
-	{
-		return hRoot;
-	}
+	bool initialize(Services &services, SDLState &state) override;
+	void start(Services &services, SDLState &state) override;
 };

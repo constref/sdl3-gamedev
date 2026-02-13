@@ -35,9 +35,12 @@ public:
 		if (!worker)
 		{
 			worker = new EngineWorker<App>(hWnd, 0, 0, width, height);
-			worker->start(nullptr);
 		}
 		return true;
+	}
+	void start()
+	{
+		worker->start(nullptr);
 	}
 	void resize(int width, int height)
 	{
