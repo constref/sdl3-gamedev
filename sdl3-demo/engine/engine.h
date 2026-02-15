@@ -22,6 +22,7 @@
 #include <systems/vulkanrendersystem.h>
 #include <prototypeinstancer.h>
 #include <executionmode.h>
+#include <tooling/exportedresources.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -49,6 +50,7 @@ class Engine
 	PrototypeInstancer protoInstancer;
 	Services services;
 	SDLState sdlState;
+	RenderInfo renderInfo;
 
 public:
 	Engine(std::unique_ptr<Application> app) : app(std::move(app)), services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
@@ -106,6 +108,7 @@ public:
 		{
 			return false;
 		}
+		renderInfo = renderSys.getRenderInfo();
 
 		// initialize and start the app
 		if (!app->initialize(services, sdlState))
@@ -121,10 +124,15 @@ public:
 		return true;
 	}
 
-	intptr_t getSharedRenderTarget()
+	RenderInfo getRenderInfo()
+	{
+		return renderInfo;
+	}
+
+	ExportedResources getSharedRenderTarget(int frameIndex)
 	{
 		auto *renderer = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
-		return renderer->getSharedRenderTarget();
+		return renderer->getSharedRenderTarget(frameIndex);
 	}
 
 	void cleanup()

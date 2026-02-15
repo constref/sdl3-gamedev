@@ -17,6 +17,7 @@
 #include <resourceid.h>
 #include <nodehandle.h>
 #include <messaging/events.h>
+#include <tooling/exportedresources.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
@@ -127,6 +128,7 @@ struct FrameResources
 	VkCommandBuffer commandBuffer = nullptr;
 	VkSemaphore imageAcquiredSemaphore = nullptr;
 	Image renderTarget;
+	VkDeviceMemory renderTargetMem = nullptr;
 	Buffer indirectDraws;
 	VkDrawIndexedIndirectCommand *drawCommands = nullptr;
 	uint32_t numDraws = 0;
@@ -148,6 +150,8 @@ struct Barrier
 	VkImageLayout oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageLayout newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageAspectFlags imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
+	uint32_t srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	uint32_t dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 };
 
 class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
@@ -278,7 +282,14 @@ public:
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
 
-	intptr_t getSharedRenderTarget();
+	RenderInfo getRenderInfo() const
+	{
+		return RenderInfo
+		{
+			.framesInFlight = MaxFramesInFlight
+		};
+	}
+	ExportedResources getSharedRenderTarget(int frameIndex);
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);

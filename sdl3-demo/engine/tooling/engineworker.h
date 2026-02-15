@@ -7,10 +7,9 @@
 #include <application.h>
 #include <engine.h>
 #include <memory>
+#include <tooling/callbacks.h>
 #include "containers/ringbuffer.h"
 #include "platformevents.h"
-
-typedef void(__stdcall InitCallback)(intptr_t);
 
 class EngineWorker
 {
@@ -20,7 +19,7 @@ class EngineWorker
 	bool shouldRun;
 	RingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread workThread;
-	intptr_t sharedRenderTarget;
+	ExportedResources sharedRenderTarget;
 
 public:
 	EngineWorker(std::unique_ptr<Engine> engine, int logW, int logH, int width, int height) : engine(std::move(engine))
@@ -30,7 +29,6 @@ public:
 		this->width = width;
 		this->height = height;
 		this->shouldRun = false;
-		this->sharedRenderTarget = 0;
 	}
 
 	~EngineWorker()
@@ -42,24 +40,27 @@ public:
 		}
 	}
 
-
-	void start(InitCallback callback)
+	void initialize(InitCallback callback)
 	{
-		workThread = std::thread([this, callback]()
+		shouldRun = true;
+		if (!engine->initialize(logW, logH, width, height))
 		{
-			shouldRun = true;
-			if (!engine->initialize(logW, logH, width, height))
-			{
-				shouldRun = false;
-				return 1;
-			}
+			shouldRun = false;
+		}
 
+		if (shouldRun)
+		{
 			if (callback)
 			{
-				sharedRenderTarget = engine->getSharedRenderTarget();
-				callback(sharedRenderTarget);
+				callback(engine->getRenderInfo());
 			}
+		}
+	}
 
+	void start()
+	{
+		workThread = std::thread([this]()
+		{
 			while (shouldRun)
 			{
 				engine->step();
@@ -116,8 +117,8 @@ public:
 	{
 		eventBuffer.add(event);
 	}
-	uint64_t getSharedRenderTarget() const
+	ExportedResources getSharedRenderTarget(int frameIndex) const
 	{
-		return sharedRenderTarget;
+		return engine->getSharedRenderTarget(frameIndex);
 	}
 };

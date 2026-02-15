@@ -21,12 +21,17 @@ EngineWorker *StartAppTooling(int logW, int logH, int width, int height)
 	return worker;
 }
 
-void StartWorker(EngineWorker *worker, InitCallback callback)
+void InitializeEngine(EngineWorker *worker, InitCallback callback)
 {
-	worker->start(callback);
+	worker->initialize(callback);
 }
 
-uint64_t GetSharedRenderTarget(EngineWorker *worker)
+void StartWorker(EngineWorker *worker)
 {
-    return worker->getSharedRenderTarget();
+	worker->start();
+}
+
+ExportedResources GetSharedRenderTarget(EngineWorker *worker, int frameIndex)
+{
+    return worker->getSharedRenderTarget(frameIndex);
 }

@@ -26,6 +26,10 @@
 
 constexpr bool debugging = true;
 
+void log(const std::string &msg) {
+	OutputDebugStringA((msg + "\n").c_str());
+}
+
 std::string readTextFile(const std::string &filePath)
 {
 	std::ifstream infile(filePath);
@@ -162,6 +166,7 @@ void VulkanRenderSystem::shutdown()
 		{
 			vmaDestroyImage(vmaAllocator, res.renderTarget.handle, res.renderTarget.allocation);
 		}
+		vkFreeMemory(device, res.renderTargetMem, nullptr);
 
 		// draw and instance data cleanup
 		if (res.indirectDraws.buffer)
@@ -516,8 +521,8 @@ void VulkanRenderSystem::endFrame()
 	}
 	else
 	{
-		// transition the internal render target for sanpling by the tooling renderer
-		std::array blitToSwapTransitions
+		// transition the internal render target for sampling by the tooling renderer
+		std::array samplingTransition
 		{
 			Barrier {
 				.image = res.renderTarget.handle,
@@ -526,10 +531,12 @@ void VulkanRenderSystem::endFrame()
 				.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 				.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
 				.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				.srcQueueFamilyIndex = gfxQueueFamIdx,
+				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_EXTERNAL,
 			},
 		};
-		transitionImages(res.commandBuffer, blitToSwapTransitions);
+		transitionImages(res.commandBuffer, samplingTransition);
 	}
 
 	vkEndCommandBuffer(res.commandBuffer);
@@ -543,7 +550,7 @@ void VulkanRenderSystem::endFrame()
 			{
 				VkSemaphoreSubmitInfo { // render work completion signal
 					.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-					.semaphore = workCompleteSemaphores[Config::ExecSelect(imageIndex, frameResIndex)],
+					.semaphore = workCompleteSemaphores[imageIndex],
 					.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
 				},
 				VkSemaphoreSubmitInfo { // entire frame is completed (timeline)
@@ -558,6 +565,11 @@ void VulkanRenderSystem::endFrame()
 		{
 			return std::array
 			{
+				VkSemaphoreSubmitInfo { // render work completion signal
+					.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+					.semaphore = workCompleteSemaphores[frameResIndex],
+					.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
+				},
 				VkSemaphoreSubmitInfo { // entire frame is completed (timeline)
 					.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
 					.semaphore = timelineSemaphore,
@@ -587,8 +599,8 @@ void VulkanRenderSystem::endFrame()
 	VkSubmitInfo2 submitInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-		.waitSemaphoreInfoCount = Config::ExecSelect(1, 0),
-		.pWaitSemaphoreInfos = Config::ExecSelect(&imageAcquireWaitInfo, nullptr), // ensure the image is ready
+		.waitSemaphoreInfoCount = 1,
+		.pWaitSemaphoreInfos = &imageAcquireWaitInfo, // ensure the image is ready
 		.commandBufferInfoCount = 1,
 		.pCommandBufferInfos = &cmdSubmitInfo,
 		.signalSemaphoreInfoCount = static_cast<uint32_t>(semaphoreSignals.size()),
@@ -900,10 +912,16 @@ VkPhysicalDevice VulkanRenderSystem::findPhysicalDevice()
 		// look through list and see if a dGPU exists
 		for (auto &pDev : physicalDevices)
 		{
-			VkPhysicalDeviceProperties props{};
-			vkGetPhysicalDeviceProperties(pDev, &props);
-			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			VkPhysicalDeviceIDProperties deviceIdProps{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
+			VkPhysicalDeviceProperties2 props
 			{
+				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+				.pNext = &deviceIdProps
+			};
+			vkGetPhysicalDeviceProperties2(pDev, &props);
+			if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+
 				physicalDevice = pDev;
 				break;
 			}
@@ -1044,6 +1062,8 @@ bool VulkanRenderSystem::createDevice(VkPhysicalDevice physicalDevice)
 	{
 		deviceExtensions.push_back(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME);
 		deviceExtensions.push_back(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
+		deviceExtensions.push_back(VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME);
+		deviceExtensions.push_back(VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME);
 	}
 
 	VkDeviceCreateInfo devCreateInfo
@@ -1174,11 +1194,21 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 
 bool vks::VulkanRenderSystem::createWorkSemaphores()
 {
+	static VkExportSemaphoreCreateInfo exportSemaphoreInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+		.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	};
+
 	const uint32_t semaphoreCount = Config::ExecSelect(swapchainImages.size(), frameResources.size());
 	workCompleteSemaphores.resize(semaphoreCount);
 	for (int i = 0; i < semaphoreCount; ++i)
 	{
-		VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO, };
+		VkSemaphoreCreateInfo semaphoreInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			.pNext = Config::ExecSelect(nullptr, &exportSemaphoreInfo)
+		};
 		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &workCompleteSemaphores[i]) != VK_SUCCESS)
 		{
 			showError("Unable to create semaphore");
@@ -1458,16 +1488,35 @@ bool VulkanRenderSystem::createSyncResources()
 		return false;
 	}
 
+	static VkExportSemaphoreCreateInfo exportSemaphoreInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+		.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	};
+
 	// per-frame image-acquire semaphores
 	for (FrameResources &res : frameResources)
 	{
 		// create the binary semaphores
-		VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+		VkSemaphoreCreateInfo semaphoreInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			.pNext = Config::ExecSelect(nullptr, &exportSemaphoreInfo)
+		};
 		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS)
 		{
 			showError("Error creating the per-frame image-acquire semaphore");
 			return false;
 		}
+		// 2. IMMEDIATE FIX: Submit a "Dummy" signal to the queue
+		// This puts the semaphore into the "Signaled" state before the first frame ever runs.
+		VkSubmitInfo initSignalInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		initSignalInfo.commandBufferCount = 0; // No work, just synchronization
+		initSignalInfo.pCommandBuffers = nullptr;
+		initSignalInfo.signalSemaphoreCount = 1;
+		initSignalInfo.pSignalSemaphores = &res.imageAcquiredSemaphore;
+		vkQueueSubmit(gfxQueue, 1, &initSignalInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(gfxQueue);
 	}
 
 	return true;
@@ -1694,20 +1743,25 @@ Buffer VulkanRenderSystem::createBuffer(VkBufferUsageFlags usage, VkBufferCreate
 
 bool vks::VulkanRenderSystem::createInternalTargets()
 {
+	//VkExternalMemoryImageCreateInfo externalImageInfo
+	//{
+	//	.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
+	//	.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	//};
+	//VkExportMemoryAllocateInfo exportAllocInfo{
+	//	.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+	//	.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	//};
 	VkExternalMemoryImageCreateInfo externalImageInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
-		.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT
+		.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
 	};
-	VkExportMemoryAllocateInfo exportAllocInfo{
-		.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
-		.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT
-	};
-
 	VkImageCreateInfo imageInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.pNext = Config::ExecSelect(nullptr, &externalImageInfo),
+		.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
 		.imageType = VK_IMAGE_TYPE_2D,
 		.format = Config::ExecSelect(swapchainFormat, exportFormat),
 		.extent {.width = logW, .height = logH, .depth = 1},
@@ -1715,39 +1769,89 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 		.arrayLayers = 1,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.tiling = VK_IMAGE_TILING_OPTIMAL,
-		.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 	};
 
-	VmaAllocationCreateInfo allocInfo{
-		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO
-	};
-	uint32_t memoryTypeIndex;
-	vmaFindMemoryTypeIndexForImageInfo(vmaAllocator, &imageInfo, &allocInfo, &memoryTypeIndex);
+	//VmaAllocationCreateInfo allocInfo{
+	//	.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+	//	.usage = VMA_MEMORY_USAGE_AUTO
+	//};
+	//uint32_t memoryTypeIndex;
+	//vmaFindMemoryTypeIndexForImageInfo(vmaAllocator, &imageInfo, &allocInfo, &memoryTypeIndex);
 
-	VmaPoolCreateInfo poolCreateInfo
-	{
-		.memoryTypeIndex = memoryTypeIndex,
-		.blockSize = 0,    // Let VMA decide block size (or set strictly if needed)
-		.maxBlockCount = 1,// Force this pool to only hold this one allocation (Optional but safe)
-		.pMemoryAllocateNext = &exportAllocInfo // <--- THIS IS THE FIELD YOU WERE LOOKING FOR
-	};
+	//VmaPoolCreateInfo poolCreateInfo
+	//{
+	//	.memoryTypeIndex = memoryTypeIndex,
+	//	.blockSize = 0,    // Let VMA decide block size (or set strictly if needed)
+	//	.maxBlockCount = 1,// Force this pool to only hold this one allocation (Optional but safe)
+	//	.pMemoryAllocateNext = &exportAllocInfo // <--- THIS IS THE FIELD YOU WERE LOOKING FOR
+	//};
 
 	for (auto &res : frameResources)
 	{
-		if (vmaCreatePool(vmaAllocator, &poolCreateInfo, &res.vmaExportPool) != VK_SUCCESS)
-		{
-			showError("Unable to create VMA export memory pool");
-			return false;
-		}
-		allocInfo.pool = Config::ExecSelect(nullptr, res.vmaExportPool);
+		vkCreateImage(device, &imageInfo, nullptr, &res.renderTarget.handle);
 
-		if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &res.renderTarget.handle, &res.renderTarget.allocation, nullptr) != VK_SUCCESS)
+		VkMemoryRequirements memReqs{};
+		vkGetImageMemoryRequirements(device, res.renderTarget.handle, &memReqs);
+
+		VkMemoryDedicatedAllocateInfo dedicatedInfo
 		{
-			showError("Error internal render target image");
-			return false;
-		}
+			.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.image = res.renderTarget.handle
+		};
+
+		VkExportMemoryAllocateInfo exportAllocInfo{
+			.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+			.pNext = &dedicatedInfo,
+			.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+		};
+
+
+		//VmaAllocationCreateInfo allocInfo{
+		//	.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+		//	.usage = VMA_MEMORY_USAGE_AUTO
+		//};
+		auto findMem = [this](uint32_t typeFilter, VkMemoryPropertyFlags properties)
+		{
+			VkPhysicalDeviceMemoryProperties memProperties{};
+			vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+			for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+			{
+				if ((typeFilter & (1 << i)) &&
+					(memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+				{
+					return i;
+				}
+			}
+			return UINT32_MAX;
+		};
+		uint32_t memoryTypeIndex = findMem(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		VkMemoryAllocateInfo allocInfo{
+			.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+			.pNext = &exportAllocInfo,
+			.allocationSize = memReqs.size,
+			.memoryTypeIndex = memoryTypeIndex
+		};
+
+		vkAllocateMemory(device, &allocInfo, nullptr, &res.renderTargetMem);
+		vkBindImageMemory(device, res.renderTarget.handle, res.renderTargetMem, 0);
+
+		//if (vmaCreatePool(vmaAllocator, &poolCreateInfo, &res.vmaExportPool) != VK_SUCCESS)
+		//{
+		//	showError("Unable to create VMA export memory pool");
+		//	return false;
+		//}
+		////allocInfo.pool = Config::ExecSelect(nullptr, res.vmaExportPool);
+
+		//if (vmaCreateImage(vmaAllocator, &imageInfo, &allocInfo, &res.renderTarget.handle, &res.renderTarget.allocation, nullptr) != VK_SUCCESS)
+		//{
+		//	showError("Error internal render target image");
+		//	return false;
+		//}
 
 		VkImageViewCreateInfo imgViewInfo
 		{
@@ -1767,6 +1871,44 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 		{
 			showError("Error creating render target image view");
 			return false;
+		}
+
+		{
+			VkPhysicalDeviceExternalImageFormatInfo externalFormatInfo{
+				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,
+				.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+			};
+
+			VkPhysicalDeviceImageFormatInfo2 formatInfo{
+				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
+				.pNext = &externalFormatInfo,
+				.format = VK_FORMAT_R8G8B8A8_UNORM,
+				.type = VK_IMAGE_TYPE_2D,
+				.tiling = VK_IMAGE_TILING_OPTIMAL,
+				.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+				.flags = 0
+			};
+
+			VkExternalImageFormatProperties externalProps{
+				.sType = VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES
+			};
+
+			VkImageFormatProperties2 formatProps{
+				.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2,
+				.pNext = &externalProps
+			};
+
+			vkGetPhysicalDeviceImageFormatProperties2(physicalDevice, &formatInfo, &formatProps);
+
+			log(std::format("External memory features: {}", externalProps.externalMemoryProperties.externalMemoryFeatures));
+			log(std::format("Compatible handle types: {}", externalProps.externalMemoryProperties.compatibleHandleTypes));
+			log(std::format("Export from imported: {}", externalProps.externalMemoryProperties.exportFromImportedHandleTypes));
+			log(std::format("Memory requirements size: {}", memReqs.size));
+			log(std::format("Memory requirements alignment: {}", memReqs.alignment));
+			log(std::format("Expected size (512x288x4): {}", (512 * 288 * 4)));
+
+			VkDeviceSize allocatedSize = allocInfo.allocationSize;
+			log(std::format("Actually allocated: {}", allocatedSize));
 		}
 	}
 
@@ -2182,6 +2324,8 @@ void VulkanRenderSystem::transitionImages(VkCommandBuffer commandBuffer, const s
 			.dstAccessMask = b.dstAccessMask,
 			.oldLayout = b.oldLayout,
 			.newLayout = b.newLayout,
+			.srcQueueFamilyIndex = b.srcQueueFamilyIndex,
+			.dstQueueFamilyIndex = b.dstQueueFamilyIndex,
 			.image = b.image,
 			.subresourceRange
 			{
@@ -2243,7 +2387,7 @@ void VulkanRenderSystem::updateTextures()
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
 }
 
-intptr_t vks::VulkanRenderSystem::getSharedRenderTarget()
+ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int frameIndex)
 {
 	//for (auto &res : frameResources)
 	//{
@@ -2251,23 +2395,55 @@ intptr_t vks::VulkanRenderSystem::getSharedRenderTarget()
 	//	VmaAllocationInfo memInfo;
 	//vmaGetAllocationInfo(vmaAllocator, res., &memInfo);
 	//}
-	VmaAllocationInfo memInfo{};
-	auto &res = frameResources[0];
-	vmaGetAllocationInfo(vmaAllocator, res.renderTarget.allocation, &memInfo);
+	//VmaAllocationInfo memInfo{};
+	//auto &res = frameResources[0];
+	//vmaGetAllocationInfo(vmaAllocator, res.renderTarget.allocation, &memInfo);
 
 	VkMemoryGetWin32HandleInfoKHR getHandleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
-	getHandleInfo.memory = memInfo.deviceMemory; // The private block VMA allocated
-	getHandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT;
+	//getHandleInfo.memory = memInfo.deviceMemory; // The private block VMA allocated
+	getHandleInfo.memory = frameResources[frameIndex].renderTargetMem;
+	getHandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
 
-	HANDLE targetHandle = 0;
-	auto fpGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetMemoryWin32HandleKHR");
-	if (!fpGetMemoryWin32HandleKHR || fpGetMemoryWin32HandleKHR(device, &getHandleInfo, &targetHandle) != VK_SUCCESS)
+	HANDLE imageHandle = 0;
+	auto getMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetMemoryWin32HandleKHR");
+	if (!getMemoryWin32HandleKHR || getMemoryWin32HandleKHR(device, &getHandleInfo, &imageHandle) != VK_SUCCESS)
 	{
-		showError("Unable to acquire HANDLE for renter target");
-		return 0;
+		showError("Unable to acquire HANDLE for render target");
+		return ExportedResources{ 0, 0 };
 	}
 
-	return reinterpret_cast<intptr_t>(targetHandle);
+	auto vkGetSemaphoreWin32HandleKHR = (PFN_vkGetSemaphoreWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetSemaphoreWin32HandleKHR");
+
+	// semaphore that tooling will wait on
+	HANDLE waitSemaphoreHandle = 0;
+	VkSemaphoreGetWin32HandleInfoKHR semHandleInfo{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_GET_WIN32_HANDLE_INFO_KHR,
+		.semaphore = workCompleteSemaphores[frameIndex],
+		.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	};
+	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &waitSemaphoreHandle) != VK_SUCCESS)
+	{
+		showError("Unable to acquire HANDLE for wait semaphore");
+		return ExportedResources{ 0, 0 };
+	}
+
+	// semaphore tooling will signal;
+	HANDLE signalSemaphoreHandle = 0;
+	semHandleInfo.semaphore = frameResources[frameIndex].imageAcquiredSemaphore;
+	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &signalSemaphoreHandle) != VK_SUCCESS)
+	{
+		showError("Unable to acquire HANDLE for signal semaphore");
+		return ExportedResources{ 0, 0 };
+	}
+
+	ExportedResources exportRes
+	{
+		.textureMemoryHandle = reinterpret_cast<intptr_t>(imageHandle),
+		.waitSemaphoreHandle = reinterpret_cast<intptr_t>(waitSemaphoreHandle),
+		.signalSemaphoreHandle = reinterpret_cast<intptr_t>(signalSemaphoreHandle)
+	};
+
+	return exportRes;
 }
 
 void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)
