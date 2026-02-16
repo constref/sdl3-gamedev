@@ -33,5 +33,14 @@ void StartWorker(EngineWorker *worker)
 
 ExportedResources GetSharedRenderTarget(EngineWorker *worker, int frameIndex)
 {
-    return worker->getSharedRenderTarget(frameIndex);
+    return worker->getEngine().getRenderer()->getSharedRenderTarget(frameIndex);
+}
+
+intptr_t ENGINE_API ExportWorkCompleteSemaphore(EngineWorker *worker, int index)
+{
+	return worker->getEngine().getRenderer()->exportWorkCompleteSemaphore(index);
+}
+intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index)
+{
+	return worker->getEngine().getRenderer()->exportImageReadySemaphore(index);
 }

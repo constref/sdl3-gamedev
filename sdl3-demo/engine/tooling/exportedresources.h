@@ -5,12 +5,13 @@
 struct RenderInfo
 {
 	uint32_t framesInFlight;
+	uint64_t renderTargetSize;
+	uint32_t workCompletePoolSize;
+	uint32_t imageReadyPoolSize;
 };
 
 struct ExportedResources
 {
 	intptr_t textureMemoryHandle;
-	intptr_t waitSemaphoreHandle;
-	intptr_t signalSemaphoreHandle;
 };
 

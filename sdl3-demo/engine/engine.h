@@ -50,7 +50,7 @@ class Engine
 	PrototypeInstancer protoInstancer;
 	Services services;
 	SDLState sdlState;
-	RenderInfo renderInfo;
+	vks::VulkanRenderSystem *vkRenderer;
 
 public:
 	Engine(std::unique_ptr<Application> app) : app(std::move(app)), services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
@@ -108,7 +108,7 @@ public:
 		{
 			return false;
 		}
-		renderInfo = renderSys.getRenderInfo();
+		vkRenderer = &renderSys;
 
 		// initialize and start the app
 		if (!app->initialize(services, sdlState))
@@ -124,15 +124,9 @@ public:
 		return true;
 	}
 
-	RenderInfo getRenderInfo()
+	vks::VulkanRenderSystem *getRenderer()
 	{
-		return renderInfo;
-	}
-
-	ExportedResources getSharedRenderTarget(int frameIndex)
-	{
-		auto *renderer = services.compSys().getSystemRegistry().getSystem<vks::VulkanRenderSystem>();
-		return renderer->getSharedRenderTarget(frameIndex);
+		return vkRenderer;
 	}
 
 	void cleanup()

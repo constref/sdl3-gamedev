@@ -16,6 +16,8 @@ ENGINE_API EngineWorker *StartAppTooling(int logW, int logH, int width, int heig
 void ENGINE_API InitializeEngine(EngineWorker *worker, InitCallback callback);
 void ENGINE_API StartWorker(EngineWorker *worker);
 ExportedResources ENGINE_API GetSharedRenderTarget(EngineWorker *worker, int frameIndex);
+intptr_t ENGINE_API ExportWorkCompleteSemaphore(EngineWorker *worker, int index);
+intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index);
 
 #ifdef __cplusplus
 }

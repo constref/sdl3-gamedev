@@ -152,9 +152,16 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroySemaphore(device, timelineSemaphore, nullptr);
 	}
+	for (VkSemaphore semaphore : workCompleteSemaphores)
+	{
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
+	for (VkSemaphore semaphore : imageReadySemaphores)
+	{
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
 	for (auto &res : frameResources)
 	{
-		vkDestroySemaphore(device, res.imageAcquiredSemaphore, nullptr);
 		vkDestroyCommandPool(device, res.commandPool, nullptr); // destroys buffers implicitly
 
 		// cleanup internal render targets
@@ -279,17 +286,23 @@ void VulkanRenderSystem::beginFrame()
 		}
 	}
 
-	frameResIndex = frameCounter++ % MaxFramesInFlight;
+	frameResIndex = frameCounter % MaxFramesInFlight;
+	workCompleteSemaphoreIndex = frameCounter % workCompleteSemaphores.size();
+	imageReadySemaphoreIndex = frameCounter % imageReadySemaphores.size();
+	frameCounter++;
 	// wait for frame using this frame's resources to complete
 	frameId = ++timelineValue; // this is our frame "ID", and what we're using to signal the end of this frame later
-	waitForId = frameId - MaxFramesInFlight; // frame N and frame N - MaxInFlight share resources (3 - 2 = 1 -- frame 3 and 1 share resources)
+
+	// frame N and frame N - MaxInFlight share resources (3 - 2 = 1 -- frame 3 and 1 share resources)
+	//waitForId = frameId - MaxFramesInFlight;
+	waitForId = frameId - 1;
 
 	VkSemaphoreWaitInfo waitInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
 		.semaphoreCount = 1,
 		.pSemaphores = &timelineSemaphore,
-		.pValues = &waitForId
+		.pValues = &waitForId,
 	};
 	vkWaitSemaphores(device, &waitInfo, UINT64_MAX);
 
@@ -311,6 +324,7 @@ void VulkanRenderSystem::beginFrame()
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
 	};
 	vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+
 
 	// transition the color and depth images
 	std::array<Barrier, 2> layoutBarriers
@@ -423,7 +437,7 @@ void VulkanRenderSystem::endFrame()
 	{
 		// start the swapchain render pass
 		// acquire the swapchain image, no need to wait for timeline semaphore just to then wait for the swapchain image
-		VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, res.imageAcquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
+		VkResult acquireResult = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageReadySemaphores[imageReadySemaphoreIndex], VK_NULL_HANDLE, &imageIndex);
 		// handle resize and out-of-date images, may need swapchain recreate
 
 		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
@@ -567,7 +581,7 @@ void VulkanRenderSystem::endFrame()
 			{
 				VkSemaphoreSubmitInfo { // render work completion signal
 					.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-					.semaphore = workCompleteSemaphores[frameResIndex],
+					.semaphore = workCompleteSemaphores[workCompleteSemaphoreIndex],
 					.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
 				},
 				VkSemaphoreSubmitInfo { // entire frame is completed (timeline)
@@ -587,11 +601,15 @@ void VulkanRenderSystem::endFrame()
 	};
 
 	// ensure swapchain image is actually available to start color output
+	constexpr VkPipelineStageFlags2 imageStageFlags = Config::ExecSelect(
+		VK_PIPELINE_STAGE_2_BLIT_BIT | VK_PIPELINE_STAGE_2_CLEAR_BIT,
+		VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
+	);
 	VkSemaphoreSubmitInfo imageAcquireWaitInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-		.semaphore = res.imageAcquiredSemaphore,
-		.stageMask = VK_PIPELINE_STAGE_2_BLIT_BIT | VK_PIPELINE_STAGE_2_CLEAR_BIT
+		.semaphore = imageReadySemaphores[imageReadySemaphoreIndex],
+		.stageMask = imageStageFlags
 	};
 
 	auto semaphoreSignals = createSignals();
@@ -599,7 +617,7 @@ void VulkanRenderSystem::endFrame()
 	VkSubmitInfo2 submitInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-		.waitSemaphoreInfoCount = 1,
+		.waitSemaphoreInfoCount = Config::ExecSelect(1, 0),
 		.pWaitSemaphoreInfos = &imageAcquireWaitInfo, // ensure the image is ready
 		.commandBufferInfoCount = 1,
 		.pCommandBufferInfos = &cmdSubmitInfo,
@@ -614,7 +632,7 @@ void VulkanRenderSystem::endFrame()
 		VkPresentInfoKHR presentInfo{
 			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &workCompleteSemaphores[imageIndex], // render work completed semaphore
+			.pWaitSemaphores = &workCompleteSemaphores[workCompleteSemaphoreIndex], // render work completed semaphore
 			.swapchainCount = 1,
 			.pSwapchains = &swapchain,
 			.pImageIndices = &imageIndex,
@@ -1194,16 +1212,16 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 
 bool vks::VulkanRenderSystem::createWorkSemaphores()
 {
-	static VkExportSemaphoreCreateInfo exportSemaphoreInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
-		.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
-	};
-
-	const uint32_t semaphoreCount = Config::ExecSelect(swapchainImages.size(), frameResources.size());
+	const uint32_t semaphoreCount = Config::ExecSelect(swapchainImages.size(), frameResources.size() * 3);
 	workCompleteSemaphores.resize(semaphoreCount);
 	for (int i = 0; i < semaphoreCount; ++i)
 	{
+		VkExportSemaphoreCreateInfo exportSemaphoreInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+			.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+		};
+
 		VkSemaphoreCreateInfo semaphoreInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -1230,11 +1248,6 @@ void VulkanRenderSystem::destroySwapchain()
 	{
 		vkDestroySwapchainKHR(device, swapchain, nullptr);
 		swapchain = nullptr;
-	}
-
-	for (VkSemaphore semaphore : workCompleteSemaphores)
-	{
-		vkDestroySemaphore(device, semaphore, nullptr);
 	}
 }
 
@@ -1488,37 +1501,50 @@ bool VulkanRenderSystem::createSyncResources()
 		return false;
 	}
 
-	static VkExportSemaphoreCreateInfo exportSemaphoreInfo
+	// pool of image-ready semaphores
+	imageReadySemaphores.resize(MaxFramesInFlight * 3);
+	for (int i = 0; i < imageReadySemaphores.size(); ++i)
 	{
-		.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
-		.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
-	};
+		VkExportSemaphoreCreateInfo exportSemaphoreInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+			.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+		};
 
-	// per-frame image-acquire semaphores
-	for (FrameResources &res : frameResources)
-	{
 		// create the binary semaphores
 		VkSemaphoreCreateInfo semaphoreInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 			.pNext = Config::ExecSelect(nullptr, &exportSemaphoreInfo)
 		};
-		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS)
+		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageReadySemaphores[i]) != VK_SUCCESS)
 		{
 			showError("Error creating the per-frame image-acquire semaphore");
 			return false;
 		}
-		// 2. IMMEDIATE FIX: Submit a "Dummy" signal to the queue
-		// This puts the semaphore into the "Signaled" state before the first frame ever runs.
-		VkSubmitInfo initSignalInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		initSignalInfo.commandBufferCount = 0; // No work, just synchronization
-		initSignalInfo.pCommandBuffers = nullptr;
-		initSignalInfo.signalSemaphoreCount = 1;
-		initSignalInfo.pSignalSemaphores = &res.imageAcquiredSemaphore;
-		vkQueueSubmit(gfxQueue, 1, &initSignalInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(gfxQueue);
 	}
 
+	// per-frame image-acquire semaphores
+	//for (FrameResources &res : frameResources)
+	//{
+	//	VkExportSemaphoreCreateInfo exportSemaphoreInfo
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+	//		.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	//	};
+
+	//	// create the binary semaphores
+	//	VkSemaphoreCreateInfo semaphoreInfo
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+	//		.pNext = Config::ExecSelect(nullptr, &exportSemaphoreInfo)
+	//	};
+	//	if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS)
+	//	{
+	//		showError("Error creating the per-frame image-acquire semaphore");
+	//		return false;
+	//	}
+	//}
 	return true;
 }
 
@@ -1574,13 +1600,13 @@ bool VulkanRenderSystem::createDescriptorSets()
 	std::array<VkDescriptorPoolSize, 2> poolSizes
 	{
 		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = MaxTextures},
-		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = 1 * MaxFramesInFlight}
+		VkDescriptorPoolSize{.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MaxFramesInFlight}
 	};
 	VkDescriptorPoolCreateInfo poolInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 		.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
-		.maxSets = 3,
+		.maxSets = MaxFramesInFlight + 1,
 		.poolSizeCount = poolSizes.size(),
 		.pPoolSizes = poolSizes.data()
 	};
@@ -1839,6 +1865,7 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 
 		vkAllocateMemory(device, &allocInfo, nullptr, &res.renderTargetMem);
 		vkBindImageMemory(device, res.renderTarget.handle, res.renderTargetMem, 0);
+		internalTextureByteSize = memReqs.size;
 
 		//if (vmaCreatePool(vmaAllocator, &poolCreateInfo, &res.vmaExportPool) != VK_SUCCESS)
 		//{
@@ -2389,18 +2416,7 @@ void VulkanRenderSystem::updateTextures()
 
 ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int frameIndex)
 {
-	//for (auto &res : frameResources)
-	//{
-	//	//res.renderTarget.
-	//	VmaAllocationInfo memInfo;
-	//vmaGetAllocationInfo(vmaAllocator, res., &memInfo);
-	//}
-	//VmaAllocationInfo memInfo{};
-	//auto &res = frameResources[0];
-	//vmaGetAllocationInfo(vmaAllocator, res.renderTarget.allocation, &memInfo);
-
 	VkMemoryGetWin32HandleInfoKHR getHandleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
-	//getHandleInfo.memory = memInfo.deviceMemory; // The private block VMA allocated
 	getHandleInfo.memory = frameResources[frameIndex].renderTargetMem;
 	getHandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
 
@@ -2409,41 +2425,68 @@ ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int frameIndex)
 	if (!getMemoryWin32HandleKHR || getMemoryWin32HandleKHR(device, &getHandleInfo, &imageHandle) != VK_SUCCESS)
 	{
 		showError("Unable to acquire HANDLE for render target");
-		return ExportedResources{ 0, 0 };
-	}
-
-	auto vkGetSemaphoreWin32HandleKHR = (PFN_vkGetSemaphoreWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetSemaphoreWin32HandleKHR");
-
-	// semaphore that tooling will wait on
-	HANDLE waitSemaphoreHandle = 0;
-	VkSemaphoreGetWin32HandleInfoKHR semHandleInfo{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_GET_WIN32_HANDLE_INFO_KHR,
-		.semaphore = workCompleteSemaphores[frameIndex],
-		.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
-	};
-	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &waitSemaphoreHandle) != VK_SUCCESS)
-	{
-		showError("Unable to acquire HANDLE for wait semaphore");
-		return ExportedResources{ 0, 0 };
-	}
-
-	// semaphore tooling will signal;
-	HANDLE signalSemaphoreHandle = 0;
-	semHandleInfo.semaphore = frameResources[frameIndex].imageAcquiredSemaphore;
-	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &signalSemaphoreHandle) != VK_SUCCESS)
-	{
-		showError("Unable to acquire HANDLE for signal semaphore");
-		return ExportedResources{ 0, 0 };
+		return ExportedResources{ 0 };
 	}
 
 	ExportedResources exportRes
 	{
-		.textureMemoryHandle = reinterpret_cast<intptr_t>(imageHandle),
-		.waitSemaphoreHandle = reinterpret_cast<intptr_t>(waitSemaphoreHandle),
-		.signalSemaphoreHandle = reinterpret_cast<intptr_t>(signalSemaphoreHandle)
+		.textureMemoryHandle = reinterpret_cast<intptr_t>(imageHandle)
 	};
 
 	return exportRes;
+}
+
+RenderInfo vks::VulkanRenderSystem::getRenderInfo() const
+{
+	return RenderInfo
+	{
+		.framesInFlight = MaxFramesInFlight,
+		.renderTargetSize = internalTextureByteSize,
+		.workCompletePoolSize = static_cast<uint32_t>(workCompleteSemaphores.size()),
+		.imageReadyPoolSize = static_cast<uint32_t>(imageReadySemaphores.size())
+	};
+}
+
+intptr_t vks::VulkanRenderSystem::exportWorkCompleteSemaphore(uint32_t index) const
+{
+	assert(index < workCompleteSemaphores.size() && "Invalid work-complete semaphore index requested");
+
+	HANDLE semaphoreHandle = 0;
+	VkSemaphoreGetWin32HandleInfoKHR semHandleInfo{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_GET_WIN32_HANDLE_INFO_KHR,
+		.semaphore = workCompleteSemaphores[index],
+		.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	};
+
+	auto vkGetSemaphoreWin32HandleKHR = (PFN_vkGetSemaphoreWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetSemaphoreWin32HandleKHR");
+	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &semaphoreHandle) != VK_SUCCESS)
+	{
+		showError("Unable to acquire semaphore HANDLE");
+		return 0;
+	}
+
+	return reinterpret_cast<intptr_t>(semaphoreHandle);
+}
+
+intptr_t vks::VulkanRenderSystem::exportImageReadySemaphore(uint32_t index) const
+{
+	assert(index < imageReadySemaphores.size() && "Invalid image-ready semaphore index requested");
+
+	HANDLE semaphoreHandle = 0;
+	VkSemaphoreGetWin32HandleInfoKHR semHandleInfo{
+		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_GET_WIN32_HANDLE_INFO_KHR,
+		.semaphore = imageReadySemaphores[index],
+		.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT
+	};
+
+	auto vkGetSemaphoreWin32HandleKHR = (PFN_vkGetSemaphoreWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetSemaphoreWin32HandleKHR");
+	if (!vkGetSemaphoreWin32HandleKHR || vkGetSemaphoreWin32HandleKHR(device, &semHandleInfo, &semaphoreHandle) != VK_SUCCESS)
+	{
+		showError("Unable to acquire semaphore HANDLE");
+		return 0;
+	}
+
+	return reinterpret_cast<intptr_t>(semaphoreHandle);
 }
 
 void VulkanRenderSystem::onEvent(NodeHandle target, const AnimationPlayEvent &event)

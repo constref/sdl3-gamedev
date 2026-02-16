@@ -19,7 +19,6 @@ class EngineWorker
 	bool shouldRun;
 	RingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread workThread;
-	ExportedResources sharedRenderTarget;
 
 public:
 	EngineWorker(std::unique_ptr<Engine> engine, int logW, int logH, int width, int height) : engine(std::move(engine))
@@ -52,7 +51,7 @@ public:
 		{
 			if (callback)
 			{
-				callback(engine->getRenderInfo());
+				callback(engine->getRenderer()->getRenderInfo());
 			}
 		}
 	}
@@ -117,8 +116,9 @@ public:
 	{
 		eventBuffer.add(event);
 	}
-	ExportedResources getSharedRenderTarget(int frameIndex) const
+
+	Engine &getEngine()
 	{
-		return engine->getSharedRenderTarget(frameIndex);
+		return *engine;
 	}
 };

@@ -126,7 +126,6 @@ struct FrameResources
 	uint32_t lastFrameId = 0;
 	VkCommandPool commandPool = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
-	VkSemaphore imageAcquiredSemaphore = nullptr;
 	Image renderTarget;
 	VkDeviceMemory renderTargetMem = nullptr;
 	Buffer indirectDraws;
@@ -157,7 +156,7 @@ struct Barrier
 class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
-	constexpr static uint32_t MaxFramesInFlight{ 2 };
+	constexpr static uint32_t MaxFramesInFlight{ Config::ExecSelect(2, 3) };
 	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
 	constexpr static VkFormat exportFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
@@ -196,6 +195,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	std::vector<VkImage> swapchainImages;
 	std::vector<VkImageView> swapchainImageViews;
 	std::vector<VkSemaphore> workCompleteSemaphores;
+	std::vector<VkSemaphore> imageReadySemaphores;
 	bool requireSwapchainRecreate = false;
 	uint32_t swapchainWidth = 0;
 	uint32_t swapchainHeight = 0;
@@ -215,7 +215,10 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	// frame and synchronization resources
 	VkSemaphore timelineSemaphore = nullptr;
 	std::array<vks::FrameResources, MaxFramesInFlight> frameResources;
+	VkDeviceSize internalTextureByteSize = 0;
 	uint32_t frameResIndex = 0;
+	uint32_t workCompleteSemaphoreIndex = 0;
+	uint32_t imageReadySemaphoreIndex = 0;
 	uint64_t frameId = 0;
 	uint64_t waitForId = 0;
 	uint32_t imageIndex = 0;
@@ -282,14 +285,10 @@ public:
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
 
-	RenderInfo getRenderInfo() const
-	{
-		return RenderInfo
-		{
-			.framesInFlight = MaxFramesInFlight
-		};
-	}
 	ExportedResources getSharedRenderTarget(int frameIndex);
+	intptr_t exportWorkCompleteSemaphore(uint32_t index) const;
+	intptr_t exportImageReadySemaphore(uint32_t index) const;
+	RenderInfo getRenderInfo() const;
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);
