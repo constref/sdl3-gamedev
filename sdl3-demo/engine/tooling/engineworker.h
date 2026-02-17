@@ -8,7 +8,8 @@
 #include <engine.h>
 #include <memory>
 #include <tooling/callbacks.h>
-#include "containers/ringbuffer.h"
+#include <containers/atomicringbuffer.h>
+#include <messaging/events.h>
 #include "platformevents.h"
 
 class EngineWorker
@@ -17,7 +18,7 @@ class EngineWorker
 	int logW, logH, width, height;
 
 	bool shouldRun;
-	RingBuffer<PlatformEvent, 64> eventBuffer;
+	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread workThread;
 
 public:
@@ -62,6 +63,7 @@ public:
 		{
 			while (shouldRun)
 			{
+				processEvents();
 				engine->step();
 			}
 
@@ -71,45 +73,57 @@ public:
 
 	void processEvents()
 	{
-		//    PlatformEvent e;
-		//    while (eventBuffer.get(e))
-		//    {
-		//        // handle external events
-		//        if (std::holds_alternative<ApplicationEnteredBackground>(e))
-		//        {
-		//            app.pause();
-		//        }
-		//        else if (std::holds_alternative<ApplicationEnteredForeground>(e))
-		//        {
-		//            app.resume();
-		//        }
-		//        else if (std::holds_alternative<MouseMoveEvent>(e))
-		//        {
-		//            const MouseMoveEvent &mouseMoveEvent = std::get<MouseMoveEvent>(e);
-		//            app.onMouseMove(mouseMoveEvent.x, mouseMoveEvent.y);
-		//        }
-		//        else if (std::holds_alternative<MouseButtonEvent>(e))
-		//        {
-		//            const MouseButtonEvent &mouseButtonEvent = std::get<MouseButtonEvent>(e);
-		//            if (mouseButtonEvent.isDown)
-		//            {
-		//                app.onMouseButtonDown(mouseButtonEvent.buttonIndex);
-		//            }
-		//            else
-		//            {
-		//                app.onMouseButtonUp(mouseButtonEvent.buttonIndex);
-		//            }
-		//        }
-		//        else if (std::holds_alternative<ResizeEvent>(e))
-		//        {
-		//            const ResizeEvent &event = std::get<ResizeEvent>(e);
-		//            app.onResizeRenderer(event.x, event.y, event.width, event.height);
-		//        }
-		//        else if (std::holds_alternative<ExitEvent>(e))
-		//        {
-		//            shouldRun = false;
-		//        }
-		//    }
+		PlatformEvent e;
+		while (eventBuffer.get(e))
+		{
+			// handle external events
+			if (std::holds_alternative<ApplicationEnteredBackground>(e))
+			{
+				//app.pause();
+			}
+			else if (std::holds_alternative<ApplicationEnteredForeground>(e))
+			{
+				//app.resume();
+			}
+			else if (std::holds_alternative<KeyUp>(e))
+			{
+				const KeyUp &keyEvent = std::get<KeyUp>(e);
+				Services &serv = engine->getServices();
+				serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
+			}
+			else if (std::holds_alternative<KeyDown>(e))
+			{
+				const KeyDown &keyEvent = std::get<KeyDown>(e);
+				Services &serv = engine->getServices();
+				serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
+			}
+			else if (std::holds_alternative<MouseMoveEvent>(e))
+			{
+				//const MouseMoveEvent &mouseMoveEvent = std::get<MouseMoveEvent>(e);
+				//app.onMouseMove(mouseMoveEvent.x, mouseMoveEvent.y);
+			}
+			else if (std::holds_alternative<MouseButtonEvent>(e))
+			{
+				//const MouseButtonEvent &mouseButtonEvent = std::get<MouseButtonEvent>(e);
+				//if (mouseButtonEvent.isDown)
+				//{
+				//	app.onMouseButtonDown(mouseButtonEvent.buttonIndex);
+				//}
+				//else
+				//{
+				//	app.onMouseButtonUp(mouseButtonEvent.buttonIndex);
+				//}
+			}
+			else if (std::holds_alternative<ResizeEvent>(e))
+			{
+				//const ResizeEvent &event = std::get<ResizeEvent>(e);
+				//app.onResizeRenderer(event.x, event.y, event.width, event.height);
+			}
+			else if (std::holds_alternative<ExitEvent>(e))
+			{
+				shouldRun = false;
+			}
+		}
 	}
 
 	void pushEvent(const PlatformEvent &event)

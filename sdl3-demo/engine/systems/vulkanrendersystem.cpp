@@ -1212,7 +1212,7 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 
 bool vks::VulkanRenderSystem::createWorkSemaphores()
 {
-	const uint32_t semaphoreCount = Config::ExecSelect(swapchainImages.size(), frameResources.size() * 3);
+	const uint32_t semaphoreCount = Config::ExecSelect(swapchainImages.size(), MaxFramesInFlight);
 	workCompleteSemaphores.resize(semaphoreCount);
 	for (int i = 0; i < semaphoreCount; ++i)
 	{
@@ -1502,7 +1502,7 @@ bool VulkanRenderSystem::createSyncResources()
 	}
 
 	// pool of image-ready semaphores
-	imageReadySemaphores.resize(MaxFramesInFlight * 3);
+	imageReadySemaphores.resize(MaxFramesInFlight);
 	for (int i = 0; i < imageReadySemaphores.size(); ++i)
 	{
 		VkExportSemaphoreCreateInfo exportSemaphoreInfo

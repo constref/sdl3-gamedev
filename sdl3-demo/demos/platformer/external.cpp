@@ -44,3 +44,13 @@ intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index)
 {
 	return worker->getEngine().getRenderer()->exportImageReadySemaphore(index);
 }
+
+void ENGINE_API OnKeyUp(EngineWorker *worker, uint16_t scancode)
+{
+	worker->pushEvent(KeyUp{ .scancode = scancode });
+}
+
+void ENGINE_API OnKeyDown(EngineWorker *worker, uint16_t scancode)
+{
+	worker->pushEvent(KeyDown{ .scancode = scancode });
+}

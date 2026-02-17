@@ -19,6 +19,9 @@ ExportedResources ENGINE_API GetSharedRenderTarget(EngineWorker *worker, int fra
 intptr_t ENGINE_API ExportWorkCompleteSemaphore(EngineWorker *worker, int index);
 intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index);
 
+void ENGINE_API OnKeyUp(EngineWorker *worker, uint16_t scancode);
+void ENGINE_API OnKeyDown(EngineWorker *worker, uint16_t scancode);
+
 #ifdef __cplusplus
 }
 #endif

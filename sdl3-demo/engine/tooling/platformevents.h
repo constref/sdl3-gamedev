@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <stdint.h>
 
 struct MouseMoveEvent
 {
@@ -11,6 +12,15 @@ struct MouseButtonEvent
 {
 	int buttonIndex;
 	bool isDown;
+};
+
+struct KeyUp
+{
+	uint16_t scancode;
+};
+struct KeyDown
+{
+	uint16_t scancode;
 };
 
 struct ResizeEvent
@@ -37,6 +47,8 @@ struct ApplicationEnteredForeground
 using PlatformEvent = std::variant<
 	ApplicationEnteredBackground,
 	ApplicationEnteredForeground,
+	KeyUp,
+	KeyDown,
 	MouseMoveEvent,
 	MouseButtonEvent,
 	ResizeEvent,

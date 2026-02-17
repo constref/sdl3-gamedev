@@ -129,6 +129,11 @@ public:
 		return vkRenderer;
 	}
 
+	Services &getServices()
+	{
+		return services;
+	}
+
 	void cleanup()
 	{
 		app->cleanup();

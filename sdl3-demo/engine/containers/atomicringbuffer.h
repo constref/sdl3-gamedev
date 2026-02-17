@@ -4,7 +4,7 @@
 #include <memory>
 
 template <typename ItemType, size_t Capacity>
-class RingBuffer
+class AtomicRingBuffer
 {
     std::unique_ptr<ItemType[]> elements = std::make_unique<ItemType[]>(Capacity);
     std::atomic_size_t readIndex = 0;
