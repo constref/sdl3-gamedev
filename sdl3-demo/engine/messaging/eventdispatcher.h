@@ -13,7 +13,7 @@ public:
 	template<typename Type, typename RecipientType>
 	static void invoke(RecipientType *recipient, NodeHandle target, const Type &obj)
 	{
-		Logger::info(recipient, "This is a test");
+		Logger::info(recipient, typeid(obj).name());
 		recipient->onEvent(target, obj);
 	}
 };

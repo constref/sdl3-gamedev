@@ -957,7 +957,7 @@ VkPhysicalDevice VulkanRenderSystem::findPhysicalDevice()
 		bool formatSupported = false;
 		for (const VkSurfaceFormatKHR &surfFormat : surfaceFormats)
 		{
-			if (surfFormat.format == swapchainFormat)
+			if (surfFormat.format == colorFormat)
 			{
 				formatSupported = true;
 				break;
@@ -1158,7 +1158,7 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 		.surface = surface,
 		.minImageCount = requestedImageCount,
-		.imageFormat = swapchainFormat,
+		.imageFormat = colorFormat,
 		.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR,
 		.imageExtent{.width = swapchainWidth, .height = swapchainHeight },
 		.imageArrayLayers = 1,
@@ -1189,7 +1189,7 @@ bool VulkanRenderSystem::createSwapchain(uint32_t width, uint32_t height)
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = swapchainImages[i],
 			.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			.format = swapchainFormat,
+			.format = colorFormat,
 			.subresourceRange
 			{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1420,12 +1420,11 @@ Pipeline VulkanRenderSystem::createGraphicsPipeline(const ShaderSet &shaderSet, 
 	};
 
 	// structure required for dynamic rendering
-	VkFormat format = Config::ExecSelect(swapchainFormat, exportFormat);
 	VkPipelineRenderingCreateInfo renderInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 		.colorAttachmentCount = 1,
-		.pColorAttachmentFormats = &format,
+		.pColorAttachmentFormats = &colorFormat,
 		.depthAttachmentFormat = depthFormat,
 	};
 
@@ -1789,7 +1788,7 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 		.pNext = Config::ExecSelect(nullptr, &externalImageInfo),
 		.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
 		.imageType = VK_IMAGE_TYPE_2D,
-		.format = Config::ExecSelect(swapchainFormat, exportFormat),
+		.format = colorFormat,
 		.extent {.width = logW, .height = logH, .depth = 1},
 		.mipLevels = 1,
 		.arrayLayers = 1,
@@ -1885,7 +1884,7 @@ bool vks::VulkanRenderSystem::createInternalTargets()
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = res.renderTarget.handle,
 			.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			.format = Config::ExecSelect(swapchainFormat, exportFormat),
+			.format = colorFormat,
 			.subresourceRange
 			{
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -2257,13 +2256,11 @@ void VulkanRenderSystem::submitTransientCommandBuffer(VkCommandBuffer commandBuf
 
 std::tuple<ResourceId, Image> VulkanRenderSystem::createImage(uint32_t width, uint32_t height, uint32_t channels)
 {
-	VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-
 	VkImageCreateInfo imageInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.imageType = VK_IMAGE_TYPE_2D,
-		.format = imageFormat,
+		.format = colorFormat,
 		.extent {.width = width, .height = height, .depth = 1},
 		.mipLevels = 1,
 		.arrayLayers = 1,
@@ -2286,7 +2283,7 @@ std::tuple<ResourceId, Image> VulkanRenderSystem::createImage(uint32_t width, ui
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		.image = image.handle,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,
-		.format = imageFormat,
+		.format = colorFormat,
 		.subresourceRange
 		{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,

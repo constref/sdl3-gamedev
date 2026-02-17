@@ -157,8 +157,7 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
 	constexpr static uint32_t MaxFramesInFlight{ Config::ExecSelect(2, 3) };
-	constexpr static VkFormat swapchainFormat{ VK_FORMAT_B8G8R8A8_SRGB };
-	constexpr static VkFormat exportFormat{ VK_FORMAT_R8G8B8A8_UNORM };
+	constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UNORM) };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 	constexpr static size_t MaxTextures = 1024;
 	constexpr static size_t MaxDrawCommands = 5000;
