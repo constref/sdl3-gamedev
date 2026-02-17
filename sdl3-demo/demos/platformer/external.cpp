@@ -54,3 +54,10 @@ void ENGINE_API OnKeyDown(EngineWorker *worker, uint16_t scancode)
 {
 	worker->pushEvent(KeyDown{ .scancode = scancode });
 }
+
+void ENGINE_API SetEventCallback(EngineWorker *worker, EventReceived callback)
+{
+	Logger::logHandler = [callback](std::string message) {
+		callback(message.c_str());
+	};
+}

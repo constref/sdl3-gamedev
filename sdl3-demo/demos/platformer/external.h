@@ -22,6 +22,8 @@ intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index);
 void ENGINE_API OnKeyUp(EngineWorker *worker, uint16_t scancode);
 void ENGINE_API OnKeyDown(EngineWorker *worker, uint16_t scancode);
 
+void ENGINE_API SetEventCallback(EngineWorker *worker, EventReceived callback);
+
 #ifdef __cplusplus
 }
 #endif
