@@ -40,27 +40,18 @@ public:
 		}
 	}
 
-	void initialize(InitCallback callback)
+	void start(InitCallback callback)
 	{
-		shouldRun = true;
-		if (!engine->initialize(logW, logH, width, height))
+		workThread = std::thread([this, callback]()
 		{
-			shouldRun = false;
-		}
-
-		if (shouldRun)
-		{
-			if (callback)
+			shouldRun = engine->initialize(logW, logH, width, height);
+			if (shouldRun)
 			{
-				callback(engine->getRenderer()->getRenderInfo());
+				if (callback)
+				{
+					callback(engine->getRenderer()->getRenderInfo());
+				}
 			}
-		}
-	}
-
-	void start()
-	{
-		workThread = std::thread([this]()
-		{
 			while (shouldRun)
 			{
 				processEvents();

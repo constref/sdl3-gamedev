@@ -13,8 +13,7 @@ class EngineWorker;
 
 int ENGINE_API StartAppStandalone();
 ENGINE_API EngineWorker *StartAppTooling(int logW, int logH, int width, int height);
-void ENGINE_API InitializeEngine(EngineWorker *worker, InitCallback callback);
-void ENGINE_API StartWorker(EngineWorker *worker);
+void ENGINE_API StartWorker(EngineWorker *worker, InitCallback callback);
 ExportedResources ENGINE_API GetSharedRenderTarget(EngineWorker *worker, int frameIndex);
 intptr_t ENGINE_API ExportWorkCompleteSemaphore(EngineWorker *worker, int index);
 intptr_t ENGINE_API ExportImageReadySemaphore(EngineWorker *worker, int index);
