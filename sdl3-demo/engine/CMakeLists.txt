@@ -71,6 +71,8 @@ set(ENGINE_SOURCES
 	"systems/basiccamerasystem.cpp"
 	"systems/vulkanrendersystem.cpp"
 	"systems/vulkanrendersystem.h"
+	"systems/d3d11rendersystem.h"
+	"systems/d3d11rendersystem.cpp"
 	"systems/context/rendercontext.h"
 	"components/componentstore.h"
 	"components/componentstore.cpp"
@@ -129,6 +131,7 @@ target_link_libraries(engine PUBLIC
 	#SDL3_mixer::SDL3_mixer
 	glm::glm
 	tinyxml2::tinyxml2
+	dxgi d3d11 d3dcompiler
 )
 
 target_include_directories(engine

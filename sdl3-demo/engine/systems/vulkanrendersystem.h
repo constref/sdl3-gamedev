@@ -25,6 +25,8 @@ typedef struct VmaAllocator_T *VmaAllocator;
 struct VmaAllocation_T;
 typedef struct VmaAllocation_T *VmaAllocation;
 
+namespace d3d11rs { class D3D11RenderSystem; };
+
 namespace vks
 {
 
@@ -50,6 +52,7 @@ struct Image
 	VkImage handle = nullptr;
 	VkImageView view = nullptr;
 	VmaAllocation allocation = nullptr;
+	VkDeviceMemory memory = nullptr;
 	uint32_t width = 0;
 	uint32_t height = 0;
 	uint32_t channels = 0;
@@ -127,7 +130,6 @@ struct FrameResources
 	VkCommandPool commandPool = nullptr;
 	VkCommandBuffer commandBuffer = nullptr;
 	Image renderTarget;
-	VkDeviceMemory renderTargetMem = nullptr;
 	Buffer indirectDraws;
 	VkDrawIndexedIndirectCommand *drawCommands = nullptr;
 	uint32_t numDraws = 0;
@@ -137,6 +139,7 @@ struct FrameResources
 	VkDescriptorSet descSet = nullptr;
 	uint64_t vertBufferAddr = 0;
 	VmaPool vmaExportPool = nullptr;
+	void *shareHandle = nullptr;
 };
 
 struct Barrier
@@ -157,7 +160,8 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
 	constexpr static uint32_t MaxFramesInFlight{ Config::ExecSelect(2, 3) };
-	constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UNORM) };
+	//constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UNORM) };
+	constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_B8G8R8A8_UNORM) };
 	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 	constexpr static size_t MaxTextures = 1024;
 	constexpr static size_t MaxDrawCommands = 5000;
@@ -176,6 +180,9 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool running = false;
 	uint64_t frameCounter = 0;
 	uint64_t timelineValue = MaxFramesInFlight - 1; // subtract 1 to ensure wait-for-ID / frame resource index start at 0 during render, avoids if (frameId < MaxFramesInFlight) check
+
+	// interop related
+	d3d11rs::D3D11RenderSystem *d3drs = nullptr;
 
 	// vulkan core
 	VkInstance vulkanInstance = nullptr;
@@ -263,8 +270,11 @@ class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 	VkSampler createSampler();
 	vks::Buffer createBuffer(VkBufferUsageFlags usage, VkBufferCreateFlags flags, size_t byteSize, void *initData);
 	bool createInternalTargets();
+	bool createDepthTarget();
+	bool importD3DTextures();
 	bool createIndirectDrawBuffers();
 	bool updatePerFrameDescriptors();
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	void loadModel();
 	VkCommandBuffer startTransientCommandBuffer();
