@@ -20,7 +20,6 @@ void EnemySystem::onEvent(NodeHandle target, const DeathEvent &event)
 		services.compSys().removeComponent(node, *cc);
 		if (ec->getType() == EnemyType::creeper)
 		{
-			const Resources &res = Resources::get();
 			ec->setState(EnemyState::dead);
 			services.eventQueue().enqueue<AnimationPlayEvent>(node.getHandle(), 0, ec->deathAnimation, ec->deathTexture);
 		}

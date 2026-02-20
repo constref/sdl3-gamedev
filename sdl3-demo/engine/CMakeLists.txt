@@ -3,6 +3,9 @@
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
+find_package(flatbuffers REQUIRED)
+#find_package(ZeroMQ REQUIRED)
+find_package(cppzmq REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -99,7 +102,10 @@ set(ENGINE_SOURCES
 	"containers/ringbuffer.h"
 	"tooling/engineinterface.h" 
 	"tooling/engineworker.h" 
-	"tooling/platformevents.h" 
+	"tooling/engineworker.cpp" 
+	"tooling/platformevents.h"
+	"tooling/interop.h"
+	"tooling/interop.cpp"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES})
@@ -123,6 +129,9 @@ if(MSVC)
     target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
+set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
+message(STATUS ${FLATBUFF_DIR})
+
 target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan
 	Vulkan::volk
@@ -132,8 +141,13 @@ target_link_libraries(engine PUBLIC
 	glm::glm
 	tinyxml2::tinyxml2
 	dxgi d3d11 d3dcompiler
+	flatbuffers::flatbuffers
+	cppzmq
 )
 
 target_include_directories(engine
 	PRIVATE "ext/"
-	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+	PUBLIC
+	${FLATBUFF_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}
+)

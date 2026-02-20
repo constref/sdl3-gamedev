@@ -186,44 +186,47 @@ public:
 		World &world = services.world();
 		Node &root = world.getNode(app->getRoot());
 
-		SDL_Event event{};
-		while (SDL_PollEvent(&event))
+		if (Config::IsStandaloneMode())
 		{
-			switch (event.type)
+			SDL_Event event{};
+			while (SDL_PollEvent(&event))
 			{
-				case SDL_EVENT_QUIT:
+				switch (event.type)
 				{
-					running = false;
-					break;
-				}
-				case SDL_EVENT_WINDOW_RESIZED:
-				{
-					sdlState.width = event.window.data1;
-					sdlState.height = event.window.data2;
-					break;
-				}
-				case SDL_EVENT_KEY_DOWN:
-				{
-					// ignore repeat key-down signals while holding (prevent event spam)
-					if (!event.key.repeat)
+					case SDL_EVENT_QUIT:
 					{
-						services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
+						running = false;
+						break;
 					}
-					break;
-				}
-				case SDL_EVENT_KEY_UP:
-				{
-					services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
-					if (event.key.scancode == SDL_SCANCODE_F2)
+					case SDL_EVENT_WINDOW_RESIZED:
 					{
-						debugMode = !debugMode;
+						sdlState.width = event.window.data1;
+						sdlState.height = event.window.data2;
+						break;
 					}
-					else if (event.key.scancode == SDL_SCANCODE_F11)
+					case SDL_EVENT_KEY_DOWN:
 					{
-						sdlState.fullscreen = !sdlState.fullscreen;
-						SDL_SetWindowFullscreen(sdlState.window, sdlState.fullscreen);
+						// ignore repeat key-down signals while holding (prevent event spam)
+						if (!event.key.repeat)
+						{
+							services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
+						}
+						break;
 					}
-					break;
+					case SDL_EVENT_KEY_UP:
+					{
+						services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0, event.key.scancode);
+						if (event.key.scancode == SDL_SCANCODE_F2)
+						{
+							debugMode = !debugMode;
+						}
+						else if (event.key.scancode == SDL_SCANCODE_F11)
+						{
+							sdlState.fullscreen = !sdlState.fullscreen;
+							SDL_SetWindowFullscreen(sdlState.window, sdlState.fullscreen);
+						}
+						break;
+					}
 				}
 			}
 		}

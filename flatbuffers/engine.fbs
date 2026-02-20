@@ -1,0 +1,9 @@
+namespace NUBE.Interop;
+
+table RenderInfo {
+	max_frames_in_flight:short;
+	texture_byte_size:ulong;
+	target_handle_1:uint64;
+	target_handle_2:uint64;
+	target_handle_3:uint64;
+}

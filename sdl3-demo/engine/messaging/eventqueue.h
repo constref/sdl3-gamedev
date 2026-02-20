@@ -39,7 +39,7 @@ public:
 		queue[wIdx++] = QueuedEvent
 		{
 			.target = target,
-			.event = std::make_unique<EventType>(std::forward<Args>(args)...),
+			.event = std::make_unique<EventType>(std::forward<Args>(args)...), // TODO: Remove heap allocations
 			.dispatch = [](EventDispatcher &dispatcher, NodeHandle target, const EventBase &e)
 			{
 				size_t numHandlers = dispatcher.send<EventType>(target, static_cast<const EventType &>(e), FrameContext::currentStage());

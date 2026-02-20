@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package engine;
+
+message Empty {}
+
+message RenderInfo
+{
+	int32 maxFramesInFlight = 1;
+}
+
+service RenderService
+{
+	rpc GetInfo(Empty) returns (RenderInfo) {}
+}

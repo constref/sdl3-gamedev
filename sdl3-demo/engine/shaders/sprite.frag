@@ -35,8 +35,7 @@ layout(set = 1, binding = 0) readonly buffer InstanceBuffer
 
 void main()
 {
-    
-	float brightness = 1.0 - gl_FragCoord.z;
+	//float brightness = 1.0 - gl_FragCoord.z;
     vec4 s = texture(textures[instances[instanceIndex].textureIndex], inUV);
 	fragColor = s;
 }

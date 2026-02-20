@@ -12,6 +12,6 @@ struct RenderInfo
 
 struct ExportedResources
 {
-	intptr_t textureMemoryHandle;
+	uint64_t textureMemoryHandle;
 };
 

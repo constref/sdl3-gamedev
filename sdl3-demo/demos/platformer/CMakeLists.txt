@@ -1,6 +1,7 @@
 set(CMAKE_CXX_STANDARD 23)
 
 set(PLATFORMER_SOURCES
+	"main.cpp"
 	"events.h"
 	"components/playercontrollercomponent.cpp"
 	"components/playercontrollercomponent.h"
@@ -28,35 +29,27 @@ set(PLATFORMER_SOURCES
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})
 
-add_library(gamelib SHARED ${PLATFORMER_SOURCES})
-target_link_libraries(gamelib PUBLIC engine)
-target_compile_definitions(gamelib PRIVATE ENGINE_EXPORTS)
+add_executable(game ${PLATFORMER_SOURCES})
+target_link_libraries(game PUBLIC engine)
 
 # For MSVC, you often need the 'latest' flag specifically
 if(MSVC)
-    target_compile_options(gamelib PRIVATE /std:c++latest)
-    target_link_options(gamelib PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+    target_compile_options(game PRIVATE /std:c++latest)
+    target_link_options(game PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
-set_target_properties(gamelib PROPERTIES
+set_target_properties(game PROPERTIES
     # This tells VS where the "root" of your source is for this project
     VS_PROJECT_IMPORT_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-# Executable target which just starts main
-add_executable(platformer "main.cpp")
-target_link_libraries(platformer PRIVATE gamelib)
-set_target_properties(platformer PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-
 if(MSVC)
-    target_link_options(platformer PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+    target_link_options(game PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
 if (EMSCRIPTEN)
     message(STATUS "Configuring Emscripten-specific flags")
-	target_link_options(platformer PRIVATE
+	target_link_options(game PRIVATE
 		"SHELL:--preload-file ${CMAKE_SOURCE_DIR}/data@/data")
 
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")

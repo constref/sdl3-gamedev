@@ -82,6 +82,7 @@ bool VulkanRenderSystem::initialize()
 		using namespace d3d11rs;
 		d3drs = new D3D11RenderSystem(width, height, logW, logH, services);
 
+		// initialize and create shadred texture (NT) handles
 		if (!d3drs->initialize(MaxFramesInFlight))
 		{
 			return false;
@@ -2550,7 +2551,8 @@ ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int frameIndex)
 	//};
 	ExportedResources exportRes
 	{
-		.textureMemoryHandle = reinterpret_cast<intptr_t>(frameResources[frameIndex].shareHandle)
+		//.textureMemoryHandle = reinterpret_cast<intptr_t>(frameResources[frameIndex].shareHandle)
+		.textureMemoryHandle = reinterpret_cast<uint64_t>(frameResources[frameIndex].shareHandle)
 	};
 
 	return exportRes;
