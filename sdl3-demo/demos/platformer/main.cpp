@@ -31,7 +31,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		StartAppTooling(512, 288, 1920, 1080);
+		const int editorPID = atoi(argv[argc - 1]);
+		StartAppTooling(editorPID, 512, 288, 1920, 1080);
 	}
 	return 0;
 }

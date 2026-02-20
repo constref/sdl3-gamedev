@@ -2531,28 +2531,33 @@ void VulkanRenderSystem::updateTextures()
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
 }
 
-ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int frameIndex)
+ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int editorPID, int frameIndex)
 {
-	//VkMemoryGetWin32HandleInfoKHR getHandleInfo = { VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR };
-	//getHandleInfo.memory = frameResources[frameIndex].renderTarget.memory;
-	//getHandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_BIT;
+	HANDLE editorProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, editorPID);
 
-	//HANDLE imageHandle = 0;
-	//auto getMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(device, "vkGetMemoryWin32HandleKHR");
-	//if (!getMemoryWin32HandleKHR || getMemoryWin32HandleKHR(device, &getHandleInfo, &imageHandle) != VK_SUCCESS)
-	//{
-	//	showError("Unable to acquire HANDLE for render target");
-	//	return ExportedResources{ 0 };
-	//}
+	if (editorProcess == NULL)
+	{
+		auto err = GetLastError();
+	}
 
-	//ExportedResources exportRes
-	//{
-	//	.textureMemoryHandle = reinterpret_cast<intptr_t>(imageHandle)
-	//};
+	HANDLE exportHandle = frameResources[frameIndex].shareHandle;
+	if (editorPID != 0)
+	{
+		HANDLE duplicatedHandle = nullptr;
+		BOOL success = DuplicateHandle(
+			GetCurrentProcess(),
+			frameResources[frameIndex].shareHandle,
+			editorProcess,
+			&duplicatedHandle,
+			0,
+			FALSE,
+			DUPLICATE_SAME_ACCESS
+		);
+		exportHandle = duplicatedHandle;
+	}
 	ExportedResources exportRes
 	{
-		//.textureMemoryHandle = reinterpret_cast<intptr_t>(frameResources[frameIndex].shareHandle)
-		.textureMemoryHandle = reinterpret_cast<uint64_t>(frameResources[frameIndex].shareHandle)
+		.textureMemoryHandle = reinterpret_cast<uint64_t>(exportHandle)
 	};
 
 	return exportRes;

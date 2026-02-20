@@ -4,13 +4,14 @@
 #include <zmq.hpp>
 #include <engine_generated.h>
 
-EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int logW, int logH, int width, int height) : engine(std::move(engine))
+EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int logW, int logH, int width, int height) : engine(std::move(engine))
 {
 	this->logW = logW;
 	this->logH = logH;
 	this->width = width;
 	this->height = height;
 	this->shouldRun = false;
+	this->editorPID = editorPID;
 }
 
 EngineWorker::~EngineWorker()
@@ -28,9 +29,9 @@ void EngineWorker::start()
 	if (shouldRun)
 	{
 		RenderInfo renderInfo = engine->getRenderer()->getRenderInfo();
-		auto expRes1 = engine->getRenderer()->getSharedRenderTarget(0);
-		auto expRes2 = engine->getRenderer()->getSharedRenderTarget(1);
-		auto expRes3 = engine->getRenderer()->getSharedRenderTarget(2);
+		auto expRes1 = engine->getRenderer()->getSharedRenderTarget(editorPID, 0);
+		auto expRes2 = engine->getRenderer()->getSharedRenderTarget(editorPID, 1);
+		auto expRes3 = engine->getRenderer()->getSharedRenderTarget(editorPID, 2);
 
 		auto *builder = new flatbuffers::FlatBufferBuilder(1024);
 		flatbuffers::Offset<NUBE::Interop::RenderInfo> rendInfo =

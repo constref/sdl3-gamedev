@@ -294,7 +294,7 @@ public:
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
 
-	ExportedResources getSharedRenderTarget(int frameIndex);
+	ExportedResources getSharedRenderTarget(int editorPID, int frameIndex);
 	intptr_t exportWorkCompleteSemaphore(uint32_t index) const;
 	intptr_t exportImageReadySemaphore(uint32_t index) const;
 	RenderInfo getRenderInfo() const;

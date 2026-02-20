@@ -18,6 +18,7 @@ class Interop;
 class EngineWorker
 {
 	std::unique_ptr<Engine> engine;
+	int editorPID;
 	int logW, logH, width, height;
 
 	bool shouldRun;
@@ -26,7 +27,7 @@ class EngineWorker
 	Interop *interop;
 
 public:
-	EngineWorker(std::unique_ptr<Engine> engine, int logW, int logH, int width, int height);
+	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int logW, int logH, int width, int height);
 	~EngineWorker();
 
 	void start();
