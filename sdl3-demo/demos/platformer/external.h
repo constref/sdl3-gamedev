@@ -6,4 +6,4 @@
 class EngineWorker;
 
 int StartAppStandalone();
-void StartAppTooling(int editorPID, int logW, int logH, int width, int height);
+void StartAppTooling(int editorPID, int editorPort, int logW, int logH, int width, int height);

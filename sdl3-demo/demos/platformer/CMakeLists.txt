@@ -29,7 +29,7 @@ set(PLATFORMER_SOURCES
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})
 
-add_executable(game ${PLATFORMER_SOURCES})
+add_executable(game WIN32 ${PLATFORMER_SOURCES})
 target_link_libraries(game PUBLIC engine)
 
 # For MSVC, you often need the 'latest' flag specifically

@@ -17,8 +17,8 @@ int StartAppStandalone()
 	return 0;
 }
 
-void StartAppTooling(int editorPID, int logW, int logH, int width, int height)
+void StartAppTooling(int editorPID, int editorPort, int logW, int logH, int width, int height)
 {
-	EngineWorker *worker = new EngineWorker(std::make_unique<Engine>(std::make_unique<Platformer>()), editorPID, logW, logH, width, height);
+	EngineWorker *worker = new EngineWorker(std::make_unique<Engine>(std::make_unique<Platformer>()), editorPID, editorPort, logW, logH, width, height);
 	worker->start();
 }

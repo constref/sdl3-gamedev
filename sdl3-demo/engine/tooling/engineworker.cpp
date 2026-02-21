@@ -1,9 +1,10 @@
 #include "engineworker.h"
 
+#include <format>
 #include <zmq.hpp>
 #include <engine_generated.h>
 
-EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int logW, int logH, int width, int height) : engine(std::move(engine))
+EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int editorPort, int logW, int logH, int width, int height) : engine(std::move(engine))
 {
 	this->logW = logW;
 	this->logH = logH;
@@ -11,6 +12,7 @@ EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int lo
 	this->height = height;
 	this->shouldRun = false;
 	this->editorPID = editorPID;
+	this->editorPort = editorPort;
 }
 
 EngineWorker::~EngineWorker()
@@ -22,7 +24,8 @@ void EngineWorker::start()
 {
 	zmq::context_t ctx;
 	zmq::socket_t request(ctx, zmq::socket_type::req);
-	request.connect("tcp://localhost:5555");
+	const std::string url = std::format("tcp://localhost:{}", editorPort);
+	request.connect(url);
 
 	shouldRun = engine->initialize(logW, logH, width, height);
 	if (shouldRun)

@@ -12,21 +12,18 @@
 #include <messaging/events.h>
 #include "platformevents.h"
 
-class Interop;
-
 class EngineWorker
 {
 	std::unique_ptr<Engine> engine;
-	int editorPID;
+	int editorPID, editorPort;
 	int logW, logH, width, height;
 
 	bool shouldRun;
 	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread publisherThread;
-	Interop *interop;
 
 public:
-	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int logW, int logH, int width, int height);
+	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int editorPort, int logW, int logH, int width, int height);
 	~EngineWorker();
 
 	void start();

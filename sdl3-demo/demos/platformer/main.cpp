@@ -5,6 +5,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <cassert>
 
 using namespace std;
 
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
 {
 	bool awaitDebugger = false;
 	int editorPID = 0;
+	int editorPort = 0;
 
 	// process args
 	if (argc > 1)
@@ -33,6 +35,13 @@ int main(int argc, char *argv[])
 					editorPID = atoi(argv[i + 1]);
 				}
 			}
+			else if (strcmp(argv[i], "--port") == 0)
+			{
+				if (i < argc)
+				{
+					editorPort = atoi(argv[i + 1]);
+				}
+			}
 		}
 	}
 	if (Config::IsStandaloneMode())
@@ -41,7 +50,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		StartAppTooling(editorPID, 512, 288, 1920, 1080);
+		assert(editorPort && "No editor port provided via --port");
+		StartAppTooling(editorPID, editorPort, 512, 288, 1920, 1080);
 	}
 	return 0;
 }
