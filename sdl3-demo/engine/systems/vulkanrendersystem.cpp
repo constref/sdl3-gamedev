@@ -2531,8 +2531,9 @@ void VulkanRenderSystem::updateTextures()
 	vkUpdateDescriptorSets(device, 1, &writes, 0, nullptr);
 }
 
-ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int editorPID, int frameIndex)
+std::vector<uint64_t> vks::VulkanRenderSystem::getSharedTextureHandles(int editorPID) const
 {
+	assert(editorPID != 0 && "Tooling PID cannot be 0");
 	HANDLE editorProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, editorPID);
 
 	if (editorProcess == NULL)
@@ -2540,38 +2541,23 @@ ExportedResources vks::VulkanRenderSystem::getSharedRenderTarget(int editorPID, 
 		auto err = GetLastError();
 	}
 
-	HANDLE exportHandle = frameResources[frameIndex].shareHandle;
-	if (editorPID != 0)
+	std::vector<uint64_t> sharedHandles;
+	sharedHandles.reserve(MaxFramesInFlight);
+	for (int i = 0; i < MaxFramesInFlight; ++i)
 	{
 		HANDLE duplicatedHandle = nullptr;
 		BOOL success = DuplicateHandle(
 			GetCurrentProcess(),
-			frameResources[frameIndex].shareHandle,
+			frameResources[i].shareHandle,
 			editorProcess,
 			&duplicatedHandle,
 			0,
 			FALSE,
-			DUPLICATE_SAME_ACCESS
-		);
-		exportHandle = duplicatedHandle;
+			DUPLICATE_SAME_ACCESS);
+		assert(success && "Unable to duplicate HANDLE");
+		sharedHandles.push_back(reinterpret_cast<uint64_t>(duplicatedHandle));
 	}
-	ExportedResources exportRes
-	{
-		.textureMemoryHandle = reinterpret_cast<uint64_t>(exportHandle)
-	};
-
-	return exportRes;
-}
-
-RenderInfo vks::VulkanRenderSystem::getRenderInfo() const
-{
-	return RenderInfo
-	{
-		.framesInFlight = MaxFramesInFlight,
-		.renderTargetSize = internalTextureByteSize,
-		.workCompletePoolSize = static_cast<uint32_t>(workCompleteSemaphores.size()),
-		.imageReadyPoolSize = static_cast<uint32_t>(imageReadySemaphores.size())
-	};
+	return sharedHandles;
 }
 
 intptr_t vks::VulkanRenderSystem::exportWorkCompleteSemaphore(uint32_t index) const

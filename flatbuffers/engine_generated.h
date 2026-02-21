@@ -23,34 +23,20 @@ struct RenderInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef RenderInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MAX_FRAMES_IN_FLIGHT = 4,
-    VT_TEXTURE_BYTE_SIZE = 6,
-    VT_TARGET_HANDLE_1 = 8,
-    VT_TARGET_HANDLE_2 = 10,
-    VT_TARGET_HANDLE_3 = 12
+    VT_TARGET_HANDLES = 6
   };
   int16_t max_frames_in_flight() const {
     return GetField<int16_t>(VT_MAX_FRAMES_IN_FLIGHT, 0);
   }
-  uint64_t texture_byte_size() const {
-    return GetField<uint64_t>(VT_TEXTURE_BYTE_SIZE, 0);
-  }
-  uint64_t target_handle_1() const {
-    return GetField<uint64_t>(VT_TARGET_HANDLE_1, 0);
-  }
-  uint64_t target_handle_2() const {
-    return GetField<uint64_t>(VT_TARGET_HANDLE_2, 0);
-  }
-  uint64_t target_handle_3() const {
-    return GetField<uint64_t>(VT_TARGET_HANDLE_3, 0);
+  const ::flatbuffers::Vector<uint64_t> *target_handles() const {
+    return GetPointer<const ::flatbuffers::Vector<uint64_t> *>(VT_TARGET_HANDLES);
   }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int16_t>(verifier, VT_MAX_FRAMES_IN_FLIGHT, 2) &&
-           VerifyField<uint64_t>(verifier, VT_TEXTURE_BYTE_SIZE, 8) &&
-           VerifyField<uint64_t>(verifier, VT_TARGET_HANDLE_1, 8) &&
-           VerifyField<uint64_t>(verifier, VT_TARGET_HANDLE_2, 8) &&
-           VerifyField<uint64_t>(verifier, VT_TARGET_HANDLE_3, 8) &&
+           VerifyOffset(verifier, VT_TARGET_HANDLES) &&
+           verifier.VerifyVector(target_handles()) &&
            verifier.EndTable();
   }
 };
@@ -62,17 +48,8 @@ struct RenderInfoBuilder {
   void add_max_frames_in_flight(int16_t max_frames_in_flight) {
     fbb_.AddElement<int16_t>(RenderInfo::VT_MAX_FRAMES_IN_FLIGHT, max_frames_in_flight, 0);
   }
-  void add_texture_byte_size(uint64_t texture_byte_size) {
-    fbb_.AddElement<uint64_t>(RenderInfo::VT_TEXTURE_BYTE_SIZE, texture_byte_size, 0);
-  }
-  void add_target_handle_1(uint64_t target_handle_1) {
-    fbb_.AddElement<uint64_t>(RenderInfo::VT_TARGET_HANDLE_1, target_handle_1, 0);
-  }
-  void add_target_handle_2(uint64_t target_handle_2) {
-    fbb_.AddElement<uint64_t>(RenderInfo::VT_TARGET_HANDLE_2, target_handle_2, 0);
-  }
-  void add_target_handle_3(uint64_t target_handle_3) {
-    fbb_.AddElement<uint64_t>(RenderInfo::VT_TARGET_HANDLE_3, target_handle_3, 0);
+  void add_target_handles(::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> target_handles) {
+    fbb_.AddOffset(RenderInfo::VT_TARGET_HANDLES, target_handles);
   }
   explicit RenderInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -88,17 +65,22 @@ struct RenderInfoBuilder {
 inline ::flatbuffers::Offset<RenderInfo> CreateRenderInfo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int16_t max_frames_in_flight = 0,
-    uint64_t texture_byte_size = 0,
-    uint64_t target_handle_1 = 0,
-    uint64_t target_handle_2 = 0,
-    uint64_t target_handle_3 = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> target_handles = 0) {
   RenderInfoBuilder builder_(_fbb);
-  builder_.add_target_handle_3(target_handle_3);
-  builder_.add_target_handle_2(target_handle_2);
-  builder_.add_target_handle_1(target_handle_1);
-  builder_.add_texture_byte_size(texture_byte_size);
+  builder_.add_target_handles(target_handles);
   builder_.add_max_frames_in_flight(max_frames_in_flight);
   return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RenderInfo> CreateRenderInfoDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int16_t max_frames_in_flight = 0,
+    const std::vector<uint64_t> *target_handles = nullptr) {
+  auto target_handles__ = target_handles ? _fbb.CreateVector<uint64_t>(*target_handles) : 0;
+  return NUBE::Interop::CreateRenderInfo(
+      _fbb,
+      max_frames_in_flight,
+      target_handles__);
 }
 
 }  // namespace Interop

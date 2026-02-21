@@ -17,7 +17,6 @@
 #include <resourceid.h>
 #include <nodehandle.h>
 #include <messaging/events.h>
-#include <tooling/exportedresources.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
@@ -158,14 +157,16 @@ struct Barrier
 
 class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
+public:
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
 	constexpr static uint32_t MaxFramesInFlight{ Config::ExecSelect(2, 3) };
-	//constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UNORM) };
-	constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_B8G8R8A8_UNORM) };
-	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 	constexpr static size_t MaxTextures = 1024;
 	constexpr static size_t MaxDrawCommands = 5000;
 	constexpr static size_t MaxInstances = 5000;
+
+private:
+	constexpr static VkFormat colorFormat{ Config::ExecSelect(VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_B8G8R8A8_UNORM) };
+	constexpr static VkFormat depthFormat{ VK_FORMAT_D32_SFLOAT };
 
 	bool ownedWindow = true;
 	SDL_Window *window = nullptr;
@@ -294,10 +295,11 @@ public:
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
 	void updateTextures();
 
-	ExportedResources getSharedRenderTarget(int editorPID, int frameIndex);
+	// tooling related methods
+	uint32_t getMaxFramesInFlight() const { return MaxFramesInFlight; }
+	std::vector<uint64_t> getSharedTextureHandles(int editorPID) const;
 	intptr_t exportWorkCompleteSemaphore(uint32_t index) const;
 	intptr_t exportImageReadySemaphore(uint32_t index) const;
-	RenderInfo getRenderInfo() const;
 
 	void onEvent(NodeHandle target, const AnimationPlayEvent &event);
 	void onEvent(NodeHandle target, const AnimationStopEvent &event);

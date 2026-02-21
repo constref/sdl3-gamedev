@@ -11,16 +11,26 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 	bool awaitDebugger = false;
+	int editorPID = 0;
+
+	// process args
 	if (argc > 1)
 	{
 		for (int i = 0; i < argc; ++i)
 		{
-			if (strcmp(argv[i], "--debug"))
+			if (strcmp(argv[i], "--debug") == 0)
 			{
 				std::cout << "Please attach a debugger to the running process" << std::endl;
 				while (!IsDebuggerPresent())
 				{
 					Sleep(100);
+				}
+			}
+			else if (strcmp(argv[i], "--pid") == 0)
+			{
+				if (i < argc)
+				{
+					editorPID = atoi(argv[i + 1]);
 				}
 			}
 		}
@@ -31,7 +41,6 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		const int editorPID = atoi(argv[argc - 1]);
 		StartAppTooling(editorPID, 512, 288, 1920, 1080);
 	}
 	return 0;

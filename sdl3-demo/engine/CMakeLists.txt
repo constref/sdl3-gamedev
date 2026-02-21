@@ -100,12 +100,9 @@ set(ENGINE_SOURCES
 	"shaders/sprite.frag"
 	"containers/atomicringbuffer.h"
 	"containers/ringbuffer.h"
-	"tooling/engineinterface.h" 
 	"tooling/engineworker.h" 
 	"tooling/engineworker.cpp" 
 	"tooling/platformevents.h"
-	"tooling/interop.h"
-	"tooling/interop.cpp"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES})

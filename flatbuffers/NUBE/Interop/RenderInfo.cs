@@ -20,32 +20,32 @@ public struct RenderInfo : IFlatbufferObject
   public RenderInfo __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public short MaxFramesInFlight { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetShort(o + __p.bb_pos) : (short)0; } }
-  public ulong TextureByteSize { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetUlong(o + __p.bb_pos) : (ulong)0; } }
-  public ulong TargetHandle1 { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetUlong(o + __p.bb_pos) : (ulong)0; } }
-  public ulong TargetHandle2 { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetUlong(o + __p.bb_pos) : (ulong)0; } }
-  public ulong TargetHandle3 { get { int o = __p.__offset(12); return o != 0 ? __p.bb.GetUlong(o + __p.bb_pos) : (ulong)0; } }
+  public ulong TargetHandles(int j) { int o = __p.__offset(6); return o != 0 ? __p.bb.GetUlong(__p.__vector(o) + j * 8) : (ulong)0; }
+  public int TargetHandlesLength { get { int o = __p.__offset(6); return o != 0 ? __p.__vector_len(o) : 0; } }
+#if ENABLE_SPAN_T
+  public Span<ulong> GetTargetHandlesBytes() { return __p.__vector_as_span<ulong>(6, 8); }
+#else
+  public ArraySegment<byte>? GetTargetHandlesBytes() { return __p.__vector_as_arraysegment(6); }
+#endif
+  public ulong[] GetTargetHandlesArray() { return __p.__vector_as_array<ulong>(6); }
 
   public static Offset<NUBE.Interop.RenderInfo> CreateRenderInfo(FlatBufferBuilder builder,
       short max_frames_in_flight = 0,
-      ulong texture_byte_size = 0,
-      ulong target_handle_1 = 0,
-      ulong target_handle_2 = 0,
-      ulong target_handle_3 = 0) {
-    builder.StartTable(5);
-    RenderInfo.AddTargetHandle3(builder, target_handle_3);
-    RenderInfo.AddTargetHandle2(builder, target_handle_2);
-    RenderInfo.AddTargetHandle1(builder, target_handle_1);
-    RenderInfo.AddTextureByteSize(builder, texture_byte_size);
+      VectorOffset target_handlesOffset = default(VectorOffset)) {
+    builder.StartTable(2);
+    RenderInfo.AddTargetHandles(builder, target_handlesOffset);
     RenderInfo.AddMaxFramesInFlight(builder, max_frames_in_flight);
     return RenderInfo.EndRenderInfo(builder);
   }
 
-  public static void StartRenderInfo(FlatBufferBuilder builder) { builder.StartTable(5); }
+  public static void StartRenderInfo(FlatBufferBuilder builder) { builder.StartTable(2); }
   public static void AddMaxFramesInFlight(FlatBufferBuilder builder, short maxFramesInFlight) { builder.AddShort(0, maxFramesInFlight, 0); }
-  public static void AddTextureByteSize(FlatBufferBuilder builder, ulong textureByteSize) { builder.AddUlong(1, textureByteSize, 0); }
-  public static void AddTargetHandle1(FlatBufferBuilder builder, ulong targetHandle1) { builder.AddUlong(2, targetHandle1, 0); }
-  public static void AddTargetHandle2(FlatBufferBuilder builder, ulong targetHandle2) { builder.AddUlong(3, targetHandle2, 0); }
-  public static void AddTargetHandle3(FlatBufferBuilder builder, ulong targetHandle3) { builder.AddUlong(4, targetHandle3, 0); }
+  public static void AddTargetHandles(FlatBufferBuilder builder, VectorOffset targetHandlesOffset) { builder.AddOffset(1, targetHandlesOffset.Value, 0); }
+  public static VectorOffset CreateTargetHandlesVector(FlatBufferBuilder builder, ulong[] data) { builder.StartVector(8, data.Length, 8); for (int i = data.Length - 1; i >= 0; i--) builder.AddUlong(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateTargetHandlesVectorBlock(FlatBufferBuilder builder, ulong[] data) { builder.StartVector(8, data.Length, 8); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateTargetHandlesVectorBlock(FlatBufferBuilder builder, ArraySegment<ulong> data) { builder.StartVector(8, data.Count, 8); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateTargetHandlesVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<ulong>(dataPtr, sizeInBytes); return builder.EndVector(); }
+  public static void StartTargetHandlesVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(8, numElems, 8); }
   public static Offset<NUBE.Interop.RenderInfo> EndRenderInfo(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<NUBE.Interop.RenderInfo>(o);
@@ -59,10 +59,7 @@ static public class RenderInfoVerify
   {
     return verifier.VerifyTableStart(tablePos)
       && verifier.VerifyField(tablePos, 4 /*MaxFramesInFlight*/, 2 /*short*/, 2, false)
-      && verifier.VerifyField(tablePos, 6 /*TextureByteSize*/, 8 /*ulong*/, 8, false)
-      && verifier.VerifyField(tablePos, 8 /*TargetHandle1*/, 8 /*ulong*/, 8, false)
-      && verifier.VerifyField(tablePos, 10 /*TargetHandle2*/, 8 /*ulong*/, 8, false)
-      && verifier.VerifyField(tablePos, 12 /*TargetHandle3*/, 8 /*ulong*/, 8, false)
+      && verifier.VerifyVectorOfData(tablePos, 6 /*TargetHandles*/, 8 /*ulong*/, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

@@ -1,6 +1,5 @@
 #include "engineworker.h"
 
-#include <tooling/interop.h>
 #include <zmq.hpp>
 #include <engine_generated.h>
 
@@ -28,30 +27,16 @@ void EngineWorker::start()
 	shouldRun = engine->initialize(logW, logH, width, height);
 	if (shouldRun)
 	{
-		RenderInfo renderInfo = engine->getRenderer()->getRenderInfo();
-		auto expRes1 = engine->getRenderer()->getSharedRenderTarget(editorPID, 0);
-		auto expRes2 = engine->getRenderer()->getSharedRenderTarget(editorPID, 1);
-		auto expRes3 = engine->getRenderer()->getSharedRenderTarget(editorPID, 2);
-
+		std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
 		auto *builder = new flatbuffers::FlatBufferBuilder(1024);
 		flatbuffers::Offset<NUBE::Interop::RenderInfo> rendInfo =
 			NUBE::Interop::CreateRenderInfo(*builder,
-				renderInfo.framesInFlight,
-				renderInfo.renderTargetSize,
-				expRes1.textureMemoryHandle,
-				expRes2.textureMemoryHandle,
-				expRes3.textureMemoryHandle);
+				engine->getRenderer()->getMaxFramesInFlight(),
+				builder->CreateVector(texHandles));
 
 		builder->Finish(rendInfo);
 		auto span = builder->GetBufferSpan();
 		request.send(span.data(), span.size());
-
-		//request.send(zmq::str_buffer("Engine Started!"), zmq::send_flags::dontwait);
-		//return MsgBuffer{ .data = span.data(), .byteSize = span.size() };
-		//if (callback)
-		//{
-		//	callback(engine->getRenderer()->getRenderInfo());
-		//}
 	}
 	while (shouldRun)
 	{
@@ -68,8 +53,6 @@ void EngineWorker::processEvents()
 		// handle external events
 		if (std::holds_alternative<InteropMessage>(e))
 		{
-			const InteropMessage &msg = std::get<InteropMessage>(e);
-			auto result = interop->processMessage(msg.messageType);
 		}
 		else if (std::holds_alternative<ApplicationEnteredBackground>(e))
 		{

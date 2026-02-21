@@ -22,7 +22,6 @@
 #include <systems/vulkanrendersystem.h>
 #include <prototypeinstancer.h>
 #include <executionmode.h>
-#include <tooling/exportedresources.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>

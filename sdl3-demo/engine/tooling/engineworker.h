@@ -8,7 +8,6 @@
 #include <application.h>
 #include <engine.h>
 #include <memory>
-#include <tooling/callbacks.h>
 #include <containers/atomicringbuffer.h>
 #include <messaging/events.h>
 #include "platformevents.h"
