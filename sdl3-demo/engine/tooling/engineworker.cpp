@@ -41,6 +41,7 @@ void EngineWorker::start()
 			{
 				zmq::message_t msg;
 				pull.recv(msg);
+				if (!msg.data() || msg.size() == 0) continue;
 
 				auto envelope = NUBE::Interop::GetEngineEnvelope(msg.data());
 				const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
