@@ -16,14 +16,232 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 namespace NUBE {
 namespace Interop {
 
-struct RenderInfo;
-struct RenderInfoBuilder;
+struct EditorEnvelope;
+struct EditorEnvelopeBuilder;
 
-struct RenderInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef RenderInfoBuilder Builder;
+struct EngineEnvelope;
+struct EngineEnvelopeBuilder;
+
+struct InitializationDetails;
+struct InitializationDetailsBuilder;
+
+struct KeyboardEvent;
+struct KeyboardEventBuilder;
+
+enum EditorMessage : uint8_t {
+  EditorMessage_NONE = 0,
+  EditorMessage_InitializationDetails = 1,
+  EditorMessage_MIN = EditorMessage_NONE,
+  EditorMessage_MAX = EditorMessage_InitializationDetails
+};
+
+inline const EditorMessage (&EnumValuesEditorMessage())[2] {
+  static const EditorMessage values[] = {
+    EditorMessage_NONE,
+    EditorMessage_InitializationDetails
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesEditorMessage() {
+  static const char * const names[3] = {
+    "NONE",
+    "InitializationDetails",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameEditorMessage(EditorMessage e) {
+  if (::flatbuffers::IsOutRange(e, EditorMessage_NONE, EditorMessage_InitializationDetails)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesEditorMessage()[index];
+}
+
+template<typename T> struct EditorMessageTraits {
+  static const EditorMessage enum_value = EditorMessage_NONE;
+};
+
+template<> struct EditorMessageTraits<NUBE::Interop::InitializationDetails> {
+  static const EditorMessage enum_value = EditorMessage_InitializationDetails;
+};
+
+template <bool B = false>
+bool VerifyEditorMessage(::flatbuffers::VerifierTemplate<B> &verifier, const void *obj, EditorMessage type);
+template <bool B = false>
+bool VerifyEditorMessageVector(::flatbuffers::VerifierTemplate<B> &verifier, const ::flatbuffers::Vector<::flatbuffers::Offset<void>> *values, const ::flatbuffers::Vector<uint8_t> *types);
+
+enum EngineMessage : uint8_t {
+  EngineMessage_NONE = 0,
+  EngineMessage_KeyboardEvent = 1,
+  EngineMessage_MIN = EngineMessage_NONE,
+  EngineMessage_MAX = EngineMessage_KeyboardEvent
+};
+
+inline const EngineMessage (&EnumValuesEngineMessage())[2] {
+  static const EngineMessage values[] = {
+    EngineMessage_NONE,
+    EngineMessage_KeyboardEvent
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesEngineMessage() {
+  static const char * const names[3] = {
+    "NONE",
+    "KeyboardEvent",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameEngineMessage(EngineMessage e) {
+  if (::flatbuffers::IsOutRange(e, EngineMessage_NONE, EngineMessage_KeyboardEvent)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesEngineMessage()[index];
+}
+
+template<typename T> struct EngineMessageTraits {
+  static const EngineMessage enum_value = EngineMessage_NONE;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::KeyboardEvent> {
+  static const EngineMessage enum_value = EngineMessage_KeyboardEvent;
+};
+
+template <bool B = false>
+bool VerifyEngineMessage(::flatbuffers::VerifierTemplate<B> &verifier, const void *obj, EngineMessage type);
+template <bool B = false>
+bool VerifyEngineMessageVector(::flatbuffers::VerifierTemplate<B> &verifier, const ::flatbuffers::Vector<::flatbuffers::Offset<void>> *values, const ::flatbuffers::Vector<uint8_t> *types);
+
+struct EditorEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EditorEnvelopeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PAYLOAD_TYPE = 4,
+    VT_PAYLOAD = 6
+  };
+  NUBE::Interop::EditorMessage payload_type() const {
+    return static_cast<NUBE::Interop::EditorMessage>(GetField<uint8_t>(VT_PAYLOAD_TYPE, 0));
+  }
+  const void *payload() const {
+    return GetPointer<const void *>(VT_PAYLOAD);
+  }
+  template<typename T> const T *payload_as() const;
+  const NUBE::Interop::InitializationDetails *payload_as_InitializationDetails() const {
+    return payload_type() == NUBE::Interop::EditorMessage_InitializationDetails ? static_cast<const NUBE::Interop::InitializationDetails *>(payload()) : nullptr;
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PAYLOAD_TYPE, 1) &&
+           VerifyOffset(verifier, VT_PAYLOAD) &&
+           VerifyEditorMessage(verifier, payload(), payload_type()) &&
+           verifier.EndTable();
+  }
+};
+
+template<> inline const NUBE::Interop::InitializationDetails *EditorEnvelope::payload_as<NUBE::Interop::InitializationDetails>() const {
+  return payload_as_InitializationDetails();
+}
+
+struct EditorEnvelopeBuilder {
+  typedef EditorEnvelope Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_payload_type(NUBE::Interop::EditorMessage payload_type) {
+    fbb_.AddElement<uint8_t>(EditorEnvelope::VT_PAYLOAD_TYPE, static_cast<uint8_t>(payload_type), 0);
+  }
+  void add_payload(::flatbuffers::Offset<void> payload) {
+    fbb_.AddOffset(EditorEnvelope::VT_PAYLOAD, payload);
+  }
+  explicit EditorEnvelopeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EditorEnvelope> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EditorEnvelope>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EditorEnvelope> CreateEditorEnvelope(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    NUBE::Interop::EditorMessage payload_type = NUBE::Interop::EditorMessage_NONE,
+    ::flatbuffers::Offset<void> payload = 0) {
+  EditorEnvelopeBuilder builder_(_fbb);
+  builder_.add_payload(payload);
+  builder_.add_payload_type(payload_type);
+  return builder_.Finish();
+}
+
+struct EngineEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EngineEnvelopeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PAYLOAD_TYPE = 4,
+    VT_PAYLOAD = 6
+  };
+  NUBE::Interop::EngineMessage payload_type() const {
+    return static_cast<NUBE::Interop::EngineMessage>(GetField<uint8_t>(VT_PAYLOAD_TYPE, 0));
+  }
+  const void *payload() const {
+    return GetPointer<const void *>(VT_PAYLOAD);
+  }
+  template<typename T> const T *payload_as() const;
+  const NUBE::Interop::KeyboardEvent *payload_as_KeyboardEvent() const {
+    return payload_type() == NUBE::Interop::EngineMessage_KeyboardEvent ? static_cast<const NUBE::Interop::KeyboardEvent *>(payload()) : nullptr;
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PAYLOAD_TYPE, 1) &&
+           VerifyOffset(verifier, VT_PAYLOAD) &&
+           VerifyEngineMessage(verifier, payload(), payload_type()) &&
+           verifier.EndTable();
+  }
+};
+
+template<> inline const NUBE::Interop::KeyboardEvent *EngineEnvelope::payload_as<NUBE::Interop::KeyboardEvent>() const {
+  return payload_as_KeyboardEvent();
+}
+
+struct EngineEnvelopeBuilder {
+  typedef EngineEnvelope Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_payload_type(NUBE::Interop::EngineMessage payload_type) {
+    fbb_.AddElement<uint8_t>(EngineEnvelope::VT_PAYLOAD_TYPE, static_cast<uint8_t>(payload_type), 0);
+  }
+  void add_payload(::flatbuffers::Offset<void> payload) {
+    fbb_.AddOffset(EngineEnvelope::VT_PAYLOAD, payload);
+  }
+  explicit EngineEnvelopeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EngineEnvelope> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EngineEnvelope>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EngineEnvelope> CreateEngineEnvelope(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    NUBE::Interop::EngineMessage payload_type = NUBE::Interop::EngineMessage_NONE,
+    ::flatbuffers::Offset<void> payload = 0) {
+  EngineEnvelopeBuilder builder_(_fbb);
+  builder_.add_payload(payload);
+  builder_.add_payload_type(payload_type);
+  return builder_.Finish();
+}
+
+struct InitializationDetails FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef InitializationDetailsBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MAX_FRAMES_IN_FLIGHT = 4,
-    VT_TARGET_HANDLES = 6
+    VT_TARGET_HANDLES = 6,
+    VT_ENGINE_URL = 8
   };
   int16_t max_frames_in_flight() const {
     return GetField<int16_t>(VT_MAX_FRAMES_IN_FLIGHT, 0);
@@ -31,56 +249,207 @@ struct RenderInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::Vector<uint64_t> *target_handles() const {
     return GetPointer<const ::flatbuffers::Vector<uint64_t> *>(VT_TARGET_HANDLES);
   }
+  const ::flatbuffers::String *engine_url() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ENGINE_URL);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int16_t>(verifier, VT_MAX_FRAMES_IN_FLIGHT, 2) &&
            VerifyOffset(verifier, VT_TARGET_HANDLES) &&
            verifier.VerifyVector(target_handles()) &&
+           VerifyOffset(verifier, VT_ENGINE_URL) &&
+           verifier.VerifyString(engine_url()) &&
            verifier.EndTable();
   }
 };
 
-struct RenderInfoBuilder {
-  typedef RenderInfo Table;
+struct InitializationDetailsBuilder {
+  typedef InitializationDetails Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_max_frames_in_flight(int16_t max_frames_in_flight) {
-    fbb_.AddElement<int16_t>(RenderInfo::VT_MAX_FRAMES_IN_FLIGHT, max_frames_in_flight, 0);
+    fbb_.AddElement<int16_t>(InitializationDetails::VT_MAX_FRAMES_IN_FLIGHT, max_frames_in_flight, 0);
   }
   void add_target_handles(::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> target_handles) {
-    fbb_.AddOffset(RenderInfo::VT_TARGET_HANDLES, target_handles);
+    fbb_.AddOffset(InitializationDetails::VT_TARGET_HANDLES, target_handles);
   }
-  explicit RenderInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  void add_engine_url(::flatbuffers::Offset<::flatbuffers::String> engine_url) {
+    fbb_.AddOffset(InitializationDetails::VT_ENGINE_URL, engine_url);
+  }
+  explicit InitializationDetailsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<RenderInfo> Finish() {
+  ::flatbuffers::Offset<InitializationDetails> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<RenderInfo>(end);
+    auto o = ::flatbuffers::Offset<InitializationDetails>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<RenderInfo> CreateRenderInfo(
+inline ::flatbuffers::Offset<InitializationDetails> CreateInitializationDetails(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int16_t max_frames_in_flight = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> target_handles = 0) {
-  RenderInfoBuilder builder_(_fbb);
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> target_handles = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> engine_url = 0) {
+  InitializationDetailsBuilder builder_(_fbb);
+  builder_.add_engine_url(engine_url);
   builder_.add_target_handles(target_handles);
   builder_.add_max_frames_in_flight(max_frames_in_flight);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<RenderInfo> CreateRenderInfoDirect(
+inline ::flatbuffers::Offset<InitializationDetails> CreateInitializationDetailsDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int16_t max_frames_in_flight = 0,
-    const std::vector<uint64_t> *target_handles = nullptr) {
+    const std::vector<uint64_t> *target_handles = nullptr,
+    const char *engine_url = nullptr) {
   auto target_handles__ = target_handles ? _fbb.CreateVector<uint64_t>(*target_handles) : 0;
-  return NUBE::Interop::CreateRenderInfo(
+  auto engine_url__ = engine_url ? _fbb.CreateString(engine_url) : 0;
+  return NUBE::Interop::CreateInitializationDetails(
       _fbb,
       max_frames_in_flight,
-      target_handles__);
+      target_handles__,
+      engine_url__);
+}
+
+struct KeyboardEvent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef KeyboardEventBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SCANCODE = 4,
+    VT_IS_DOWN = 6
+  };
+  uint16_t scancode() const {
+    return GetField<uint16_t>(VT_SCANCODE, 0);
+  }
+  bool is_down() const {
+    return GetField<uint8_t>(VT_IS_DOWN, 0) != 0;
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_SCANCODE, 2) &&
+           VerifyField<uint8_t>(verifier, VT_IS_DOWN, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct KeyboardEventBuilder {
+  typedef KeyboardEvent Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_scancode(uint16_t scancode) {
+    fbb_.AddElement<uint16_t>(KeyboardEvent::VT_SCANCODE, scancode, 0);
+  }
+  void add_is_down(bool is_down) {
+    fbb_.AddElement<uint8_t>(KeyboardEvent::VT_IS_DOWN, static_cast<uint8_t>(is_down), 0);
+  }
+  explicit KeyboardEventBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<KeyboardEvent> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<KeyboardEvent>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<KeyboardEvent> CreateKeyboardEvent(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t scancode = 0,
+    bool is_down = false) {
+  KeyboardEventBuilder builder_(_fbb);
+  builder_.add_scancode(scancode);
+  builder_.add_is_down(is_down);
+  return builder_.Finish();
+}
+
+template <bool B>
+inline bool VerifyEditorMessage(::flatbuffers::VerifierTemplate<B> &verifier, const void *obj, EditorMessage type) {
+  switch (type) {
+    case EditorMessage_NONE: {
+      return true;
+    }
+    case EditorMessage_InitializationDetails: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::InitializationDetails *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    default: return true;
+  }
+}
+
+template <bool B>
+inline bool VerifyEditorMessageVector(::flatbuffers::VerifierTemplate<B> &verifier, const ::flatbuffers::Vector<::flatbuffers::Offset<void>> *values, const ::flatbuffers::Vector<uint8_t> *types) {
+  if (!values || !types) return !values && !types;
+  if (values->size() != types->size()) return false;
+  for (::flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
+    if (!VerifyEditorMessage(
+        verifier,  values->Get(i), types->GetEnum<EditorMessage>(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <bool B>
+inline bool VerifyEngineMessage(::flatbuffers::VerifierTemplate<B> &verifier, const void *obj, EngineMessage type) {
+  switch (type) {
+    case EngineMessage_NONE: {
+      return true;
+    }
+    case EngineMessage_KeyboardEvent: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::KeyboardEvent *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    default: return true;
+  }
+}
+
+template <bool B>
+inline bool VerifyEngineMessageVector(::flatbuffers::VerifierTemplate<B> &verifier, const ::flatbuffers::Vector<::flatbuffers::Offset<void>> *values, const ::flatbuffers::Vector<uint8_t> *types) {
+  if (!values || !types) return !values && !types;
+  if (values->size() != types->size()) return false;
+  for (::flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
+    if (!VerifyEngineMessage(
+        verifier,  values->Get(i), types->GetEnum<EngineMessage>(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline const NUBE::Interop::EngineEnvelope *GetEngineEnvelope(const void *buf) {
+  return ::flatbuffers::GetRoot<NUBE::Interop::EngineEnvelope>(buf);
+}
+
+inline const NUBE::Interop::EngineEnvelope *GetSizePrefixedEngineEnvelope(const void *buf) {
+  return ::flatbuffers::GetSizePrefixedRoot<NUBE::Interop::EngineEnvelope>(buf);
+}
+
+template <bool B = false>
+inline bool VerifyEngineEnvelopeBuffer(
+    ::flatbuffers::VerifierTemplate<B> &verifier) {
+  return verifier.template VerifyBuffer<NUBE::Interop::EngineEnvelope>(nullptr);
+}
+
+template <bool B = false>
+inline bool VerifySizePrefixedEngineEnvelopeBuffer(
+    ::flatbuffers::VerifierTemplate<B> &verifier) {
+  return verifier.template VerifySizePrefixedBuffer<NUBE::Interop::EngineEnvelope>(nullptr);
+}
+
+inline void FinishEngineEnvelopeBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<NUBE::Interop::EngineEnvelope> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedEngineEnvelopeBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<NUBE::Interop::EngineEnvelope> root) {
+  fbb.FinishSizePrefixed(root);
 }
 
 }  // namespace Interop

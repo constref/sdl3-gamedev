@@ -23,8 +23,6 @@ set(PLATFORMER_SOURCES
 	"systems/damagesystem.cpp"
 	"systems/enemysystem.h"
 	"systems/enemysystem.cpp"
-	"external.h"
-	"external.cpp"
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})

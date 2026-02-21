@@ -10,20 +10,25 @@
 #include <memory>
 #include <containers/atomicringbuffer.h>
 #include <messaging/events.h>
+#include <zmq.hpp>
 #include "platformevents.h"
 
 class EngineWorker
 {
 	std::unique_ptr<Engine> engine;
-	int editorPID, editorPort;
+	int editorPID;
+	std::string editorUrl;
 	int logW, logH, width, height;
 
 	bool shouldRun;
 	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread publisherThread;
+	std::thread pullThread;
+	zmq::socket_t push;
+	zmq::socket_t pull;
 
 public:
-	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int editorPort, int logW, int logH, int width, int height);
+	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, const std::string &handshakeUrl, int logW, int logH, int width, int height);
 	~EngineWorker();
 
 	void start();

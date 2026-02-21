@@ -1,18 +1,18 @@
 #include "engineworker.h"
 
 #include <format>
-#include <zmq.hpp>
 #include <engine_generated.h>
 
-EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, int editorPort, int logW, int logH, int width, int height) : engine(std::move(engine))
+EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, const std::string &editorUrl, int logW, int logH, int width, int height)
 {
+	this->engine = std::move(engine);
 	this->logW = logW;
 	this->logH = logH;
 	this->width = width;
 	this->height = height;
 	this->shouldRun = false;
 	this->editorPID = editorPID;
-	this->editorPort = editorPort;
+	this->editorUrl = editorUrl;
 }
 
 EngineWorker::~EngineWorker()
@@ -23,22 +23,56 @@ EngineWorker::~EngineWorker()
 void EngineWorker::start()
 {
 	zmq::context_t ctx;
-	zmq::socket_t request(ctx, zmq::socket_type::req);
-	const std::string url = std::format("tcp://localhost:{}", editorPort);
-	request.connect(url);
+
+	// create socket for engine->tooling data
+	//push = zmq::socket_t(ctx, zmq::socket_type::push);
+	//push.connect("tcp://127.0.0.1:0");
+
+	pull = zmq::socket_t(ctx, zmq::socket_type::pull);
+	pull.bind("tcp://127.0.0.1:0");
+	const std::string engineUrl = pull.get(zmq::sockopt::last_endpoint);
 
 	shouldRun = engine->initialize(logW, logH, width, height);
 	if (shouldRun)
 	{
-		std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
-		auto *builder = new flatbuffers::FlatBufferBuilder(1024);
-		flatbuffers::Offset<NUBE::Interop::RenderInfo> rendInfo =
-			NUBE::Interop::CreateRenderInfo(*builder,
-				engine->getRenderer()->getMaxFramesInFlight(),
-				builder->CreateVector(texHandles));
+		// start up the pull socket for tooling events
+		pullThread = std::thread([this]() {
+			while (shouldRun)
+			{
+				zmq::message_t msg;
+				pull.recv(msg);
 
-		builder->Finish(rendInfo);
+				auto envelope = NUBE::Interop::GetEngineEnvelope(msg.data());
+				const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
+
+				if (keyEvent->is_down())
+				{
+					pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+				}
+				else
+				{
+
+					pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+				}
+			}
+		});
+		using namespace NUBE::Interop;
+		std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
+
+		auto *builder = new flatbuffers::FlatBufferBuilder(1024);
+		auto initDetails = NUBE::Interop::CreateInitializationDetails(*builder,
+			engine->getRenderer()->getMaxFramesInFlight(),
+			builder->CreateVector(texHandles),
+			builder->CreateString(engineUrl)
+		);
+
+		auto msg = NUBE::Interop::CreateEditorEnvelope(*builder, EditorMessage::EditorMessage_InitializationDetails, initDetails.Union());
+		builder->Finish(msg);
 		auto span = builder->GetBufferSpan();
+
+		// send the initial handshake data to the editor
+		zmq::socket_t request(ctx, zmq::socket_type::req);
+		request.connect(editorUrl);
 		request.send(span.data(), span.size());
 	}
 	while (shouldRun)

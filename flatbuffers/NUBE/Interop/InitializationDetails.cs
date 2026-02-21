@@ -9,15 +9,15 @@ using global::System;
 using global::System.Collections.Generic;
 using global::Google.FlatBuffers;
 
-public struct RenderInfo : IFlatbufferObject
+public struct InitializationDetails : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
   public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_25_12_19(); }
-  public static RenderInfo GetRootAsRenderInfo(ByteBuffer _bb) { return GetRootAsRenderInfo(_bb, new RenderInfo()); }
-  public static RenderInfo GetRootAsRenderInfo(ByteBuffer _bb, RenderInfo obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
+  public static InitializationDetails GetRootAsInitializationDetails(ByteBuffer _bb) { return GetRootAsInitializationDetails(_bb, new InitializationDetails()); }
+  public static InitializationDetails GetRootAsInitializationDetails(ByteBuffer _bb, InitializationDetails obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
-  public RenderInfo __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
+  public InitializationDetails __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public short MaxFramesInFlight { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetShort(o + __p.bb_pos) : (short)0; } }
   public ulong TargetHandles(int j) { int o = __p.__offset(6); return o != 0 ? __p.bb.GetUlong(__p.__vector(o) + j * 8) : (ulong)0; }
@@ -28,17 +28,26 @@ public struct RenderInfo : IFlatbufferObject
   public ArraySegment<byte>? GetTargetHandlesBytes() { return __p.__vector_as_arraysegment(6); }
 #endif
   public ulong[] GetTargetHandlesArray() { return __p.__vector_as_array<ulong>(6); }
+  public string EngineUrl { get { int o = __p.__offset(8); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
+#if ENABLE_SPAN_T
+  public Span<byte> GetEngineUrlBytes() { return __p.__vector_as_span<byte>(8, 1); }
+#else
+  public ArraySegment<byte>? GetEngineUrlBytes() { return __p.__vector_as_arraysegment(8); }
+#endif
+  public byte[] GetEngineUrlArray() { return __p.__vector_as_array<byte>(8); }
 
-  public static Offset<NUBE.Interop.RenderInfo> CreateRenderInfo(FlatBufferBuilder builder,
+  public static Offset<NUBE.Interop.InitializationDetails> CreateInitializationDetails(FlatBufferBuilder builder,
       short max_frames_in_flight = 0,
-      VectorOffset target_handlesOffset = default(VectorOffset)) {
-    builder.StartTable(2);
-    RenderInfo.AddTargetHandles(builder, target_handlesOffset);
-    RenderInfo.AddMaxFramesInFlight(builder, max_frames_in_flight);
-    return RenderInfo.EndRenderInfo(builder);
+      VectorOffset target_handlesOffset = default(VectorOffset),
+      StringOffset engine_urlOffset = default(StringOffset)) {
+    builder.StartTable(3);
+    InitializationDetails.AddEngineUrl(builder, engine_urlOffset);
+    InitializationDetails.AddTargetHandles(builder, target_handlesOffset);
+    InitializationDetails.AddMaxFramesInFlight(builder, max_frames_in_flight);
+    return InitializationDetails.EndInitializationDetails(builder);
   }
 
-  public static void StartRenderInfo(FlatBufferBuilder builder) { builder.StartTable(2); }
+  public static void StartInitializationDetails(FlatBufferBuilder builder) { builder.StartTable(3); }
   public static void AddMaxFramesInFlight(FlatBufferBuilder builder, short maxFramesInFlight) { builder.AddShort(0, maxFramesInFlight, 0); }
   public static void AddTargetHandles(FlatBufferBuilder builder, VectorOffset targetHandlesOffset) { builder.AddOffset(1, targetHandlesOffset.Value, 0); }
   public static VectorOffset CreateTargetHandlesVector(FlatBufferBuilder builder, ulong[] data) { builder.StartVector(8, data.Length, 8); for (int i = data.Length - 1; i >= 0; i--) builder.AddUlong(data[i]); return builder.EndVector(); }
@@ -46,20 +55,22 @@ public struct RenderInfo : IFlatbufferObject
   public static VectorOffset CreateTargetHandlesVectorBlock(FlatBufferBuilder builder, ArraySegment<ulong> data) { builder.StartVector(8, data.Count, 8); builder.Add(data); return builder.EndVector(); }
   public static VectorOffset CreateTargetHandlesVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<ulong>(dataPtr, sizeInBytes); return builder.EndVector(); }
   public static void StartTargetHandlesVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(8, numElems, 8); }
-  public static Offset<NUBE.Interop.RenderInfo> EndRenderInfo(FlatBufferBuilder builder) {
+  public static void AddEngineUrl(FlatBufferBuilder builder, StringOffset engineUrlOffset) { builder.AddOffset(2, engineUrlOffset.Value, 0); }
+  public static Offset<NUBE.Interop.InitializationDetails> EndInitializationDetails(FlatBufferBuilder builder) {
     int o = builder.EndTable();
-    return new Offset<NUBE.Interop.RenderInfo>(o);
+    return new Offset<NUBE.Interop.InitializationDetails>(o);
   }
 }
 
 
-static public class RenderInfoVerify
+static public class InitializationDetailsVerify
 {
   static public bool Verify(Google.FlatBuffers.Verifier verifier, uint tablePos)
   {
     return verifier.VerifyTableStart(tablePos)
       && verifier.VerifyField(tablePos, 4 /*MaxFramesInFlight*/, 2 /*short*/, 2, false)
       && verifier.VerifyVectorOfData(tablePos, 6 /*TargetHandles*/, 8 /*ulong*/, false)
+      && verifier.VerifyString(tablePos, 8 /*EngineUrl*/, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

@@ -1,6 +1,31 @@
 namespace NUBE.Interop;
 
-table RenderInfo {
+union EditorMessage {
+	InitializationDetails
+}
+
+union EngineMessage {
+	KeyboardEvent
+}
+
+table EditorEnvelope {
+	payload:EditorMessage;
+}
+
+table EngineEnvelope {
+	payload:EngineMessage;
+}
+
+table InitializationDetails {
 	max_frames_in_flight:short;
 	target_handles:[uint64];
+	engine_url:string;
 }
+
+table KeyboardEvent {
+	scancode:ushort;
+	is_down:bool;
+}
+
+root_type EditorEnvelope;
+root_type EngineEnvelope;

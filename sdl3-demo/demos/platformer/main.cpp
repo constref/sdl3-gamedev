@@ -1,57 +1,13 @@
 ﻿#include <SDL3/SDL_main.h>
-#include <iostream>
-#include "external.h"
-#include <config.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <cassert>
+#include <bootstrap.h>
+#include "platformer.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-	bool awaitDebugger = false;
-	int editorPID = 0;
-	int editorPort = 0;
+	Bootstrap bootstrap(argc, argv);
+	bootstrap.exec(std::make_unique<Platformer>(), 512, 288, 1920, 1080);
 
-	// process args
-	if (argc > 1)
-	{
-		for (int i = 0; i < argc; ++i)
-		{
-			if (strcmp(argv[i], "--debug") == 0)
-			{
-				std::cout << "Please attach a debugger to the running process" << std::endl;
-				while (!IsDebuggerPresent())
-				{
-					Sleep(100);
-				}
-			}
-			else if (strcmp(argv[i], "--pid") == 0)
-			{
-				if (i < argc)
-				{
-					editorPID = atoi(argv[i + 1]);
-				}
-			}
-			else if (strcmp(argv[i], "--port") == 0)
-			{
-				if (i < argc)
-				{
-					editorPort = atoi(argv[i + 1]);
-				}
-			}
-		}
-	}
-	if (Config::IsStandaloneMode())
-	{
-		StartAppStandalone();
-	}
-	else
-	{
-		assert(editorPort && "No editor port provided via --port");
-		StartAppTooling(editorPID, editorPort, 512, 288, 1920, 1080);
-	}
 	return 0;
 }
