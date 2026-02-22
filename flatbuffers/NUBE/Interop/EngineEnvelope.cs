@@ -22,6 +22,8 @@ public struct EngineEnvelope : IFlatbufferObject
 
   public NUBE.Interop.EngineMessage PayloadType { get { int o = __p.__offset(4); return o != 0 ? (NUBE.Interop.EngineMessage)__p.bb.Get(o + __p.bb_pos) : NUBE.Interop.EngineMessage.NONE; } }
   public TTable? Payload<TTable>() where TTable : struct, IFlatbufferObject { int o = __p.__offset(6); return o != 0 ? (TTable?)__p.__union<TTable>(o + __p.bb_pos) : null; }
+  public NUBE.Interop.EngineStartupCommand PayloadAsEngineStartupCommand() { return Payload<NUBE.Interop.EngineStartupCommand>().Value; }
+  public NUBE.Interop.EngineShutdownCommand PayloadAsEngineShutdownCommand() { return Payload<NUBE.Interop.EngineShutdownCommand>().Value; }
   public NUBE.Interop.KeyboardEvent PayloadAsKeyboardEvent() { return Payload<NUBE.Interop.KeyboardEvent>().Value; }
 
   public static Offset<NUBE.Interop.EngineEnvelope> CreateEngineEnvelope(FlatBufferBuilder builder,

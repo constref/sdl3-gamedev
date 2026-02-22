@@ -8,7 +8,9 @@ namespace NUBE.Interop
 public enum EngineMessage : byte
 {
   NONE = 0,
-  KeyboardEvent = 1,
+  EngineStartupCommand = 1,
+  EngineShutdownCommand = 2,
+  KeyboardEvent = 3,
 };
 
 
@@ -20,6 +22,12 @@ static public class EngineMessageVerify
     bool result = true;
     switch((EngineMessage)typeId)
     {
+      case EngineMessage.EngineStartupCommand:
+        result = NUBE.Interop.EngineStartupCommandVerify.Verify(verifier, tablePos);
+        break;
+      case EngineMessage.EngineShutdownCommand:
+        result = NUBE.Interop.EngineShutdownCommandVerify.Verify(verifier, tablePos);
+        break;
       case EngineMessage.KeyboardEvent:
         result = NUBE.Interop.KeyboardEventVerify.Verify(verifier, tablePos);
         break;

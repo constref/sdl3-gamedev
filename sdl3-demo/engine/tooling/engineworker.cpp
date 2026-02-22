@@ -36,12 +36,6 @@ void EngineWorker::start()
 			{
 				HANDLE hPipe = CreateNamedPipeA(std::format("\\\\.\\pipe\\{}", engineUrl).c_str(), PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_WAIT,
 					1, 1024 * 64, 1024 * 64, 0, NULL);
-				if (hPipe == INVALID_HANDLE_VALUE)
-				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					continue;
-				}
-
 				BOOL connected = ConnectNamedPipe(hPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 				if (connected)
 				{
@@ -62,15 +56,27 @@ void EngineWorker::start()
 						if (success && bytesRead == msgSize)
 						{
 							auto envelope = NUBE::Interop::GetEngineEnvelope(buffer);
-							const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
-							if (keyEvent->is_down())
+							switch (envelope->payload_type())
 							{
-								pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
-							}
-							else
-							{
+								case NUBE::Interop::EngineMessage_EngineShutdownCommand:
+								{
+									pushEvent(ExitEvent());
+									break;
+								}
+								case NUBE::Interop::EngineMessage_KeyboardEvent:
+								{
+									const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
+									if (keyEvent->is_down())
+									{
+										pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+									}
+									else
+									{
 
-								pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+										pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+									}
+									break;
+								}
 							}
 						}
 					}

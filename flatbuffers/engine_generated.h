@@ -28,6 +28,12 @@ struct InitializationDetailsBuilder;
 struct KeyboardEvent;
 struct KeyboardEventBuilder;
 
+struct EngineStartupCommand;
+struct EngineStartupCommandBuilder;
+
+struct EngineShutdownCommand;
+struct EngineShutdownCommandBuilder;
+
 enum EditorMessage : uint8_t {
   EditorMessage_NONE = 0,
   EditorMessage_InitializationDetails = 1,
@@ -73,22 +79,28 @@ bool VerifyEditorMessageVector(::flatbuffers::VerifierTemplate<B> &verifier, con
 
 enum EngineMessage : uint8_t {
   EngineMessage_NONE = 0,
-  EngineMessage_KeyboardEvent = 1,
+  EngineMessage_EngineStartupCommand = 1,
+  EngineMessage_EngineShutdownCommand = 2,
+  EngineMessage_KeyboardEvent = 3,
   EngineMessage_MIN = EngineMessage_NONE,
   EngineMessage_MAX = EngineMessage_KeyboardEvent
 };
 
-inline const EngineMessage (&EnumValuesEngineMessage())[2] {
+inline const EngineMessage (&EnumValuesEngineMessage())[4] {
   static const EngineMessage values[] = {
     EngineMessage_NONE,
+    EngineMessage_EngineStartupCommand,
+    EngineMessage_EngineShutdownCommand,
     EngineMessage_KeyboardEvent
   };
   return values;
 }
 
 inline const char * const *EnumNamesEngineMessage() {
-  static const char * const names[3] = {
+  static const char * const names[5] = {
     "NONE",
+    "EngineStartupCommand",
+    "EngineShutdownCommand",
     "KeyboardEvent",
     nullptr
   };
@@ -103,6 +115,14 @@ inline const char *EnumNameEngineMessage(EngineMessage e) {
 
 template<typename T> struct EngineMessageTraits {
   static const EngineMessage enum_value = EngineMessage_NONE;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::EngineStartupCommand> {
+  static const EngineMessage enum_value = EngineMessage_EngineStartupCommand;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::EngineShutdownCommand> {
+  static const EngineMessage enum_value = EngineMessage_EngineShutdownCommand;
 };
 
 template<> struct EngineMessageTraits<NUBE::Interop::KeyboardEvent> {
@@ -188,6 +208,12 @@ struct EngineEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return GetPointer<const void *>(VT_PAYLOAD);
   }
   template<typename T> const T *payload_as() const;
+  const NUBE::Interop::EngineStartupCommand *payload_as_EngineStartupCommand() const {
+    return payload_type() == NUBE::Interop::EngineMessage_EngineStartupCommand ? static_cast<const NUBE::Interop::EngineStartupCommand *>(payload()) : nullptr;
+  }
+  const NUBE::Interop::EngineShutdownCommand *payload_as_EngineShutdownCommand() const {
+    return payload_type() == NUBE::Interop::EngineMessage_EngineShutdownCommand ? static_cast<const NUBE::Interop::EngineShutdownCommand *>(payload()) : nullptr;
+  }
   const NUBE::Interop::KeyboardEvent *payload_as_KeyboardEvent() const {
     return payload_type() == NUBE::Interop::EngineMessage_KeyboardEvent ? static_cast<const NUBE::Interop::KeyboardEvent *>(payload()) : nullptr;
   }
@@ -200,6 +226,14 @@ struct EngineEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.EndTable();
   }
 };
+
+template<> inline const NUBE::Interop::EngineStartupCommand *EngineEnvelope::payload_as<NUBE::Interop::EngineStartupCommand>() const {
+  return payload_as_EngineStartupCommand();
+}
+
+template<> inline const NUBE::Interop::EngineShutdownCommand *EngineEnvelope::payload_as<NUBE::Interop::EngineShutdownCommand>() const {
+  return payload_as_EngineShutdownCommand();
+}
 
 template<> inline const NUBE::Interop::KeyboardEvent *EngineEnvelope::payload_as<NUBE::Interop::KeyboardEvent>() const {
   return payload_as_KeyboardEvent();
@@ -366,6 +400,90 @@ inline ::flatbuffers::Offset<KeyboardEvent> CreateKeyboardEvent(
   return builder_.Finish();
 }
 
+struct EngineStartupCommand FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EngineStartupCommandBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_UNUSED = 4
+  };
+  bool unused() const {
+    return GetField<uint8_t>(VT_UNUSED, 1) != 0;
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_UNUSED, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct EngineStartupCommandBuilder {
+  typedef EngineStartupCommand Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_unused(bool unused) {
+    fbb_.AddElement<uint8_t>(EngineStartupCommand::VT_UNUSED, static_cast<uint8_t>(unused), 1);
+  }
+  explicit EngineStartupCommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EngineStartupCommand> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EngineStartupCommand>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EngineStartupCommand> CreateEngineStartupCommand(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    bool unused = true) {
+  EngineStartupCommandBuilder builder_(_fbb);
+  builder_.add_unused(unused);
+  return builder_.Finish();
+}
+
+struct EngineShutdownCommand FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EngineShutdownCommandBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_UNUSED = 4
+  };
+  bool unused() const {
+    return GetField<uint8_t>(VT_UNUSED, 1) != 0;
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_UNUSED, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct EngineShutdownCommandBuilder {
+  typedef EngineShutdownCommand Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_unused(bool unused) {
+    fbb_.AddElement<uint8_t>(EngineShutdownCommand::VT_UNUSED, static_cast<uint8_t>(unused), 1);
+  }
+  explicit EngineShutdownCommandBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<EngineShutdownCommand> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<EngineShutdownCommand>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<EngineShutdownCommand> CreateEngineShutdownCommand(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    bool unused = true) {
+  EngineShutdownCommandBuilder builder_(_fbb);
+  builder_.add_unused(unused);
+  return builder_.Finish();
+}
+
 template <bool B>
 inline bool VerifyEditorMessage(::flatbuffers::VerifierTemplate<B> &verifier, const void *obj, EditorMessage type) {
   switch (type) {
@@ -398,6 +516,14 @@ inline bool VerifyEngineMessage(::flatbuffers::VerifierTemplate<B> &verifier, co
   switch (type) {
     case EngineMessage_NONE: {
       return true;
+    }
+    case EngineMessage_EngineStartupCommand: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::EngineStartupCommand *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EngineMessage_EngineShutdownCommand: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::EngineShutdownCommand *>(obj);
+      return verifier.VerifyTable(ptr);
     }
     case EngineMessage_KeyboardEvent: {
       auto ptr = reinterpret_cast<const NUBE::Interop::KeyboardEvent *>(obj);
