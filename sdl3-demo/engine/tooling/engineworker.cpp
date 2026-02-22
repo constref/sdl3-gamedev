@@ -25,56 +25,82 @@ void EngineWorker::start()
 	zmq::context_t ctx;
 
 	// create socket for engine->tooling data
-	//push = zmq::socket_t(ctx, zmq::socket_type::push);
-	//push.connect("tcp://127.0.0.1:0");
-
-	pull = zmq::socket_t(ctx, zmq::socket_type::pull);
-	pull.bind("tcp://127.0.0.1:0");
-	const std::string engineUrl = pull.get(zmq::sockopt::last_endpoint);
+	const std::string engineUrl = "NUBEEngine";
 
 	shouldRun = engine->initialize(logW, logH, width, height);
 	if (shouldRun)
 	{
 		// start up the pull socket for tooling events
-		pullThread = std::thread([this]() {
+		pullThread = std::thread([this, engineUrl]() {
 			while (shouldRun)
 			{
-				zmq::message_t msg;
-				pull.recv(msg);
-				if (!msg.data() || msg.size() == 0) continue;
-
-				auto envelope = NUBE::Interop::GetEngineEnvelope(msg.data());
-				const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
-
-				if (keyEvent->is_down())
+				HANDLE hPipe = CreateNamedPipeA(std::format("\\\\.\\pipe\\{}", engineUrl).c_str(), PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_WAIT,
+					1, 1024 * 64, 1024 * 64, 0, NULL);
+				if (hPipe == INVALID_HANDLE_VALUE)
 				{
-					pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					continue;
 				}
-				else
-				{
 
-					pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+				BOOL connected = ConnectNamedPipe(hPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+				if (connected)
+				{
+					const size_t bufferSize = 1024;
+					uint8_t buffer[bufferSize];
+					while (shouldRun)
+					{
+						uint32_t msgSize = 0;
+						DWORD bytesRead = 0;
+						BOOL success = ReadFile(hPipe, &msgSize, sizeof(uint32_t), &bytesRead, NULL);
+						if (!success || bytesRead == 0)
+						{
+							break;
+						}
+
+						assert(msgSize <= bufferSize && "Message size too large for input buffer.");
+						success = ReadFile(hPipe, buffer, msgSize, &bytesRead, NULL);
+						if (success && bytesRead == msgSize)
+						{
+							auto envelope = NUBE::Interop::GetEngineEnvelope(buffer);
+							const NUBE::Interop::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
+							if (keyEvent->is_down())
+							{
+								pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+							}
+							else
+							{
+
+								pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+							}
+						}
+					}
 				}
 			}
+			return 0;
 		});
-		using namespace NUBE::Interop;
-		std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
 
-		auto *builder = new flatbuffers::FlatBufferBuilder(1024);
-		auto initDetails = NUBE::Interop::CreateInitializationDetails(*builder,
-			engine->getRenderer()->getMaxFramesInFlight(),
-			builder->CreateVector(texHandles),
-			builder->CreateString(engineUrl)
-		);
+		// Push data into editor for INIT
+		HANDLE hPipe = CreateFile(TEXT("\\\\.\\pipe\\NUBEEditor"), GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+		if (hPipe != INVALID_HANDLE_VALUE)
+		{
+			using namespace NUBE::Interop;
+			std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
 
-		auto msg = NUBE::Interop::CreateEditorEnvelope(*builder, EditorMessage::EditorMessage_InitializationDetails, initDetails.Union());
-		builder->Finish(msg);
-		auto span = builder->GetBufferSpan();
+			auto *builder = new flatbuffers::FlatBufferBuilder(1024);
+			auto initDetails = NUBE::Interop::CreateInitializationDetails(*builder,
+				engine->getRenderer()->getMaxFramesInFlight(),
+				builder->CreateVector(texHandles),
+				builder->CreateString(engineUrl)
+			);
 
-		// send the initial handshake data to the editor
-		zmq::socket_t request(ctx, zmq::socket_type::req);
-		request.connect(editorUrl);
-		request.send(span.data(), span.size());
+			auto msg = NUBE::Interop::CreateEditorEnvelope(*builder, EditorMessage::EditorMessage_InitializationDetails, initDetails.Union());
+			builder->FinishSizePrefixed(msg);
+			auto span = builder->GetBufferSpan();
+
+			DWORD bytesWritten = 0;
+			BOOL success = WriteFile(hPipe, span.data(), span.size(), &bytesWritten, NULL);
+			delete builder;
+		}
 	}
 	while (shouldRun)
 	{
