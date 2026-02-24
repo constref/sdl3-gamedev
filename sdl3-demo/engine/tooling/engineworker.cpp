@@ -22,8 +22,6 @@ EngineWorker::~EngineWorker()
 
 void EngineWorker::start()
 {
-	zmq::context_t ctx;
-
 	// create socket for engine->tooling data
 	const std::string engineUrl = "NUBEEngine";
 

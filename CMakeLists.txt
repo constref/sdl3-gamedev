@@ -11,3 +11,4 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory("sdl3-demo/engine")
 add_subdirectory ("sdl3-demo/demos/platformer")
+add_subdirectory ("sdl3-demo/demos/empty")

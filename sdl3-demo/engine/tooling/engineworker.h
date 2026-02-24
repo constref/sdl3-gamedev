@@ -10,7 +10,6 @@
 #include <memory>
 #include <containers/atomicringbuffer.h>
 #include <messaging/events.h>
-#include <zmq.hpp>
 #include "platformevents.h"
 
 class EngineWorker
@@ -24,8 +23,6 @@ class EngineWorker
 	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread publisherThread;
 	std::thread pullThread;
-	zmq::socket_t push;
-	zmq::socket_t pull;
 
 public:
 	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, const std::string &handshakeUrl, int logW, int logH, int width, int height);

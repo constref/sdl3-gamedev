@@ -4,8 +4,6 @@ find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
-#find_package(ZeroMQ REQUIRED)
-find_package(cppzmq REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -77,6 +75,8 @@ set(ENGINE_SOURCES
 	"systems/vulkanrendersystem.h"
 	"systems/d3d11rendersystem.h"
 	"systems/d3d11rendersystem.cpp"
+	"systems/d3d12rendersystem.h"
+	"systems/d3d12rendersystem.cpp"
 	"systems/context/rendercontext.h"
 	"components/componentstore.h"
 	"components/componentstore.cpp"
@@ -138,9 +138,8 @@ target_link_libraries(engine PUBLIC
 	#SDL3_mixer::SDL3_mixer
 	glm::glm
 	tinyxml2::tinyxml2
-	dxgi d3d11 d3dcompiler
 	flatbuffers::flatbuffers
-	cppzmq
+	dxgi d3d11 d3d12 d3dcompiler
 )
 
 target_include_directories(engine

@@ -20,6 +20,7 @@
 #include <systems/collisionsystem.h>
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
+#include <systems/d3d12rendersystem.h>
 #include <prototypeinstancer.h>
 #include <executionmode.h>
 
@@ -49,6 +50,7 @@ class Engine
 	PrototypeInstancer protoInstancer;
 	Services services;
 	SDLState sdlState;
+	d3d12rs::D3D12RenderSystem *d3d12Renderer;
 	vks::VulkanRenderSystem *vkRenderer;
 
 public:
@@ -84,7 +86,8 @@ public:
 				return false;
 			}
 
-			SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+			//SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+			SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_RESIZABLE);
 			if (!window)
 			{
 				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
@@ -102,12 +105,19 @@ public:
 		services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 		services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 		services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-		auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH, services));
+		auto &renderSys = services.compSys().registerSystem(std::make_unique<d3d12rs::D3D12RenderSystem>(services, sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH));
 		if (!renderSys.initialize())
 		{
 			return false;
 		}
-		vkRenderer = &renderSys;
+		d3d12Renderer = &renderSys;
+
+		//auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH, services));
+		//if (!renderSys.initialize())
+		//{
+		//	return false;
+		//}
+		//vkRenderer = &renderSys;
 
 		// initialize and start the app
 		if (!app->initialize(services, sdlState))
@@ -118,7 +128,7 @@ public:
 		app->start(services, sdlState);
 
 		// TODO: This should move
-		renderSys.updateTextures();
+		//renderSys.updateTextures();
 
 		return true;
 	}
