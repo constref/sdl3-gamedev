@@ -369,3 +369,4 @@ FodyWeavers.xsd
 /.vscode/launch.json
 /build*
 /vcpkg_installed
+/data/littlest_tokyo/glTF

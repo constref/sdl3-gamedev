@@ -96,10 +96,6 @@ set(ENGINE_SOURCES
 	"prototypeinstancer.h"
 	"prototypeinstancer.cpp"
 	"ext/tiny_gltf.cc"
-	"shaders/shader.vert"
-	"shaders/shader.frag"
-	"shaders/sprite.vert"
-	"shaders/sprite.frag"
 	"containers/atomicringbuffer.h"
 	"containers/ringbuffer.h"
 	"tooling/engineworker.h" 
@@ -107,9 +103,19 @@ set(ENGINE_SOURCES
 	"tooling/platformevents.h"
 )
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES})
+set(SHADER_SOURCES
+	"shaders/shader.vert"
+	"shaders/shader.frag"
+	"shaders/sprite.vert"
+	"shaders/sprite.frag"
+	"shaders/hlsl/basic.hlsl"
+)
 
-add_library(engine STATIC ${ENGINE_SOURCES})
+set_source_files_properties(${SHADER_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_SOURCES})
+
+add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET engine PROPERTY CXX_STANDARD 23)

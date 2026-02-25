@@ -34,28 +34,37 @@ struct Mesh
 
 struct FrameResources
 {
-	Microsoft::WRL::ComPtr<ID3D12Resource> backbuffer;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
+	uint16_t renderTargetIndex = 0;
 	uint64_t fenceValue = 0;
+};
+
+struct DescriptorSizes
+{
+	size_t RTV = 0;
+	size_t DSV = 0;
+	size_t CBV = 0;
 };
 
 class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
-	constexpr static inline uint16_t MaxFrames = 3;
+	constexpr static inline uint16_t FramesInFlight = 3;
+	constexpr static inline uint16_t RenderTargetCount = 2;
 	constexpr static inline uint32_t MaxVertCount = 5000;
 	HWND m_hWnd = NULL;
 	int m_width, m_height, m_logW, m_logH;
 
+	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, RenderTargetCount> m_backBuffers;
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> m_dxgiAdapter;
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_device;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapchain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
-	size_t m_RTVDescriptorSize = 0;
+	DescriptorSizes m_descriptorSizes;
 	uint16_t m_backBufferIndex = 0;
 
-	FrameResources m_frameResources[MaxFrames];
+	FrameResources m_frameResources[FramesInFlight];
 
 	// sync related
 	UINT m_syncInterval = 1;
