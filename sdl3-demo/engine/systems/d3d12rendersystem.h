@@ -52,6 +52,8 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	constexpr static inline uint16_t FramesInFlight = 3;
 	constexpr static inline uint16_t RenderTargetCount = 2;
 	constexpr static inline uint32_t MaxVertCount = 5000;
+	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	constexpr static inline DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
 	HWND m_hWnd = NULL;
 	int m_width, m_height, m_logW, m_logH;
 
@@ -59,8 +61,12 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> m_dxgiAdapter;
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_device;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_singleUseCommandAllocator;
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_singleUseCommandList;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapchain;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_depthStencil;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RTVDescriptorHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DSVDescriptorHeap;
 	DescriptorSizes m_descriptorSizes;
 	uint16_t m_backBufferIndex = 0;
 
@@ -71,7 +77,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	bool m_allowTearing = false;
 	uint16_t m_frameResIndex = 0;
 	uint64_t m_frameIndex = 0;
-	uint64_t m_fenceValue = 0;
+	uint64_t m_fenceValue = FramesInFlight;
 	HANDLE m_fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
 
@@ -87,6 +93,7 @@ public:
 	void update(Node &node) override;
 	void updateTextures();
 	bool createSwapchain();
+	void flushGPU();
 };
 
 }

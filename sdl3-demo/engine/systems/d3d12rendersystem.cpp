@@ -122,8 +122,6 @@ bool D3D12RenderSystem::initialize()
 		}
 	}
 
-	createSwapchain();
-
 	for (int i = 0; i < FramesInFlight; ++i)
 	{
 		auto &res = m_frameResources[i];
@@ -134,9 +132,18 @@ bool D3D12RenderSystem::initialize()
 		DXCHK(res.commandList->Close(), "Couldn't close command list");
 	}
 
+	// create single use command objects
+	DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_singleUseCommandAllocator.GetAddressOf())),
+		"Couldn't create the single-use command allocator");
+	DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_singleUseCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_singleUseCommandList.GetAddressOf())),
+		"Couldn't create the single-use command list");
+	DXCHK(m_singleUseCommandList->Close(), "Couldn't close command list");
+
 	DXCHK(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)), "Unable to create fence");
 	m_fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(m_fenceEvent && "Failed to create fence event");
+
+	createSwapchain();
 
 	return true;
 }
@@ -149,13 +156,7 @@ void d3d12rs::D3D12RenderSystem::shutdown()
 	{
 		return;
 	}
-	if (m_fence->GetCompletedValue() < m_fenceValue)
-	{
-		if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent)))
-		{
-			::WaitForSingleObject(m_fenceEvent, INFINITE);
-		}
-	}
+	flushGPU();
 	CloseHandle(m_fenceEvent);
 }
 
@@ -163,7 +164,7 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 {
 	m_frameResIndex = m_frameIndex % FramesInFlight;
 	auto &res = m_frameResources[m_frameResIndex];
-
+	
 	if (m_fence->GetCompletedValue() < res.fenceValue)
 	{
 		if (FAILED(m_fence->SetEventOnCompletion(res.fenceValue, m_fenceEvent)))
@@ -173,14 +174,15 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 		}
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
+
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
 	res.commandList->Reset(res.commandAllocator.Get(), nullptr);
 
 	auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	res.commandList->ResourceBarrier(1, &rtBarrier);
 
-	FLOAT clearColor[] = { 0.4f, 0.6f, 0.9f, 1.0f };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	rtvHandle.Offset(res.renderTargetIndex * m_descriptorSizes.RTV);
 	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 }
@@ -228,7 +230,7 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
 	swapchainDesc.Width = m_width;
 	swapchainDesc.Height = m_height;
-	swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapchainDesc.Format = SwapchainFormat;
 	swapchainDesc.Stereo = FALSE;
 	swapchainDesc.SampleDesc = { 1, 0 };
 	swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -243,13 +245,20 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER), "Failed to disable full-screen shortcut.");
 	DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
 
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
-	heapDesc.NumDescriptors = RenderTargetCount;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	DXCHK(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_descriptorHeap)), "Unable to create descriptor heap");
+	// RTV Heap
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
+	rtvHeapDesc.NumDescriptors = RenderTargetCount;
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	DXCHK(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RTVDescriptorHeap)), "Unable to create RTV descriptor heap");
+	// DSV Heap
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	DXCHK(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DSVDescriptorHeap)), "Unable to create DSV descriptor heap");
 
+	// create the render target views
 	m_descriptorSizes.RTV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	for (int i = 0; i < RenderTargetCount; ++i)
 	{
 		DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())), "Unable to get swapchain back buffer");
@@ -257,5 +266,43 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 		rtvHandle.Offset(m_descriptorSizes.RTV);
 	}
 
+	// create a depth/stencil view
+	D3D12_RESOURCE_DESC dsDesc{};
+	dsDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	dsDesc.Alignment = 0;
+	dsDesc.Width = m_width;
+	dsDesc.Height = m_height;
+	dsDesc.DepthOrArraySize = 1;
+	dsDesc.MipLevels = 1;
+	dsDesc.Format = DepthStencilFormat;
+	dsDesc.SampleDesc = { 1, 0 };
+	dsDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	dsDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE dsClearVal{};
+	dsClearVal.Format = DepthStencilFormat;
+	dsClearVal.DepthStencil = { 1, 0 };
+
+	CD3DX12_HEAP_PROPERTIES dsHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+	DXCHK(m_device->CreateCommittedResource(&dsHeapProps, D3D12_HEAP_FLAG_NONE, &dsDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &dsClearVal, IID_PPV_ARGS(m_depthStencil.GetAddressOf())),
+		"Unable to create depth resource");
+
+	m_descriptorSizes.DSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_DSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	m_device->CreateDepthStencilView(m_depthStencil.Get(), nullptr, dsvHandle);
+
 	return true;
+}
+
+void d3d12rs::D3D12RenderSystem::flushGPU()
+{
+	if (m_fence->GetCompletedValue() < m_fenceValue)
+	{
+		if (FAILED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent)))
+		{
+			Logger::error(this, "Unable to set fence completion event");
+			return;
+		}
+		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
+	}
 }
