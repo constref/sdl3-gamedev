@@ -7,7 +7,8 @@
 
 #include <SDL3/SDL_system.h>
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
+
+using namespace DirectX;
 
 #define DXCHK(result, msg) \
     if (FAILED(result)) { \
@@ -123,16 +124,30 @@ bool D3D12RenderSystem::initialize()
 
 	createSwapchain();
 
-	DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)),
-		"Couldn't create the command allocator");
-
-	DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)),
-		"Couldn't create the command list");
-	DXCHK(m_commandList->Close(), "Couldn't close command list");
+	for (int i = 0; i < MaxFrames; ++i)
+	{
+		auto &res = m_frameResources[i];
+		DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&res.commandAllocator)),
+			"Couldn't create the command allocator");
+		DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, res.commandAllocator.Get(), nullptr, IID_PPV_ARGS(&res.commandList)),
+			"Couldn't create the command list");
+		DXCHK(res.commandList->Close(), "Couldn't close command list");
+	}
 
 	DXCHK(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)), "Unable to create fence");
 	m_fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(m_fenceEvent && "Failed to create fence event");
+
+	// create buffers for mesh data
+	D3D12_RESOURCE_DESC vertDataDesc{};
+	vertDataDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertDataDesc.Width = MaxVertCount * sizeof(Vertex);
+	vertDataDesc.Height = 1;
+	vertDataDesc.DepthOrArraySize = 1;
+	vertDataDesc.MipLevels = 1;
+	vertDataDesc.Format = DXGI_FORMAT_UNKNOWN;
+	vertDataDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
 
 	return true;
 }
@@ -156,7 +171,7 @@ void d3d12rs::D3D12RenderSystem::shutdown()
 
 void d3d12rs::D3D12RenderSystem::beginFrame()
 {
-	m_frameResIndex = m_frameIndex % MaxFrames;
+	m_frameResIndex = m_swapchain->GetCurrentBackBufferIndex();
 	auto &res = m_frameResources[m_frameResIndex];
 
 	if (m_fence->GetCompletedValue() < res.fenceValue)
@@ -168,31 +183,26 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 		}
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
-	m_commandList->Reset(m_commandAllocator.Get(), nullptr);
-	D3D12_RESOURCE_BARRIER barrier{
-		.Transition {.pResource = res.backbuffer.Get(),
-		.StateBefore = D3D12_RESOURCE_STATE_PRESENT, .StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET} };
-	m_commandList->ResourceBarrier(1, &barrier);
+	res.commandList->Reset(res.commandAllocator.Get(), nullptr);
+	auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(res.backbuffer.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	res.commandList->ResourceBarrier(1, &rtBarrier);
 
 	FLOAT clearColor[] = { 0.4f, 0.6f, 0.9f, 1.0f };
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += m_frameResIndex * m_RTVDescriptorSize;
 
-	m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 }
 
 void d3d12rs::D3D12RenderSystem::endFrame()
 {
 	auto &res = m_frameResources[m_frameResIndex];
 
-	D3D12_RESOURCE_BARRIER barrier{
-		.Transition {.pResource = res.backbuffer.Get(),
-		.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET, .StateAfter = D3D12_RESOURCE_STATE_PRESENT} };
-	m_commandList->ResourceBarrier(1, &barrier);
+	auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(res.backbuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	res.commandList->ResourceBarrier(1, &presentBarrier);
+	res.commandList->Close();
 
-	m_commandList->Close();
-
-	std::array<ID3D12CommandList *, 1> commandLists{ m_commandList.Get() };
+	std::array<ID3D12CommandList *, 1> commandLists{ res.commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
 
 	UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
@@ -200,8 +210,6 @@ void d3d12rs::D3D12RenderSystem::endFrame()
 
 	res.fenceValue = ++m_fenceValue;
 	m_commandQueue->Signal(m_fence.Get(), res.fenceValue);
-
-	m_frameIndex++;
 }
 
 void D3D12RenderSystem::update(Node &node)
@@ -249,13 +257,13 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	DXCHK(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_descriptorHeap)), "Unable to create descriptor heap");
 
 	m_RTVDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	for (int i = 0; i < MaxFrames; ++i)
 	{
 		auto &res = m_frameResources[i];
 		DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(&res.backbuffer)), "Unable to get swapchain back buffer");
 		m_device->CreateRenderTargetView(res.backbuffer.Get(), nullptr, rtvHandle);
-		rtvHandle.ptr += m_RTVDescriptorSize;
+		rtvHandle.Offset(m_RTVDescriptorSize);
 	}
 
 	return true;

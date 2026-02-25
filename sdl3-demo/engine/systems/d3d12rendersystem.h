@@ -4,32 +4,53 @@
 #include <components/spritecomponent.h>
 
 #include <wrl.h>
-#include <d3d12.h>
+#include <directx/d3dx12.h>
 #include <dxgi1_6.h>
+#include <DirectXMath.h>
 
 struct SDL_Window;
 
 namespace d3d12rs
 {
 
+struct Vertex
+{
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT2 uv;
+};
+
+struct SubMesh
+{
+	size_t vertexStart = 0;
+	size_t vertexCount = 0;
+	size_t indexStart = 0;
+	size_t indexCount = 0;
+};
+
+struct Mesh
+{
+	std::vector<SubMesh> subMeshes;
+};
+
 struct FrameResources
 {
 	Microsoft::WRL::ComPtr<ID3D12Resource> backbuffer;
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;
 };
 
 class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 	constexpr static inline uint16_t MaxFrames = 3;
+	constexpr static inline uint32_t MaxVertCount = 5000;
 	HWND m_hWnd = NULL;
 	int m_width, m_height, m_logW, m_logH;
 
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> m_dxgiAdapter;
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_device;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
-	Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapchain;
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapchain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
 	size_t m_RTVDescriptorSize = 0;
 	uint16_t m_backBufferIndex = 0;

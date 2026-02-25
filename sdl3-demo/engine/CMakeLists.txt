@@ -4,6 +4,7 @@ find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
+find_package(DirectX-Headers REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -140,6 +141,7 @@ target_link_libraries(engine PUBLIC
 	tinyxml2::tinyxml2
 	flatbuffers::flatbuffers
 	dxgi d3d11 d3d12 d3dcompiler
+	Microsoft::DirectX-Headers
 )
 
 target_include_directories(engine
