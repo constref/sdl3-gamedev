@@ -144,8 +144,42 @@ bool D3D12RenderSystem::initialize()
 	assert(m_fenceEvent && "Failed to create fence event");
 
 	createSwapchain();
+	m_copyOperations.reserve(MaxCopyOps);
 
+	auto uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(StagingBuffSize);
+	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
+		"Unable to create the main staging buffer");
+
+	CD3DX12_RANGE readRange(0, 0);
+	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
+
+	loadAssets();
 	return true;
+}
+
+void d3d12rs::D3D12RenderSystem::loadAssets()
+{
+	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+	Vertex vertices[] =
+	{
+
+	  { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1, 0, 0, 1) },
+	  { XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(0, 1, 0, 1) },
+	  { XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(0, 0, 1, 1) },
+	  { XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(1, 1, 0, 1) },
+	  { XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 1, 1) },
+	  { XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(0, 1, 1, 1) },
+	  { XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(1, 1, 0, 1) },
+	  { XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 0, 1) }
+	};
+
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
+	auto buffState = D3D12_RESOURCE_STATE_COMMON;
+	HRESULT result1 = m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDesc, buffState, nullptr, IID_PPV_ARGS(boxVerts.GetAddressOf()));
+	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t*>(vertices), _countof(vertices)), boxVerts.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 }
 
 void d3d12rs::D3D12RenderSystem::shutdown()
@@ -157,14 +191,29 @@ void d3d12rs::D3D12RenderSystem::shutdown()
 		return;
 	}
 	flushGPU();
+
+	if (m_stagingBuffer)
+	{
+		m_stagingBuffer->Unmap(0, nullptr);
+	}
 	CloseHandle(m_fenceEvent);
+}
+
+bool d3d12rs::D3D12RenderSystem::createPipelineStateObject()
+{
+	return false;
+}
+
+bool d3d12rs::D3D12RenderSystem::createShaders()
+{
+	return false;
 }
 
 void d3d12rs::D3D12RenderSystem::beginFrame()
 {
 	m_frameResIndex = m_frameIndex % FramesInFlight;
 	auto &res = m_frameResources[m_frameResIndex];
-	
+
 	if (m_fence->GetCompletedValue() < res.fenceValue)
 	{
 		if (FAILED(m_fence->SetEventOnCompletion(res.fenceValue, m_fenceEvent)))
@@ -178,6 +227,29 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
 	res.commandList->Reset(res.commandAllocator.Get(), nullptr);
 
+	// process pending copy operations
+	if (m_copyOperations.size())
+	{
+		static std::vector<D3D12_RESOURCE_BARRIER> barriers(MaxCopyOps);
+		barriers.clear();
+		for (int i = 0; i < m_copyOperations.size(); ++i)
+		{
+			auto &copyOP = m_copyOperations[i];
+			res.commandList->CopyBufferRegion(copyOP.dstBuffer.Get(), 0, m_stagingBuffer.Get(), copyOP.stagingOffset, copyOP.byteSize);
+
+			if (copyOP.dstStateAfter != D3D12_RESOURCE_STATE_COMMON)
+			{
+				barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(copyOP.dstBuffer.Get(), copyOP.dstStateBefore, copyOP.dstStateAfter));
+			}
+		}
+		res.commandList->ResourceBarrier(barriers.size(), barriers.data());
+		m_copyOperations.clear();
+	}
+
+	// viewport and scissor setup
+	D3D12_VIEWPORT viewport{ .TopLeftX = 0, .TopLeftY = 0, .Width = static_cast<float>(m_width), .Height = static_cast<float>(m_height), .MinDepth = 0, .MaxDepth = 1 };
+	res.commandList->RSSetViewports(1, &viewport);
+
 	auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	res.commandList->ResourceBarrier(1, &rtBarrier);
 
@@ -185,6 +257,9 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	rtvHandle.Offset(res.renderTargetIndex * m_descriptorSizes.RTV);
 	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+	const float aspectRation = m_width / static_cast<float>(m_height);
+	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
 }
 
 void d3d12rs::D3D12RenderSystem::endFrame()
@@ -305,4 +380,28 @@ void d3d12rs::D3D12RenderSystem::flushGPU()
 		}
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
+}
+
+uint32_t d3d12rs::D3D12RenderSystem::stageData(void *srcPtr, size_t byteSize, size_t alignment)
+{
+	size_t alignedSize = (byteSize + alignment - 1) & ~(alignment - 1);
+	assert(m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
+	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
+	uint32_t dataOffset = m_stagingOffset;
+	m_stagingOffset += alignedSize;
+	return dataOffset;
+}
+
+void d3d12rs::D3D12RenderSystem::copyBuffer(std::span<uint8_t> srcData, ComPtr<ID3D12Resource> dst,
+	D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
+{
+	constexpr uint32_t VertexIndexAlignment = 4;
+
+	assert(m_copyOperations.size() < MaxCopyOps && "Copy operations buffer at capacity");
+	m_copyOperations.push_back(CopyOperation{
+		.stagingOffset = stageData(srcData.data(), srcData.size_bytes(), VertexIndexAlignment),
+		.byteSize = srcData.size_bytes(),
+		.dstBuffer = dst,
+		.dstStateBefore = dstStateBefore,
+		.dstStateAfter = dstStateAfter });
 }
