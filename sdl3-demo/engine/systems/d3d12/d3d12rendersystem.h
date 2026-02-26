@@ -65,6 +65,11 @@ struct DescriptorSizes
 	size_t CBV = 0;
 };
 
+struct ConstsPerObject
+{
+	DirectX::XMFLOAT4X4 worldViewProj;
+};
+
 class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 {
 	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -103,7 +108,12 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	ComPtr<ID3D12Fence> m_fence;
 
 	// assets
-	ComPtr<ID3D12Resource> boxVerts;
+	ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
+	ComPtr<ID3D12Resource> m_boxVerts, m_boxIndices;
+	D3D12_VERTEX_BUFFER_VIEW vbv{};
+	D3D12_INDEX_BUFFER_VIEW ibv{};
+	ComPtr<ID3D12Resource> m_cbBuffPerObj;
+	void *m_cbPerObjPtr = nullptr;
 
 public:
 	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);

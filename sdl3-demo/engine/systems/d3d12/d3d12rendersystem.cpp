@@ -19,12 +19,18 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 using namespace d3d12rs;
 
+size_t align(size_t size, size_t alignment)
+{
+	return (size + alignment - 1) & ~(alignment - 1);
+}
+
 D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH) : System(services)
 {
 	m_width = width;
 	m_height = height;
 	m_logW = logW;
 	m_logH = logH;
+	m_fenceEvent = NULL;
 	if (Config::IsStandaloneMode())
 	{
 		m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
@@ -153,6 +159,23 @@ bool D3D12RenderSystem::initialize()
 
 	CD3DX12_RANGE readRange(0, 0);
 	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
+	
+	const size_t cbPerObjSize = align(sizeof(ConstsPerObject), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize);
+	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerObjDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerObj.GetAddressOf())),
+		"Unable to create per-obj CB buffer");
+	DXCHK(m_cbBuffPerObj->Map(0, &readRange, &m_cbPerObjPtr), "Unable to map cb buffer");
+
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	DXCHK(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(m_cbvHeap.GetAddressOf())), "Unable to create CBV descriptor heap");
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+	cbvDesc.SizeInBytes = cbPerObjSize;
+	cbvDesc.BufferLocation = m_cbBuffPerObj->GetGPUVirtualAddress();
+	m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	loadAssets();
 	return true;
@@ -162,9 +185,9 @@ void d3d12rs::D3D12RenderSystem::loadAssets()
 {
 	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
+	// create vertex buffer
 	Vertex vertices[] =
 	{
-
 	  { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1, 0, 0, 1) },
 	  { XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(0, 1, 0, 1) },
 	  { XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(0, 0, 1, 1) },
@@ -174,12 +197,37 @@ void d3d12rs::D3D12RenderSystem::loadAssets()
 	  { XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(1, 1, 0, 1) },
 	  { XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 0, 1) }
 	};
-
-	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
-	auto buffState = D3D12_RESOURCE_STATE_COMMON;
-	HRESULT result1 = m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDesc, buffState, nullptr, IID_PPV_ARGS(boxVerts.GetAddressOf()));
-	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t*>(vertices), _countof(vertices)), boxVerts.Get(),
+	auto resDescV = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
+	auto buffStateV = D3D12_RESOURCE_STATE_COMMON;
+	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr, IID_PPV_ARGS(m_boxVerts.GetAddressOf()));
+	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices), _countof(vertices)), m_boxVerts.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+	vbv = D3D12_VERTEX_BUFFER_VIEW{};
+	vbv.BufferLocation = m_boxVerts->GetGPUVirtualAddress();
+	vbv.SizeInBytes = sizeof(vertices);
+	vbv.StrideInBytes = sizeof(Vertex);
+
+	// create index buffer
+	std::uint16_t indices[] = 
+	{
+		0, 1, 2, 0, 2, 3, // front face
+		4, 6, 5, 4, 7, 6, // back face
+		4, 5, 1, 4, 1, 0, // left face
+		3, 2, 6, 3, 6, 7, // right face
+		1, 5, 6, 1, 6, 2, // top face
+		4, 0, 3, 4, 3, 7  // bottom face
+	};
+	auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices));
+	auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
+	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(m_boxIndices.GetAddressOf()));
+	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices), _countof(indices)), m_boxIndices.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+	ibv = D3D12_INDEX_BUFFER_VIEW{};
+	ibv.BufferLocation = m_boxIndices->GetGPUVirtualAddress();
+	ibv.SizeInBytes = sizeof(indices);
+	ibv.Format = DXGI_FORMAT_R16_UINT;
 }
 
 void d3d12rs::D3D12RenderSystem::shutdown()
@@ -195,6 +243,10 @@ void d3d12rs::D3D12RenderSystem::shutdown()
 	if (m_stagingBuffer)
 	{
 		m_stagingBuffer->Unmap(0, nullptr);
+	}
+	if (m_cbBuffPerObj)
+	{
+		m_cbBuffPerObj->Unmap(0, nullptr);
 	}
 	CloseHandle(m_fenceEvent);
 }
@@ -260,6 +312,17 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 
 	const float aspectRation = m_width / static_cast<float>(m_height);
 	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
+
+	XMMATRIX worldViewProj = perspective;
+
+	// update the per-obj const buff
+	ConstsPerObject cbPerObj{};
+	XMStoreFloat4x4(&cbPerObj.worldViewProj, XMMatrixTranspose(worldViewProj));
+	memcpy(m_cbPerObjPtr, &cbPerObj, align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
+
+	//res.commandList->IASetVertexBuffers(0, 1, &vbv);
+	//res.commandList->IASetIndexBuffer(&ibv);
+	//res.commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 }
 
 void d3d12rs::D3D12RenderSystem::endFrame()
@@ -384,7 +447,7 @@ void d3d12rs::D3D12RenderSystem::flushGPU()
 
 uint32_t d3d12rs::D3D12RenderSystem::stageData(void *srcPtr, size_t byteSize, size_t alignment)
 {
-	size_t alignedSize = (byteSize + alignment - 1) & ~(alignment - 1);
+	size_t alignedSize = align(byteSize, alignment);
 	assert(m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
 	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
 	uint32_t dataOffset = m_stagingOffset;
