@@ -26,6 +26,7 @@ struct Vertex
 {
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT4 color;
+	DirectX::XMFLOAT2 uv;
 };
 
 struct SubMesh
@@ -81,10 +82,10 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	ComPtr<IDXGIAdapter4> m_dxgiAdapter;
 	ComPtr<ID3D12Device2> m_device;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
-	ComPtr<ID3D12CommandAllocator> m_singleUseCommandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> m_singleUseCommandList;
 	ComPtr<IDXGISwapChain3> m_swapchain;
 	ComPtr<ID3D12Resource> m_depthStencil;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle;
+	ComPtr<ID3D12RootSignature> m_rootSig;
 	ComPtr<ID3D12DescriptorHeap> m_RTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> m_DSVDescriptorHeap;
 	DescriptorSizes m_descriptorSizes;
@@ -114,6 +115,9 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	D3D12_INDEX_BUFFER_VIEW ibv{};
 	ComPtr<ID3D12Resource> m_cbBuffPerObj;
 	void *m_cbPerObjPtr = nullptr;
+	ComPtr<ID3DBlob> m_vsBytecode = nullptr;
+	ComPtr<ID3DBlob> m_psBytecode = nullptr;
+	ComPtr<ID3D12PipelineState> m_pso;
 
 public:
 	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);
@@ -122,8 +126,9 @@ public:
 	bool initialize();
 	void loadAssets();
 	void shutdown();
-	bool createPipelineStateObject();
-	bool createShaders();
+	ComPtr<ID3D12PipelineState> createPipelineStateObject();
+	ComPtr<ID3DBlob> compileShader(const std::string &file, const std::string &entryPoint, const std::string &target);
+	bool createShaders(const std::string &shaderName);
 
 	void beginFrame();
 	void endFrame();

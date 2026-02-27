@@ -7,6 +7,7 @@
 
 #include <SDL3/SDL_system.h>
 #include <d3dcompiler.h>
+#include <filesystem>
 
 using namespace DirectX;
 
@@ -36,6 +37,11 @@ D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int
 		m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 		assert(m_hWnd && "Unable to acquire HWND for provided window");
 	}
+
+	Logger::logHandler = [](const std::string &message)
+	{
+		OutputDebugStringA(std::format("{}\n", message).c_str());
+	};
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -138,13 +144,6 @@ bool D3D12RenderSystem::initialize()
 		DXCHK(res.commandList->Close(), "Couldn't close command list");
 	}
 
-	// create single use command objects
-	DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_singleUseCommandAllocator.GetAddressOf())),
-		"Couldn't create the single-use command allocator");
-	DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_singleUseCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_singleUseCommandList.GetAddressOf())),
-		"Couldn't create the single-use command list");
-	DXCHK(m_singleUseCommandList->Close(), "Couldn't close command list");
-
 	DXCHK(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)), "Unable to create fence");
 	m_fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(m_fenceEvent && "Failed to create fence event");
@@ -159,7 +158,7 @@ bool D3D12RenderSystem::initialize()
 
 	CD3DX12_RANGE readRange(0, 0);
 	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
-	
+
 	const size_t cbPerObjSize = align(sizeof(ConstsPerObject), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerObjDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerObj.GetAddressOf())),
@@ -176,6 +175,21 @@ bool D3D12RenderSystem::initialize()
 	cbvDesc.SizeInBytes = cbPerObjSize;
 	cbvDesc.BufferLocation = m_cbBuffPerObj->GetGPUVirtualAddress();
 	m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	// create a root signature
+	CD3DX12_DESCRIPTOR_RANGE1 cbvTable{};
+	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+
+	std::array<CD3DX12_ROOT_PARAMETER1, 1> rootParameters{};
+	rootParameters[0].InitAsDescriptorTable(1, &cbvTable);
+
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc{};
+	rootSigDesc.Init_1_1(rootParameters.size(), rootParameters.data(), 0u, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	ComPtr<ID3DBlob> error = nullptr;
+	DXCHK(D3D12SerializeVersionedRootSignature(&rootSigDesc, serializedRootSig.GetAddressOf(), error.GetAddressOf()), "Unable to serialize root signature");
+	DXCHK(m_device->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(m_rootSig.GetAddressOf())), "Error creating root signature");
 
 	loadAssets();
 	return true;
@@ -200,7 +214,7 @@ void d3d12rs::D3D12RenderSystem::loadAssets()
 	auto resDescV = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
 	auto buffStateV = D3D12_RESOURCE_STATE_COMMON;
 	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr, IID_PPV_ARGS(m_boxVerts.GetAddressOf()));
-	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices), _countof(vertices)), m_boxVerts.Get(),
+	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices), sizeof(vertices)), m_boxVerts.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 	vbv = D3D12_VERTEX_BUFFER_VIEW{};
@@ -209,7 +223,7 @@ void d3d12rs::D3D12RenderSystem::loadAssets()
 	vbv.StrideInBytes = sizeof(Vertex);
 
 	// create index buffer
-	std::uint16_t indices[] = 
+	std::uint16_t indices[] =
 	{
 		0, 1, 2, 0, 2, 3, // front face
 		4, 6, 5, 4, 7, 6, // back face
@@ -221,13 +235,18 @@ void d3d12rs::D3D12RenderSystem::loadAssets()
 	auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices));
 	auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
 	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(m_boxIndices.GetAddressOf()));
-	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices), _countof(indices)), m_boxIndices.Get(),
+	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices), sizeof(indices)), m_boxIndices.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
 	ibv = D3D12_INDEX_BUFFER_VIEW{};
 	ibv.BufferLocation = m_boxIndices->GetGPUVirtualAddress();
 	ibv.SizeInBytes = sizeof(indices);
 	ibv.Format = DXGI_FORMAT_R16_UINT;
+
+	bool isSuccess = createShaders("basic");
+	assert(isSuccess && "Shader compilation error(s)");
+
+	m_pso = createPipelineStateObject();
 }
 
 void d3d12rs::D3D12RenderSystem::shutdown()
@@ -251,14 +270,76 @@ void d3d12rs::D3D12RenderSystem::shutdown()
 	CloseHandle(m_fenceEvent);
 }
 
-bool d3d12rs::D3D12RenderSystem::createPipelineStateObject()
+ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
 {
-	return false;
+	std::array vertexInputs{
+		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "POSITION", .Format = DXGI_FORMAT_R32G32B32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, position)},
+		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "COLOR", .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, color)},
+		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "TEXCOORD", .Format = DXGI_FORMAT_R32G32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, uv)}
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = m_rootSig.Get();
+	psoDesc.InputLayout = { .pInputElementDescs = vertexInputs.data(), .NumElements = vertexInputs.size() };
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsBytecode.Get());
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psBytecode.Get());
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.SampleDesc = { 1, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = RenderTargetCount;
+	psoDesc.RTVFormats[0] = SwapchainFormat;
+	psoDesc.DSVFormat = DepthStencilFormat;
+
+	ComPtr<ID3D12PipelineState> pso = nullptr;
+	if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pso.GetAddressOf()))))
+	{
+		Logger::error(this, "Error creating Pipeline State Object");
+		return nullptr;
+	}
+
+	return pso;
 }
 
-bool d3d12rs::D3D12RenderSystem::createShaders()
+ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string &file, const std::string &entryPoint, const std::string &target)
 {
-	return false;
+	const std::wstring wFile = std::wstring(file.begin(), file.end());
+	constexpr UINT compileFlags = Config::DebugSelect(D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0);
+
+	ComPtr<ID3DBlob> bytecode = nullptr;
+	if (std::filesystem::exists(file))
+	{
+		Logger::info(this, std::format("Compiling {} : {}() : {}", file, entryPoint, target));
+		ComPtr<ID3DBlob> errors = nullptr;
+		HRESULT hr = D3DCompileFromFile(wFile.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), target.c_str(),
+			compileFlags, 0, bytecode.GetAddressOf(), errors.GetAddressOf());
+		if (FAILED(hr))
+		{
+			Logger::error(this, "Error in shader compilation");
+			if (errors)
+			{
+				Logger::error(this, reinterpret_cast<char *>(errors->GetBufferPointer()));
+				return nullptr;
+			}
+		}
+	}
+	else
+	{
+		Logger::error(this, std::format("Shader file {} can't be found", file));
+		return nullptr;
+	}
+	return bytecode;
+}
+
+bool d3d12rs::D3D12RenderSystem::createShaders(const std::string &shaderName)
+{
+	const std::string prefix = "sdl3-demo/engine/shaders/hlsl";
+	const std::string file = std::format("{}/{}.hlsl", prefix, shaderName);
+	m_vsBytecode = compileShader(file, "VSMain", "vs_5_1");
+	m_psBytecode = compileShader(file, "PSMain", "ps_5_1");
+	return true;
 }
 
 void d3d12rs::D3D12RenderSystem::beginFrame()
@@ -277,7 +358,8 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	}
 
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
-	res.commandList->Reset(res.commandAllocator.Get(), nullptr);
+	res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
+	res.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// process pending copy operations
 	if (m_copyOperations.size())
@@ -299,8 +381,10 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	}
 
 	// viewport and scissor setup
-	D3D12_VIEWPORT viewport{ .TopLeftX = 0, .TopLeftY = 0, .Width = static_cast<float>(m_width), .Height = static_cast<float>(m_height), .MinDepth = 0, .MaxDepth = 1 };
+	static D3D12_VIEWPORT viewport{ .TopLeftX = 0, .TopLeftY = 0, .Width = static_cast<float>(m_width), .Height = static_cast<float>(m_height), .MinDepth = 0, .MaxDepth = 1 };
 	res.commandList->RSSetViewports(1, &viewport);
+	static D3D12_RECT scissorRect{ .left = 0, .top = 0, .right = m_width, .bottom = m_height };
+	res.commandList->RSSetScissorRects(1, &scissorRect);
 
 	auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	res.commandList->ResourceBarrier(1, &rtBarrier);
@@ -310,19 +394,35 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	rtvHandle.Offset(res.renderTargetIndex * m_descriptorSizes.RTV);
 	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-	const float aspectRation = m_width / static_cast<float>(m_height);
-	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
+	FLOAT dsvClear[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0, nullptr);
 
-	XMMATRIX worldViewProj = perspective;
+	res.commandList->OMSetRenderTargets(1, &rtvHandle, false, &m_dsvHandle);
+
+	const float aspectRation = m_width / static_cast<float>(m_height);
+	static float rot = 0;
+	static float zpos = 0;
+	rot += 2 * FrameContext::dt();
+	XMMATRIX world = XMMatrixRotationY(rot) * XMMatrixTranslation(0, 0, sinf(rot));
+	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 0, -3, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
+	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
+	XMMATRIX worldViewProj = world * view * proj;
 
 	// update the per-obj const buff
 	ConstsPerObject cbPerObj{};
 	XMStoreFloat4x4(&cbPerObj.worldViewProj, XMMatrixTranspose(worldViewProj));
 	memcpy(m_cbPerObjPtr, &cbPerObj, align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 
-	//res.commandList->IASetVertexBuffers(0, 1, &vbv);
-	//res.commandList->IASetIndexBuffer(&ibv);
-	//res.commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+	static std::array descriptorHeaps{ m_cbvHeap.Get() };
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbv(m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
+	cbv.Offset(0, m_descriptorSizes.CBV);
+	res.commandList->SetGraphicsRootSignature(m_rootSig.Get());
+	res.commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
+	res.commandList->SetGraphicsRootDescriptorTable(0, cbv);
+
+	res.commandList->IASetVertexBuffers(0, 1, &vbv);
+	res.commandList->IASetIndexBuffer(&ibv);
+	res.commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 }
 
 void d3d12rs::D3D12RenderSystem::endFrame()
@@ -428,6 +528,7 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	m_descriptorSizes.DSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_DSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	m_device->CreateDepthStencilView(m_depthStencil.Get(), nullptr, dsvHandle);
+	m_dsvHandle = dsvHandle;
 
 	return true;
 }

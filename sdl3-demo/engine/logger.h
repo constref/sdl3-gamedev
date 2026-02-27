@@ -8,7 +8,7 @@
 class Logger
 {
 public:
-	static inline std::function<void(std::string)> logHandler = [](std::string message) {
+	static inline std::function<void(std::string)> logHandler = [](const std::string &message) {
 		std::cout << message << std::endl;
 	};
 

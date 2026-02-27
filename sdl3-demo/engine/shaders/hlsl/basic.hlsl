@@ -1,5 +1,3 @@
-#pragma shader_model 5.1
-
 cbuffer cbPerObject : register(b0)
 {
     float4x4 worldViewProj;
@@ -27,15 +25,16 @@ struct Material
     float4 reflect;
 };
 
-PixelIn vsMain(VertexIn input)
+PixelIn VSMain(VertexIn input)
 {
     PixelIn output;
     output.position = mul(float4(input.position, 1), worldViewProj);
     output.color = input.color;
+    output.uv = float2(0, 0);
     return output;
 }
 
-float4 psMain(PixelIn input) : SV_TARGET
+float4 PSMain(PixelIn input) : SV_TARGET
 {
     return input.color;
 }

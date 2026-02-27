@@ -31,4 +31,17 @@ namespace Config
 			return toolingValue;
 		}
 	}
+
+	template<typename DVal, typename RVal>
+	constexpr auto DebugSelect(DVal debugValue, RVal releaseValue)
+	{
+		if constexpr (IsDebugBuild)
+		{
+			return debugValue;
+		}
+		else
+		{
+			return releaseValue;
+		}
+	}
 }
