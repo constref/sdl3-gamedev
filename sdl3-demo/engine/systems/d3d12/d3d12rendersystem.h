@@ -1,7 +1,7 @@
 #pragma once
 
 #include <systems/system.h>
-#include <components/spritecomponent.h>
+#include <components/meshcomponent.h>
 
 #include <wrl.h>
 #include <directx/d3dx12.h>
@@ -19,6 +19,7 @@ constexpr static uint16_t RenderTargetCount = 2;
 constexpr static uint16_t MaxCopyOps = 32;
 constexpr static uint32_t MaxVertCount = 5000;
 constexpr static size_t StagingBuffSize = 1024 * 1024 * 128;
+constexpr static uint16_t AlignmentVertexIndex = 4;
 
 using Microsoft::WRL::ComPtr;
 
@@ -31,20 +32,61 @@ struct Vertex
 
 struct SubMesh
 {
+	std::vector<Vertex> vertices;
+	std::vector<uint16_t> indices;
+
+	size_t vertexElementSize() const
+	{
+		return sizeof(decltype(vertices)::value_type);
+	}
+	size_t indexElementSize() const
+	{
+		return sizeof(decltype(indices)::value_type);
+	}
+};
+
+class Mesh
+{
+	size_t m_vertexCount = 0;
+	size_t m_indexCount = 0;
+	std::vector<SubMesh> m_subMeshes;
+public:
+	void addSubmesh(SubMesh &&subMesh)
+	{
+		m_vertexCount += subMesh.vertices.size();
+		m_indexCount += subMesh.indices.size();
+		m_subMeshes.push_back(subMesh);
+	}
+	const auto &subMeshes() const
+	{
+		return m_subMeshes;
+	}
+	size_t vertexCount() const { return m_vertexCount; }
+	size_t indexCount() const { return m_indexCount; }
+	size_t verticesByteSize() const { return m_vertexCount * sizeof(Vertex); }
+	size_t indicesByteSize() const { return m_indexCount * sizeof(uint16_t); }
+};
+
+struct GPUSubMesh
+{
 	size_t vertexStart = 0;
 	size_t vertexCount = 0;
 	size_t indexStart = 0;
 	size_t indexCount = 0;
 };
 
-struct Mesh
+struct GPUMesh
 {
-	std::vector<SubMesh> subMeshes;
+	std::vector<GPUSubMesh> subMeshes;
+	ComPtr<ID3D12Resource> vertexBuffer;
+	ComPtr<ID3D12Resource> indexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW vertexView{};
+	D3D12_INDEX_BUFFER_VIEW indexView{};
 };
 
 struct CopyOperation
 {
-	uint32_t stagingOffset = 0;
+	size_t stagingOffset = 0;
 	size_t byteSize = 0;
 	ComPtr<ID3D12Resource> dstBuffer;
 	D3D12_RESOURCE_STATES dstStateBefore;
@@ -71,7 +113,7 @@ struct ConstsPerObject
 	DirectX::XMFLOAT4X4 worldViewProj;
 };
 
-class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
+class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 {
 	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	constexpr static inline DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
@@ -94,7 +136,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	// staging buffer
 	ComPtr<ID3D12Resource> m_stagingBuffer;
 	void *m_stagingPtr = nullptr;
-	uint32_t m_stagingOffset = 0;
+	size_t m_stagingOffset = 0;
 
 	std::vector<CopyOperation> m_copyOperations;
 	FrameResources m_frameResources[FramesInFlight];
@@ -109,10 +151,9 @@ class D3D12RenderSystem : public System<FrameStage::Render, SpriteComponent>
 	ComPtr<ID3D12Fence> m_fence;
 
 	// assets
+	std::vector<GPUMesh> m_gpuMeshes;
+
 	ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
-	ComPtr<ID3D12Resource> m_boxVerts, m_boxIndices;
-	D3D12_VERTEX_BUFFER_VIEW vbv{};
-	D3D12_INDEX_BUFFER_VIEW ibv{};
 	ComPtr<ID3D12Resource> m_cbBuffPerObj;
 	void *m_cbPerObjPtr = nullptr;
 	ComPtr<ID3DBlob> m_vsBytecode = nullptr;
@@ -124,6 +165,9 @@ public:
 	~D3D12RenderSystem();
 
 	bool initialize();
+	GPUMeshHandle loadMesh(const Mesh &mesh);
+	const GPUMesh &getMesh(GPUMeshHandle handle);
+	SubMesh loadGeometry(const std::span<Vertex> &vertices, const std::span<uint16_t> &indices);
 	void loadAssets();
 	void shutdown();
 	ComPtr<ID3D12PipelineState> createPipelineStateObject();
@@ -137,8 +181,7 @@ public:
 	bool createSwapchain();
 	void flushGPU();
 	uint32_t stageData(void *srcPtr, size_t byteSize, size_t alignment);
-	void copyBuffer(std::span<uint8_t> srcData, ComPtr<ID3D12Resource> dst,
-		D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter = D3D12_RESOURCE_STATE_COMMON);
+	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
 };
 
 }

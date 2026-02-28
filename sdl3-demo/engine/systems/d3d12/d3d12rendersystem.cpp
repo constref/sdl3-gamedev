@@ -195,61 +195,126 @@ bool D3D12RenderSystem::initialize()
 	return true;
 }
 
-void d3d12rs::D3D12RenderSystem::loadAssets()
+uint32_t D3D12RenderSystem::stageData(void *srcPtr, size_t byteSize, size_t alignment)
+{
+	size_t alignedSize = align(byteSize, alignment);
+	assert(m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
+	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
+	uint32_t dataOffset = m_stagingOffset;
+	m_stagingOffset += alignedSize;
+	return dataOffset;
+}
+
+void D3D12RenderSystem::scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
+{
+	assert(m_copyOperations.size() < MaxCopyOps && "Copy operations buffer at capacity");
+	m_copyOperations.push_back(CopyOperation{
+		.stagingOffset = stagingOffset,
+		.byteSize = dataSize,
+		.dstBuffer = dstBuffer.Get(),
+		.dstStateBefore = dstStateBefore,
+		.dstStateAfter = dstStateAfter });
+}
+
+GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh &mesh)
 {
 	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	// create vertex buffer
-	Vertex vertices[] =
+	//copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices.data()), vertsSize), m_boxVerts.Get(),
+	//	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+	//const size_t idxsSize = indices.size_bytes();
+	//auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(idxsSize);
+	//auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
+	//m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(m_boxIndices.GetAddressOf()));
+	//copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices.data()), idxsSize), m_boxIndices.Get(),
+	//	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+	//ibv = D3D12_INDEX_BUFFER_VIEW{};
+	//ibv.BufferLocation = m_boxIndices->GetGPUVirtualAddress();
+	//ibv.SizeInBytes = idxsSize;
+	//ibv.Format = DXGI_FORMAT_R32_UINT;
+
+
+	// pack verts for all submeshes into staging to prepare for GPU copy
+	GPUMesh gpuMesh;
+	gpuMesh.subMeshes.resize(mesh.subMeshes().size());
+
+	m_stagingOffset = align(m_stagingOffset, AlignmentVertexIndex);
+	const size_t vbStagingStart = m_stagingOffset;
+	size_t vertTotalSize = 0;
+	uint16_t vertexStart = 0;
+	for (int i = 0; i < mesh.subMeshes().size(); ++i)
 	{
-	  { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1, 0, 0, 1) },
-	  { XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(0, 1, 0, 1) },
-	  { XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(0, 0, 1, 1) },
-	  { XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(1, 1, 0, 1) },
-	  { XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 1, 1) },
-	  { XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(0, 1, 1, 1) },
-	  { XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(1, 1, 0, 1) },
-	  { XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 0, 1) }
-	};
-	auto resDescV = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
+		auto &sm = mesh.subMeshes()[i];
+		gpuMesh.subMeshes[i].vertexStart = vertexStart;
+		gpuMesh.subMeshes[i].vertexCount = sm.vertices.size();
+
+		const size_t vertDataSize = sm.vertices.size() * sm.vertexElementSize();
+		memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, sm.vertices.data(), vertDataSize);
+		m_stagingOffset += vertDataSize;
+		vertTotalSize += vertDataSize;
+		vertexStart += sm.vertices.size();
+	}
+
+	// pack indices for all submeshes into staging to prepare for GPU copy
+	m_stagingOffset = align(m_stagingOffset, AlignmentVertexIndex);
+	const size_t ibStagingStart = m_stagingOffset;
+	size_t indexTotalSize = 0;
+	uint16_t indexStart = 0;
+	for (int i = 0; i < mesh.subMeshes().size(); ++i)
+	{
+		auto &sm = mesh.subMeshes()[i];
+		gpuMesh.subMeshes[i].indexStart = indexStart;
+		gpuMesh.subMeshes[i].indexCount = sm.indices.size();
+
+		const size_t indexDataSize = sm.indices.size() * sm.indexElementSize();
+		memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, sm.indices.data(), indexDataSize);
+		m_stagingOffset += indexDataSize;
+		indexTotalSize += indexDataSize;
+		indexStart += sm.indices.size();
+	}
+
+	// create vb and ib and views
+	auto resDescV = CD3DX12_RESOURCE_DESC::Buffer(vertTotalSize);
 	auto buffStateV = D3D12_RESOURCE_STATE_COMMON;
-	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr, IID_PPV_ARGS(m_boxVerts.GetAddressOf()));
-	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices), sizeof(vertices)), m_boxVerts.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr, IID_PPV_ARGS(gpuMesh.vertexBuffer.GetAddressOf()));
+	scheduleGPUCopy(vbStagingStart, vertTotalSize, gpuMesh.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-	vbv = D3D12_VERTEX_BUFFER_VIEW{};
-	vbv.BufferLocation = m_boxVerts->GetGPUVirtualAddress();
-	vbv.SizeInBytes = sizeof(vertices);
-	vbv.StrideInBytes = sizeof(Vertex);
+	gpuMesh.vertexView = D3D12_VERTEX_BUFFER_VIEW{};
+	gpuMesh.vertexView.BufferLocation = gpuMesh.vertexBuffer->GetGPUVirtualAddress();
+	gpuMesh.vertexView.SizeInBytes = vertTotalSize;
+	gpuMesh.vertexView.StrideInBytes = sizeof(Vertex);
 
-	// create index buffer
-	std::uint16_t indices[] =
-	{
-		0, 1, 2, 0, 2, 3, // front face
-		4, 6, 5, 4, 7, 6, // back face
-		4, 5, 1, 4, 1, 0, // left face
-		3, 2, 6, 3, 6, 7, // right face
-		1, 5, 6, 1, 6, 2, // top face
-		4, 0, 3, 4, 3, 7  // bottom face
-	};
-	auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices));
+	auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(indexTotalSize);
 	auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
-	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(m_boxIndices.GetAddressOf()));
-	copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices), sizeof(indices)), m_boxIndices.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(gpuMesh.indexBuffer.GetAddressOf()));
+	scheduleGPUCopy(ibStagingStart, indexTotalSize, gpuMesh.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
-	ibv = D3D12_INDEX_BUFFER_VIEW{};
-	ibv.BufferLocation = m_boxIndices->GetGPUVirtualAddress();
-	ibv.SizeInBytes = sizeof(indices);
-	ibv.Format = DXGI_FORMAT_R16_UINT;
+	gpuMesh.indexView = D3D12_INDEX_BUFFER_VIEW{};
+	gpuMesh.indexView.BufferLocation = gpuMesh.indexBuffer->GetGPUVirtualAddress();
+	gpuMesh.indexView.SizeInBytes = indexTotalSize;
+	gpuMesh.indexView.Format = (indexTotalSize / indexStart == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 
+	GPUMeshHandle newHandle = m_gpuMeshes.size();
+	m_gpuMeshes.push_back(std::move(gpuMesh));
+	return newHandle;
+}
+
+const GPUMesh &D3D12RenderSystem::getMesh(GPUMeshHandle handle)
+{
+	return m_gpuMeshes[handle];
+}
+
+void D3D12RenderSystem::loadAssets()
+{
 	bool isSuccess = createShaders("basic");
 	assert(isSuccess && "Shader compilation error(s)");
 
 	m_pso = createPipelineStateObject();
 }
 
-void d3d12rs::D3D12RenderSystem::shutdown()
+void D3D12RenderSystem::shutdown()
 {
 	// flush the GPU, wait for one final fence value
 	m_fenceValue++;
@@ -333,7 +398,7 @@ ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string &file, const
 	return bytecode;
 }
 
-bool d3d12rs::D3D12RenderSystem::createShaders(const std::string &shaderName)
+bool D3D12RenderSystem::createShaders(const std::string &shaderName)
 {
 	const std::string prefix = "sdl3-demo/engine/shaders/hlsl";
 	const std::string file = std::format("{}/{}.hlsl", prefix, shaderName);
@@ -342,7 +407,7 @@ bool d3d12rs::D3D12RenderSystem::createShaders(const std::string &shaderName)
 	return true;
 }
 
-void d3d12rs::D3D12RenderSystem::beginFrame()
+void D3D12RenderSystem::beginFrame()
 {
 	m_frameResIndex = m_frameIndex % FramesInFlight;
 	auto &res = m_frameResources[m_frameResIndex];
@@ -398,6 +463,30 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0, nullptr);
 
 	res.commandList->OMSetRenderTargets(1, &rtvHandle, false, &m_dsvHandle);
+}
+
+void D3D12RenderSystem::endFrame()
+{
+	auto &res = m_frameResources[m_frameResIndex];
+
+	auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	res.commandList->ResourceBarrier(1, &presentBarrier);
+	res.commandList->Close();
+
+	std::array<ID3D12CommandList *, 1> commandLists{ res.commandList.Get() };
+	m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
+
+	UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	m_swapchain->Present(m_syncInterval, presentFlags);
+
+	res.fenceValue = ++m_fenceValue;
+	m_commandQueue->Signal(m_fence.Get(), res.fenceValue);
+	m_frameIndex++;
+}
+
+void D3D12RenderSystem::update(Node &node)
+{
+	auto &res = m_frameResources[m_frameResIndex];
 
 	const float aspectRation = m_width / static_cast<float>(m_height);
 	static float rot = 0;
@@ -420,32 +509,12 @@ void d3d12rs::D3D12RenderSystem::beginFrame()
 	res.commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
 	res.commandList->SetGraphicsRootDescriptorTable(0, cbv);
 
-	res.commandList->IASetVertexBuffers(0, 1, &vbv);
-	res.commandList->IASetIndexBuffer(&ibv);
+	auto [mc] = getRequiredComponents(node);
+
+	const GPUMesh &mesh = getMesh(mc->getHandle());
+	res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
+	res.commandList->IASetIndexBuffer(&mesh.indexView);
 	res.commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-}
-
-void d3d12rs::D3D12RenderSystem::endFrame()
-{
-	auto &res = m_frameResources[m_frameResIndex];
-
-	auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	res.commandList->ResourceBarrier(1, &presentBarrier);
-	res.commandList->Close();
-
-	std::array<ID3D12CommandList *, 1> commandLists{ res.commandList.Get() };
-	m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
-
-	UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
-	m_swapchain->Present(m_syncInterval, presentFlags);
-
-	res.fenceValue = ++m_fenceValue;
-	m_commandQueue->Signal(m_fence.Get(), res.fenceValue);
-	m_frameIndex++;
-}
-
-void D3D12RenderSystem::update(Node &node)
-{
 }
 
 void D3D12RenderSystem::updateTextures()
@@ -544,28 +613,4 @@ void d3d12rs::D3D12RenderSystem::flushGPU()
 		}
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
-}
-
-uint32_t d3d12rs::D3D12RenderSystem::stageData(void *srcPtr, size_t byteSize, size_t alignment)
-{
-	size_t alignedSize = align(byteSize, alignment);
-	assert(m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
-	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
-	uint32_t dataOffset = m_stagingOffset;
-	m_stagingOffset += alignedSize;
-	return dataOffset;
-}
-
-void d3d12rs::D3D12RenderSystem::copyBuffer(std::span<uint8_t> srcData, ComPtr<ID3D12Resource> dst,
-	D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
-{
-	constexpr uint32_t VertexIndexAlignment = 4;
-
-	assert(m_copyOperations.size() < MaxCopyOps && "Copy operations buffer at capacity");
-	m_copyOperations.push_back(CopyOperation{
-		.stagingOffset = stageData(srcData.data(), srcData.size_bytes(), VertexIndexAlignment),
-		.byteSize = srcData.size_bytes(),
-		.dstBuffer = dst,
-		.dstStateBefore = dstStateBefore,
-		.dstStateAfter = dstStateAfter });
 }
