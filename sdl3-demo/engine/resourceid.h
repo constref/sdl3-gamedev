@@ -1,6 +1,6 @@
 #pragma once
 
-#include <limits>
+#include <climits>
 
 class ResourceId
 {

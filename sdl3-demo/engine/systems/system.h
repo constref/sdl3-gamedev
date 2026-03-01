@@ -22,7 +22,11 @@ public:
 	virtual void onLinked(Node &node) {}
 	virtual void onUnlinked(Node &node) {}
 	FrameStage getStage() { return frameStage; }
-	bool setInitialized(bool initialized) { this->initialized = initialized; }
+	bool setInitialized(bool initialized)
+	{
+		this->initialized = initialized;
+		return true;
+	}
 	bool isInitialized() const { return initialized; }
 };
 

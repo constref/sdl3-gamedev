@@ -33,3 +33,7 @@ if (EMSCRIPTEN)
 
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
+
+if (EXECUTION_MODE STREQUAL "TOOLING")
+	target_link_libraries(empty PRIVATE enginetooling)
+endif()

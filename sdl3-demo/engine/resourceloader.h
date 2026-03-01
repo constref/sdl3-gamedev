@@ -2,6 +2,7 @@
 
 #include <resourceid.h>
 #include <string>
+#include <cstdint>
 
 class Services;
 

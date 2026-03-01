@@ -6,6 +6,9 @@ find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
 find_package(DirectX-Headers REQUIRED)
 
+# tooling specific
+find_package(pxr REQUIRED)
+
 set(CMAKE_CXX_STANDARD 23)
 
 set(ENGINE_SOURCES
@@ -36,6 +39,8 @@ set(ENGINE_SOURCES
 	"components/basiccameracomponent.cpp"
 	"components/spritecomponent.h"
 	"components/spritecomponent.cpp"
+	"components/meshcomponent.h"
+	"components/meshcomponent.cpp"
 	"messaging/observer.h"
 	"messaging/command.h"
 	"messaging/commanddispatcher.h"
@@ -112,7 +117,6 @@ set(SHADER_SOURCES
 )
 
 set_source_files_properties(${SHADER_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
-
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
 add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
@@ -137,6 +141,9 @@ endif()
 set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
 message(STATUS ${FLATBUFF_DIR})
 
+message(STATUS "USD Libs: ${PXR_LIBRARIES}")
+message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
+
 target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan
 	Vulkan::volk
@@ -156,3 +163,11 @@ target_include_directories(engine
 	${FLATBUFF_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+add_library(enginetooling
+	"tooling/usd/usdprocessor.h"
+	"tooling/usd/usdprocessor.cpp"
+)
+
+target_link_libraries(enginetooling
+	PRIVATE usd usdGeom)

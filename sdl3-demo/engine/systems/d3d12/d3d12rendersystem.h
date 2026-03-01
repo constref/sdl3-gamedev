@@ -174,8 +174,8 @@ public:
 	ComPtr<ID3DBlob> compileShader(const std::string &file, const std::string &entryPoint, const std::string &target);
 	bool createShaders(const std::string &shaderName);
 
-	void beginFrame();
-	void endFrame();
+	void beginFrame() override;
+	void endFrame() override;
 	void update(Node &node) override;
 	void updateTextures();
 	bool createSwapchain();
