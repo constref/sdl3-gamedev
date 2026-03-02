@@ -17,6 +17,8 @@
 
 #include <systems/d3d12/d3d12rendersystem.h>
 
+#include "tooling/usd/usdprocessor.h"
+
 using namespace DirectX;
 
 Empty::Empty()
@@ -60,6 +62,9 @@ bool Empty::initialize(Services &services, SDLState &state)
 
 	Node &root = world.getNode(getRoot());
 	services.compSys().addComponent<MeshComponent>(root, boxHandle);
+
+	USDProcessor usdproc;
+	usdproc.loadStage();
 
 	return true;
 }

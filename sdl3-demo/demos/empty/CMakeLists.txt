@@ -8,8 +8,8 @@ set(PLATFORMER_SOURCES
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})
 
-add_executable(empty WIN32 ${PLATFORMER_SOURCES})
-target_link_libraries(empty PUBLIC engine)
+add_executable(empty ${PLATFORMER_SOURCES})
+target_link_libraries(empty PUBLIC engine enginetooling)
 
 # For MSVC, you often need the 'latest' flag specifically
 if(MSVC)

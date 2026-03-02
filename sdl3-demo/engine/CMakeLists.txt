@@ -103,6 +103,8 @@ set(ENGINE_SOURCES
 	"ext/tiny_gltf.cc"
 	"containers/atomicringbuffer.h"
 	"containers/ringbuffer.h"
+	"tooling/platformutils.h"
+	"tooling/platformutils.cpp"
 	"tooling/engineworker.h" 
 	"tooling/engineworker.cpp" 
 	"tooling/platformevents.h"
@@ -164,10 +166,11 @@ target_include_directories(engine
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+
 add_library(enginetooling
 	"tooling/usd/usdprocessor.h"
 	"tooling/usd/usdprocessor.cpp"
 )
 
 target_link_libraries(enginetooling
-	PRIVATE usd usdGeom)
+	PRIVATE engine usd usdGeom)
