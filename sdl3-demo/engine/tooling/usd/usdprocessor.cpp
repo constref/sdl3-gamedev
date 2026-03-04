@@ -201,7 +201,7 @@ Mesh USDProcessor::loadStage()
 	TfDiagnosticMgr::GetInstance().AddDelegate(&usdLogger);
 	PlugRegistry &plugReg = pxr::PlugRegistry::GetInstance();
 
-	const std::string usdPath = "S:\\projects\\constref\\sdl3-demo\\data\\usd\\ufo.usd";
+	const std::string usdPath = "data\\usd\\ufo.usd";
 	if (!std::filesystem::exists(usdPath))
 	{
 		throw std::runtime_error("Unable to find USD file");
