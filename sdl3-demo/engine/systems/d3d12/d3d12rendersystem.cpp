@@ -494,7 +494,8 @@ void D3D12RenderSystem::update(Node &node)
 	static float rot = 0;
 	static float zpos = 0;
 	rot += 2 * FrameContext::dt();
-	XMMATRIX world = XMMatrixRotationY(rot) * XMMatrixTranslation(0, 0, sinf(rot));
+	zpos += 2 * FrameContext::dt();
+	XMMATRIX world = XMMatrixRotationY(rot) * XMMatrixTranslation(0, 0, (sinf(zpos) + 1) / 2.0f * 5);
 	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 0, -3, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
 	XMMATRIX worldViewProj = world * view * proj;
