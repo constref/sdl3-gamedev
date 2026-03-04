@@ -173,4 +173,4 @@ add_library(enginetooling
 )
 
 target_link_libraries(enginetooling
-	PRIVATE engine usd usdGeom)
+	PRIVATE engine usd usdGeom usdImaging hd)

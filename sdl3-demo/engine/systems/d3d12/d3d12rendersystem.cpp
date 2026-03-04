@@ -514,7 +514,7 @@ void D3D12RenderSystem::update(Node &node)
 	const GPUMesh &mesh = getMesh(mc->getHandle());
 	res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
 	res.commandList->IASetIndexBuffer(&mesh.indexView);
-	res.commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+	res.commandList->DrawIndexedInstanced(4200, 1, 0, 0, 0);
 }
 
 void D3D12RenderSystem::updateTextures()

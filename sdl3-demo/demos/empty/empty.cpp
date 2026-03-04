@@ -34,37 +34,36 @@ bool Empty::initialize(Services &services, SDLState &state)
 	World &world = services.world();
 	setRoot(world.createNode());
 
-	auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
-
-	d3d12rs::Mesh boxMesh;
-	boxMesh.addSubmesh(d3d12rs::SubMesh{
-		.vertices = {
-			{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1, 0, 0, 1) },
-			{ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(0, 1, 0, 1) },
-			{ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(0, 0, 1, 1) },
-			{ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(1, 1, 0, 1) },
-			{ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 1, 1) },
-			{ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(0, 1, 1, 1) },
-			{ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(1, 1, 0, 1) },
-			{ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 0, 1) }
-		},
-		.indices = {
-			0, 1, 2, 0, 2, 3, // front face
-			4, 6, 5, 4, 7, 6, // back face
-			4, 5, 1, 4, 1, 0, // left face
-			3, 2, 6, 3, 6, 7, // right face
-			1, 5, 6, 1, 6, 2, // top face
-			4, 0, 3, 4, 3, 7  // bottom face
-		}
-		});
-
-	GPUMeshHandle boxHandle = renderSys->loadMesh(boxMesh);
+	//Mesh boxMesh;
+	//boxMesh.addSubmesh(SubMesh{
+	//	.vertices = {
+	//		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(1, 0, 0, 1) },
+	//		{ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(0, 1, 0, 1) },
+	//		{ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(0, 0, 1, 1) },
+	//		{ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(1, 1, 0, 1) },
+	//		{ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 1, 1) },
+	//		{ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(0, 1, 1, 1) },
+	//		{ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(1, 1, 0, 1) },
+	//		{ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(1, 0, 0, 1) }
+	//	},
+	//	.indices = {
+	//		0, 1, 2, 0, 2, 3, // front face
+	//		4, 6, 5, 4, 7, 6, // back face
+	//		4, 5, 1, 4, 1, 0, // left face
+	//		3, 2, 6, 3, 6, 7, // right face
+	//		1, 5, 6, 1, 6, 2, // top face
+	//		4, 0, 3, 4, 3, 7  // bottom face
+	//	}
+	//	});
 
 	Node &root = world.getNode(getRoot());
-	services.compSys().addComponent<MeshComponent>(root, boxHandle);
 
+	auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
 	USDProcessor usdproc;
-	usdproc.loadStage();
+	auto newMesh = usdproc.loadStage();
+
+	GPUMeshHandle hMesh = renderSys->loadMesh(newMesh);
+	services.compSys().addComponent<MeshComponent>(root, hMesh);
 
 	return true;
 }

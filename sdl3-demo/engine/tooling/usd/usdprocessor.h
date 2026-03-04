@@ -1,7 +1,8 @@
 #pragma once
+#include "rendering/mesh.h"
 
 class USDProcessor
 {
 public:
-	void loadStage();
+	Mesh loadStage();
 };
