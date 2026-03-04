@@ -6,6 +6,7 @@ cbuffer cbPerObject : register(b0)
 struct VertexIn
 {
     float3 position : POSITION;
+    float3 normal : NORMAL;
     float4 color : COLOR;
     float2 uv : TEXCOORD;
 };
@@ -13,6 +14,7 @@ struct VertexIn
 struct PixelIn
 {
     float4 position : SV_Position;
+    float4 normal : NORMAL;
     float4 color : COLOR;
     float2 uv : TEXCOORD;
 };
@@ -29,13 +31,14 @@ PixelIn VSMain(VertexIn input)
 {
     PixelIn output;
     output.position = mul(float4(input.position, 1), worldViewProj);
+    output.normal = float4(normalize(input.normal), 1);
     output.color = input.color;
-    output.uv = float2(0, 0);
+    output.uv = input.uv;
     return output;
 }
 
 float4 PSMain(PixelIn input) : SV_TARGET
 {
-    return input.color;
+    return input.normal;
 }
 

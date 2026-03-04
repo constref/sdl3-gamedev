@@ -339,6 +339,7 @@ ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
 {
 	std::array vertexInputs{
 		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "POSITION", .Format = DXGI_FORMAT_R32G32B32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, position)},
+		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "NORMAL", .Format = DXGI_FORMAT_R32G32B32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, normal)},
 		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "COLOR", .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, color)},
 		D3D12_INPUT_ELEMENT_DESC{.SemanticName = "TEXCOORD", .Format = DXGI_FORMAT_R32G32_FLOAT, .InputSlot = 0, .AlignedByteOffset = offsetof(Vertex, uv)}
 	};

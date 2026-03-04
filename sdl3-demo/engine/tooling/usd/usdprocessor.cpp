@@ -99,6 +99,7 @@ static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
 {
 	using namespace pxr;
 	using namespace DirectX;
+	Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
 
 	UsdGeomPrimvarsAPI primvarApi(mesh);
 	VtArray<GfVec3f> points;
@@ -144,21 +145,15 @@ static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
 
 	const uint32_t indexCount = newIndices.size() * 3;
 	assert((triNormals.size() == indexCount && triSts.size() == indexCount) && "Normals / UVs and index counts must match");
+	Logger::info(self, "Vertex data triangulated, generating vertex and index data");
 
+	// map that will hold each unique vertex entry during processing
 	std::unordered_map<VertexId, uint32_t, VertexId::Hasher> vertexMap;
-
-	// copy the vertices and indices into the submesh
-	//for (const GfVec3f &p : points)
-	//{
-	//	Vertex v;
-	//	v.position = DirectX::XMFLOAT3(p[0], p[1], p[2]);
-	//	v.color = DirectX::XMFLOAT4(1, 1, 1, 1);
-	//	v.uv = DirectX::XMFLOAT2(0, 0);
-	//	submeshVerts.push_back(v);
-	//}
-
-	uint32_t indexPos = 0;
 	submeshVerts.reserve(points.size());
+	submeshIndices.reserve(newIndices.size() * 3);
+
+	// generate unique vertex IDs (pos, norm, uv) and store each unique variation
+	uint32_t indexPos = 0;
 	for (uint32_t i = 0; i < newIndices.size(); ++i)
 	{
 		const GfVec3i vec3idx = newIndices[i];
@@ -192,6 +187,7 @@ static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
 			indexPos++;
 		}
 	}
+	Logger::info(self, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(), submeshIndices.size()));
 	newMesh.addSubmesh(SubMesh(submeshVerts, submeshIndices));
 	return newMesh;
 }
