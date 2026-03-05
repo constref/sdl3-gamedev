@@ -503,6 +503,8 @@ void D3D12RenderSystem::update(Node &node)
 	// update the per-obj const buff
 	ConstsPerObject cbPerObj{};
 	XMStoreFloat4x4(&cbPerObj.worldViewProj, XMMatrixTranspose(worldViewProj));
+	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, world));
+	XMStoreFloat4x4(&cbPerObj.invTransWorld, invTransWorld);
 	memcpy(m_cbPerObjPtr, &cbPerObj, align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 
 	static std::array descriptorHeaps{ m_cbvHeap.Get() };

@@ -1,6 +1,7 @@
 cbuffer cbPerObject : register(b0)
 {
     float4x4 worldViewProj;
+    float4x4 invTransWorld;
 }
 
 struct VertexIn
@@ -31,7 +32,7 @@ PixelIn VSMain(VertexIn input)
 {
     PixelIn output;
     output.position = mul(float4(input.position, 1), worldViewProj);
-    output.normal = float4(normalize(input.normal), 1);
+    output.normal = mul(float4(normalize(input.normal), 1), invTransWorld);
     output.color = input.color;
     output.uv = input.uv;
     return output;

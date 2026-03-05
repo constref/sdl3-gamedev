@@ -69,6 +69,7 @@ struct DescriptorSizes
 struct ConstsPerObject
 {
 	DirectX::XMFLOAT4X4 worldViewProj;
+	DirectX::XMFLOAT4X4 invTransWorld;
 };
 
 class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
