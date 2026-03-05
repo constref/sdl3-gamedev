@@ -160,21 +160,28 @@ bool D3D12RenderSystem::initialize()
 	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
 
 	const size_t cbPerObjSize = align(sizeof(ConstsPerObject), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize);
+	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize * FramesInFlight);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerObjDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerObj.GetAddressOf())),
 		"Unable to create per-obj CB buffer");
 	DXCHK(m_cbBuffPerObj->Map(0, &readRange, &m_cbPerObjPtr), "Unable to map cb buffer");
 
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.NumDescriptors = FramesInFlight;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	DXCHK(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(m_cbvHeap.GetAddressOf())), "Unable to create CBV descriptor heap");
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
 	cbvDesc.SizeInBytes = cbPerObjSize;
-	cbvDesc.BufferLocation = m_cbBuffPerObj->GetGPUVirtualAddress();
-	m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
+	for (int i = 0; i < FramesInFlight; ++i)
+	{
+		D3D12_GPU_VIRTUAL_ADDRESS gpuAddr = m_cbBuffPerObj->GetGPUVirtualAddress();
+		cbvDesc.BufferLocation = gpuAddr + i * cbPerObjSize;
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset(i, m_descriptorSizes.CBV);
+		m_device->CreateConstantBufferView(&cbvDesc, handle);
+	}
 
 	// create a root signature
 	CD3DX12_DESCRIPTOR_RANGE1 cbvTable{};
@@ -491,25 +498,29 @@ void D3D12RenderSystem::update(Node &node)
 	auto &res = m_frameResources[m_frameResIndex];
 
 	const float aspectRation = m_width / static_cast<float>(m_height);
-	static float rot = 0;
-	static float zpos = 0;
-	rot += 2 * FrameContext::dt();
-	zpos += 2 * FrameContext::dt();
-	XMMATRIX world = XMMatrixRotationY(rot) * XMMatrixTranslation(0, 0, (sinf(zpos) + 1) / 2.0f * 5);
-	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 0, -3, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
+	XMMATRIX world = XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
+	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 2, -6, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
 	XMMATRIX worldViewProj = world * view * proj;
 
 	// update the per-obj const buff
 	ConstsPerObject cbPerObj{};
+	XMStoreFloat4x4(&cbPerObj.world, world);
 	XMStoreFloat4x4(&cbPerObj.worldViewProj, XMMatrixTranspose(worldViewProj));
-	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, world));
+	XMMATRIX normalMat = world * view * proj;
+	normalMat.r[3] = XMVectorSet(0, 0, 0, 1); // remove translation from normal transform
+	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
 	XMStoreFloat4x4(&cbPerObj.invTransWorld, invTransWorld);
-	memcpy(m_cbPerObjPtr, &cbPerObj, align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
 
+	// copy the object consts into the cbv
+	const size_t perObjAlignedSize = align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+	memcpy(static_cast<uint8_t*>(m_cbPerObjPtr) + perObjAlignedSize * m_frameResIndex, &cbPerObj, sizeof(cbPerObj));
+
+	// grab the current cbv handle for the root signature
 	static std::array descriptorHeaps{ m_cbvHeap.Get() };
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbv(m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
-	cbv.Offset(0, m_descriptorSizes.CBV);
+	cbv.Offset(m_frameResIndex, m_descriptorSizes.CBV);
+
 	res.commandList->SetGraphicsRootSignature(m_rootSig.Get());
 	res.commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
 	res.commandList->SetGraphicsRootDescriptorTable(0, cbv);
