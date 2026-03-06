@@ -26,6 +26,11 @@ public:
 		}
 	}
 
+	constexpr static size_t capacity()
+	{
+		return MaxObjects;
+	}
+
 	NodeHandle createNode()
 	{
 		assert(!freeList.empty() && "Out of object slots in pool");
