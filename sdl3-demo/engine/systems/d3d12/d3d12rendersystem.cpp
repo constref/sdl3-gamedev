@@ -85,6 +85,11 @@ bool D3D12RenderSystem::initialize()
 	// create the D3D device
 	DXCHK(D3D12CreateDevice(m_dxgiAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)), "Error creating the D3D12Device");
 
+	// cache the descriptor sizes
+	m_descriptorSizes.CBV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_descriptorSizes.RTV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_descriptorSizes.DSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
 	ComPtr<ID3D12InfoQueue> infoQueue;
 	if (SUCCEEDED(m_device.As(&infoQueue)))
 	{
@@ -151,10 +156,10 @@ bool D3D12RenderSystem::initialize()
 	createSwapchain();
 	m_copyOperations.reserve(MaxCopyOps);
 
-	// staging buffer for copy operations
 	auto uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
+	// staging buffer for copy operations
 	auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(StagingBuffSize);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
 		"Unable to create the main staging buffer");
@@ -162,56 +167,78 @@ bool D3D12RenderSystem::initialize()
 	CD3DX12_RANGE readRange(0, 0);
 	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
 
-	// constant buffers
-	const size_t cbPerObjSize = align(sizeof(ConstsPerObject), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize * FramesInFlight);
-	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerObjDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerObj.GetAddressOf())),
+	// descriptors and buffers
+	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc{};
+	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	descHeapDesc.NumDescriptors = DescriptorsPerFrame * FramesInFlight;
+	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	DXCHK(m_device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(m_descriptorHeap.GetAddressOf())), "Unable to create CBV descriptor heap");
+
+	// per frame constants buffer
+	const size_t cbPerFrameSize = align(sizeof(ConstsPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+	auto cbPerFrameDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerFrameSize * FramesInFlight);
+	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerFrameDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerFrame.GetAddressOf())),
 		"Unable to create per-obj CB buffer");
-	DXCHK(m_cbBuffPerObj->Map(0, &readRange, &m_cbPerObjPtr), "Unable to map cb buffer");
+	DXCHK(m_cbBuffPerFrame->Map(0, &readRange, &m_cbPerFramePtr), "Unable to map cb buffer");
 
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.NumDescriptors = FramesInFlight;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	DXCHK(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(m_cbvHeap.GetAddressOf())), "Unable to create CBV descriptor heap");
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-	cbvDesc.SizeInBytes = cbPerObjSize;
-	for (int i = 0; i < FramesInFlight; ++i)
+	// matrix data buffer
+	struct MatrixSizes
 	{
-		D3D12_GPU_VIRTUAL_ADDRESS gpuAddr = m_cbBuffPerObj->GetGPUVirtualAddress();
-		cbvDesc.BufferLocation = gpuAddr + i * cbPerObjSize;
+		size_t byteSize = sizeof(XMMATRIX);
+		size_t perObject = 2;
+		size_t perFrame = World::capacity() * perObject;
+		size_t totalCount = FramesInFlight * perFrame;
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
-		handle.Offset(i, m_descriptorSizes.CBV);
-		m_device->CreateConstantBufferView(&cbvDesc, handle);
-	}
+	} matrixSizes;
+
+	auto srvMatrixDesc = CD3DX12_RESOURCE_DESC::Buffer(matrixSizes.byteSize * matrixSizes.totalCount);
+	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvMatrixDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_matrixBuffer.GetAddressOf())),
+		"Unable to create matrix buffer");
 
 	// Render objects buffer
 	constexpr size_t renderInfoSize = sizeof(RenderObject);
 	auto srvRenderInfoDesc = CD3DX12_RESOURCE_DESC::Buffer(renderInfoSize * FramesInFlight * World::capacity());
-	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
-		"Unable to render-object buffer");
+	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
+		"Unable to create render-object buffer");
 
-	D3D12_DESCRIPTOR_HEAP_DESC objHeapDesc{};
-	objHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	objHeapDesc.NumDescriptors = FramesInFlight;
-	objHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(World::capacity(), renderInfoSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE objCpuHandle(m_objHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	for (uint32_t i = 0; i < FramesInFlight; ++i)
 	{
-		objCpuHandle.Offset(i, m_descriptorSizes.CBV);
-		objSrvDesc.Buffer.FirstElement = i * FramesInFlight;
-		m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, objCpuHandle);
+		m_frameResources[i].drawOperations.reserve(World::capacity());
+
+		// per frame cbv
+		D3D12_GPU_VIRTUAL_ADDRESS gpuAddr = m_cbBuffPerFrame->GetGPUVirtualAddress();
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+		cbvDesc.SizeInBytes = cbPerFrameSize;
+		cbvDesc.BufferLocation = gpuAddr + i * cbPerFrameSize;
+		m_device->CreateConstantBufferView(&cbvDesc, handle);
+		handle.Offset(1, m_descriptorSizes.CBV);
+
+		// matrix srv
+		auto matSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(matrixSizes.totalCount, matrixSizes.byteSize);
+		matSrvDesc.Buffer.FirstElement = i * matrixSizes.perFrame;
+		matSrvDesc.Buffer.NumElements = matrixSizes.perFrame;
+		m_device->CreateShaderResourceView(m_matrixBuffer.Get(), &matSrvDesc, handle);
+		handle.Offset(1, m_descriptorSizes.CBV);
+
+		// render object srv
+		auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(World::capacity(), renderInfoSize);
+		objSrvDesc.Buffer.FirstElement = i * World::capacity();
+		objSrvDesc.Buffer.NumElements = World::capacity();
+		m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, handle);
+		handle.Offset(1, m_descriptorSizes.CBV);
 	}
 
 	// create a root signature
-	CD3DX12_DESCRIPTOR_RANGE1 cbvTable{};
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	std::array descTable
+	{
+		CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1),
+		CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0)
+	};
 
-	std::array<CD3DX12_ROOT_PARAMETER1, 1> rootParameters{};
-	rootParameters[0].InitAsDescriptorTable(1, &cbvTable);
+	std::array<CD3DX12_ROOT_PARAMETER1, 2> rootParameters{};
+	rootParameters[0].InitAsConstants(1, 0);
+	rootParameters[1].InitAsDescriptorTable(descTable.size(), descTable.data());
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc{};
 	rootSigDesc.Init_1_1(rootParameters.size(), rootParameters.data(), 0u, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -358,9 +385,9 @@ void D3D12RenderSystem::shutdown()
 	{
 		m_stagingBuffer->Unmap(0, nullptr);
 	}
-	if (m_cbBuffPerObj)
+	if (m_cbBuffPerFrame)
 	{
-		m_cbBuffPerObj->Unmap(0, nullptr);
+		m_cbBuffPerFrame->Unmap(0, nullptr);
 	}
 	CloseHandle(m_fenceEvent);
 }
@@ -441,8 +468,11 @@ bool D3D12RenderSystem::createShaders(const std::string &shaderName)
 
 void D3D12RenderSystem::beginFrame()
 {
+	m_nextROIndex = 0;
+	m_nextMatrixIndex = 0;
 	m_frameResIndex = m_frameIndex % FramesInFlight;
 	auto &res = m_frameResources[m_frameResIndex];
+	res.drawOperations.clear();
 
 	if (m_fence->GetCompletedValue() < res.fenceValue)
 	{
@@ -456,7 +486,6 @@ void D3D12RenderSystem::beginFrame()
 
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
 	res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
-	res.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// process pending copy operations
 	if (m_copyOperations.size())
@@ -477,6 +506,40 @@ void D3D12RenderSystem::beginFrame()
 		m_copyOperations.clear();
 	}
 
+	// transition the matrix and RO buffers to copy-dest
+	std::array barriersPreCopy
+	{
+		CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), m_matrixBuffState, D3D12_RESOURCE_STATE_COPY_DEST),
+		CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
+	};
+	res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
+}
+
+void D3D12RenderSystem::endFrame()
+{
+	auto &res = m_frameResources[m_frameResIndex];
+
+	// transition the buffers to SRV compatible
+	auto endState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+	std::array barriersPostCopy
+	{
+		CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState),
+		CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState)
+	};
+	res.commandList->ResourceBarrier(barriersPostCopy.size(), barriersPostCopy.data());
+
+	m_matrixBuffState = endState;
+	m_objBufferState = endState;
+
+	// bind root signature
+	static std::array descriptorHeaps{ m_descriptorHeap.Get() };
+	CD3DX12_GPU_DESCRIPTOR_HANDLE descHandle(m_descriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+		m_frameResIndex * DescriptorsPerFrame, m_descriptorSizes.CBV);
+
+	res.commandList->SetGraphicsRootSignature(m_rootSig.Get());
+	res.commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
+	res.commandList->SetGraphicsRootDescriptorTable(1, descHandle);
+
 	// viewport and scissor setup
 	static D3D12_VIEWPORT viewport{ .TopLeftX = 0, .TopLeftY = 0, .Width = static_cast<float>(m_width), .Height = static_cast<float>(m_height), .MinDepth = 0, .MaxDepth = 1 };
 	res.commandList->RSSetViewports(1, &viewport);
@@ -486,20 +549,25 @@ void D3D12RenderSystem::beginFrame()
 	auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	res.commandList->ResourceBarrier(1, &rtBarrier);
 
-	FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	rtvHandle.Offset(res.renderTargetIndex * m_descriptorSizes.RTV);
-	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		res.renderTargetIndex, m_descriptorSizes.RTV);
 
+	FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	FLOAT dsvClear[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0, nullptr);
-
 	res.commandList->OMSetRenderTargets(1, &rtvHandle, false, &m_dsvHandle);
-}
+	res.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-void D3D12RenderSystem::endFrame()
-{
-	auto &res = m_frameResources[m_frameResIndex];
+	// draw all objects
+	for (const DrawOperation &drawOp : res.drawOperations)
+	{
+		const GPUMesh &mesh = getMesh(drawOp.meshHandle);
+		res.commandList->SetGraphicsRoot32BitConstant(0, drawOp.roIndex, 0);
+		res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
+		res.commandList->IASetIndexBuffer(&mesh.indexView);
+		res.commandList->DrawIndexedInstanced(4200, 1, 0, 0, 0);
+	}
 
 	auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	res.commandList->ResourceBarrier(1, &presentBarrier);
@@ -519,41 +587,47 @@ void D3D12RenderSystem::endFrame()
 void D3D12RenderSystem::update(Node &node)
 {
 	auto &res = m_frameResources[m_frameResIndex];
+	const uint32_t roIndex = m_nextROIndex++;
 
+	RenderObject ro
+	{
+		.baseMatrixIndex = m_nextMatrixIndex
+	};
+
+	// calculate object transformation matrices
 	const float aspectRation = m_width / static_cast<float>(m_height);
 	XMMATRIX world = XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
 	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 2, -6, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
-	XMMATRIX worldViewProj = world * view * proj;
-
-	// update the per-obj const buff
-	ConstsPerObject cbPerObj{};
-	XMStoreFloat4x4(&cbPerObj.world, world);
-	XMStoreFloat4x4(&cbPerObj.worldViewProj, XMMatrixTranspose(worldViewProj));
-	XMMATRIX normalMat = world * view * proj;
+	XMMATRIX viewProj = view * proj;
+	XMMATRIX worldViewProj = world * viewProj;
+	XMMATRIX normalMat = worldViewProj;
 	normalMat.r[3] = XMVectorSet(0, 0, 0, 1); // remove translation from normal transform
 	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
-	XMStoreFloat4x4(&cbPerObj.invTransWorld, invTransWorld);
+
+	// update the per-obj data
+	XMFLOAT4X4 objMatrices[3];
+	XMStoreFloat4x4(&objMatrices[0], world);
+	XMStoreFloat4x4(&objMatrices[1], XMMatrixTranspose(worldViewProj));
+	XMStoreFloat4x4(&objMatrices[2], invTransWorld);
+	m_nextMatrixIndex += _countof(objMatrices);
+
+	uint32_t stageMatrixOffset = stageData(&objMatrices[0], sizeof(objMatrices), 4);
+	uint32_t stageRObjOffset = stageData(&ro, sizeof(ro), 4);
+
+	res.commandList->CopyBufferRegion(m_matrixBuffer.Get(), ro.baseMatrixIndex * sizeof(XMFLOAT4X4),
+		m_stagingBuffer.Get(), stageMatrixOffset, sizeof(objMatrices));
+	res.commandList->CopyBufferRegion(m_objBuffer.Get(), roIndex * sizeof(RenderObject),
+		m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
 	// copy the object consts into the cbv
-	const size_t perObjAlignedSize = align(sizeof(cbPerObj), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-	memcpy(static_cast<uint8_t*>(m_cbPerObjPtr) + perObjAlignedSize * m_frameResIndex, &cbPerObj, sizeof(cbPerObj));
-
-	// grab the current cbv handle for the root signature
-	static std::array descriptorHeaps{ m_cbvHeap.Get() };
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbv(m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
-	cbv.Offset(m_frameResIndex, m_descriptorSizes.CBV);
-
-	res.commandList->SetGraphicsRootSignature(m_rootSig.Get());
-	res.commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
-	res.commandList->SetGraphicsRootDescriptorTable(0, cbv);
+	ConstsPerFrame cbPerFrame{};
+	XMStoreFloat4x4(&cbPerFrame.viewProj, viewProj);
+	const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+	memcpy(static_cast<uint8_t *>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame, sizeof(cbPerFrame));
 
 	auto [mc] = getRequiredComponents(node);
-
-	const GPUMesh &mesh = getMesh(mc->getHandle());
-	res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
-	res.commandList->IASetIndexBuffer(&mesh.indexView);
-	res.commandList->DrawIndexedInstanced(4200, 1, 0, 0, 0);
+	res.drawOperations.push_back(DrawOperation{ .roIndex = roIndex, .meshHandle = mc->getHandle() });
 }
 
 void D3D12RenderSystem::updateTextures()
@@ -603,13 +677,12 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	DXCHK(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DSVDescriptorHeap)), "Unable to create DSV descriptor heap");
 
 	// create the render target views
-	m_descriptorSizes.RTV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	for (int i = 0; i < RenderTargetCount; ++i)
 	{
 		DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())), "Unable to get swapchain back buffer");
 		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(m_descriptorSizes.RTV);
+		rtvHandle.Offset(1, m_descriptorSizes.RTV);
 	}
 
 	// create a depth/stencil view

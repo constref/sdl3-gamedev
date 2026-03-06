@@ -19,7 +19,7 @@ constexpr static uint16_t FramesInFlight = 3;
 constexpr static uint16_t RenderTargetCount = 2;
 constexpr static uint16_t MaxCopyOps = 32;
 constexpr static uint32_t MaxVertCount = 5000;
-constexpr static size_t StagingBuffSize = 1024 * 1024 * 128;
+constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
 constexpr static uint16_t AlignmentVertexIndex = 4;
 
 using Microsoft::WRL::ComPtr;
@@ -51,14 +51,6 @@ struct CopyOperation
 	D3D12_RESOURCE_STATES dstStateAfter;
 };
 
-struct FrameResources
-{
-	ComPtr<ID3D12CommandAllocator> commandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	uint16_t renderTargetIndex = 0;
-	uint64_t fenceValue = 0;
-};
-
 struct DescriptorSizes
 {
 	size_t RTV = 0;
@@ -66,18 +58,29 @@ struct DescriptorSizes
 	size_t CBV = 0;
 };
 
-struct ConstsPerObject
+struct ConstsPerFrame
 {
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 worldViewProj;
-	DirectX::XMFLOAT4X4 invTransWorld;
+	DirectX::XMFLOAT4X4 viewProj;
 };
 
 struct RenderObject
 {
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 worldViewProj;
-	DirectX::XMFLOAT4X4 invTransWorld;
+	uint32_t baseMatrixIndex = 0;
+};
+
+struct DrawOperation
+{
+	uint32_t roIndex;
+	GPUMeshHandle meshHandle;
+};
+
+struct FrameResources
+{
+	ComPtr<ID3D12CommandAllocator> commandAllocator;
+	ComPtr<ID3D12GraphicsCommandList> commandList;
+	uint16_t renderTargetIndex = 0;
+	uint64_t fenceValue = 0;
+	std::vector<DrawOperation> drawOperations;
 };
 
 class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
@@ -119,26 +122,31 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 
 	// assets
 	std::vector<GPUMesh> m_gpuMeshes;
-
-	ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
-	ComPtr<ID3D12Resource> m_cbBuffPerObj;
-	void *m_cbPerObjPtr = nullptr;
+	ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
+	ComPtr<ID3D12Resource> m_cbBuffPerFrame;
+	void *m_cbPerFramePtr = nullptr;
 	ComPtr<ID3DBlob> m_vsBytecode = nullptr;
 	ComPtr<ID3DBlob> m_psBytecode = nullptr;
 	ComPtr<ID3D12PipelineState> m_pso;
 
 	// render objects
-	ComPtr<ID3D12DescriptorHeap> m_objHeap;
+	constexpr static uint32_t CBVCount = 1;
+	constexpr static uint32_t SRVCount = 2;
+	constexpr static uint32_t DescriptorsPerFrame = CBVCount + SRVCount;
+	uint32_t m_nextROIndex = 0;
+	uint32_t m_nextMatrixIndex = 0;
+	ComPtr<ID3D12Resource> m_matrixBuffer;
+	D3D12_RESOURCE_STATES m_matrixBuffState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	ComPtr<ID3D12Resource> m_objBuffer;
+	D3D12_RESOURCE_STATES m_objBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
 public:
 	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);
-	~D3D12RenderSystem();
+	~D3D12RenderSystem() override;
 
 	bool initialize();
 	GPUMeshHandle loadMesh(const Mesh &mesh);
 	const GPUMesh &getMesh(GPUMeshHandle handle);
-	SubMesh loadGeometry(const std::span<Vertex> &vertices, const std::span<uint16_t> &indices);
 	void loadAssets();
 	void shutdown();
 	ComPtr<ID3D12PipelineState> createPipelineStateObject();

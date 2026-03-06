@@ -74,7 +74,7 @@ public:
 	}
 };
 
-class World : public ObjectPool<Node, 5000>
+class World : public ObjectPool<Node, 1000>
 {
 public:
 	World() {}

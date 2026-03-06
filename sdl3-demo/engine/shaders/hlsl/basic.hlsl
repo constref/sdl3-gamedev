@@ -1,8 +1,24 @@
-cbuffer cbPerObject : register(b0)
+struct RenderObject 
 {
-    float4x4 world;
-    float4x4 worldViewProj;
-    float4x4 invTransWorld;
+    uint baseMatrixIndex;
+};
+
+struct Material
+{
+    float4 ambient;
+    float4 diffuse;
+    float4 specular;
+    float4 reflect;
+};
+
+StructuredBuffer<float4x4> matrices : register(t0);
+StructuredBuffer<RenderObject> renderObjects : register(t1);
+
+uint roIdx : register(b0);
+
+cbuffer cbPerFrame : register(b1)
+{
+    float4x4 viewProj;
 }
 
 struct VertexIn
@@ -22,16 +38,13 @@ struct PixelIn
     float2 uv : TEXCOORD;
 };
 
-struct Material
-{
-    float4 ambient;
-    float4 diffuse;
-    float4 specular;
-    float4 reflect;
-};
-
 PixelIn VSMain(VertexIn input)
 {
+    RenderObject ro = renderObjects[roIdx];
+    float4x4 world = matrices[ro.baseMatrixIndex];
+    float4x4 worldViewProj = matrices[ro.baseMatrixIndex + 1];
+    float4x4 invTransWorld = matrices[ro.baseMatrixIndex + 2];
+
     PixelIn output;
     output.position = mul(float4(input.position, 1), worldViewProj);
     output.positionW = mul(float4(input.position, 1), world);
