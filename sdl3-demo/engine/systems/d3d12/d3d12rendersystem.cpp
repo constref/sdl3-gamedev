@@ -151,10 +151,7 @@ bool D3D12RenderSystem::initialize()
 	createSwapchain();
 	m_copyOperations.reserve(MaxCopyOps);
 
-	// staging buffer for copy operations
 	auto uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-
 	auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(StagingBuffSize);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
 		"Unable to create the main staging buffer");
@@ -162,7 +159,6 @@ bool D3D12RenderSystem::initialize()
 	CD3DX12_RANGE readRange(0, 0);
 	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
 
-	// constant buffers
 	const size_t cbPerObjSize = align(sizeof(ConstsPerObject), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 	auto cbPerObjDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerObjSize * FramesInFlight);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerObjDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerObj.GetAddressOf())),
@@ -185,25 +181,6 @@ bool D3D12RenderSystem::initialize()
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
 		handle.Offset(i, m_descriptorSizes.CBV);
 		m_device->CreateConstantBufferView(&cbvDesc, handle);
-	}
-
-	// Render objects buffer
-	constexpr size_t renderInfoSize = sizeof(RenderObject);
-	auto srvRenderInfoDesc = CD3DX12_RESOURCE_DESC::Buffer(renderInfoSize * FramesInFlight * World::capacity());
-	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
-		"Unable to render-object buffer");
-
-	D3D12_DESCRIPTOR_HEAP_DESC objHeapDesc{};
-	objHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	objHeapDesc.NumDescriptors = FramesInFlight;
-	objHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(World::capacity(), renderInfoSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE objCpuHandle(m_objHeap->GetCPUDescriptorHandleForHeapStart());
-	for (uint32_t i = 0; i < FramesInFlight; ++i)
-	{
-		objCpuHandle.Offset(i, m_descriptorSizes.CBV);
-		objSrvDesc.Buffer.FirstElement = i * FramesInFlight;
-		m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, objCpuHandle);
 	}
 
 	// create a root signature

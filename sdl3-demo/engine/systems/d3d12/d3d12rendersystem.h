@@ -73,13 +73,6 @@ struct ConstsPerObject
 	DirectX::XMFLOAT4X4 invTransWorld;
 };
 
-struct RenderObject
-{
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 worldViewProj;
-	DirectX::XMFLOAT4X4 invTransWorld;
-};
-
 class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 {
 	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -126,10 +119,6 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	ComPtr<ID3DBlob> m_vsBytecode = nullptr;
 	ComPtr<ID3DBlob> m_psBytecode = nullptr;
 	ComPtr<ID3D12PipelineState> m_pso;
-
-	// render objects
-	ComPtr<ID3D12DescriptorHeap> m_objHeap;
-	ComPtr<ID3D12Resource> m_objBuffer;
 
 public:
 	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);
