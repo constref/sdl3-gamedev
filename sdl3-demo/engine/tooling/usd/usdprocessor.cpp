@@ -22,23 +22,28 @@
 
 #include <systems/d3d12/d3d12rendersystem.h>
 
-class USDLogger : public pxr::TfDiagnosticMgr::Delegate
+#include "componentsystems.h"
+
+using namespace pxr;
+using namespace DirectX;
+
+class USDLogger : public TfDiagnosticMgr::Delegate
 {
 public:
-	void IssueError(const pxr::TfError &err) override
+	void IssueError(const TfError &err) override
 	{
 		Logger::error(this, std::format("{}", err.GetErrorCodeAsString()));
 	}
-	void IssueFatalError(const pxr::TfCallContext &context,
+	void IssueFatalError(const TfCallContext &context,
 		const std::string &msg) override
 	{
 		Logger::error(this, std::format("USD Fatal Error: {}", msg));
 	}
-	void IssueStatus(const pxr::TfStatus &status) override
+	void IssueStatus(const TfStatus &status) override
 	{
 		Logger::info(this, std::format("USD Status: {}", status.GetCommentary()));
 	}
-	void IssueWarning(const pxr::TfWarning &warning) override
+	void IssueWarning(const TfWarning &warning) override
 	{
 		Logger::warn(this, std::format("{}", warning.GetCommentary()));
 	}
@@ -47,13 +52,13 @@ public:
 struct VertexId
 {
 	uint32_t index = UINT32_MAX;
-	pxr::GfVec3f normal;
-	pxr::GfVec2f uv;
+	GfVec3f normal;
+	GfVec2f uv;
 	constexpr static float epsilon = 0.001f;
 
 	bool operator==(const VertexId &o) const
 	{
-		const float nDot = pxr::GfDot(normal, o.normal);
+		const float nDot = GfDot(normal, o.normal);
 		return index == o.index && nDot > 0.999f &&
 			isSame(uv[0], o.uv[0]) &&
 			isSame(uv[1], o.uv[1]);
@@ -95,10 +100,8 @@ private:
 
 
 
-static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
+static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 {
-	using namespace pxr;
-	using namespace DirectX;
 	Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
 
 	UsdGeomPrimvarsAPI primvarApi(mesh);
@@ -116,7 +119,6 @@ static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
 	VtIntArray primitiveParams;
 	meshUtil.ComputeTriangleIndices(&newIndices, &primitiveParams);
 
-	Mesh newMesh;
 	std::vector<Vertex> submeshVerts;
 	submeshVerts.reserve(points.size());
 	std::vector<uint16_t> submeshIndices;
@@ -188,29 +190,41 @@ static Mesh processMesh(USDProcessor *self, pxr::UsdGeomMesh mesh)
 		}
 	}
 	Logger::info(self, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(), submeshIndices.size()));
-	newMesh.addSubmesh(SubMesh(submeshVerts, submeshIndices));
-	return newMesh;
+	std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>();
+	newMesh->addSubmesh(SubMesh(submeshVerts, submeshIndices));
+	return std::move(newMesh);
 }
 
-Mesh USDProcessor::loadStage()
+static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services &services, std::unordered_map<std::string, std::unique_ptr<Mesh>> &meshes)
 {
-	using namespace pxr;
+	Logger::info(self, std::format("Traversing {}", prim.GetPath().GetString()));
+	World &world = services.world();
+	d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
 
-	// Activate debug symbols programmatically (alternative to env var)
-	USDLogger usdLogger;
-	TfDiagnosticMgr::GetInstance().AddDelegate(&usdLogger);
-	PlugRegistry &plugReg = pxr::PlugRegistry::GetInstance();
+	// lambda to process geom mesh and attach component to runtime Node
+	auto processGeomMesh = [self, &meshes, &services, renderer](Node &node, UsdGeomMesh meshPrim)
+	{
+		const std::string path = meshPrim.GetPath().GetString();
 
-	const std::string usdPath = "data\\usd\\ufo.usd";
-	if (!std::filesystem::exists(usdPath))
+		auto meshItr = meshes.find(path);
+		if (meshItr == meshes.end())
+		{
+			auto [itr, added] = meshes.insert({ path, processMesh(self, meshPrim) });
+			meshItr = itr;
+		}
+
+		GPUMeshHandle meshHandle = renderer->loadMesh(*meshItr->second);
+		services.compSys().addComponent<MeshComponent>(node, meshHandle);
+	};
+
+	auto &typeInfo = prim.GetPrimTypeInfo();
+	if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
 	{
-		throw std::runtime_error("Unable to find USD file");
-	}
-	auto stage = pxr::UsdStage::Open(usdPath);
-	auto range = stage->Traverse();
-	for (auto itr = range.begin(); itr != range.end(); ++itr)
-	{
-		UsdPrim prim = *itr;
+		// Xform, create a node with transform
+		NodeHandle hNode = world.createNode();
+		Node &node = world.getNode(hNode);
+		parent.addChild(node);
+
 		if (prim.IsInstance())
 		{
 			UsdPrim prototype = prim.GetPrototype();
@@ -219,23 +233,44 @@ Mesh USDProcessor::loadStage()
 				if (child.GetTypeName() == UsdGeomTokens->Mesh)
 				{
 					UsdGeomMesh meshPrim(child);
-					auto newMesh = processMesh(this, meshPrim);
-					return newMesh;
+					processGeomMesh(node, meshPrim);
 				}
 			}
 		}
-		auto pathStr = prim.GetPath().GetString();
-		Logger::info(this, std::format("Traversing {}", pathStr));
-		if (prim.GetTypeName() == UsdGeomTokens->Mesh)
+		else
 		{
-			Logger::info(this, "Loading mesh");
-
-			UsdGeomMesh geomMesh(prim);
-			VtArray<GfVec3f> points;
-			geomMesh.GetPointsAttr().Get(&points);
-			//UsdAttribute points = prim.GetAttribute(UsdGeomTokens->Points);
-			Logger::info(this, "Triangulating USD prim points");
+			for (UsdPrim child : prim.GetChildren())
+			{
+				processPrim(self, child, node, services, meshes);
+			}
 		}
 	}
-	return Mesh();
+	else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
+	{
+		NodeHandle hNode = world.createNode();
+		Node &node = world.getNode(hNode);
+		parent.addChild(node);
+
+		UsdGeomMesh meshPrim(prim);
+		processGeomMesh(node, meshPrim);
+	}
+}
+
+void USDProcessor::loadStage(const std::string &usdPath, Node &root, Services &services)
+{
+	USDLogger usdLogger;
+	TfDiagnosticMgr::GetInstance().AddDelegate(&usdLogger);
+
+	if (!std::filesystem::exists(usdPath))
+	{
+		throw std::runtime_error("Unable to find USD file");
+	}
+
+	auto stage = pxr::UsdStage::Open(usdPath);
+	auto range = stage->Traverse();
+	for (auto itr = range.begin(); itr != range.end(); ++itr)
+	{
+		UsdPrim prim = *itr;
+		processPrim(this, prim, root, services, meshes);
+	}
 }
