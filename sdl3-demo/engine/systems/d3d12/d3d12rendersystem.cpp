@@ -56,12 +56,8 @@ bool D3D12RenderSystem::initialize()
 	debugInterface->EnableDebugLayer();
 
 	ComPtr<IDXGIFactory4> dxgiFactory;
-#if defined(_DEBUG)
-	UINT factoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#else 
-	UINT factoryFlags = 0;
-#endif
 
+	UINT factoryFlags = Config::DebugSelect(DXGI_CREATE_FACTORY_DEBUG, 0);
 	DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory)), "Couldn't create DXGIFactory2");
 
 	// find an appropriate adapter
@@ -160,12 +156,14 @@ bool D3D12RenderSystem::initialize()
 	auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
 	// staging buffer for copy operations
-	auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(StagingBuffSize);
+	constexpr size_t stagingBufferTotalSize = FramesInFlight * StagingBuffSize;
+	auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(stagingBufferTotalSize);
 	DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
 		"Unable to create the main staging buffer");
 
 	CD3DX12_RANGE readRange(0, 0);
-	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingPtr), "Unable to map staging buffer");
+	DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingBasePtr), "Unable to map staging buffer");
+	m_stagingPtr = m_stagingBasePtr;
 
 	// descriptors and buffers
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc{};
@@ -471,6 +469,7 @@ void D3D12RenderSystem::beginFrame()
 	m_nextROIndex = 0;
 	m_nextMatrixIndex = 0;
 	m_frameResIndex = m_frameIndex % FramesInFlight;
+	m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
 	auto &res = m_frameResources[m_frameResIndex];
 	res.drawOperations.clear();
 

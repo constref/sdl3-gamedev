@@ -105,6 +105,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 
 	// staging buffer
 	ComPtr<ID3D12Resource> m_stagingBuffer;
+	void *m_stagingBasePtr = nullptr;
 	void *m_stagingPtr = nullptr;
 	size_t m_stagingOffset = 0;
 
