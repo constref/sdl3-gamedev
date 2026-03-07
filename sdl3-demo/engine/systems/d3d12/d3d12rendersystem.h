@@ -68,6 +68,15 @@ struct RenderObject
 	uint32_t baseMatrixIndex = 0;
 };
 
+struct ObjectMatrices
+{
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMFLOAT4X4 worldViewProj;
+	DirectX::XMFLOAT4X4 invTransWorld;
+	
+	constexpr static uint16_t matrixCount() { return sizeof(ObjectMatrices) / sizeof(DirectX::XMFLOAT4X4); };
+};
+
 struct DrawOperation
 {
 	uint32_t roIndex;
@@ -134,6 +143,10 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	constexpr static uint32_t CBVCount = 1;
 	constexpr static uint32_t SRVCount = 2;
 	constexpr static uint32_t DescriptorsPerFrame = CBVCount + SRVCount;
+	constexpr static size_t ROFrameSize = sizeof(RenderObject) * World::capacity();
+	constexpr static size_t ROPerFrame = World::capacity();
+	constexpr static size_t MatrixFrameSize = sizeof(ObjectMatrices) * World::capacity();
+	constexpr static size_t MatricesPerFrame = ObjectMatrices::matrixCount() * World::capacity();
 	uint32_t m_nextROIndex = 0;
 	uint32_t m_nextMatrixIndex = 0;
 	ComPtr<ID3D12Resource> m_matrixBuffer;
@@ -160,7 +173,7 @@ public:
 	void updateTextures();
 	bool createSwapchain();
 	void flushGPU();
-	uint32_t stageData(void *srcPtr, size_t byteSize, size_t alignment);
+	uint32_t stageData(const void *srcPtr, size_t byteSize, size_t alignment);
 	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
 };
 

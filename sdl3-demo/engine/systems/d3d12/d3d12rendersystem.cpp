@@ -38,10 +38,10 @@ D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int
 		assert(m_hWnd && "Unable to acquire HWND for provided window");
 	}
 
-	Logger::logHandler = [](const std::string &message)
-	{
-		OutputDebugStringA(std::format("{}\n", message).c_str());
-	};
+	// Logger::logHandler = [](const std::string &message)
+	// {
+	// 	OutputDebugStringA(std::format("{}\n", message).c_str());
+	// };
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -180,22 +180,12 @@ bool D3D12RenderSystem::initialize()
 	DXCHK(m_cbBuffPerFrame->Map(0, &readRange, &m_cbPerFramePtr), "Unable to map cb buffer");
 
 	// matrix data buffer
-	struct MatrixSizes
-	{
-		size_t byteSize = sizeof(XMMATRIX);
-		size_t perObject = 2;
-		size_t perFrame = World::capacity() * perObject;
-		size_t totalCount = FramesInFlight * perFrame;
-
-	} matrixSizes;
-
-	auto srvMatrixDesc = CD3DX12_RESOURCE_DESC::Buffer(matrixSizes.byteSize * matrixSizes.totalCount);
+	auto srvMatrixDesc = CD3DX12_RESOURCE_DESC::Buffer(MatrixFrameSize * FramesInFlight);
 	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvMatrixDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_matrixBuffer.GetAddressOf())),
 		"Unable to create matrix buffer");
 
 	// Render objects buffer
-	constexpr size_t renderInfoSize = sizeof(RenderObject);
-	auto srvRenderInfoDesc = CD3DX12_RESOURCE_DESC::Buffer(renderInfoSize * FramesInFlight * World::capacity());
+	auto srvRenderInfoDesc = CD3DX12_RESOURCE_DESC::Buffer(ROFrameSize * FramesInFlight);
 	DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
 		"Unable to create render-object buffer");
 
@@ -213,16 +203,12 @@ bool D3D12RenderSystem::initialize()
 		handle.Offset(1, m_descriptorSizes.CBV);
 
 		// matrix srv
-		auto matSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(matrixSizes.totalCount, matrixSizes.byteSize);
-		matSrvDesc.Buffer.FirstElement = i * matrixSizes.perFrame;
-		matSrvDesc.Buffer.NumElements = matrixSizes.perFrame;
+		auto matSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(MatricesPerFrame, sizeof(XMFLOAT4X4), i * MatricesPerFrame);
 		m_device->CreateShaderResourceView(m_matrixBuffer.Get(), &matSrvDesc, handle);
 		handle.Offset(1, m_descriptorSizes.CBV);
 
 		// render object srv
-		auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(World::capacity(), renderInfoSize);
-		objSrvDesc.Buffer.FirstElement = i * World::capacity();
-		objSrvDesc.Buffer.NumElements = World::capacity();
+		auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(ROPerFrame, sizeof(RenderObject), i * ROPerFrame);
 		m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, handle);
 		handle.Offset(1, m_descriptorSizes.CBV);
 	}
@@ -250,13 +236,14 @@ bool D3D12RenderSystem::initialize()
 	return true;
 }
 
-uint32_t D3D12RenderSystem::stageData(void *srcPtr, size_t byteSize, size_t alignment)
+uint32_t D3D12RenderSystem::stageData(const void *srcPtr, size_t byteSize, size_t alignment)
 {
 	size_t alignedSize = align(byteSize, alignment);
 	assert(m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
 	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
 	uint32_t dataOffset = m_stagingOffset;
 	m_stagingOffset += alignedSize;
+	
 	return dataOffset;
 }
 
@@ -469,9 +456,7 @@ void D3D12RenderSystem::beginFrame()
 	m_nextROIndex = 0;
 	m_nextMatrixIndex = 0;
 	m_frameResIndex = m_frameIndex % FramesInFlight;
-	m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
 	auto &res = m_frameResources[m_frameResIndex];
-	res.drawOperations.clear();
 
 	if (m_fence->GetCompletedValue() < res.fenceValue)
 	{
@@ -483,13 +468,17 @@ void D3D12RenderSystem::beginFrame()
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
 
+	m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
+	m_stagingOffset = 0;
+	res.drawOperations.clear();
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
+	res.commandAllocator->Reset();
 	res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
 
 	// process pending copy operations
 	if (m_copyOperations.size())
 	{
-		static std::vector<D3D12_RESOURCE_BARRIER> barriers(MaxCopyOps);
+		std::vector<D3D12_RESOURCE_BARRIER> barriers(MaxCopyOps);
 		barriers.clear();
 		for (int i = 0; i < m_copyOperations.size(); ++i)
 		{
@@ -605,18 +594,20 @@ void D3D12RenderSystem::update(Node &node)
 	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
 
 	// update the per-obj data
-	XMFLOAT4X4 objMatrices[3];
-	XMStoreFloat4x4(&objMatrices[0], world);
-	XMStoreFloat4x4(&objMatrices[1], XMMatrixTranspose(worldViewProj));
-	XMStoreFloat4x4(&objMatrices[2], invTransWorld);
-	m_nextMatrixIndex += _countof(objMatrices);
+	ObjectMatrices objMatrices;
+	XMStoreFloat4x4(&objMatrices.world, world);
+	XMStoreFloat4x4(&objMatrices.worldViewProj, XMMatrixTranspose(worldViewProj));
+	XMStoreFloat4x4(&objMatrices.invTransWorld, invTransWorld);
+	m_nextMatrixIndex += ObjectMatrices::matrixCount();
 
-	uint32_t stageMatrixOffset = stageData(&objMatrices[0], sizeof(objMatrices), 4);
+	uint32_t stageMatrixOffset = stageData(&objMatrices, sizeof(objMatrices), 4);
 	uint32_t stageRObjOffset = stageData(&ro, sizeof(ro), 4);
 
-	res.commandList->CopyBufferRegion(m_matrixBuffer.Get(), ro.baseMatrixIndex * sizeof(XMFLOAT4X4),
+	res.commandList->CopyBufferRegion(m_matrixBuffer.Get(), 
+		(m_frameResIndex * MatrixFrameSize) + ro.baseMatrixIndex * sizeof(XMFLOAT4X4),
 		m_stagingBuffer.Get(), stageMatrixOffset, sizeof(objMatrices));
-	res.commandList->CopyBufferRegion(m_objBuffer.Get(), roIndex * sizeof(RenderObject),
+	res.commandList->CopyBufferRegion(m_objBuffer.Get(), 
+		(m_frameResIndex * ROFrameSize) + roIndex * sizeof(RenderObject),
 		m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
 	// copy the object consts into the cbv
