@@ -21,6 +21,7 @@
 #include <pxr/usd/usdGeom/primvar.h>
 
 #include <systems/d3d12/d3d12rendersystem.h>
+#include <vulkan/vulkan_core.h>
 
 #include "componentsystems.h"
 
@@ -217,6 +218,22 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		services.compSys().addComponent<MeshComponent>(node, meshHandle);
 	};
 
+	auto extractTransform = [](UsdPrim prim, Node &node)
+	{
+		UsdGeomXformable xf(prim);
+		bool resetsXformStack = false;
+		auto ops = xf.GetOrderedXformOps(&resetsXformStack);
+		for (UsdGeomXformOp op : ops)
+		{
+			if (op.GetOpType() == UsdGeomXformOp::TypeTranslate)
+			{
+				GfVec3d translation;
+				bool got = op.Get<GfVec3d>(&translation);
+				node.setPosition(glm::vec3(translation[0], translation[1], translation[2]));
+			}
+		}
+	};
+
 	auto &typeInfo = prim.GetPrimTypeInfo();
 	if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
 	{
@@ -225,6 +242,7 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		Node &node = world.getNode(hNode);
 		parent.addChild(node);
 
+		extractTransform(prim, node);
 		if (prim.IsInstance())
 		{
 			UsdPrim prototype = prim.GetPrototype();
@@ -251,6 +269,7 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		Node &node = world.getNode(hNode);
 		parent.addChild(node);
 
+		extractTransform(prim, node);
 		UsdGeomMesh meshPrim(prim);
 		processGeomMesh(node, meshPrim);
 	}
