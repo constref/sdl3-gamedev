@@ -453,11 +453,10 @@ bool D3D12RenderSystem::createShaders(const std::string &shaderName)
 
 void D3D12RenderSystem::beginFrame()
 {
-	m_nextROIndex = 0;
-	m_nextMatrixIndex = 0;
 	m_frameResIndex = m_frameIndex % FramesInFlight;
 	auto &res = m_frameResources[m_frameResIndex];
 
+	// ensure frame resources are available
 	if (m_fence->GetCompletedValue() < res.fenceValue)
 	{
 		if (FAILED(m_fence->SetEventOnCompletion(res.fenceValue, m_fenceEvent)))
@@ -468,6 +467,9 @@ void D3D12RenderSystem::beginFrame()
 		::WaitForSingleObject(m_fenceEvent, UINT_MAX);
 	}
 
+	// initialize frame data
+	m_nextROIndex = 0;
+	m_nextMatrixIndex = 0;
 	m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
 	m_stagingOffset = 0;
 	res.drawOperations.clear();
@@ -551,10 +553,13 @@ void D3D12RenderSystem::endFrame()
 	for (const DrawOperation &drawOp : res.drawOperations)
 	{
 		const GPUMesh &mesh = getMesh(drawOp.meshHandle);
-		res.commandList->SetGraphicsRoot32BitConstant(0, drawOp.roIndex, 0);
-		res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
-		res.commandList->IASetIndexBuffer(&mesh.indexView);
-		res.commandList->DrawIndexedInstanced(4200, 1, 0, 0, 0);
+		for (const GPUSubMesh &subMesh : mesh.subMeshes)
+		{
+			res.commandList->SetGraphicsRoot32BitConstant(0, drawOp.roIndex, 0);
+			res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
+			res.commandList->IASetIndexBuffer(&mesh.indexView);
+			res.commandList->DrawIndexedInstanced(subMesh.indexCount, 1, 0, subMesh.vertexStart, 0);
+		}
 	}
 
 	auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_backBuffers[res.renderTargetIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
