@@ -107,10 +107,10 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 
 	UsdGeomPrimvarsAPI primvarApi(mesh);
 	VtArray<GfVec3f> points;
-	VtArray<int> faceCounts;
-	VtArray<int> indices;
 	mesh.GetPointsAttr().Get(&points);
+	VtArray<int> faceCounts;
 	mesh.GetFaceVertexCountsAttr().Get(&faceCounts);
+	VtArray<int> indices;
 	mesh.GetFaceVertexIndicesAttr().Get(&indices);
 
 	HdMeshTopology topology(UsdGeomTokens->none, UsdGeomTokens->leftHanded, faceCounts, indices);
@@ -196,7 +196,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 	return std::move(newMesh);
 }
 
-static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services &services, std::unordered_map<std::string, std::unique_ptr<Mesh>> &meshes)
+static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services &services, std::unordered_map<std::string, PrimGeo> &meshes)
 {
 	Logger::info(self, std::format("Traversing {}", prim.GetPath().GetString()));
 	World &world = services.world();
@@ -210,12 +210,19 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		auto meshItr = meshes.find(path);
 		if (meshItr == meshes.end())
 		{
-			auto [itr, added] = meshes.insert({ path, processMesh(self, meshPrim) });
+			std::unique_ptr<Mesh> cpuMesh = processMesh(self, meshPrim);
+			GPUMeshHandle gpuHandle = renderer->loadMesh(*cpuMesh);
+			
+			PrimGeo primGeo{
+				.mesh = std::move(cpuMesh),
+				.gpuHandle = gpuHandle
+			};
+			
+			auto [itr, added] = meshes.insert({ path, std::move(primGeo) });
 			meshItr = itr;
 		}
 
-		GPUMeshHandle meshHandle = renderer->loadMesh(*meshItr->second);
-		services.compSys().addComponent<MeshComponent>(node, meshHandle);
+		services.compSys().addComponent<MeshComponent>(node, meshItr->second.gpuHandle);
 	};
 
 	auto extractTransform = [](UsdPrim prim, Node &node)
@@ -231,6 +238,19 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 				bool got = op.Get<GfVec3d>(&translation);
 				node.setPosition(glm::vec3(translation[0], translation[1], translation[2]));
 			}
+			else if (op.GetOpType() == UsdGeomXformOp::TypeRotateXYZ)
+			{
+				if (op.GetPrecision() == UsdGeomXformOp::PrecisionFloat)
+				{
+					GfVec3f rotations;
+					bool got = op.Get<GfVec3f>(&rotations);
+					node.setRotation(XMFLOAT3(DirectX::XMConvertToRadians(rotations[0]), 
+						DirectX::XMConvertToRadians(rotations[1]), 
+						DirectX::XMConvertToRadians(rotations[2])));
+				}
+			}
+			else if (op.GetOpType() == UsdGeomXformOp::TypeScale)
+			{}
 		}
 	};
 
@@ -286,10 +306,18 @@ void USDProcessor::loadStage(const std::string &usdPath, Node &root, Services &s
 	}
 
 	auto stage = pxr::UsdStage::Open(usdPath);
+
+	/*
 	auto range = stage->Traverse();
 	for (auto itr = range.begin(); itr != range.end(); ++itr)
 	{
 		UsdPrim prim = *itr;
 		processPrim(this, prim, root, services, meshes);
+	}
+	*/
+	UsdPrim rootPrim = stage->GetPseudoRoot();
+	for (auto child : rootPrim.GetChildren())
+	{
+		processPrim(this, child, root, services, meshes);
 	}
 }
