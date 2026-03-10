@@ -86,8 +86,7 @@ public:
 				return false;
 			}
 
-			//SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-			SDL_Window *window = SDL_CreateWindow("SDL3 Demo", sdlState.width, sdlState.height, SDL_WINDOW_RESIZABLE);
+			SDL_Window *window = SDL_CreateWindow("NUBE Engine", sdlState.width, sdlState.height, SDL_WINDOW_RESIZABLE);
 			if (!window)
 			{
 				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);

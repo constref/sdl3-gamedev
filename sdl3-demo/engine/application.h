@@ -14,6 +14,7 @@ protected:
 	void setRoot(NodeHandle root) { this->root = root; }
 
 public:
+	virtual ~Application() = default;
 	NodeHandle getRoot() const { return root; }
 	virtual bool initialize(Services &services, SDLState &state) = 0;
 	virtual void start(Services &services, SDLState &state) = 0;

@@ -16,5 +16,5 @@ public:
 	void onEvent(NodeHandle hNode, const KeyDownEvent &event);
 	void onLinked(Node &node) override;
 
-	void handleDirectionChange(NodeHandle target, InputState &state, InputComponent &inputComp);
+	void handleDirectionChange(NodeHandle target, const InputState &state, InputComponent &inputComp) const;
 };

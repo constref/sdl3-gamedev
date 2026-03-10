@@ -16,19 +16,18 @@
 #include <resourceloader.h>
 
 #include "inputstate.h"
+#include "systems/fpscamerasystem.h"
 #include "tooling/usd/usdprocessor.h"
 
 using namespace DirectX;
 
-Empty::Empty()
+bool Empty::initialize(Services &services, SDLState &state)
 {
+	services.compSys().registerSystem(std::make_unique<FPSCameraSystem>(services));
+	return true;
 }
 
 void Empty::start(Services &services, SDLState &state)
-{
-}
-
-bool Empty::initialize(Services &services, SDLState &state)
 {
 	World &world = services.world();
 	setRoot(world.createNode());
@@ -36,16 +35,22 @@ bool Empty::initialize(Services &services, SDLState &state)
 	
 	NodeHandle hPlayer = world.createNode();
 	Node &player = world.getNode(hPlayer);
-	services.compSys().addComponent<PhysicsComponent>(player);
+	player.setPosition(glm::vec3(5, 0.5f, -10));
+	auto &physics = services.compSys().addComponent<PhysicsComponent>(player);
+	physics.setAcceleration(glm::vec3(50, 50, 50));
+	physics.setMaxSpeed(glm::vec3(50, 50, 50));
+	physics.setGravityFactor(0);
 	services.compSys().addComponent<CollisionComponent>(player);
-	services.compSys().addComponent<InputComponent>(player);
+	auto &input = services.compSys().addComponent<InputComponent>(player);
+	input.setAxes(0, 2, 1); // A/D controls X-axis, W/S controls Z-axis
 	services.inputState().setFocus(hPlayer);
+	services.compSys().addComponent<CameraComponent>(player);
+	
+	root.addChild(player);
 	
 	//const std::string usdPath = "data\\usd\\ufo.usd";
 	const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
 
 	USDProcessor usdproc;
 	usdproc.loadStage(usdPath, root, services);
-
-	return true;
 }

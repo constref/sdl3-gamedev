@@ -32,6 +32,7 @@ D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int
 	m_logW = logW;
 	m_logH = logH;
 	m_fenceEvent = NULL;
+	m_camPosition = XMFLOAT4(0, 0, 0, 1);
 	if (Config::IsStandaloneMode())
 	{
 		m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
@@ -256,6 +257,11 @@ void D3D12RenderSystem::scheduleGPUCopy(size_t stagingOffset, size_t dataSize, C
 		.dstBuffer = dstBuffer.Get(),
 		.dstStateBefore = dstStateBefore,
 		.dstStateAfter = dstStateAfter });
+}
+
+void D3D12RenderSystem::setCamPosition(float x, float y, float z)
+{
+	m_camPosition = XMFLOAT4(x, y, z, 1.0f);
 }
 
 GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh &mesh)
@@ -505,9 +511,10 @@ void D3D12RenderSystem::beginFrame()
 	res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
 	
 	// view and projection calculations
-	float camX = sinf((float)FrameContext::gt() * 0.5f) * 5;
-	float camZ = cosf((float)FrameContext::gt() * 0.5f) * 5;
-	m_viewMatrix = XMMatrixLookAtLH(XMVectorSet(camX, 0.5f, camZ, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
+	XMVECTOR camPosition = XMLoadFloat4(&m_camPosition);
+	XMVECTOR camDirection = XMVectorAdd(camPosition, XMVectorSet(0, 0, 1, 0));
+	XMVECTOR camUp = XMVectorSet(0, 1, 0, 0);
+	m_viewMatrix = XMMatrixLookAtLH(camPosition, camDirection, camUp);
 	
 	const float aspectRatio = m_width / static_cast<float>(m_height);
 	m_projMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRatio, 0.1f, 100.0f);

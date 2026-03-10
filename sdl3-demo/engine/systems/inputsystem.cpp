@@ -16,24 +16,25 @@ void InputSystem::update(Node &node)
 {
 }
 
-void InputSystem::handleDirectionChange(NodeHandle target, InputState &state, InputComponent &inputComp)
+void InputSystem::handleDirectionChange(NodeHandle target, const InputState &state, InputComponent &inputComp) const
 {
+	DirectX::XMINT3 axes = inputComp.getAxes();
 	glm::vec3 direction{ 0 };
 	if (state.isKeyPressed(SDL_SCANCODE_A))
 	{
-		direction.x += -1;
+		direction[axes.x] += -1;
 	}
 	if (state.isKeyPressed(SDL_SCANCODE_D))
 	{
-		direction.x += 1;
+		direction[axes.x] += 1;
 	}
 	if (state.isKeyPressed(SDL_SCANCODE_W))
 	{
-		direction.y += 1;
+		direction[axes.y] += 1;
 	}
 	if (state.isKeyPressed(SDL_SCANCODE_S))
 	{
-		direction.y -= 1;
+		direction[axes.y] -= 1;
 	}
 	if (inputComp.getDirection() != direction)
 	{

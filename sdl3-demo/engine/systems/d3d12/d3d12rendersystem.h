@@ -141,6 +141,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	ComPtr<ID3D12PipelineState> m_pso;
 	
 	// camera related
+	DirectX::XMFLOAT4 m_camPosition;
 	DirectX::XMMATRIX m_projMatrix;
 	DirectX::XMMATRIX m_viewMatrix;
 	DirectX::XMMATRIX m_viewProjMatrix;
@@ -181,6 +182,8 @@ public:
 	void flushGPU();
 	uint32_t stageData(const void *srcPtr, size_t byteSize, size_t alignment);
 	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
+	
+	void setCamPosition(float x, float y, float z);
 };
 
 }

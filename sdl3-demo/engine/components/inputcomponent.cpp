@@ -12,4 +12,5 @@
 InputComponent::InputComponent(Node &owner) : Component(owner)
 {
 	direction = { 0, 0, 0 };
+	axes = { 0, 1, 2 };
 }

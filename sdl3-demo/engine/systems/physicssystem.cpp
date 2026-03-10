@@ -9,6 +9,10 @@
 
 PhysicsSystem::PhysicsSystem(Services &services) : System(services)
 {
+	localX = glm::vec3(1, 0, 0);
+	localY = glm::vec3(0, 1, 0);
+	localZ = glm::vec3(0, 0, 1);
+	
 	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
 }
 
@@ -17,8 +21,11 @@ void PhysicsSystem::update(Node &node)
 	auto [pc, cc] = getRequiredComponents(node);
 	glm::vec3 vel = pc->getVelocity();
 
+	// calculate movement
 	glm::vec3 netForce{ 0 };
-	netForce += pc->getDirection() * pc->getAcceleration();
+	netForce += pc->getDirection().x * localX * pc->getAcceleration().x;
+	netForce += pc->getDirection().y * localY * pc->getAcceleration().y;
+	netForce += pc->getDirection().z * localZ * pc->getAcceleration().z;
 
 	// gravity
 	const glm::vec3 gravity(0, 600, 0);
@@ -63,7 +70,7 @@ void PhysicsSystem::update(Node &node)
 	pc->setDelta(vel * FrameContext::dt());
 }
 
-void PhysicsSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event)
+void PhysicsSystem::onEvent(NodeHandle target, const DirectionChangedEvent &event) const
 {
 	Node &node = services.world().getNode(target);
 	auto *pc = node.getComponent<PhysicsComponent>();

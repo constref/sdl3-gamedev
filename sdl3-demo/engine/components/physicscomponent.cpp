@@ -1,9 +1,6 @@
 #include "physicscomponent.h"
 
 #include <node.h>
-#include <framecontext.h>
-#include <messaging/commands.h>
-#include <messaging/events.h>
 
 PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner)
 {
@@ -22,16 +19,8 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner)
 void PhysicsComponent::setVelocity(const glm::vec3 &vel)
 {
 	this->velocity = vel;
-	//owner.sendCommand(UpdateVelocityCommand{ vel });
 }
-//
-//void PhysicsComponent::onCommand(const ScaleVelocityAxisCommand &msg)
-//{
-//	glm::vec2 vel = getVelocity();
-//	vel[static_cast<int>(msg.getAxis())] *= msg.getFactor();
-//	setVelocity(vel);
-//}
-//
+
 void PhysicsComponent::addImpulse(const glm::vec3 &impulse)
 {
 	velocity += impulse;
