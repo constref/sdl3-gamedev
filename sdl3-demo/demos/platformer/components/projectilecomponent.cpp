@@ -1,6 +1,6 @@
 #include "projectilecomponent.h"
 
-ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner, FrameStage::Gameplay)
+ProjectileComponent::ProjectileComponent(Node &owner) : Component(owner)
 {
 	hit = false;
 	lifeDuration = 0;

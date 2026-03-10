@@ -16,7 +16,7 @@
 
 #include "projectilecomponent.h"
 
-WeaponComponent::WeaponComponent(Node &owner) : Component(owner, FrameStage::Gameplay), cooldownTimer(0.1f)
+WeaponComponent::WeaponComponent(Node &owner) : Component(owner), cooldownTimer(0.1f)
 {
 	shooting = false;
 	canFire = true;

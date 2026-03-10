@@ -3,7 +3,7 @@
 #include <logger.h>
 #include <messaging/messaging.h>
 
-HealthComponent::HealthComponent(Node &owner, int hp) : Component(owner, FrameStage::Gameplay)
+HealthComponent::HealthComponent(Node &owner, int hp) : Component(owner)
 {
 	this->hp = hp;
 }
