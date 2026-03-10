@@ -18,19 +18,17 @@ class Component
 {
 	FrameStage stage;
 	std::vector<Timer *> timers;
-
-protected:
-	Node &owner;
+	Node &m_owner;
 
 public:
-	Component(Node &owner, FrameStage stage) : owner(owner), stage(stage) { }
-	FrameStage getStage() const { return stage; }
+	Component(Node &owner) : m_owner(owner) { }
 	virtual ~Component();
 
 	virtual void onStart() {}
 	virtual void earlyUpdate();
 	virtual void update() {}
 
+	Node &owner() { return m_owner; }
 	void addTimer(Timer &timer);
 	void removeTimer(const Timer &timer);
 

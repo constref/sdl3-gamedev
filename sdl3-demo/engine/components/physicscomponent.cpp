@@ -5,7 +5,7 @@
 #include <messaging/commands.h>
 #include <messaging/events.h>
 
-PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner, FrameStage::Physics)
+PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner)
 {
 	direction = { 0, 0, 0 };
 	maxSpeed = { 0, 0, 0 };

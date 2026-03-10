@@ -6,7 +6,7 @@
 #include <messaging/events.h>
 
 SpriteComponent::SpriteComponent(Node &owner, ResourceId texture, float width, float height)
-	: Component(owner, FrameStage::Render), flashTimer(0.05f)
+	: Component(owner), flashTimer(0.05f)
 {
 	this->texture = texture;
 	shouldFlash = false;

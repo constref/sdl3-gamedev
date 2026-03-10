@@ -1,6 +1,6 @@
 #include "meshcomponent.h"
 
-MeshComponent::MeshComponent(Node &owner, GPUMeshHandle meshHandle) : Component(owner, FrameStage::Render)
+MeshComponent::MeshComponent(Node &owner, GPUMeshHandle meshHandle) : Component(owner)
 {
 	setHandle(meshHandle);
 }

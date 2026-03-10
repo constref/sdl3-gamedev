@@ -6,7 +6,7 @@
 #include <framecontext.h>
 #include <cassert>
 
-AnimationComponent::AnimationComponent(Node &owner) : Component(owner, FrameStage::Animation)
+AnimationComponent::AnimationComponent(Node &owner) : Component(owner)
 {
 	this->frameNumber = 1;
 	this->playbackMode = AnimationPlaybackMode::continuous;

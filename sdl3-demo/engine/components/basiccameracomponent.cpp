@@ -7,7 +7,7 @@
 #include <messaging/commanddispatcher.h>
 #include <world.h>
 
-BasicCameraComponent::BasicCameraComponent(Node &owner, glm::vec2 viewportSize, int tileWidth, int tileHeight, int mapWidth, int mapHeight) : Component(owner, FrameStage::Gameplay)
+BasicCameraComponent::BasicCameraComponent(Node &owner, glm::vec2 viewportSize, int tileWidth, int tileHeight, int mapWidth, int mapHeight) : Component(owner)
 {
 	this->viewportPosition = { 0, 0 };
 	this->viewportSize = viewportSize;

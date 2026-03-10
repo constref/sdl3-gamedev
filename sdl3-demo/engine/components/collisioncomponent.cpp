@@ -12,7 +12,7 @@
 
 std::vector<NodeHandle> CollisionComponent::collidableNodes;
 
-CollisionComponent::CollisionComponent(Node &owner) : Component(owner, FrameStage::Physics), collider{ 0 }
+CollisionComponent::CollisionComponent(Node &owner) : Component(owner), collider{ 0 }
 {
 	collidableNodes.push_back(owner.getHandle());
 	hasCollider = true;
@@ -34,7 +34,7 @@ CollisionComponent::~CollisionComponent()
 
 void CollisionComponent::removeCollider()
 {
-	auto itr = std::find(collidableNodes.begin(), collidableNodes.end(), owner.getHandle());
+	auto itr = std::find(collidableNodes.begin(), collidableNodes.end(), owner().getHandle());
 	if (itr != collidableNodes.end())
 	{
 		collidableNodes.erase(itr);
