@@ -16,14 +16,17 @@ using ComponentId = unsigned long;
 
 class Component
 {
-	FrameStage stage;
 	std::vector<Timer *> timers;
 	Node &m_owner;
 
 public:
 	Component(Node &owner) : m_owner(owner) { }
+	Component(Component &) = delete;
+	Component(Component &&) = delete;
 	virtual ~Component();
-
+	
+	void operator=(const Component &) = delete;
+	
 	virtual void onStart() {}
 	virtual void earlyUpdate();
 	virtual void update() {}
