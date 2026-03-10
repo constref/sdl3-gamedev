@@ -27,12 +27,15 @@ void PhysicsSystem::update(Node &node)
 	// apply forces
 	vel += netForce * FrameContext::dt();
 
-	const float absVelX = std::abs(vel.x);
-	glm::vec3 maxSpeed = pc->getMaxSpeed();
-	if (absVelX > maxSpeed.x)
+	const glm::vec3 maxSpeed = pc->getMaxSpeed();
+	for (int i = 0; i < 3; i++)
 	{
-		const float xDir = vel.x / absVelX;
-		vel.x = xDir * maxSpeed.x;
+		const float absVal = std::abs(vel[i]);
+		if (absVal > maxSpeed[i])
+		{
+			const float dir = vel[i] / absVal;
+			vel[i] = dir * maxSpeed[i];
+		}
 	}
 
 	const float absVelY = std::abs(vel.y);
@@ -48,6 +51,11 @@ void PhysicsSystem::update(Node &node)
 	if (std::abs(vel.x) < 0.01f)
 	{
 		vel.x = 0;
+	}
+	vel.z *= factor;
+	if (std::abs(vel.z) < 0.01f)
+	{
+		vel.z = 0;
 	}
 	pc->setVelocity(vel);
 
