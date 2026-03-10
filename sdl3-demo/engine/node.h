@@ -12,6 +12,7 @@
 #include <nodehandle.h>
 #include <logger.h>
 #include <config.h>
+#include <DirectXMath.h>
 
 class NodeRemovalEvent;
 class SystemBase;
@@ -22,6 +23,7 @@ protected:
 	NodeHandle handle;
 	NodeHandle parent;
 	glm::vec3 position;
+	DirectX::XMFLOAT3 rotation;
 	std::vector<NodeHandle> children;
 	std::vector<ComponentEntry> components;
 	std::array<std::vector<SystemBase *>, static_cast<size_t>(FrameStage::StageCount)> linkedSystems;
@@ -41,6 +43,8 @@ public:
 	NodeHandle getHandle() const { return handle; }
 	glm::vec3 getPosition() const { return position; }
 	void setPosition(const glm::vec3 position) { this->position = position; }
+	DirectX::XMFLOAT3 getRotation() const { return rotation; }
+	void setRotation(const DirectX::XMFLOAT3 rotation) { this->rotation = rotation; }
 	auto &getParent() const { return parent; }
 	auto &getChildren() { return children; }
 	void addChild(Node &child);

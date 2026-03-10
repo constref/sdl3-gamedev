@@ -393,6 +393,7 @@ ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psBytecode.Get());
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
@@ -471,7 +472,6 @@ void D3D12RenderSystem::beginFrame()
 	m_nextROIndex = 0;
 	m_nextMatrixIndex = 0;
 	m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
-	m_stagingOffset = 0;
 	res.drawOperations.clear();
 	res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
 	res.commandAllocator->Reset();
@@ -503,6 +503,22 @@ void D3D12RenderSystem::beginFrame()
 		CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
 	};
 	res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
+	
+	// view and projection calculations
+	float camX = sinf((float)FrameContext::gt() * 0.5f) * 5;
+	float camZ = cosf((float)FrameContext::gt() * 0.5f) * 5;
+	m_viewMatrix = XMMatrixLookAtLH(XMVectorSet(camX, 0.5f, camZ, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
+	
+	const float aspectRatio = m_width / static_cast<float>(m_height);
+	m_projMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRatio, 0.1f, 100.0f);
+	
+	m_viewProjMatrix = m_viewMatrix * m_projMatrix;
+	
+	// copy the frame consts into the cbv
+	ConstsPerFrame cbPerFrame{};
+	XMStoreFloat4x4(&cbPerFrame.viewProj, m_viewProjMatrix);
+	const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+	memcpy(static_cast<uint8_t *>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame, sizeof(cbPerFrame));
 }
 
 void D3D12RenderSystem::endFrame()
@@ -575,6 +591,7 @@ void D3D12RenderSystem::endFrame()
 	res.fenceValue = ++m_fenceValue;
 	m_commandQueue->Signal(m_fence.Get(), res.fenceValue);
 	m_frameIndex++;
+	m_stagingOffset = 0;
 }
 
 void D3D12RenderSystem::update(Node &node)
@@ -588,13 +605,13 @@ void D3D12RenderSystem::update(Node &node)
 	};
 
 	// calculate object transformation matrices
-	const float aspectRation = m_width / static_cast<float>(m_height);
-	XMMATRIX world = XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
-	XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0, 2, -6, 0), XMVectorSet(0, 0, 0, 0), XMVectorSet(0, 1, 0, 0));
-	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRation, 0.1f, 100.0f);
-	XMMATRIX viewProj = view * proj;
-	XMMATRIX worldViewProj = world * viewProj;
-	XMMATRIX normalMat = worldViewProj;
+	XMMATRIX rotX = XMMatrixRotationX(node.getRotation().x);
+	XMMATRIX rotY = XMMatrixRotationY(node.getRotation().y);
+	XMMATRIX rotZ = XMMatrixRotationZ(node.getRotation().z);
+	XMMATRIX rotation = rotX * rotY * rotZ;
+	XMMATRIX world = rotation * XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
+	XMMATRIX worldViewProj = world * m_viewProjMatrix;
+	XMMATRIX normalMat = world;
 	normalMat.r[3] = XMVectorSet(0, 0, 0, 1); // remove translation from normal transform
 	XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
 
@@ -614,12 +631,6 @@ void D3D12RenderSystem::update(Node &node)
 	res.commandList->CopyBufferRegion(m_objBuffer.Get(), 
 		(m_frameResIndex * ROFrameSize) + roIndex * sizeof(RenderObject),
 		m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
-
-	// copy the object consts into the cbv
-	ConstsPerFrame cbPerFrame{};
-	XMStoreFloat4x4(&cbPerFrame.viewProj, viewProj);
-	const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-	memcpy(static_cast<uint8_t *>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame, sizeof(cbPerFrame));
 
 	auto [mc] = getRequiredComponents(node);
 	res.drawOperations.push_back(DrawOperation{ .roIndex = roIndex, .meshHandle = mc->getHandle() });

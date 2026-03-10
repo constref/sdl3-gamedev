@@ -60,6 +60,7 @@ struct DescriptorSizes
 
 struct ConstsPerFrame
 {
+	DirectX::XMFLOAT4 camPosition;
 	DirectX::XMFLOAT4X4 viewProj;
 };
 
@@ -138,6 +139,11 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	ComPtr<ID3DBlob> m_vsBytecode = nullptr;
 	ComPtr<ID3DBlob> m_psBytecode = nullptr;
 	ComPtr<ID3D12PipelineState> m_pso;
+	
+	// camera related
+	DirectX::XMMATRIX m_projMatrix;
+	DirectX::XMMATRIX m_viewMatrix;
+	DirectX::XMMATRIX m_viewProjMatrix;
 
 	// render objects
 	constexpr static uint32_t CBVCount = 1;
