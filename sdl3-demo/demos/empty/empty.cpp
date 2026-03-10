@@ -15,6 +15,7 @@
 #include <messaging/events.h>
 #include <resourceloader.h>
 
+#include "inputstate.h"
 #include "tooling/usd/usdprocessor.h"
 
 using namespace DirectX;
@@ -31,9 +32,17 @@ bool Empty::initialize(Services &services, SDLState &state)
 {
 	World &world = services.world();
 	setRoot(world.createNode());
-
 	Node &root = world.getNode(getRoot());
-	const std::string usdPath = "data\\usd\\ufo.usd";
+	
+	NodeHandle hPlayer = world.createNode();
+	Node &player = world.getNode(hPlayer);
+	services.compSys().addComponent<PhysicsComponent>(player);
+	services.compSys().addComponent<CollisionComponent>(player);
+	services.compSys().addComponent<InputComponent>(player);
+	services.inputState().setFocus(hPlayer);
+	
+	//const std::string usdPath = "data\\usd\\ufo.usd";
+	const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
 
 	USDProcessor usdproc;
 	usdproc.loadStage(usdPath, root, services);
