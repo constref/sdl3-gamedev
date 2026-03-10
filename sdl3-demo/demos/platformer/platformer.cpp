@@ -250,7 +250,7 @@ void Platformer::processLayer(Node &root, Services &services, SDLState &state,  
 			Node &player = world.getNode(hPlayer);
 			player.setTag(2);
 			player.setPosition(objPos);
-			auto &inputComponent = services.compSys().addComponent<InputComponent>(player, hPlayer);
+			auto &inputComponent = services.compSys().addComponent<InputComponent>(player);
 			auto &ctrlComp = services.compSys().addComponent<PlayerControllerComponent>(player);
 			ctrlComp.setIdleAnimation(animPlayerIdle);
 			ctrlComp.setIdleTexture(texIdle);
