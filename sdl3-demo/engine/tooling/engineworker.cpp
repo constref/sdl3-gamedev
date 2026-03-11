@@ -92,7 +92,7 @@ void EngineWorker::start()
 
 			auto *builder = new flatbuffers::FlatBufferBuilder(1024);
 			auto initDetails = NUBE::Interop::CreateInitializationDetails(*builder,
-				engine->getRenderer()->getMaxFramesInFlight(),
+				texHandles.size(),
 				builder->CreateVector(texHandles),
 				builder->CreateString(engineUrl)
 			);

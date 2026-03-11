@@ -71,9 +71,9 @@ bool Engine::initialize(int logW, int logH, int width, int height)
 	return true;
 }
 
-vks::VulkanRenderSystem* Engine::getRenderer()
+d3d12rs::D3D12RenderSystem *Engine::getRenderer() const
 {
-	return vkRenderer;
+	return d3d12Renderer;
 }
 
 Services& Engine::getServices()

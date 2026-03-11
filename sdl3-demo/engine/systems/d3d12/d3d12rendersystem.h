@@ -8,8 +8,10 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include <rendering/mesh.h>
+#include <d3d11on12.h>
 
 #include <span>
+
 
 struct SDL_Window;
 
@@ -111,9 +113,17 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	ComPtr<ID3D12DescriptorHeap> m_RTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> m_DSVDescriptorHeap;
 	DescriptorSizes m_descriptorSizes;
-	uint16_t m_backBufferIndex = 0;
+	// internal render targets
 	ComPtr<ID3D12Heap> renderTargetHeap;
 	std::vector<ComPtr<ID3D12Resource>> m_renderTargetTextures;
+	std::vector<HANDLE> m_ntHandles;
+	std::vector<ComPtr<IDXGIKeyedMutex>> m_rtKeyedMutexes;
+	
+	// D3D11 Interop
+	std::vector<ComPtr<ID3D11Texture2D>> m_d3d11Targets;
+	ComPtr<ID3D11Device> m_device11;
+	ComPtr<ID3D11On12Device> m_device11on12;
+	ComPtr<ID3D11DeviceContext> m_deviceContext11;
 
 	// staging buffer
 	ComPtr<ID3D12Resource> m_stagingBuffer;
@@ -186,6 +196,7 @@ public:
 	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
 	
 	void setCamPosition(float x, float y, float z);
+	std::vector<uint64_t> getSharedTextureHandles(int editorPID);
 };
 
 }

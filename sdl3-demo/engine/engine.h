@@ -51,10 +51,11 @@ class Engine
 	Services services;
 	SDLState sdlState;
 	d3d12rs::D3D12RenderSystem *d3d12Renderer;
-	vks::VulkanRenderSystem *vkRenderer;
+	vks::VulkanRenderSystem* vkRenderer;
 
 public:
 	Engine(std::unique_ptr<Application> app);
+
 	~Engine()
 	{
 #ifdef __EMSCRIPTEN__
@@ -65,10 +66,11 @@ public:
 
 	bool initialize(int logW, int logH, int width, int height);
 
-	vks::VulkanRenderSystem *getRenderer();
-	Services &getServices();
+	d3d12rs::D3D12RenderSystem* getRenderer() const;
+	Services& getServices();
 
 	void cleanup();
+
 	void run()
 	{
 		prevTime = SDL_GetTicks();
@@ -83,10 +85,10 @@ public:
 		}
 #endif
 	}
-	
+
 	void step();
 
 private:
-	static void emIterate(void *userData);
-	void processSystems(Node &obj, World &world);
+	static void emIterate(void* userData);
+	void processSystems(Node& obj, World& world);
 };

@@ -174,8 +174,7 @@ target_include_directories(engine
 
 #add_library(enginetooling
 	#"tooling/usd/usdprocessor.h"
-	#"tooling/usd/usdprocessor.cpp"
-#)
+	#"tooling/usd/usdprocessor.cpp")
 
 #target_link_libraries(enginetooling
 	#PRIVATE engine usd usdGeom usdImaging hd)

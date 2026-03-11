@@ -296,7 +296,6 @@ public:
 	void updateTextures();
 
 	// tooling related methods
-	uint32_t getMaxFramesInFlight() const { return MaxFramesInFlight; }
 	std::vector<uint64_t> getSharedTextureHandles(int editorPID) const;
 	intptr_t exportWorkCompleteSemaphore(uint32_t index) const;
 	intptr_t exportImageReadySemaphore(uint32_t index) const;
