@@ -7,7 +7,7 @@ find_package(flatbuffers REQUIRED)
 find_package(DirectX-Headers REQUIRED)
 
 # tooling specific
-find_package(pxr REQUIRED)
+#find_package(pxr REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -16,6 +16,7 @@ set(ENGINE_SOURCES
 	"timer.h"
 	"animation.h"
 	"engine.h"
+	"engine.cpp"
 	"bootstrap.h"
 	"bootstrap.cpp"
 	"application.h"
@@ -109,8 +110,8 @@ set(ENGINE_SOURCES
 	"containers/ringbuffer.h"
 	"tooling/platformutils.h"
 	"tooling/platformutils.cpp"
-	"tooling/engineworker.h" 
-	"tooling/engineworker.cpp" 
+	"tooling/engineworker.h"
+	"tooling/engineworker.cpp"
 	"tooling/platformevents.h"
 )
 
@@ -171,10 +172,11 @@ target_include_directories(engine
 )
 
 
-add_library(enginetooling
-	"tooling/usd/usdprocessor.h"
-	"tooling/usd/usdprocessor.cpp"
-)
+#add_library(enginetooling
+	#"tooling/usd/usdprocessor.h"
+	#"tooling/usd/usdprocessor.cpp"
+#)
 
-target_link_libraries(enginetooling
-	PRIVATE engine usd usdGeom usdImaging hd)
+#target_link_libraries(enginetooling
+	#PRIVATE engine usd usdGeom usdImaging hd)
+	#PRIVATE engine)

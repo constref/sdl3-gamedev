@@ -1,5 +1,12 @@
 #include <messaging/eventqueue.h>
 
+EventQueue::EventQueue()
+{
+	queue.resize(30000);
+	rIdx = 0;
+	wIdx = 0;
+}
+
 void EventQueue::dispatch()
 {
 	size_t currRIdx = rIdx; // currRIdx is what actually does reading, rIdx only moves when all events are completed
@@ -21,4 +28,9 @@ void EventQueue::dispatch()
 	}
 	// all outstanding events completed, move main read-index further now
 	if (eventsCompleted == numEvents) rIdx = currRIdx;
+}
+
+size_t EventQueue::getCount() const
+{
+	return wIdx;
 }

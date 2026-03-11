@@ -37,7 +37,7 @@ void Empty::start(Services &services, SDLState &state)
 	Node &player = world.getNode(hPlayer);
 	player.setPosition(glm::vec3(5, 0.5f, -10));
 	auto &physics = services.compSys().addComponent<PhysicsComponent>(player);
-	physics.setAcceleration(glm::vec3(50, 50, 50));
+	physics.setAcceleration(glm::vec3(30, 30, 30));
 	physics.setMaxSpeed(glm::vec3(50, 50, 50));
 	physics.setGravityFactor(0);
 	services.compSys().addComponent<CollisionComponent>(player);
@@ -49,8 +49,8 @@ void Empty::start(Services &services, SDLState &state)
 	root.addChild(player);
 	
 	//const std::string usdPath = "data\\usd\\ufo.usd";
-	const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
+	//const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
 
-	USDProcessor usdproc;
-	usdproc.loadStage(usdPath, root, services);
+	//USDProcessor usdproc;
+	//usdproc.loadStage(usdPath, root, services);
 }

@@ -20,6 +20,16 @@ public:
 	KeyDownEvent(uint16_t scancode) : scancode(scancode) { }
 };
 
+class MouseMotionEvent : public Event<MouseMotionEvent, FrameStage::Input>
+{
+	int m_x;
+	int m_y;
+public:
+	MouseMotionEvent(int x, int y) : m_x(x), m_y(y) {};
+	int x() const { return m_x; }
+	int y() const { return m_y; }
+};
+
 class ComponentRemovalEvent : public Event<ComponentRemovalEvent, FrameStage::End>
 {
 	NodeHandle target;

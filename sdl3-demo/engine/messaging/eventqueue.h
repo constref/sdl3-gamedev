@@ -24,12 +24,7 @@ class EventQueue
 	size_t rIdx, wIdx;
 
 public:
-	EventQueue()
-	{
-		queue.resize(5000);
-		rIdx = 0;
-		wIdx = 0;
-	}
+	EventQueue();
 
 	EventDispatcher dispatcher;
 
@@ -51,9 +46,5 @@ public:
 	}
 
 	void dispatch();
-
-	size_t getCount()
-	{
-		return wIdx;
-	}
+	size_t getCount() const;
 };
