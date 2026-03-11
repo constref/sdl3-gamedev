@@ -244,7 +244,7 @@ uint32_t D3D12RenderSystem::stageData(const void *srcPtr, size_t byteSize, size_
 	memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
 	uint32_t dataOffset = m_stagingOffset;
 	m_stagingOffset += alignedSize;
-	
+
 	return dataOffset;
 }
 
@@ -509,18 +509,18 @@ void D3D12RenderSystem::beginFrame()
 		CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
 	};
 	res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
-	
+
 	// view and projection calculations
 	XMVECTOR camPosition = XMLoadFloat4(&m_camPosition);
 	XMVECTOR camDirection = XMVectorAdd(camPosition, XMVectorSet(0, 0, 1, 0));
 	XMVECTOR camUp = XMVectorSet(0, 1, 0, 0);
 	m_viewMatrix = XMMatrixLookAtLH(camPosition, camDirection, camUp);
-	
+
 	const float aspectRatio = m_width / static_cast<float>(m_height);
 	m_projMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRatio, 0.1f, 100.0f);
-	
+
 	m_viewProjMatrix = m_viewMatrix * m_projMatrix;
-	
+
 	// copy the frame consts into the cbv
 	ConstsPerFrame cbPerFrame{};
 	XMStoreFloat4x4(&cbPerFrame.viewProj, m_viewProjMatrix);
@@ -632,10 +632,10 @@ void D3D12RenderSystem::update(Node &node)
 	uint32_t stageMatrixOffset = stageData(&objMatrices, sizeof(objMatrices), 4);
 	uint32_t stageRObjOffset = stageData(&ro, sizeof(ro), 4);
 
-	res.commandList->CopyBufferRegion(m_matrixBuffer.Get(), 
+	res.commandList->CopyBufferRegion(m_matrixBuffer.Get(),
 		(m_frameResIndex * MatrixFrameSize) + ro.baseMatrixIndex * sizeof(XMFLOAT4X4),
 		m_stagingBuffer.Get(), stageMatrixOffset, sizeof(objMatrices));
-	res.commandList->CopyBufferRegion(m_objBuffer.Get(), 
+	res.commandList->CopyBufferRegion(m_objBuffer.Get(),
 		(m_frameResIndex * ROFrameSize) + roIndex * sizeof(RenderObject),
 		m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
@@ -647,55 +647,72 @@ void D3D12RenderSystem::updateTextures()
 {
 }
 
-bool d3d12rs::D3D12RenderSystem::createSwapchain()
+bool D3D12RenderSystem::createSwapchain()
 {
-	Logger::info(this, "Creating and initializing swapchain resources");
-	ComPtr<IDXGISwapChain4> dxgiSwapchain;
-	ComPtr<IDXGIFactory4> dxgiFactory4;
-
-	UINT factoryFlags = 0;
-#if defined(_DEBUG)
-	factoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
-
-	DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory4)), "Couldn't create DXGIFactory2 during swapchain init");
-
-	DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
-	swapchainDesc.Width = m_width;
-	swapchainDesc.Height = m_height;
-	swapchainDesc.Format = SwapchainFormat;
-	swapchainDesc.Stereo = FALSE;
-	swapchainDesc.SampleDesc = { 1, 0 };
-	swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapchainDesc.BufferCount = RenderTargetCount;
-	swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
-	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-	swapchainDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-
-	ComPtr<IDXGISwapChain1> swapchain;
-	DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr, &swapchain), "Failed to create a swapchain for the given HWND");
-	DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER), "Failed to disable full-screen shortcut.");
-	DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
-
-	// RTV Heap
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-	rtvHeapDesc.NumDescriptors = RenderTargetCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	DXCHK(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RTVDescriptorHeap)), "Unable to create RTV descriptor heap");
-	// DSV Heap
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	DXCHK(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DSVDescriptorHeap)), "Unable to create DSV descriptor heap");
-
-	// create the render target views
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	for (int i = 0; i < RenderTargetCount; ++i)
+	if constexpr (Config::IsStandaloneMode())
 	{
-		DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())), "Unable to get swapchain back buffer");
-		m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, m_descriptorSizes.RTV);
+		Logger::info(this, "Creating and initializing swapchain resources");
+		ComPtr<IDXGISwapChain4> dxgiSwapchain;
+		ComPtr<IDXGIFactory4> dxgiFactory4;
+
+		UINT factoryFlags = Config::DebugSelect(DXGI_CREATE_FACTORY_DEBUG, 0);
+		DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory4)), "Couldn't create DXGIFactory2 during swapchain init");
+
+		DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
+		swapchainDesc.Width = m_width;
+		swapchainDesc.Height = m_height;
+		swapchainDesc.Format = SwapchainFormat;
+		swapchainDesc.Stereo = FALSE;
+		swapchainDesc.SampleDesc = { 1, 0 };
+		swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapchainDesc.BufferCount = RenderTargetCount;
+		swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
+		swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+		swapchainDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+		ComPtr<IDXGISwapChain1> swapchain;
+		DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr, &swapchain), "Failed to create a swapchain for the given HWND");
+		DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER), "Failed to disable full-screen shortcut.");
+		DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
+
+		// RTV Heap
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
+		rtvHeapDesc.NumDescriptors = RenderTargetCount;
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		DXCHK(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RTVDescriptorHeap)), "Unable to create RTV descriptor heap");
+		// DSV Heap
+		D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+		dsvHeapDesc.NumDescriptors = 1;
+		dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		DXCHK(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DSVDescriptorHeap)), "Unable to create DSV descriptor heap");
+
+		// create the render target views
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		for (int i = 0; i < RenderTargetCount; ++i)
+		{
+			DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())), "Unable to get swapchain back buffer");
+			m_device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, rtvHandle);
+			rtvHandle.Offset(1, m_descriptorSizes.RTV);
+		}
+	}
+	else
+	{
+		// create a series of internal render targets
+		auto renderTargetDesc = CD3DX12_RESOURCE_DESC::Tex2D(SwapchainFormat, m_logW, m_logH,
+			1, 0, 1, 0, 
+			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+		auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT);
+
+		D3D12_CLEAR_VALUE clearValue{ .Color = {1, 0, 0, 1} };
+
+		m_renderTargetTextures.resize(RenderTargetCount);
+		for (auto renderTarget : m_renderTargetTextures)
+		{
+			
+			DXCHK(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_SHARED, &renderTargetDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(renderTarget.GetAddressOf())),
+				"Unable to create internal render target texture");
+		}
 	}
 
 	// create a depth/stencil view
@@ -727,7 +744,7 @@ bool d3d12rs::D3D12RenderSystem::createSwapchain()
 	return true;
 }
 
-void d3d12rs::D3D12RenderSystem::flushGPU()
+void D3D12RenderSystem::flushGPU()
 {
 	if (m_fence->GetCompletedValue() < m_fenceValue)
 	{

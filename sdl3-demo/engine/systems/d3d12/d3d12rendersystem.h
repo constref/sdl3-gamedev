@@ -112,6 +112,8 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	ComPtr<ID3D12DescriptorHeap> m_DSVDescriptorHeap;
 	DescriptorSizes m_descriptorSizes;
 	uint16_t m_backBufferIndex = 0;
+	ComPtr<ID3D12Heap> renderTargetHeap;
+	std::vector<ComPtr<ID3D12Resource>> m_renderTargetTextures;
 
 	// staging buffer
 	ComPtr<ID3D12Resource> m_stagingBuffer;
