@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <DirectXMath.h>
 #include <components/component.h>
 
 struct FrameContext;
@@ -14,9 +15,9 @@ class PhysicsComponent : public Component
 	glm::vec3 maxSpeed;
 	glm::vec3 direction;
 	glm::vec3 delta;
-	glm::vec3 m_localX;
-	glm::vec3 m_localY;
-	glm::vec3 m_localZ;
+	DirectX::XMFLOAT3 m_localX;
+	DirectX::XMFLOAT3 m_localY;
+	DirectX::XMFLOAT3 m_localZ;
 	bool grounded;
 	bool dynamic;
 	float gravityFactor;
@@ -41,12 +42,12 @@ public:
 	void setDamping(float damping) { this->damping = damping; }
 	glm::vec3 getDelta() const { return delta; }
 	void setDelta(glm::vec3 delta) { this->delta = delta; }
-	glm::vec3 localX() const { return m_localX; }
-	void setLocalX(const glm::vec3 &localX) { m_localX = localX; }
-	glm::vec3 localY() const { return m_localY; }
-	void setLocalY(const glm::vec3 &localY) { m_localY = localY; }
-	glm::vec3 localZ() const { return m_localZ; }
-	void setLocalZ(const glm::vec3 &localZ) { m_localZ = localZ; }
+	DirectX::XMFLOAT3 localX() const { return m_localX; }
+	void setLocalX(const DirectX::XMFLOAT3 &localX) { m_localX = localX; }
+	DirectX::XMFLOAT3 localY() const { return m_localY; }
+	void setLocalY(const DirectX::XMFLOAT3 &localY) { m_localY = localY; }
+	DirectX::XMFLOAT3 localZ() const { return m_localZ; }
+	void setLocalZ(const DirectX::XMFLOAT3 &localZ) { m_localZ = localZ; }
 
 	void addImpulse(const glm::vec3 &impulse);
 };

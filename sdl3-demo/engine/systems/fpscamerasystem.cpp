@@ -24,16 +24,22 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	auto [ic, cc, pc] = getRequiredComponents(node);
 	rotY += ic->mouseDelta().x * FrameContext::dt();
 	// rotate local z around y axis
-	glm::vec3 localZ = pc->localZ();
-	glm::vec3 localY = pc->localY();
-	glm::vec3 newLocalZ = glm::rotateY(localZ, ic->mouseDelta().x * FrameContext::dt());
-	pc->setLocalZ(glm::normalize(newLocalZ));
+	XMFLOAT3 localX;
+	XMFLOAT3 localY = pc->localY();
+	XMFLOAT3 localZ = pc->localZ();
+	
+	XMVECTOR oldLocalZ = XMLoadFloat3(&localZ);
+	XMVECTOR rotAxis = XMLoadFloat3(&localY);
+	XMVECTOR quat = XMQuaternionRotationAxis(rotAxis, ic->mouseDelta().x * 0.5f * FrameContext::dt());
+	XMVECTOR newLocalZ = XMVector3Rotate(oldLocalZ, quat);
+	XMStoreFloat3(&localZ, newLocalZ);
+	pc->setLocalZ(localZ);
 	
 	// calculate new local x axis
-	glm::vec3 newLocalX = glm::cross(newLocalZ, localY);
-	//pc->setLocalX(newLocalX);
-    
-	Logger::info(this, std::format("{}", rotY));
+	XMVECTOR vecLocalY = XMLoadFloat3(&localY);
+	XMVECTOR newLocalX = XMVector3Cross(vecLocalY, newLocalZ);
+	XMStoreFloat3(&localX, newLocalX);
+	pc->setLocalX(localX);
 }
 
 void FPSCameraSystem::update(Node& node)

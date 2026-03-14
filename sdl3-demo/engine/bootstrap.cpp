@@ -47,7 +47,7 @@ int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH
 	if constexpr (Config::IsStandaloneMode())
 	{
 		Engine engine(std::move(application));
-		if (!engine.initialize(512, 288, 1920, 1080))
+		if (!engine.initialize(logW, logH, width, height))
 		{
 			return 1;
 		}

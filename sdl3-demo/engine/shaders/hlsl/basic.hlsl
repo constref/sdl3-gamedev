@@ -56,7 +56,7 @@ PixelIn VSMain(VertexIn input)
 
 float4 PSMain(PixelIn input) : SV_TARGET
 {
-    float3 lightPos = float3(2, 0.5f, 1);
+    float3 lightPos = float3(1, 0.6f, 0);
     float3 lightTarget = float3(0, 0, 0);
     float3 lightDir = lightTarget - lightPos;
 

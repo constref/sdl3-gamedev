@@ -19,9 +19,14 @@ void PhysicsSystem::update(Node &node)
 
 	// calculate movement
 	glm::vec3 netForce{ 0 };
-	netForce += pc->getDirection().x * pc->localX() * pc->getAcceleration().x;
-	netForce += pc->getDirection().y * pc->localY() * pc->getAcceleration().y;
-	netForce += pc->getDirection().z * pc->localZ() * pc->getAcceleration().z;
+	// TODO: Remove this conversion
+	const glm::vec3 localX(pc->localX().x, pc->localX().y, pc->localX().z);
+	const glm::vec3 localY(pc->localY().x, pc->localY().y, pc->localY().z);
+	const glm::vec3 localZ(pc->localZ().x, pc->localZ().y, pc->localZ().z);
+	
+	netForce += pc->getDirection().x * localX * pc->getAcceleration().x;
+	netForce += pc->getDirection().y * localY * pc->getAcceleration().y;
+	netForce += pc->getDirection().z * localZ * pc->getAcceleration().z;
 
 	// gravity
 	const glm::vec3 gravity(0, 600, 0);

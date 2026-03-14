@@ -614,7 +614,7 @@ void D3D12RenderSystem::beginFrame()
     XMVECTOR camPosition = XMLoadFloat4(&m_camPosition);
     XMVECTOR camDirection = XMLoadFloat4(&m_camDirection);
     XMVECTOR camUp = XMVectorSet(0, 1, 0, 0);
-    m_viewMatrix = XMMatrixLookAtLH(camPosition, camDirection, camUp);
+    m_viewMatrix = XMMatrixLookAtLH(camPosition, camPosition + camDirection, camUp);
     const float aspectRatio = m_width / static_cast<float>(m_height);
     m_projMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRatio, 0.1f, 100.0f);
     m_viewProjMatrix = m_viewMatrix * m_projMatrix;
@@ -748,7 +748,7 @@ void D3D12RenderSystem::update(Node& node)
     XMMATRIX rotation = rotX * rotY * rotZ;
     XMMATRIX world = rotation * XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
     XMMATRIX worldViewProj = world * m_viewProjMatrix;
-    XMMATRIX normalMat = world * m_viewMatrix;
+    XMMATRIX normalMat = world;
     normalMat.r[3] = XMVectorSet(0, 0, 0, 1); // remove translation from normal transform
     XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
 

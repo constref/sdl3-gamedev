@@ -14,9 +14,9 @@ PhysicsComponent::PhysicsComponent(Node &owner) : Component(owner)
 	gravityFactor = 1.0f;
 	damping = 10.0f;
 	delta = { 0, 0, 0 };
-	m_localX = glm::vec3(1, 0, 0);
-	m_localY = glm::vec3(0, 1, 0);
-	m_localZ = glm::vec3(0, 0, 1);
+	m_localX = DirectX::XMFLOAT3(1, 0, 0);
+	m_localY = DirectX::XMFLOAT3(0, 1, 0);
+	m_localZ = DirectX::XMFLOAT3(0, 0, 1);
 }
 
 void PhysicsComponent::setVelocity(const glm::vec3 &vel)
