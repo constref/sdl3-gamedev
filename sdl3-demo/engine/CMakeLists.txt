@@ -165,7 +165,7 @@ target_include_directories(engine
 )
 
 # tooling specific
-if (EXECUTION_MODE STREQUAL "TOOLING")
+#if (EXECUTION_MODE STREQUAL "TOOLING")
     find_package(pxr REQUIRED)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
@@ -177,4 +177,4 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 
     target_link_libraries(enginetooling
         PRIVATE engine usd usdGeom usdImaging hd)
-endif()
+#endif()
