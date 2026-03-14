@@ -10,6 +10,7 @@ InputSystem::InputSystem(Services &services) : System(services)
 {
 	services.eventQueue().dispatcher.registerHandler<KeyUpEvent>(this);
 	services.eventQueue().dispatcher.registerHandler<KeyDownEvent>(this);
+	services.eventQueue().dispatcher.registerHandler<MouseMotionEvent>(this);
 }
 
 void InputSystem::update(Node &node)
@@ -65,6 +66,22 @@ void InputSystem::onEvent(NodeHandle target, const KeyDownEvent &event)
 			break;
 		}
 	}
+}
+
+void InputSystem::onEvent(NodeHandle hNode, const MouseMotionEvent& event)
+{
+	using namespace DirectX;
+	Node &node = services.world().getNode(hNode);
+	auto [ic] = getRequiredComponents(node);
+	XMFLOAT2 newPos((float)event.x(), (float)event.y());
+	XMFLOAT2 oldPos = ic->mousePosition();
+	XMVECTOR v1 = XMLoadFloat2(&newPos);
+	XMVECTOR v2 = XMLoadFloat2(&oldPos);
+	XMVECTOR delta = XMVectorSubtract(v1, v2);
+	XMFLOAT2 fDelta;
+	XMStoreFloat2(&fDelta, delta);
+	ic->setMousePosition(newPos);
+	ic->setMouseDelta(fDelta);
 }
 
 void InputSystem::onEvent(NodeHandle target, const KeyUpEvent &event)

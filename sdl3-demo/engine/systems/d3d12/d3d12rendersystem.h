@@ -154,6 +154,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	
 	// camera related
 	DirectX::XMFLOAT4 m_camPosition;
+	DirectX::XMFLOAT4 m_camDirection;
 	DirectX::XMMATRIX m_projMatrix;
 	DirectX::XMMATRIX m_viewMatrix;
 	DirectX::XMMATRIX m_viewProjMatrix;
@@ -195,7 +196,9 @@ public:
 	uint32_t stageData(const void *srcPtr, size_t byteSize, size_t alignment);
 	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
 	
+	void setViewMatrix(const DirectX::XMMATRIX &viewMatrix);
 	void setCamPosition(float x, float y, float z);
+	void setCamDirection(float x, float y, float z);
 	std::vector<uint64_t> getSharedTextureHandles(int editorPID);
 };
 

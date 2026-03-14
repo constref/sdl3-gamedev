@@ -9,10 +9,6 @@
 
 PhysicsSystem::PhysicsSystem(Services &services) : System(services)
 {
-	localX = glm::vec3(1, 0, 0);
-	localY = glm::vec3(0, 1, 0);
-	localZ = glm::vec3(0, 0, 1);
-	
 	services.eventQueue().dispatcher.registerHandler<DirectionChangedEvent>(this);
 }
 
@@ -23,9 +19,9 @@ void PhysicsSystem::update(Node &node)
 
 	// calculate movement
 	glm::vec3 netForce{ 0 };
-	netForce += pc->getDirection().x * localX * pc->getAcceleration().x;
-	netForce += pc->getDirection().y * localY * pc->getAcceleration().y;
-	netForce += pc->getDirection().z * localZ * pc->getAcceleration().z;
+	netForce += pc->getDirection().x * pc->localX() * pc->getAcceleration().x;
+	netForce += pc->getDirection().y * pc->localY() * pc->getAcceleration().y;
+	netForce += pc->getDirection().z * pc->localZ() * pc->getAcceleration().z;
 
 	// gravity
 	const glm::vec3 gravity(0, 600, 0);

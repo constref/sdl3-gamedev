@@ -8,10 +8,6 @@ class DirectionChangedEvent;
 
 class PhysicsSystem : public System<FrameStage::Physics, PhysicsComponent, CollisionComponent>
 {
-	glm::vec3 localX;
-	glm::vec3 localY;
-	glm::vec3 localZ;
-	
 public:
 	PhysicsSystem(Services &services);
 

@@ -49,7 +49,7 @@ public:
 		return (node.getComponent<Components>() && ...);
 	}
 
-	auto getRequiredComponents(Node &node)
+	auto getRequiredComponents(Node &node) const
 	{
 		return std::make_tuple(node.getComponent<Components>()...);
 	}

@@ -291,9 +291,19 @@ void D3D12RenderSystem::scheduleGPUCopy(size_t stagingOffset, size_t dataSize, C
     });
 }
 
+void D3D12RenderSystem::setViewMatrix(const DirectX::XMMATRIX& viewMatrix)
+{
+    m_viewMatrix = viewMatrix;
+}
+
 void D3D12RenderSystem::setCamPosition(float x, float y, float z)
 {
     m_camPosition = XMFLOAT4(x, y, z, 1.0f);
+}
+
+void D3D12RenderSystem::setCamDirection(float x, float y, float z)
+{
+    m_camDirection = XMFLOAT4(x, y, z, 0.0f);
 }
 
 std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID)
@@ -602,7 +612,7 @@ void D3D12RenderSystem::beginFrame()
 
     // view and projection calculations
     XMVECTOR camPosition = XMLoadFloat4(&m_camPosition);
-    XMVECTOR camDirection = XMVectorAdd(camPosition, XMVectorSet(0, 0, 1, 0));
+    XMVECTOR camDirection = XMLoadFloat4(&m_camDirection);
     XMVECTOR camUp = XMVectorSet(0, 1, 0, 0);
     m_viewMatrix = XMMatrixLookAtLH(camPosition, camDirection, camUp);
     const float aspectRatio = m_width / static_cast<float>(m_height);

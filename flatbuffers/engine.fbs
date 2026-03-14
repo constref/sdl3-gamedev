@@ -7,7 +7,8 @@ union EditorMessage {
 union EngineMessage {
 	EngineStartupCommand,
 	EngineShutdownCommand,
-	KeyboardEvent
+	KeyboardEvent,
+	MouseMoveEvent
 }
 
 table EditorEnvelope {
@@ -27,6 +28,11 @@ table InitializationDetails {
 table KeyboardEvent {
 	scancode:ushort;
 	is_down:bool;
+}
+
+table MouseMoveEvent {
+    x:int;
+    y:int;
 }
 
 table EngineStartupCommand {

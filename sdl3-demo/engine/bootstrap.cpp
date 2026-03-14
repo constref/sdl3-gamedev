@@ -7,7 +7,7 @@
 
 Bootstrap::Bootstrap(int argc, char *argv[])
 {
-	if (Config::IsToolingMode())
+	if constexpr (Config::IsToolingMode())
 	{
 		if (argc > 1)
 		{
@@ -44,7 +44,7 @@ Bootstrap::Bootstrap(int argc, char *argv[])
 
 int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH, int width, int height)
 {
-	if (Config::IsStandaloneMode())
+	if constexpr (Config::IsStandaloneMode())
 	{
 		Engine engine(std::move(application));
 		if (!engine.initialize(512, 288, 1920, 1080))

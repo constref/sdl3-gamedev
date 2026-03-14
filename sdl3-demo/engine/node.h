@@ -60,7 +60,7 @@ public:
 	bool isLinkedWith(SystemBase *sys);
 
 	template<typename T>
-	T *getComponent()
+	T *getComponent() const
 	{
 		// use a linear for-loop search for debug builds
 		// otherwise compiler doesn't inline function

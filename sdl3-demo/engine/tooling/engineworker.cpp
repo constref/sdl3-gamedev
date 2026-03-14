@@ -137,6 +137,12 @@ void EngineWorker::start()
                         }
                         break;
                     }
+                    case NUBE::Interop::EngineMessage_MouseMoveEvent:
+                    {
+                        const NUBE::Interop::MouseMoveEvent *mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
+                        pushEvent(MouseMoveEvent{.x = mouseMoveEvent->x(), .y = mouseMoveEvent->y()});
+                        break;
+                    }
                     case NUBE::Interop::EngineMessage_EngineStartupCommand:
                     {
                         break;
@@ -207,8 +213,9 @@ void EngineWorker::processEvents()
         }
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
-            //const MouseMoveEvent &mouseMoveEvent = std::get<MouseMoveEvent>(e);
-            //app.onMouseMove(mouseMoveEvent.x, mouseMoveEvent.y);
+            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
+            Services& serv = engine->getServices();
+            serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x, mouseEvent.y);
         }
         else if (std::holds_alternative<MouseButtonEvent>(e))
         {

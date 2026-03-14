@@ -28,6 +28,9 @@ struct InitializationDetailsBuilder;
 struct KeyboardEvent;
 struct KeyboardEventBuilder;
 
+struct MouseMoveEvent;
+struct MouseMoveEventBuilder;
+
 struct EngineStartupCommand;
 struct EngineStartupCommandBuilder;
 
@@ -82,33 +85,36 @@ enum EngineMessage : uint8_t {
   EngineMessage_EngineStartupCommand = 1,
   EngineMessage_EngineShutdownCommand = 2,
   EngineMessage_KeyboardEvent = 3,
+  EngineMessage_MouseMoveEvent = 4,
   EngineMessage_MIN = EngineMessage_NONE,
-  EngineMessage_MAX = EngineMessage_KeyboardEvent
+  EngineMessage_MAX = EngineMessage_MouseMoveEvent
 };
 
-inline const EngineMessage (&EnumValuesEngineMessage())[4] {
+inline const EngineMessage (&EnumValuesEngineMessage())[5] {
   static const EngineMessage values[] = {
     EngineMessage_NONE,
     EngineMessage_EngineStartupCommand,
     EngineMessage_EngineShutdownCommand,
-    EngineMessage_KeyboardEvent
+    EngineMessage_KeyboardEvent,
+    EngineMessage_MouseMoveEvent
   };
   return values;
 }
 
 inline const char * const *EnumNamesEngineMessage() {
-  static const char * const names[5] = {
+  static const char * const names[6] = {
     "NONE",
     "EngineStartupCommand",
     "EngineShutdownCommand",
     "KeyboardEvent",
+    "MouseMoveEvent",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameEngineMessage(EngineMessage e) {
-  if (::flatbuffers::IsOutRange(e, EngineMessage_NONE, EngineMessage_KeyboardEvent)) return "";
+  if (::flatbuffers::IsOutRange(e, EngineMessage_NONE, EngineMessage_MouseMoveEvent)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesEngineMessage()[index];
 }
@@ -127,6 +133,10 @@ template<> struct EngineMessageTraits<NUBE::Interop::EngineShutdownCommand> {
 
 template<> struct EngineMessageTraits<NUBE::Interop::KeyboardEvent> {
   static const EngineMessage enum_value = EngineMessage_KeyboardEvent;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::MouseMoveEvent> {
+  static const EngineMessage enum_value = EngineMessage_MouseMoveEvent;
 };
 
 template <bool B = false>
@@ -217,6 +227,9 @@ struct EngineEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const NUBE::Interop::KeyboardEvent *payload_as_KeyboardEvent() const {
     return payload_type() == NUBE::Interop::EngineMessage_KeyboardEvent ? static_cast<const NUBE::Interop::KeyboardEvent *>(payload()) : nullptr;
   }
+  const NUBE::Interop::MouseMoveEvent *payload_as_MouseMoveEvent() const {
+    return payload_type() == NUBE::Interop::EngineMessage_MouseMoveEvent ? static_cast<const NUBE::Interop::MouseMoveEvent *>(payload()) : nullptr;
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -237,6 +250,10 @@ template<> inline const NUBE::Interop::EngineShutdownCommand *EngineEnvelope::pa
 
 template<> inline const NUBE::Interop::KeyboardEvent *EngineEnvelope::payload_as<NUBE::Interop::KeyboardEvent>() const {
   return payload_as_KeyboardEvent();
+}
+
+template<> inline const NUBE::Interop::MouseMoveEvent *EngineEnvelope::payload_as<NUBE::Interop::MouseMoveEvent>() const {
+  return payload_as_MouseMoveEvent();
 }
 
 struct EngineEnvelopeBuilder {
@@ -400,6 +417,58 @@ inline ::flatbuffers::Offset<KeyboardEvent> CreateKeyboardEvent(
   return builder_.Finish();
 }
 
+struct MouseMoveEvent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MouseMoveEventBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X = 4,
+    VT_Y = 6
+  };
+  int32_t x() const {
+    return GetField<int32_t>(VT_X, 0);
+  }
+  int32_t y() const {
+    return GetField<int32_t>(VT_Y, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_X, 4) &&
+           VerifyField<int32_t>(verifier, VT_Y, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct MouseMoveEventBuilder {
+  typedef MouseMoveEvent Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x(int32_t x) {
+    fbb_.AddElement<int32_t>(MouseMoveEvent::VT_X, x, 0);
+  }
+  void add_y(int32_t y) {
+    fbb_.AddElement<int32_t>(MouseMoveEvent::VT_Y, y, 0);
+  }
+  explicit MouseMoveEventBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<MouseMoveEvent> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<MouseMoveEvent>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<MouseMoveEvent> CreateMouseMoveEvent(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t x = 0,
+    int32_t y = 0) {
+  MouseMoveEventBuilder builder_(_fbb);
+  builder_.add_y(y);
+  builder_.add_x(x);
+  return builder_.Finish();
+}
+
 struct EngineStartupCommand FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef EngineStartupCommandBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -527,6 +596,10 @@ inline bool VerifyEngineMessage(::flatbuffers::VerifierTemplate<B> &verifier, co
     }
     case EngineMessage_KeyboardEvent: {
       auto ptr = reinterpret_cast<const NUBE::Interop::KeyboardEvent *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EngineMessage_MouseMoveEvent: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::MouseMoveEvent *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

@@ -13,4 +13,6 @@ InputComponent::InputComponent(Node &owner) : Component(owner)
 {
 	direction = { 0, 0, 0 };
 	axes = { 0, 1, 2 };
+	m_mousePosition = { 0, 0 };
+	m_mouseDelta = { 0, 0 };
 }
