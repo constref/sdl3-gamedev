@@ -128,6 +128,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 	// vertex normals
 	VtArray<GfVec3f> usdNormals;
 	mesh.GetNormalsAttr().Get(&usdNormals);
+	assert(mesh.GetNormalsInterpolation() == UsdGeomTokens->faceVarying && "Only face varying normals are currently supported");
 
 	// triangulate the normals from usd source
 	VtValue triNormalsVal;
@@ -137,11 +138,15 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 		Logger::error(self, "Error triangulating face normals");
 	}
 	VtVec3fArray triNormals = triNormalsVal.Get<VtArray<GfVec3f>>();
+	for (GfVec3f &n : triNormals)
+	{
+		n.Normalize();
+	}
 
 	// get UVs (st)
 	UsdGeomPrimvar stPrimvar = primvarApi.GetPrimvar(TfToken("st"));
 	VtArray<GfVec2f> stList;
-	stPrimvar.GetAttr().Get(&stList);
+	stPrimvar.ComputeFlattened(&stList);
 	VtValue stTriVal;
 	HdMeshComputationResult triStResult = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(stList.begin(), stList.size(), HdTypeFloatVec2, &stTriVal);
 	VtVec2fArray triSts = stTriVal.Get<VtArray<GfVec2f>>();
@@ -167,7 +172,6 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 			GfVec2f usdSt = triSts[indexPos];
 
 			// generate a vertex ID to check against the hash
-			usdNorm.Normalize();
 			VertexId ve
 			{
 				.index = idx,

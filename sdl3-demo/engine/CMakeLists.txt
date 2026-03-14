@@ -6,9 +6,6 @@ find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
 find_package(DirectX-Headers REQUIRED)
 
-# tooling specific
-#find_package(pxr REQUIRED)
-
 set(CMAKE_CXX_STANDARD 23)
 
 set(ENGINE_SOURCES
@@ -148,15 +145,11 @@ endif()
 set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
 message(STATUS ${FLATBUFF_DIR})
 
-message(STATUS "USD Libs: ${PXR_LIBRARIES}")
-message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
-
 target_link_libraries(engine PUBLIC
 	Vulkan::Vulkan
 	Vulkan::volk
 	Vulkan::shaderc_combined
 	SDL3::SDL3
-	#SDL3_mixer::SDL3_mixer
 	glm::glm
 	tinyxml2::tinyxml2
 	flatbuffers::flatbuffers
@@ -171,11 +164,17 @@ target_include_directories(engine
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# tooling specific
+if (EXECUTION_MODE STREQUAL "TOOLING")
+    find_package(pxr REQUIRED)
 
-#add_library(enginetooling
-	#"tooling/usd/usdprocessor.h"
-	#"tooling/usd/usdprocessor.cpp")
+    message(STATUS "USD Libs: ${PXR_LIBRARIES}")
+    message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
 
-#target_link_libraries(enginetooling
-	#PRIVATE engine usd usdGeom usdImaging hd)
-	#PRIVATE engine)
+    add_library(enginetooling
+        "tooling/usd/usdprocessor.h"
+        "tooling/usd/usdprocessor.cpp")
+
+    target_link_libraries(enginetooling
+        PRIVATE engine usd usdGeom usdImaging hd)
+endif()

@@ -49,8 +49,8 @@ void Empty::start(Services &services, SDLState &state)
 	root.addChild(player);
 	
 	//const std::string usdPath = "data\\usd\\ufo.usd";
-	//const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
+	const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/prefabs_MODEL.usd";
 
-	//USDProcessor usdproc;
-	//usdproc.loadStage(usdPath, root, services);
+	USDProcessor usdproc;
+	usdproc.loadStage(usdPath, root, services);
 }

@@ -8,7 +8,7 @@ set(PLATFORMER_SOURCES
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})
 
-add_executable(empty ${PLATFORMER_SOURCES})
+add_executable(empty WIN32 ${PLATFORMER_SOURCES})
 target_link_libraries(empty PUBLIC engine)
 
 # For MSVC, you often need the 'latest' flag specifically
@@ -35,5 +35,5 @@ if (EMSCRIPTEN)
 endif()
 
 if (EXECUTION_MODE STREQUAL "TOOLING")
-	#target_link_libraries(empty PRIVATE enginetooling)
+    target_link_libraries(empty PRIVATE enginetooling)
 endif()

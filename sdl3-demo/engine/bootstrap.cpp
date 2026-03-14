@@ -55,8 +55,8 @@ int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH
 	}
 	else
 	{
-		EngineWorker *worker = new EngineWorker(std::make_unique<Engine>(std::move(application)), editorPID, editorUrl, logW, logH, width, height);
-		worker->start();
+		EngineWorker worker(std::make_unique<Engine>(std::move(application)), editorPID, editorUrl, logW, logH, width, height);
+		worker.start();
 	}
 
 	return 0;

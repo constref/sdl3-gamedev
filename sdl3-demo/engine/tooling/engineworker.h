@@ -32,5 +32,4 @@ public:
 	void processEvents();
 	void pushEvent(const PlatformEvent &event);
 	Engine &getEngine();
-	void processInteropMessage(uint32_t msgType);
 };

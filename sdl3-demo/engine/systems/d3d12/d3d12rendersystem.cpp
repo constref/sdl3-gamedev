@@ -670,9 +670,15 @@ void D3D12RenderSystem::endFrame()
     res.commandList->OMSetRenderTargets(1, &rtvHandle, false, &m_dsvHandle);
     res.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    // ensure we can acquire the keyed-mutex lock
     if constexpr (Config::IsToolingMode())
     {
-        m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, INFINITE);
+        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, 1000);
+        if (hr == WAIT_TIMEOUT)
+        {
+            // do nothing if we can't acquire a lock
+            return;
+        }
     }
 
     // draw all objects
@@ -732,7 +738,7 @@ void D3D12RenderSystem::update(Node& node)
     XMMATRIX rotation = rotX * rotY * rotZ;
     XMMATRIX world = rotation * XMMatrixTranslation(node.getPosition().x, node.getPosition().y, node.getPosition().z);
     XMMATRIX worldViewProj = world * m_viewProjMatrix;
-    XMMATRIX normalMat = world;
+    XMMATRIX normalMat = world * m_viewMatrix;
     normalMat.r[3] = XMVectorSet(0, 0, 0, 1); // remove translation from normal transform
     XMMATRIX invTransWorld = XMMatrixTranspose(XMMatrixInverse(nullptr, normalMat));
 

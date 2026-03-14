@@ -44,11 +44,6 @@ struct ApplicationEnteredForeground
 {
 };
 
-struct InteropMessage
-{
-	uint32_t messageType;
-};
-
 using PlatformEvent = std::variant<
 	ApplicationEnteredBackground,
 	ApplicationEnteredForeground,
@@ -57,6 +52,5 @@ using PlatformEvent = std::variant<
 	MouseMoveEvent,
 	MouseButtonEvent,
 	ResizeEvent,
-	ExitEvent,
-	InteropMessage
+	ExitEvent
 >;
