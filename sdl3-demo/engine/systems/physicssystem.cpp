@@ -55,16 +55,21 @@ void PhysicsSystem::update(Node &node)
 
 	// simulate friction
 	const float factor = std::max(0.9f, 1.0f - pc->getDamping() * FrameContext::dt());
-	vel.x *= factor;
-	if (std::abs(vel.x) < 0.01f)
+	vel *= factor;
+	if (vel.length() < 0.01f)
 	{
-		vel.x = 0;
+		vel *= 0;
 	}
-	vel.z *= factor;
-	if (std::abs(vel.z) < 0.01f)
-	{
-		vel.z = 0;
-	}
+	// vel.x *= factor;
+	// if (std::abs(vel.x) < 0.01f)
+	// {
+	// 	vel.x = 0;
+	// }
+	// vel.z *= factor;
+	// if (std::abs(vel.z) < 0.01f)
+	// {
+	// 	vel.z = 0;
+	// }
 	pc->setVelocity(vel);
 
 	// collision component can check per-axis and apply resolution

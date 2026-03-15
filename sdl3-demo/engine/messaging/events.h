@@ -6,6 +6,10 @@
 #include <animationplaybackmode.h>
 #include <resourceid.h>
 
+class ShutdownEvent : public Event<ShutdownEvent, FrameStage::End>
+{
+};
+
 class KeyUpEvent : public Event<KeyUpEvent, FrameStage::Input>
 {
 public:

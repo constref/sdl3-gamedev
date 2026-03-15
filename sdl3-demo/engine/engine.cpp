@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#include "systems/enginesystem.h"
 #include "systems/windowingsystem.h"
 
 Engine::Engine(std::unique_ptr<Application> app): app(std::move(app)), services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
@@ -38,6 +39,7 @@ bool Engine::initialize(int logW, int logH, int width, int height)
 		return false;
 	}
 	d3d12Renderer = &renderSys;
+	services.compSys().registerSystem(std::make_unique<EngineSystem>(services, *this));
 
 	//auto &renderSys = services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH, services));
 	//if (!renderSys.initialize())
@@ -74,6 +76,26 @@ void Engine::cleanup()
 {
 	app->cleanup();
 	services.compSys().shutdown();
+}
+
+void Engine::run()
+{
+	prevTime = SDL_GetTicks();
+	running = true;
+
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(emIterate, this, 0, true);
+#else
+	while (running)
+	{
+		step();
+	}
+#endif
+}
+
+void Engine::stop()
+{
+	running = false;
 }
 
 void Engine::step()

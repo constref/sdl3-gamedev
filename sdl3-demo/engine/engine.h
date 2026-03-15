@@ -71,20 +71,8 @@ public:
 
 	void cleanup();
 
-	void run()
-	{
-		prevTime = SDL_GetTicks();
-		running = true;
-
-#ifdef __EMSCRIPTEN__
-		emscripten_set_main_loop_arg(emIterate, this, 0, true);
-#else
-		while (running)
-		{
-			step();
-		}
-#endif
-	}
+	void run();
+	void stop();
 
 	void step();
 
