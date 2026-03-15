@@ -64,6 +64,8 @@ set(ENGINE_SOURCES
 	"containers/atomicringbuffer.h"
 	"animationplaybackmode.h"
 	"systems/system.h"
+	"systems/windowingsystem.h"
+	"systems/windowingsystem.cpp"
 	"systems/physicssystem.h"
 	"systems/physicssystem.cpp"
 	"systems/inputsystem.h"
@@ -83,6 +85,7 @@ set(ENGINE_SOURCES
 	"systems/vulkanrendersystem.h"
 	"systems/d3d11rendersystem.h"
 	"systems/d3d11rendersystem.cpp"
+	"systems/d3d12/util.h"
 	"systems/d3d12/d3d12rendersystem.h"
 	"systems/d3d12/d3d12rendersystem.cpp"
 	"systems/context/rendercontext.h"
@@ -174,8 +177,8 @@ target_include_directories(engine
     add_library(enginetooling
         "tooling/systems/editorinputsystem.h"
         "tooling/systems/editorinputsystem.cpp"
-        "tooling/systems/editingsystem.h"
-        "tooling/systems/editingsystem.cpp"
+        "tooling/systems/editorsystem.h"
+        "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp")

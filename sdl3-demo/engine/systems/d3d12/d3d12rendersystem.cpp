@@ -1,31 +1,28 @@
 #include "d3d12rendersystem.h"
-
-#include <logger.h>
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include <logger.h>
 #include <SDL3/SDL_system.h>
 #include <d3dcompiler.h>
 #include <filesystem>
-
 #include <d3d11on12.h>
+#include "util.h"
 
 using namespace DirectX;
 
-#define DXCHK(result, msg) \
-    if (FAILED(result)) { \
-        Logger::error(this, msg); \
-        return false; \
-    }
+namespace d3d12rs
+{
+    constexpr static uint16_t FramesInFlight = 1;
+    constexpr static uint16_t RenderTargetCount = 2;
+    constexpr static uint16_t MaxCopyOps = 32;
+    constexpr static uint32_t MaxVertCount = 5000;
+    constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
+    constexpr static uint16_t AlignmentVertexIndex = 4;
+}
 
 using namespace Microsoft::WRL;
 using namespace d3d12rs;
-
-size_t align(size_t size, size_t alignment)
-{
-    return (size + alignment - 1) & ~(alignment - 1);
-}
 
 D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int width, int height, int logW,
                                      int logH) : System(services)
@@ -35,7 +32,10 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int
     m_logW = logW;
     m_logH = logH;
     m_fenceEvent = NULL;
+    m_fenceValue = FramesInFlight;
+    m_frameResources.resize(FramesInFlight);
     m_camPosition = XMFLOAT4(0, 0, 0, 1);
+    m_backBuffers.resize(RenderTargetCount);
     if (Config::IsStandaloneMode())
     {
         m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER,
@@ -722,7 +722,7 @@ void D3D12RenderSystem::endFrame()
     if constexpr (Config::IsStandaloneMode())
     {
         UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
-        m_swapchain->Present(m_syncInterval, presentFlags);
+        m_swapchain->Present(1, presentFlags);
     }
     
     res.fenceValue = ++m_fenceValue;
@@ -796,15 +796,15 @@ bool D3D12RenderSystem::createSwapchain()
     if constexpr (Config::IsStandaloneMode())
     {
         // create internal render targets
-        constexpr auto rtFlags = Config::ExecSelect(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-                                                    D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-                                                    D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        constexpr auto rtFlags =
+            Config::ExecSelect(
+                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
         auto renderTargetDesc = CD3DX12_RESOURCE_DESC::Tex2D(SwapchainFormat, m_logW, m_logH,
                                                              1, 0, 1, 0, rtFlags);
         auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT);
 
-        D3D12_CLEAR_VALUE clearValue
-            {.Format = SwapchainFormat, .Color = {1, 0, 0, 1}};
+        D3D12_CLEAR_VALUE clearValue{.Format = SwapchainFormat, .Color = {1, 0, 0, 1}};
 
         m_renderTargetTextures.resize(RenderTargetCount);
         for (auto& renderTarget : m_renderTargetTextures)

@@ -17,12 +17,6 @@ struct SDL_Window;
 
 namespace d3d12rs
 {
-constexpr static uint16_t FramesInFlight = 3;
-constexpr static uint16_t RenderTargetCount = 2;
-constexpr static uint16_t MaxCopyOps = 32;
-constexpr static uint32_t MaxVertCount = 5000;
-constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
-constexpr static uint16_t AlignmentVertexIndex = 4;
 
 using Microsoft::WRL::ComPtr;
 
@@ -102,7 +96,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	HWND m_hWnd = NULL;
 	int m_width, m_height, m_logW, m_logH;
 
-	std::array<ComPtr<ID3D12Resource>, RenderTargetCount> m_backBuffers;
+	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
 	ComPtr<IDXGIAdapter4> m_dxgiAdapter;
 	ComPtr<ID3D12Device2> m_device;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
@@ -132,14 +126,14 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	size_t m_stagingOffset = 0;
 
 	std::vector<CopyOperation> m_copyOperations;
-	FrameResources m_frameResources[FramesInFlight];
+	std::vector<FrameResources> m_frameResources;
 
 	// sync related
 	UINT m_syncInterval = 1;
 	bool m_allowTearing = false;
 	uint16_t m_frameResIndex = 0;
 	uint64_t m_frameIndex = 0;
-	uint64_t m_fenceValue = FramesInFlight;
+	uint64_t m_fenceValue = 0;
 	HANDLE m_fenceEvent;
 	ComPtr<ID3D12Fence> m_fence;
 

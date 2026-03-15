@@ -141,7 +141,6 @@ void Engine::step()
 	}
 
 	ctx.deltaTime = deltaTime;
-	// TODO: Review frame begin/end sequence here
 	FrameContext::global().setStage(FrameStage::Render);
 	auto &stageSystems = services.compSys().getSystemRegistry().getStageSystems(FrameContext::currentStage());
 	for (auto &sys : stageSystems)
