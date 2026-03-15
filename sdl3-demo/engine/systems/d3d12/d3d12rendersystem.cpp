@@ -13,8 +13,8 @@ using namespace DirectX;
 
 namespace d3d12rs
 {
-    constexpr static uint16_t FramesInFlight = 1;
-    constexpr static uint16_t RenderTargetCount = 2;
+    constexpr static uint16_t FramesInFlight = Config::ExecSelect(2, 1);
+    constexpr static uint16_t RenderTargetCount = Config::ExecSelect(3, 2);
     constexpr static uint16_t MaxCopyOps = 32;
     constexpr static uint32_t MaxVertCount = 5000;
     constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
