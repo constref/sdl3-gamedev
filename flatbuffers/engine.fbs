@@ -33,6 +33,8 @@ table KeyboardEvent {
 table MouseMoveEvent {
     x:int;
     y:int;
+    x_rel:int;
+    y_rel:int;
 }
 
 table EngineStartupCommand {

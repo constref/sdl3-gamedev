@@ -174,6 +174,8 @@ target_include_directories(engine
     add_library(enginetooling
         "tooling/systems/editorinputsystem.h"
         "tooling/systems/editorinputsystem.cpp"
+        "tooling/systems/editingsystem.h"
+        "tooling/systems/editingsystem.cpp"
         "tooling/events.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp")

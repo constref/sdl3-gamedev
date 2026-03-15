@@ -6,6 +6,8 @@ struct MouseMoveEvent
 {
     int x;
 	int y;
+	int xRel;
+	int yRel;
 };
 
 struct MouseButtonEvent

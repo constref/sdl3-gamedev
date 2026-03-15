@@ -421,7 +421,9 @@ struct MouseMoveEvent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef MouseMoveEventBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_X = 4,
-    VT_Y = 6
+    VT_Y = 6,
+    VT_X_REL = 8,
+    VT_Y_REL = 10
   };
   int32_t x() const {
     return GetField<int32_t>(VT_X, 0);
@@ -429,11 +431,19 @@ struct MouseMoveEvent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   int32_t y() const {
     return GetField<int32_t>(VT_Y, 0);
   }
+  int32_t x_rel() const {
+    return GetField<int32_t>(VT_X_REL, 0);
+  }
+  int32_t y_rel() const {
+    return GetField<int32_t>(VT_Y_REL, 0);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
+           VerifyField<int32_t>(verifier, VT_X_REL, 4) &&
+           VerifyField<int32_t>(verifier, VT_Y_REL, 4) &&
            verifier.EndTable();
   }
 };
@@ -447,6 +457,12 @@ struct MouseMoveEventBuilder {
   }
   void add_y(int32_t y) {
     fbb_.AddElement<int32_t>(MouseMoveEvent::VT_Y, y, 0);
+  }
+  void add_x_rel(int32_t x_rel) {
+    fbb_.AddElement<int32_t>(MouseMoveEvent::VT_X_REL, x_rel, 0);
+  }
+  void add_y_rel(int32_t y_rel) {
+    fbb_.AddElement<int32_t>(MouseMoveEvent::VT_Y_REL, y_rel, 0);
   }
   explicit MouseMoveEventBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -462,8 +478,12 @@ struct MouseMoveEventBuilder {
 inline ::flatbuffers::Offset<MouseMoveEvent> CreateMouseMoveEvent(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t x = 0,
-    int32_t y = 0) {
+    int32_t y = 0,
+    int32_t x_rel = 0,
+    int32_t y_rel = 0) {
   MouseMoveEventBuilder builder_(_fbb);
+  builder_.add_y_rel(y_rel);
+  builder_.add_x_rel(x_rel);
   builder_.add_y(y);
   builder_.add_x(x);
   return builder_.Finish();

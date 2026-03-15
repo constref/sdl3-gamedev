@@ -44,6 +44,8 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	// update the render system camera details
 	auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
 	renderSys->setCamDirection(pc->localZ().x, pc->localZ().y, pc->localZ().z);
+	
+	Logger::info(this, std::format("FPSCameraSystem::onEvent({},{})", event.xRel(), event.yRel()));
 }
 
 void FPSCameraSystem::update(Node& node)
