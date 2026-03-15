@@ -13,6 +13,14 @@ Engine::Engine(std::unique_ptr<Application> app): app(std::move(app)), services(
 	globalTime = 0;
 }
 
+Engine::~Engine()
+{
+#ifdef __EMSCRIPTEN__
+	emscripten_cancel_main_loop();
+#endif
+	cleanup();
+}
+
 bool Engine::initialize(int logW, int logH, int width, int height)
 {
 	sdlState.logW = logW;

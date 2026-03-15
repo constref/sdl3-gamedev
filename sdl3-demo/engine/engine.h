@@ -55,25 +55,14 @@ class Engine
 
 public:
 	Engine(std::unique_ptr<Application> app);
-
-	~Engine()
-	{
-#ifdef __EMSCRIPTEN__
-		emscripten_cancel_main_loop();
-#endif
-		cleanup();
-	}
+	~Engine();
 
 	bool initialize(int logW, int logH, int width, int height);
-
 	d3d12rs::D3D12RenderSystem* getRenderer() const;
 	Services& getServices();
-
 	void cleanup();
-
 	void run();
 	void stop();
-
 	void step();
 
 private:
