@@ -17,12 +17,19 @@
 
 #include "inputstate.h"
 #include "systems/fpscamerasystem.h"
+#include "tooling/systems/editingsystem.h"
+#include "tooling/systems/editorinputsystem.h"
+#include "tooling/systems/nodeauthoringcomponent.h"
 #include "tooling/usd/usdprocessor.h"
 
 using namespace DirectX;
 
 bool Empty::initialize(Services &services, SDLState &state)
 {
+	// TODO: Review how to toggle the registration of these systems
+	services.compSys().registerSystem(std::make_unique<EditorInputSystem>(services));
+	services.compSys().registerSystem(std::make_unique<EditingSystem>(services));
+	
 	services.compSys().registerSystem(std::make_unique<FPSCameraSystem>(services));
 	return true;
 }

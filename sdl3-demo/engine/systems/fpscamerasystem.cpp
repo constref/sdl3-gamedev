@@ -22,7 +22,7 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	using namespace DirectX;
 	Node &node = services.world().getNode(target);
 	auto [ic, cc, pc] = getRequiredComponents(node);
-	rotY += ic->mouseDelta().x * FrameContext::dt();
+	
 	// rotate local z around y axis
 	XMFLOAT3 localX;
 	XMFLOAT3 localY = pc->localY();
@@ -30,7 +30,7 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	
 	XMVECTOR oldLocalZ = XMLoadFloat3(&localZ);
 	XMVECTOR rotAxis = XMLoadFloat3(&localY);
-	XMVECTOR quat = XMQuaternionRotationAxis(rotAxis, ic->mouseDelta().x * 0.5f * FrameContext::dt());
+	XMVECTOR quat = XMQuaternionRotationAxis(rotAxis, event.xRel() * 0.5f * FrameContext::dt());
 	XMVECTOR newLocalZ = XMVector3Rotate(oldLocalZ, quat);
 	XMStoreFloat3(&localZ, newLocalZ);
 	pc->setLocalZ(localZ);
@@ -40,13 +40,15 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	XMVECTOR newLocalX = XMVector3Cross(vecLocalY, newLocalZ);
 	XMStoreFloat3(&localX, newLocalX);
 	pc->setLocalX(localX);
+	
+	// update the render system camera details
+	auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
+	renderSys->setCamDirection(pc->localZ().x, pc->localZ().y, pc->localZ().z);
 }
 
 void FPSCameraSystem::update(Node& node)
 {
-    auto [ic, cc, pc] = getRequiredComponents(node);
-    auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
-    glm::vec3 pos = node.getPosition();
-	renderSys->setCamDirection(pc->localZ().x, pc->localZ().y, pc->localZ().z);
-    renderSys->setCamPosition(pos.x, pos.y, pos.z);
+	auto *renderSys = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
+	glm::vec3 pos = node.getPosition();
+	renderSys->setCamPosition(pos.x, pos.y, pos.z);
 }

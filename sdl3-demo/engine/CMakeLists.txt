@@ -172,6 +172,9 @@ target_include_directories(engine
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
 
     add_library(enginetooling
+        "tooling/systems/editorinputsystem.h"
+        "tooling/systems/editorinputsystem.cpp"
+        "tooling/events.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp")
 

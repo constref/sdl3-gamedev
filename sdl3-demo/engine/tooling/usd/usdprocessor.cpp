@@ -113,7 +113,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 	VtArray<int> indices;
 	mesh.GetFaceVertexIndicesAttr().Get(&indices);
 
-	HdMeshTopology topology(UsdGeomTokens->none, UsdGeomTokens->leftHanded, faceCounts, indices);
+	HdMeshTopology topology(UsdGeomTokens->none, UsdGeomTokens->rightHanded, faceCounts, indices);
 	HdMeshUtil meshUtil(&topology, mesh.GetPath());
 
 	VtVec3iArray newIndices;
@@ -184,7 +184,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 			{
 				// vertex wasn't in the map, create a new mesh vert
 				Vertex v;
-				v.position = XMFLOAT3(points[idx][0], points[idx][1], points[idx][2]);
+				v.position = XMFLOAT3(points[idx][0], points[idx][1], -points[idx][2]);
 				v.normal = XMFLOAT3(ve.normal[0], ve.normal[1], ve.normal[2]);
 				v.uv = XMFLOAT2(ve.uv[0], ve.uv[1]);
 				v.color = XMFLOAT4(1, 1, 1, 1);
@@ -240,7 +240,7 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 			{
 				GfVec3d translation;
 				bool got = op.Get<GfVec3d>(&translation);
-				node.setPosition(glm::vec3(translation[0], translation[1], translation[2]));
+				node.setPosition(glm::vec3(translation[0], translation[1], -translation[2]));
 			}
 			else if (op.GetOpType() == UsdGeomXformOp::TypeRotateXYZ)
 			{
@@ -248,8 +248,8 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 				{
 					GfVec3f rotations;
 					bool got = op.Get<GfVec3f>(&rotations);
-					node.setRotation(XMFLOAT3(DirectX::XMConvertToRadians(rotations[0]), 
-						DirectX::XMConvertToRadians(rotations[1]), 
+					node.setRotation(XMFLOAT3(-DirectX::XMConvertToRadians(rotations[0]), 
+						-DirectX::XMConvertToRadians(rotations[1]), 
 						DirectX::XMConvertToRadians(rotations[2])));
 				}
 			}

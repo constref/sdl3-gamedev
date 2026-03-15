@@ -2,7 +2,6 @@
 
 #include <systems/system.h>
 #include <components/inputcomponent.h>
-#include <components/physicscomponent.h>
 
 class KeyUpEvent;
 class KeyDownEvent;

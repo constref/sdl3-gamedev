@@ -24,10 +24,15 @@ class MouseMotionEvent : public Event<MouseMotionEvent, FrameStage::Input>
 {
 	int m_x;
 	int m_y;
+	int m_xRel;
+	int m_yRel;
+	
 public:
-	MouseMotionEvent(int x, int y) : m_x(x), m_y(y) {};
+	MouseMotionEvent(int xPos, int yPos, int xRel, int yRel) : m_x(xPos), m_y(yPos), m_xRel(xRel), m_yRel(yRel) {};
 	int x() const { return m_x; }
 	int y() const { return m_y; }
+	int xRel() const { return m_xRel; }
+	int yRel() const { return m_yRel; }
 };
 
 class ComponentRemovalEvent : public Event<ComponentRemovalEvent, FrameStage::End>

@@ -1,5 +1,7 @@
 #include "engine.h"
 
+#include "systems/windowingsystem.h"
+
 Engine::Engine(std::unique_ptr<Application> app): app(std::move(app)), services(world, compSys, eventQueue, inputState, protoInstancer), sdlState(SDL_GetKeyboardState(nullptr))
 {
 	debugMode = false;
@@ -12,29 +14,16 @@ Engine::Engine(std::unique_ptr<Application> app): app(std::move(app)), services(
 
 bool Engine::initialize(int logW, int logH, int width, int height)
 {
-	sdlState.width = width;
-	sdlState.height = height;
 	sdlState.logW = logW;
 	sdlState.logH = logH;
 
+	SDL_Window *window = nullptr;
 	if constexpr (Config::IsStandaloneMode())
 	{
-		if (!SDL_Init(SDL_INIT_VIDEO))
-		{
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
-			return false;
-		}
-
-		SDL_Window *window = SDL_CreateWindow("NUBE Engine", sdlState.width, sdlState.height, SDL_WINDOW_RESIZABLE);
-		if (!window)
-		{
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(), nullptr);
-			cleanup();
-			return false;
-		}
-		sdlState.window = window;
-		SDL_SetWindowFullscreen(window, sdlState.fullscreen);
+		auto windowSystem = std::make_unique<WindowingSystem>(services);
+		windowSystem->initialize(width, height);
+		window = windowSystem->window();
+		services.compSys().registerSystem(std::move(windowSystem));
 	}
 
 	// core system registrations
@@ -43,7 +32,7 @@ bool Engine::initialize(int logW, int logH, int width, int height)
 	services.compSys().registerSystem(std::make_unique<PhysicsSystem>(services));
 	services.compSys().registerSystem(std::make_unique<CollisionSystem>(services));
 	services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(services));
-	auto &renderSys = services.compSys().registerSystem(std::make_unique<d3d12rs::D3D12RenderSystem>(services, sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH));
+	auto &renderSys = services.compSys().registerSystem(std::make_unique<d3d12rs::D3D12RenderSystem>(services, window, width, height, logW, logH));
 	if (!renderSys.initialize())
 	{
 		return false;
@@ -85,12 +74,6 @@ void Engine::cleanup()
 {
 	app->cleanup();
 	services.compSys().shutdown();
-
-	if constexpr (Config::IsStandaloneMode())
-	{
-		SDL_DestroyWindow(sdlState.window);
-		SDL_Quit();
-	}
 }
 
 void Engine::step()
@@ -118,72 +101,6 @@ void Engine::step()
 	World &world = services.world();
 	Node &root = world.getNode(app->getRoot());
 	
-	//std::vector<DirectX::XMFLOAT2> mousePositions;
-	//mousePositions.reserve(256);
-
-	if (Config::IsStandaloneMode())
-	{
-		SDL_Event event{};
-		while (SDL_PollEvent(&event))
-		{
-			switch (event.type)
-			{
-				case SDL_EVENT_QUIT:
-				{
-					running = false;
-					break;
-				}
-				case SDL_EVENT_WINDOW_RESIZED:
-				{
-					sdlState.width = event.window.data1;
-					sdlState.height = event.window.data2;
-					break;
-				}
-				case SDL_EVENT_KEY_DOWN:
-				{
-					// ignore repeat key-down signals while holding (prevent event spam)
-					if (!event.key.repeat)
-					{
-						services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0,
-						                                            event.key.scancode);
-					}
-					break;
-				}
-				case SDL_EVENT_KEY_UP:
-				{
-					services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0,
-					                                          event.key.scancode);
-					if (event.key.scancode == SDL_SCANCODE_F2)
-					{
-						debugMode = !debugMode;
-					}
-					else if (event.key.scancode == SDL_SCANCODE_F11)
-					{
-						sdlState.fullscreen = !sdlState.fullscreen;
-						SDL_SetWindowFullscreen(sdlState.window, sdlState.fullscreen);
-					}
-					break;
-				}
-				case SDL_EVENT_MOUSE_MOTION:
-				{
-					//mousePositions.push_back({ event.motion.x, event.motion.y});
-					services.eventQueue().enqueue<MouseMotionEvent>(services.inputState().getFocusTarget(), 0, event.motion.x, event.motion.y);
-					break;
-				}
-			}
-		}
-	}
-	
-	/*
-	if (mousePositions.size())
-	{
-		Logger::info(this, std::format("{}", mousePositions.size()));
-		DirectX::XMFLOAT2 lastPos = mousePositions.back();
-		services.eventQueue().enqueue<MouseMotionEvent>(services.inputState().getFocusTarget(), 0, lastPos.x, lastPos.y);
-		mousePositions.clear();
-	}
-	*/
-
 	FrameContext::global().setStage(FrameStage::Start);
 	services.eventQueue().dispatch();
 	processSystems(root, world);

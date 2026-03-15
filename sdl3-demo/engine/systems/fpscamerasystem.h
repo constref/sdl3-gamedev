@@ -8,7 +8,6 @@
 
 class FPSCameraSystem : public System<FrameStage::Gameplay, InputComponent, CameraComponent, PhysicsComponent>
 {
-    float rotY = 0;
 public:
     FPSCameraSystem(Services& services);
     void update(Node& node) override;
