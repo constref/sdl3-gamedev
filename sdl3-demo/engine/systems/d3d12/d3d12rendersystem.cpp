@@ -754,7 +754,7 @@ void D3D12RenderSystem::update(Node& node)
 
     // update the per-obj data
     ObjectMatrices objMatrices;
-    XMStoreFloat4x4(&objMatrices.world, world);
+    XMStoreFloat4x4(&objMatrices.world, XMMatrixTranspose(world));
     XMStoreFloat4x4(&objMatrices.worldViewProj, XMMatrixTranspose(worldViewProj));
     XMStoreFloat4x4(&objMatrices.invTransWorld, invTransWorld);
     m_nextMatrixIndex += ObjectMatrices::matrixCount();

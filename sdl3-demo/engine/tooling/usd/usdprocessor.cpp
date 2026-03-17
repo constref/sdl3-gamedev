@@ -185,7 +185,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 				// vertex wasn't in the map, create a new mesh vert
 				Vertex v;
 				v.position = XMFLOAT3(points[idx][0], points[idx][1], -points[idx][2]);
-				v.normal = XMFLOAT3(ve.normal[0], ve.normal[1], ve.normal[2]);
+				v.normal = XMFLOAT3(ve.normal[0], ve.normal[1], -ve.normal[2]);
 				v.uv = XMFLOAT2(ve.uv[0], ve.uv[1]);
 				v.color = XMFLOAT4(1, 1, 1, 1);
 				submeshVerts.push_back(v);
@@ -269,6 +269,7 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		extractTransform(prim, node);
 		if (prim.IsInstance())
 		{
+			// refer to prim's prototype
 			UsdPrim prototype = prim.GetPrototype();
 			for (UsdPrim child : prototype.GetChildren())
 			{
@@ -281,9 +282,26 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 		}
 		else
 		{
+			// look directly in prim's tree for mesh (not instance)
 			for (UsdPrim child : prim.GetChildren())
 			{
-				processPrim(self, child, node, services, meshes);
+				if (child.GetTypeName() == UsdGeomTokens->Mesh)
+				{
+					UsdGeomMesh meshPrim(child);
+					processGeomMesh(node, meshPrim);
+				}
+			}
+		}
+	}
+	else if (prim.GetTypeName() == UsdGeomTokens->Scope)
+	{
+		// scopes are only for organization
+		if (prim.IsActive())
+		{
+			// TODO: Ensure no material should be inherited from this Scope prim
+			for (UsdPrim child : prim.GetChildren())
+			{
+				processPrim(self, child, parent, services, meshes);
 			}
 		}
 	}

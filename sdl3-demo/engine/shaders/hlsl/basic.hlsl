@@ -48,7 +48,9 @@ PixelIn VSMain(VertexIn input)
     PixelIn output;
     output.position = mul(float4(input.position, 1), worldViewProj);
     output.positionW = mul(float4(input.position, 1), world);
-    output.normal = mul(float4(input.normal, 0), invTransWorld).xyz;
+    
+    float3x3 normMat = (float3x3)world;
+    output.normal = mul(input.normal, normMat);
     output.color = input.color;
     output.uv = input.uv;
     return output;
@@ -56,18 +58,38 @@ PixelIn VSMain(VertexIn input)
 
 float4 PSMain(PixelIn input) : SV_TARGET
 {
-    float3 lightPos = float3(1, 0.6f, 0);
-    float3 lightTarget = float3(0, 0, 0);
-    float3 lightDir = lightTarget - lightPos;
-
-    // ambient light
-    float4 ambientColor = float4(0.1, 0.1, 0.1, 1.0);
+    float4 finalColor = float4(0.0, 0.0, 0.0, 1.0);
     
-    // point light
-    float3 L = normalize(lightPos - input.positionW);
-    float lightAmt = max(dot(L, normalize(input.normal)), 0);
-    float4 lightColor = float4(0.8, 0.6, 0.5, 1.0);
+    // ambient light
+    float4 ambientColor = float4(0.05, 0.05, 0.05, 1.0);
+    finalColor += input.color * ambientColor;
+    
+    // directional light
+    {
+        float intensity = 0.1;
+        float3 lightDir = normalize(float3(-1, 0, 0));
+        float lightAmt = max(dot(lightDir, normalize(input.normal)), 0);
+        finalColor += input.color * float4(0.9, 0.8, 0.8, 0) * lightAmt * intensity;
+    }
+    
+    const int numDirLights = 2;
+    float3 dirLights[2] = {float3(3, 0.7, -3), float3(1, 0.7, -10)};
+    for (int i = 0; i < numDirLights; ++i)
+    {
+        // point light
+        float3 lightPos = dirLights[i];
+        const float falloff = 4;
+        float3 L = lightPos - input.positionW;
+        float distance = length(L);
+    
+        if (distance < falloff)
+        {
+            L = L / distance; // normalize
+            float lightAmt = max(dot(L, normalize(input.normal)), 0);
+            finalColor += input.color * (float4(1.0, 0.2, 0.1, 0.0) * lightAmt) * (1 - smoothstep(falloff - 3, falloff, distance));
+        }
+    }
 
-    return (input.color * ambientColor) + (input.color * (lightColor * lightAmt));
+    return finalColor;
 }
 
