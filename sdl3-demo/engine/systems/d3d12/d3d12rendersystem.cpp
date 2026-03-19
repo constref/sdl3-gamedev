@@ -688,7 +688,7 @@ void D3D12RenderSystem::endFrame()
     // ensure we can acquire the keyed-mutex lock
     if constexpr (Config::IsToolingMode())
     {
-        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, 1000);
+        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, 30000);
         if (hr == WAIT_TIMEOUT)
         {
             // do nothing if we can't acquire a lock

@@ -117,16 +117,16 @@ void EngineWorker::start()
             }
 
             // handle specific message
-            auto envelope = NUBE::Interop::GetEngineEnvelope(buffer);
+            auto envelope = NUBE::Interop::GetEditorEnvelope(buffer);
             switch (envelope->payload_type())
             {
-                case NUBE::Interop::EngineMessage_EngineShutdownCommand:
+                case NUBE::Interop::EditorMessage_EngineShutdownCommand:
                 {
                     pushEvent(ExitEvent());
                     Logger::info(this, "Engine shutdown command received.");
                     break;
                 }
-                case NUBE::Interop::EngineMessage_KeyboardEvent:
+                case NUBE::Interop::EditorMessage_KeyboardEvent:
                 {
                     const NUBE::Interop::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
                     if (keyEvent->is_down())
@@ -139,7 +139,7 @@ void EngineWorker::start()
                     }
                     break;
                 }
-                case NUBE::Interop::EngineMessage_MouseMoveEvent:
+                case NUBE::Interop::EditorMessage_MouseMoveEvent:
                 {
                     const NUBE::Interop::MouseMoveEvent* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
                     pushEvent(MouseMoveEvent{
@@ -148,11 +148,11 @@ void EngineWorker::start()
                     });
                     break;
                 }
-                case NUBE::Interop::EngineMessage_EngineStartupCommand:
+                case NUBE::Interop::EditorMessage_EngineStartupCommand:
                 {
                     break;
                 }
-                case NUBE::Interop::EngineMessage_NONE:
+                case NUBE::Interop::EditorMessage_NONE:
                     break;
             }
         }
@@ -180,10 +180,10 @@ void EngineWorker::start()
         using namespace NUBE::Interop;
         if (msg.has_value())
         {
-            auto envelope = GetEngineEnvelope(request.data());
+            auto envelope = GetEditorEnvelope(request.data());
             switch (envelope->payload_type())
             {
-                case EngineMessage_EngineStartupCommand:
+                case EditorMessage_EngineStartupCommand:
                 {
                     m_engine->initialize(1920, 1080, 1920, 1080);
                     // shared handles for GPU interop
@@ -195,7 +195,7 @@ void EngineWorker::start()
                                                                    builder.CreateVector(texHandles),
                                                                    builder.CreateString(engineUrl));
 
-                    auto env = CreateEditorEnvelope(builder, EditorMessage_InitializationDetails, initDetails.Union());
+                    auto env = CreateEngineEnvelope(builder, EngineMessage_InitializationDetails, initDetails.Union());
                     builder.Finish(env);
                     auto span = builder.GetBufferSpan();
                     zmq::message_t response(span);
@@ -214,10 +214,10 @@ void EngineWorker::start()
                     });
                     break;
                 }
-                case EngineMessage_EngineShutdownCommand:
+                case EditorMessage_EngineShutdownCommand:
                 {
                     zmq::message_t response(0);
-                    rep.send(response, zmq::send_flags::dontwait);
+                    rep.send(response, zmq::send_flags::none);
                     
                     m_running = false;
                     if (m_engineThread.joinable())
@@ -226,22 +226,28 @@ void EngineWorker::start()
                     }
                     break;
                 }
-                case EngineMessage_USD_CreateStageEvent:
+                case EditorMessage_USD_CreateStageEvent:
                 {
                     const auto* e = envelope->payload_as_USD_CreateStageEvent();
                     usdSystem.createStage(e->path()->c_str());
+                    zmq::message_t response(0);
+                    rep.send(response, zmq::send_flags::none);
                     break;
                 }
-                case EngineMessage_USD_SaveStageEvent:
+                case EditorMessage_USD_SaveStageEvent:
                 {
                     const auto* e = envelope->payload_as_USD_SaveStageEvent();
                     usdSystem.saveStage();
+                    zmq::message_t response(0);
+                    rep.send(response, zmq::send_flags::none);
                     break;
                 }
-                case EngineMessage_USD_AddLayerEvent:
+                case EditorMessage_USD_AddLayerEvent:
                 {
                     const auto* e = envelope->payload_as_USD_AddLayerEvent();
                     usdSystem.addLayer(e->path()->c_str());
+                    zmq::message_t response(0);
+                    rep.send(response, zmq::send_flags::none);
                     break;
                 }
                 default:
