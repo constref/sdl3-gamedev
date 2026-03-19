@@ -1,4 +1,4 @@
-#include "usdprocessor.h"
+#include "usdsystem.h"
 #include <filesystem>
 #include <unordered_map>
 
@@ -27,6 +27,9 @@
 
 using namespace pxr;
 using namespace DirectX;
+using namespace usd;
+
+static UsdStageRefPtr g_stage = nullptr;
 
 class USDLogger : public TfDiagnosticMgr::Delegate
 {
@@ -49,6 +52,8 @@ public:
 		Logger::warn(this, std::format("{}", warning.GetCommentary()));
 	}
 };
+
+static USDLogger g_usdLogger;
 
 struct VertexId
 {
@@ -101,7 +106,7 @@ private:
 
 
 
-static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
+static std::unique_ptr<Mesh> processMesh(USDSystem *self, UsdGeomMesh mesh)
 {
 	Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
 
@@ -200,7 +205,7 @@ static std::unique_ptr<Mesh> processMesh(USDProcessor *self, UsdGeomMesh mesh)
 	return std::move(newMesh);
 }
 
-static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services &services, std::unordered_map<std::string, PrimGeo> &meshes)
+static void processPrim(USDSystem *self, UsdPrim prim, Node &parent, Services &services, std::unordered_map<std::string, PrimGeo> &meshes)
 {
 	Logger::info(self, std::format("Traversing {}", prim.GetPath().GetString()));
 	World &world = services.world();
@@ -317,17 +322,15 @@ static void processPrim(USDProcessor *self, UsdPrim prim, Node &parent, Services
 	}
 }
 
-void USDProcessor::loadStage(const std::string &usdPath, Node &root, Services &services)
+USDSystem::USDSystem()
 {
-	USDLogger usdLogger;
-	TfDiagnosticMgr::GetInstance().AddDelegate(&usdLogger);
-
-	if (!std::filesystem::exists(usdPath))
-	{
-		throw std::runtime_error("Unable to find USD file");
-	}
-
-	auto stage = pxr::UsdStage::Open(usdPath);
+	TfDiagnosticMgr::GetInstance().AddDelegate(&g_usdLogger);
+	// if (!std::filesystem::exists(""))
+	// {
+	// 	throw std::runtime_error("Unable to find USD file");
+	// }
+	//
+	// auto stage = pxr::UsdStage::Open("");
 
 	/*
 	auto range = stage->Traverse();
@@ -337,9 +340,39 @@ void USDProcessor::loadStage(const std::string &usdPath, Node &root, Services &s
 		processPrim(this, prim, root, services, meshes);
 	}
 	*/
-	UsdPrim rootPrim = stage->GetPseudoRoot();
+	/*
+	UsdPrim rootPrim = stage-e->GetPseudoRoot();
 	for (auto child : rootPrim.GetChildren())
 	{
 		processPrim(this, child, root, services, meshes);
+	}
+*/
+}
+
+void USDSystem::createStage(const std::string &path)
+{
+	g_stage = pxr::UsdStage::CreateNew(path);
+}
+
+void USDSystem::saveStage()
+{
+	g_stage->Save();
+}
+
+void USDSystem::addLayer(const std::string &layerPath)
+{
+	if (std::filesystem::exists(layerPath))
+	{
+		g_stage->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
+	}
+	else
+	{
+		Logger::error(this, "File path does not exist");
+	}
+	
+	UsdPrim rootPrim = g_stage->GetPseudoRoot();
+	for (auto child : rootPrim.GetChildren())
+	{
+		//processPrim(this, child, root, services, meshes);
 	}
 }

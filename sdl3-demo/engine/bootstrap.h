@@ -10,7 +10,7 @@ class Bootstrap
 {
 	bool awaitDebugger = false;
 	int editorPID = 0;
-	std::string editorUrl;
+	std::string url;
 
 public:
 	Bootstrap(int argc, char *argv[]);

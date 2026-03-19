@@ -28,17 +28,17 @@ Bootstrap::Bootstrap(int argc, char *argv[])
 						editorPID = atoi(argv[i + 1]);
 					}
 				}
-				else if (strcmp(argv[i], "--editor-url") == 0)
+				else if (strcmp(argv[i], "--url") == 0)
 				{
 					if (i < argc)
 					{
-						editorUrl = std::string(argv[i + 1]);
+						url = std::string(argv[i + 1]);
 					}
 				}
 			}
 		}
 		assert(editorPID != 0 && "Process ID for tooling needs to be provided via --pid <PID>");
-		assert(editorUrl.length() > 0 && "No URL provided via --editor-url <URL> to connect the tooling");
+		assert(url.length() > 0 && "No URL provided via --url <URL> to connect the tooling");
 	}
 }
 
@@ -55,7 +55,7 @@ int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH
 	}
 	else
 	{
-		EngineWorker worker(std::make_unique<Engine>(std::move(application)), editorPID, editorUrl, logW, logH, width, height);
+		EngineWorker worker(std::move(application), editorPID, url);
 		worker.start();
 	}
 

@@ -113,9 +113,6 @@ set(ENGINE_SOURCES
 	"containers/ringbuffer.h"
 	"tooling/platformutils.h"
 	"tooling/platformutils.cpp"
-	"tooling/engineworker.h"
-	"tooling/engineworker.cpp"
-	"tooling/platformevents.h"
 )
 
 set(SHADER_SOURCES
@@ -173,19 +170,27 @@ target_include_directories(engine
 # tooling specific
 #if (EXECUTION_MODE STREQUAL "TOOLING")
     find_package(pxr REQUIRED)
+    find_package(cppzmq REQUIRED)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
 
     add_library(enginetooling
+        "tooling/engineworker.h"
+        "tooling/engineworker.cpp"
+        "tooling/platformevents.h"
         "tooling/systems/editorinputsystem.h"
         "tooling/systems/editorinputsystem.cpp"
         "tooling/systems/editorsystem.h"
         "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
-        "tooling/usd/usdprocessor.h"
-        "tooling/usd/usdprocessor.cpp")
+        "tooling/usd/usdsystem.h"
+        "tooling/usd/usdsystem.cpp"
+        "tooling/usd/rootcomponent.h"
+        "tooling/usd/rootcomponent.cpp"
+        "tooling/usd/events.h"
+    )
 
     target_link_libraries(enginetooling
-        PRIVATE engine usd usdGeom usdImaging hd)
+        PRIVATE engine usd usdGeom usdImaging hd cppzmq)
 #endif()

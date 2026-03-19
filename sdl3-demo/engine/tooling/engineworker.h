@@ -1,31 +1,28 @@
 #pragma once
 
-#include <wtypes.h>
+#include <engine_generated.h>
 #include <thread>
-#include <array>
-#include <stdint.h>
-
-#include <application.h>
 #include <engine.h>
 #include <memory>
 #include <containers/atomicringbuffer.h>
-#include <messaging/events.h>
 #include "platformevents.h"
 
 class EngineWorker
 {
-	std::unique_ptr<Engine> engine;
+	std::unique_ptr<Engine> m_engine;
 	int editorPID;
-	std::string editorUrl;
-	int logW, logH, width, height;
+	std::string url;
 
-	bool shouldRun;
+	bool m_listening;
+	bool m_running;
 	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread publisherThread;
-	std::thread pullThread;
+	std::thread m_engineThread;
+	std::thread m_repThread;
+	std::thread m_pullThread;
 
 public:
-	EngineWorker(std::unique_ptr<Engine> engine, int editorPID, const std::string &handshakeUrl, int logW, int logH, int width, int height);
+	EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url);
 	~EngineWorker();
 
 	void start();

@@ -18,6 +18,7 @@ uint roIdx : register(b0);
 
 cbuffer cbPerFrame : register(b1)
 {
+    float4 camPosition;
     float4x4 viewProj;
 }
 

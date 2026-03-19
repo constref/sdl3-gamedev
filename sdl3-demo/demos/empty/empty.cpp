@@ -20,13 +20,13 @@
 #include "tooling/systems/editorsystem.h"
 #include "tooling/systems/editorinputsystem.h"
 #include "tooling/systems/nodeauthoringcomponent.h"
-#include "tooling/usd/usdprocessor.h"
+#include "tooling/usd/usdsystem.h"
 
 using namespace DirectX;
 
 bool Empty::initialize(Services &services, SDLState &state)
 {
-	// TODO: Review how to toggle the registration of these systems
+	// TODO: Toggle system registration for tooling builds appropriately
 	services.compSys().registerSystem(std::make_unique<EditorInputSystem>(services));
 	services.compSys().registerSystem(std::make_unique<EditorSystem>(services));
 	
@@ -54,10 +54,4 @@ void Empty::start(Services &services, SDLState &state)
 	services.compSys().addComponent<CameraComponent>(player);
 	
 	root.addChild(player);
-	
-	//const std::string usdPath = "data\\usd\\ufo.usd";
-	const std::string usdPath = "C:/Users/nikol/Documents/maya/projects/USD Concept/usd/level_MODEL.usd";
-
-	USDProcessor usdproc;
-	usdproc.loadStage(usdPath, root, services);
 }

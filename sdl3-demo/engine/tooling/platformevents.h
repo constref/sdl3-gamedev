@@ -2,6 +2,8 @@
 #include <variant>
 #include <stdint.h>
 
+#include "usd/events.h"
+
 struct MouseMoveEvent
 {
     int x;
@@ -47,12 +49,15 @@ struct ApplicationEnteredForeground
 };
 
 using PlatformEvent = std::variant<
-	ApplicationEnteredBackground,
-	ApplicationEnteredForeground,
-	KeyUp,
-	KeyDown,
-	MouseMoveEvent,
-	MouseButtonEvent,
-	ResizeEvent,
-	ExitEvent
+ApplicationEnteredBackground,
+ApplicationEnteredForeground,
+KeyUp,
+KeyDown,
+MouseMoveEvent,
+MouseButtonEvent,
+ResizeEvent,
+ExitEvent,
+usd::CreateStageEvent,
+usd::SaveStageEvent,
+usd::AddLayerEvent
 >;

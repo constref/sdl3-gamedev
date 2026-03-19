@@ -13,6 +13,8 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
               FLATBUFFERS_VERSION_REVISION == 19,
              "Non-compatible flatbuffers version included");
 
+#include "usd_generated.h"
+
 namespace NUBE {
 namespace Interop {
 
@@ -86,35 +88,44 @@ enum EngineMessage : uint8_t {
   EngineMessage_EngineShutdownCommand = 2,
   EngineMessage_KeyboardEvent = 3,
   EngineMessage_MouseMoveEvent = 4,
+  EngineMessage_USD_CreateStageEvent = 5,
+  EngineMessage_USD_SaveStageEvent = 6,
+  EngineMessage_USD_AddLayerEvent = 7,
   EngineMessage_MIN = EngineMessage_NONE,
-  EngineMessage_MAX = EngineMessage_MouseMoveEvent
+  EngineMessage_MAX = EngineMessage_USD_AddLayerEvent
 };
 
-inline const EngineMessage (&EnumValuesEngineMessage())[5] {
+inline const EngineMessage (&EnumValuesEngineMessage())[8] {
   static const EngineMessage values[] = {
     EngineMessage_NONE,
     EngineMessage_EngineStartupCommand,
     EngineMessage_EngineShutdownCommand,
     EngineMessage_KeyboardEvent,
-    EngineMessage_MouseMoveEvent
+    EngineMessage_MouseMoveEvent,
+    EngineMessage_USD_CreateStageEvent,
+    EngineMessage_USD_SaveStageEvent,
+    EngineMessage_USD_AddLayerEvent
   };
   return values;
 }
 
 inline const char * const *EnumNamesEngineMessage() {
-  static const char * const names[6] = {
+  static const char * const names[9] = {
     "NONE",
     "EngineStartupCommand",
     "EngineShutdownCommand",
     "KeyboardEvent",
     "MouseMoveEvent",
+    "USD_CreateStageEvent",
+    "USD_SaveStageEvent",
+    "USD_AddLayerEvent",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameEngineMessage(EngineMessage e) {
-  if (::flatbuffers::IsOutRange(e, EngineMessage_NONE, EngineMessage_MouseMoveEvent)) return "";
+  if (::flatbuffers::IsOutRange(e, EngineMessage_NONE, EngineMessage_USD_AddLayerEvent)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesEngineMessage()[index];
 }
@@ -137,6 +148,18 @@ template<> struct EngineMessageTraits<NUBE::Interop::KeyboardEvent> {
 
 template<> struct EngineMessageTraits<NUBE::Interop::MouseMoveEvent> {
   static const EngineMessage enum_value = EngineMessage_MouseMoveEvent;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::USD::CreateStageEvent> {
+  static const EngineMessage enum_value = EngineMessage_USD_CreateStageEvent;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::USD::SaveStageEvent> {
+  static const EngineMessage enum_value = EngineMessage_USD_SaveStageEvent;
+};
+
+template<> struct EngineMessageTraits<NUBE::Interop::USD::AddLayerEvent> {
+  static const EngineMessage enum_value = EngineMessage_USD_AddLayerEvent;
 };
 
 template <bool B = false>
@@ -230,6 +253,15 @@ struct EngineEnvelope FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const NUBE::Interop::MouseMoveEvent *payload_as_MouseMoveEvent() const {
     return payload_type() == NUBE::Interop::EngineMessage_MouseMoveEvent ? static_cast<const NUBE::Interop::MouseMoveEvent *>(payload()) : nullptr;
   }
+  const NUBE::Interop::USD::CreateStageEvent *payload_as_USD_CreateStageEvent() const {
+    return payload_type() == NUBE::Interop::EngineMessage_USD_CreateStageEvent ? static_cast<const NUBE::Interop::USD::CreateStageEvent *>(payload()) : nullptr;
+  }
+  const NUBE::Interop::USD::SaveStageEvent *payload_as_USD_SaveStageEvent() const {
+    return payload_type() == NUBE::Interop::EngineMessage_USD_SaveStageEvent ? static_cast<const NUBE::Interop::USD::SaveStageEvent *>(payload()) : nullptr;
+  }
+  const NUBE::Interop::USD::AddLayerEvent *payload_as_USD_AddLayerEvent() const {
+    return payload_type() == NUBE::Interop::EngineMessage_USD_AddLayerEvent ? static_cast<const NUBE::Interop::USD::AddLayerEvent *>(payload()) : nullptr;
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -254,6 +286,18 @@ template<> inline const NUBE::Interop::KeyboardEvent *EngineEnvelope::payload_as
 
 template<> inline const NUBE::Interop::MouseMoveEvent *EngineEnvelope::payload_as<NUBE::Interop::MouseMoveEvent>() const {
   return payload_as_MouseMoveEvent();
+}
+
+template<> inline const NUBE::Interop::USD::CreateStageEvent *EngineEnvelope::payload_as<NUBE::Interop::USD::CreateStageEvent>() const {
+  return payload_as_USD_CreateStageEvent();
+}
+
+template<> inline const NUBE::Interop::USD::SaveStageEvent *EngineEnvelope::payload_as<NUBE::Interop::USD::SaveStageEvent>() const {
+  return payload_as_USD_SaveStageEvent();
+}
+
+template<> inline const NUBE::Interop::USD::AddLayerEvent *EngineEnvelope::payload_as<NUBE::Interop::USD::AddLayerEvent>() const {
+  return payload_as_USD_AddLayerEvent();
 }
 
 struct EngineEnvelopeBuilder {
@@ -620,6 +664,18 @@ inline bool VerifyEngineMessage(::flatbuffers::VerifierTemplate<B> &verifier, co
     }
     case EngineMessage_MouseMoveEvent: {
       auto ptr = reinterpret_cast<const NUBE::Interop::MouseMoveEvent *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EngineMessage_USD_CreateStageEvent: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::USD::CreateStageEvent *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EngineMessage_USD_SaveStageEvent: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::USD::SaveStageEvent *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EngineMessage_USD_AddLayerEvent: {
+      auto ptr = reinterpret_cast<const NUBE::Interop::USD::AddLayerEvent *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

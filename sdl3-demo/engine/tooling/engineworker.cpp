@@ -1,167 +1,260 @@
 #include "engineworker.h"
-
 #include <format>
-#include <engine_generated.h>
 
-EngineWorker::EngineWorker(std::unique_ptr<Engine> engine, int editorPID, const std::string& editorUrl, int logW,
-                           int logH, int width, int height)
+#include <zmq.hpp>
+
+#include "usd/usdsystem.h"
+
+//static zmq::context_t g_context;
+
+EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
 {
-    this->engine = std::move(engine);
-    this->logW = logW;
-    this->logH = logH;
-    this->width = width;
-    this->height = height;
-    this->shouldRun = false;
+    m_engine = std::make_unique<Engine>(std::move(app));
+    m_listening = false;
+    m_running = false;
     this->editorPID = editorPID;
-    this->editorUrl = editorUrl;
+    this->url = url;
 }
 
 EngineWorker::~EngineWorker()
 {
-    shouldRun = false;
+    m_listening = false;
+    m_running = false;
 }
 
 void EngineWorker::start()
 {
-    // create socket for engine->tooling data
+    m_listening = true;
     const std::string engineUrl = "NUBEEngine";
 
-    shouldRun = engine->initialize(logW, logH, width, height);
-    if (shouldRun)
+    // pull socket for high-frequency, low-latency data
+    m_pullThread = std::thread([this, engineUrl]()
     {
-        // start up the pull socket for tooling events
-        pullThread = std::thread([this, engineUrl]()
+        HANDLE hPipe = CreateNamedPipeA(std::format("\\\\.\\pipe\\{}", engineUrl).c_str(),
+                                        PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+                                        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
+                                        1, 1024 * 64, 1024 * 64, 0, NULL);
+
+        OVERLAPPED ov{};
+        ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+        // perform async connect
+        BOOL connected = ConnectNamedPipe(hPipe, &ov);
+        if (!connected)
         {
-            HANDLE hPipe = CreateNamedPipeA(std::format("\\\\.\\pipe\\{}", engineUrl).c_str(),
-                                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-                                            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
-                                            1, 1024 * 64, 1024 * 64, 0, NULL);
+            if (GetLastError() == ERROR_IO_PENDING)
+            {
+                WaitForSingleObject(ov.hEvent, INFINITE);
+            }
+            else
+            {
+                CloseHandle(ov.hEvent);
+                CloseHandle(hPipe);
+                return;
+            }
+        }
+        ResetEvent(ov.hEvent);
 
-            OVERLAPPED ov{};
-            ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+        Logger::info(this, "Engine runtime server started, listening for incoming commands...");
+        while (m_listening)
+        {
+            constexpr size_t headerSize{sizeof(uint32_t)};
+            constexpr size_t bufferSize{1024uz * 64uz};
+            uint8_t buffer[bufferSize];
+            uint32_t msgSize = 0;
+            DWORD bytesRead = 0;
 
-            // perform async connect
-            BOOL connected = ConnectNamedPipe(hPipe, &ov);
-            if (!connected)
+            // read the message size, followed by the payload
+            BOOL success = ReadFile(hPipe, &msgSize, headerSize, &bytesRead, &ov);
+            if (!success)
             {
                 if (GetLastError() == ERROR_IO_PENDING)
                 {
                     WaitForSingleObject(ov.hEvent, INFINITE);
+                    if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
+                    {
+                        break;
+                    }
                 }
                 else
                 {
-                    CloseHandle(ov.hEvent);
-                    CloseHandle(hPipe);
-                    return;
+                    break;
                 }
             }
-            ResetEvent(ov.hEvent);
 
-            Logger::info(this, "Engine runtime server started, listening for incoming commands...");
-            while (shouldRun)
+            Logger::info(this, std::format("{} header-bytes read", bytesRead));
+            if (bytesRead != headerSize)
             {
-                constexpr size_t headerSize{sizeof(uint32_t)};
-                constexpr size_t bufferSize{1024uz * 64uz};
-                uint8_t buffer[bufferSize];
-                uint32_t msgSize = 0;
-                DWORD bytesRead = 0;
+                Logger::error(this, "Invalid header size read");
+                break;
+            }
 
-                // read the message size, followed by the payload
-                BOOL success = ReadFile(hPipe, &msgSize, headerSize, &bytesRead, &ov);
-                if (!success)
+            ResetEvent(ov.hEvent);
+            // read payload
+            success = ReadFile(hPipe, &buffer, msgSize, &bytesRead, &ov);
+            if (!success)
+            {
+                if (GetLastError() == ERROR_IO_PENDING)
                 {
-                    if (GetLastError() == ERROR_IO_PENDING)
-                    {
-                        WaitForSingleObject(ov.hEvent, INFINITE);
-                        if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
-                        {
-                            break;
-                        }
-                    }
-                    else
+                    WaitForSingleObject(ov.hEvent, INFINITE);
+                    if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
                     {
                         break;
                     }
                 }
-                
-                if (bytesRead != headerSize)
+                else
                 {
                     break;
-                }
-
-                ResetEvent(ov.hEvent);
-                // read payload
-                success = ReadFile(hPipe, &buffer, msgSize, &bytesRead, &ov);
-                if (!success)
-                {
-                    if (GetLastError() == ERROR_IO_PENDING)
-                    {
-                        WaitForSingleObject(ov.hEvent, INFINITE);
-                        if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                
-                // message read incomplete
-                if (bytesRead != msgSize)
-                {
-                    break;
-                }
-                
-                // handle specific message
-                auto envelope = NUBE::Interop::GetEngineEnvelope(buffer);
-                switch (envelope->payload_type())
-                {
-                    case NUBE::Interop::EngineMessage_EngineShutdownCommand:
-                    {
-                        pushEvent(ExitEvent());
-                        Logger::info(this, "Engine shutdown command received.");
-                        break;
-                    }
-                    case NUBE::Interop::EngineMessage_KeyboardEvent:
-                    {
-                        const NUBE::Interop::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
-                        if (keyEvent->is_down())
-                        {
-                            pushEvent(KeyDown{.scancode = keyEvent->scancode()});
-                        }
-                        else
-                        {
-                            pushEvent(KeyUp{.scancode = keyEvent->scancode()});
-                        }
-                        break;
-                    }
-                    case NUBE::Interop::EngineMessage_MouseMoveEvent:
-                    {
-                        const NUBE::Interop::MouseMoveEvent *mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
-                        pushEvent(MouseMoveEvent{.x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(), .yRel = mouseMoveEvent->y_rel()});
-                        break;
-                    }
-                    case NUBE::Interop::EngineMessage_EngineStartupCommand:
-                    {
-                        break;
-                    }
-                    case NUBE::Interop::EngineMessage_NONE:
-                        break;
                 }
             }
-            CancelIoEx(hPipe, nullptr);
-            CloseHandle(hPipe);
-            CloseHandle(ov.hEvent);
-            Logger::info(this, "Engine runtime server finished.");
-        });
-        if (pullThread.joinable())
-        {
-            pullThread.detach();
-        }
 
-        // Push data into editor for INIT
+            // message read incomplete
+            Logger::info(this, std::format("{} message-bytes read", bytesRead));
+            if (bytesRead != msgSize)
+            {
+                Logger::error(this, "Invalid message size read");
+                break;
+            }
+
+            // handle specific message
+            auto envelope = NUBE::Interop::GetEngineEnvelope(buffer);
+            switch (envelope->payload_type())
+            {
+                case NUBE::Interop::EngineMessage_EngineShutdownCommand:
+                {
+                    pushEvent(ExitEvent());
+                    Logger::info(this, "Engine shutdown command received.");
+                    break;
+                }
+                case NUBE::Interop::EngineMessage_KeyboardEvent:
+                {
+                    const NUBE::Interop::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
+                    if (keyEvent->is_down())
+                    {
+                        pushEvent(KeyDown{.scancode = keyEvent->scancode()});
+                    }
+                    else
+                    {
+                        pushEvent(KeyUp{.scancode = keyEvent->scancode()});
+                    }
+                    break;
+                }
+                case NUBE::Interop::EngineMessage_MouseMoveEvent:
+                {
+                    const NUBE::Interop::MouseMoveEvent* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
+                    pushEvent(MouseMoveEvent{
+                        .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
+                        .yRel = mouseMoveEvent->y_rel()
+                    });
+                    break;
+                }
+                case NUBE::Interop::EngineMessage_EngineStartupCommand:
+                {
+                    break;
+                }
+                case NUBE::Interop::EngineMessage_NONE:
+                    break;
+            }
+        }
+        CancelIoEx(hPipe, nullptr);
+        CloseHandle(hPipe);
+        CloseHandle(ov.hEvent);
+        Logger::info(this, "Engine runtime server finished.");
+    });
+    if (m_pullThread.joinable())
+    {
+        m_pullThread.detach();
+    }
+
+    // create socket for engine->tooling data
+    zmq::context_t ctx;
+    zmq::socket_t rep = zmq::socket_t(ctx, ZMQ_REP);
+    rep.bind(url);
+
+    usd::USDSystem usdSystem;
+    while (m_listening)
+    {
+        zmq::message_t request;
+        auto msg = rep.recv(request, zmq::recv_flags::none);
+
+        using namespace NUBE::Interop;
+        if (msg.has_value())
+        {
+            auto envelope = GetEngineEnvelope(request.data());
+            switch (envelope->payload_type())
+            {
+                case EngineMessage_EngineStartupCommand:
+                {
+                    m_engine->initialize(1920, 1080, 1920, 1080);
+                    // shared handles for GPU interop
+                    std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
+
+                    // send back the render-init response
+                    flatbuffers::FlatBufferBuilder builder(1024);
+                    auto initDetails = CreateInitializationDetails(builder, texHandles.size(),
+                                                                   builder.CreateVector(texHandles),
+                                                                   builder.CreateString(engineUrl));
+
+                    auto env = CreateEditorEnvelope(builder, EditorMessage_InitializationDetails, initDetails.Union());
+                    builder.Finish(env);
+                    auto span = builder.GetBufferSpan();
+                    zmq::message_t response(span);
+                    rep.send(response, zmq::send_flags::none);
+                    
+                    m_running = true;
+                    m_engineThread = std::thread([this]()
+                    {
+                        while (m_running)
+                        {
+                            processEvents();
+                            m_engine->step();
+                        }
+                        m_engine->cleanup();
+                        Logger::info(this, "Engine worker shutting down");
+                    });
+                    break;
+                }
+                case EngineMessage_EngineShutdownCommand:
+                {
+                    zmq::message_t response(0);
+                    rep.send(response, zmq::send_flags::dontwait);
+                    
+                    m_running = false;
+                    if (m_engineThread.joinable())
+                    {
+                        m_engineThread.detach();
+                    }
+                    break;
+                }
+                case EngineMessage_USD_CreateStageEvent:
+                {
+                    const auto* e = envelope->payload_as_USD_CreateStageEvent();
+                    usdSystem.createStage(e->path()->c_str());
+                    break;
+                }
+                case EngineMessage_USD_SaveStageEvent:
+                {
+                    const auto* e = envelope->payload_as_USD_SaveStageEvent();
+                    usdSystem.saveStage();
+                    break;
+                }
+                case EngineMessage_USD_AddLayerEvent:
+                {
+                    const auto* e = envelope->payload_as_USD_AddLayerEvent();
+                    usdSystem.addLayer(e->path()->c_str());
+                    break;
+                }
+                default:
+                {
+                    Logger::error(this, "Unrecognized command received by editor");
+                };
+            }
+        }
+    }
+
+
+    // Push data into editor for INIT
+    /*
         HANDLE hPipe = CreateFile(TEXT("\\\\.\\pipe\\NUBEEditor"), GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
         if (hPipe != INVALID_HANDLE_VALUE)
         {
@@ -185,37 +278,31 @@ void EngineWorker::start()
             delete builder;
         }
     }
-    while (shouldRun)
-    {
-        processEvents();
-        engine->step();
-    }
-    Logger::info(this, "Engine worker exiting...");
+    */
 }
 
 void EngineWorker::processEvents()
 {
     PlatformEvent e;
+    Services& serv = m_engine->getServices();
     while (eventBuffer.get(e))
     {
         // handle external events
         if (std::holds_alternative<KeyDown>(e))
         {
             const KeyDown& keyEvent = std::get<KeyDown>(e);
-            Services& serv = engine->getServices();
             serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<KeyUp>(e))
         {
             const KeyUp& keyEvent = std::get<KeyUp>(e);
-            Services& serv = engine->getServices();
             serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
-            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
-            Services& serv = engine->getServices();
-            serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x, mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
+            const MouseMoveEvent& mouseEvent = std::get<MouseMoveEvent>(e);
+            serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
+                                                        mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }
         else if (std::holds_alternative<MouseButtonEvent>(e))
         {
@@ -245,7 +332,21 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<ExitEvent>(e))
         {
             Logger::info(this, "Engine exit event received, stopping run-loop");
-            shouldRun = false;
+            m_listening = false;
+            m_running = false;
+        }
+        else if (std::holds_alternative<usd::CreateStageEvent>(e))
+        {
+            serv.eventQueue().enqueue<
+                usd::CreateStageEvent>(NodeHandle{}, 0, std::get<usd::CreateStageEvent>(e).path());
+        }
+        else if (std::holds_alternative<usd::SaveStageEvent>(e))
+        {
+            serv.eventQueue().enqueue<usd::SaveStageEvent>(NodeHandle{}, 0);
+        }
+        else if (std::holds_alternative<usd::AddLayerEvent>(e))
+        {
+            serv.eventQueue().enqueue<usd::AddLayerEvent>(NodeHandle{}, 0, std::get<usd::AddLayerEvent>(e).path());
         }
     }
 }
@@ -257,5 +358,5 @@ void EngineWorker::pushEvent(const PlatformEvent& event)
 
 Engine& EngineWorker::getEngine()
 {
-    return *engine;
+    return *m_engine;
 }

@@ -1,3 +1,5 @@
+include "usd.fbs";
+
 namespace NUBE.Interop;
 
 union EditorMessage {
@@ -8,7 +10,10 @@ union EngineMessage {
 	EngineStartupCommand,
 	EngineShutdownCommand,
 	KeyboardEvent,
-	MouseMoveEvent
+	MouseMoveEvent,
+	USD.CreateStageEvent,
+	USD.SaveStageEvent,
+	USD.AddLayerEvent
 }
 
 table EditorEnvelope {
