@@ -20,7 +20,7 @@
 #include "tooling/systems/editorsystem.h"
 #include "tooling/systems/editorinputsystem.h"
 #include "tooling/systems/nodeauthoringcomponent.h"
-#include "tooling/usd/usdsystem.h"
+#include "tooling/usd/usdprocessor.h"
 
 using namespace DirectX;
 

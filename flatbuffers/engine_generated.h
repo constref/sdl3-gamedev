@@ -15,6 +15,6 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 #include "editor_envelope_generated.h"
 #include "engine_envelope_generated.h"
-#include "usd_generated.h"
+#include "piped_envelope_generated.h"
 
 #endif  // FLATBUFFERS_GENERATED_ENGINE_H_

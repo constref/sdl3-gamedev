@@ -3,7 +3,7 @@
 
 #include <zmq.hpp>
 
-#include "usd/usdsystem.h"
+#include "usd/usdprocessor.h"
 
 //static zmq::context_t g_context;
 
@@ -117,18 +117,13 @@ void EngineWorker::start()
             }
 
             // handle specific message
-            auto envelope = NUBE::Interop::GetEditorEnvelope(buffer);
+            using namespace NUBE::Interop;
+            auto envelope = Piped::GetPipedEnvelope(buffer);
             switch (envelope->payload_type())
             {
-                case NUBE::Interop::EditorMessage_EngineShutdownCommand:
+                case Piped::PipedMessage_KeyboardEvent:
                 {
-                    pushEvent(ExitEvent());
-                    Logger::info(this, "Engine shutdown command received.");
-                    break;
-                }
-                case NUBE::Interop::EditorMessage_KeyboardEvent:
-                {
-                    const NUBE::Interop::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
+                    const Piped::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
                     if (keyEvent->is_down())
                     {
                         pushEvent(KeyDown{.scancode = keyEvent->scancode()});
@@ -139,21 +134,16 @@ void EngineWorker::start()
                     }
                     break;
                 }
-                case NUBE::Interop::EditorMessage_MouseMoveEvent:
+                case Piped::PipedMessage::PipedMessage_MouseMoveEvent:
                 {
-                    const NUBE::Interop::MouseMoveEvent* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
+                    const auto* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
                     pushEvent(MouseMoveEvent{
                         .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
                         .yRel = mouseMoveEvent->y_rel()
                     });
                     break;
                 }
-                case NUBE::Interop::EditorMessage_EngineStartupCommand:
-                {
-                    break;
-                }
-                case NUBE::Interop::EditorMessage_NONE:
-                    break;
+                default: {}
             }
         }
         CancelIoEx(hPipe, nullptr);
@@ -171,7 +161,7 @@ void EngineWorker::start()
     zmq::socket_t rep = zmq::socket_t(ctx, ZMQ_REP);
     rep.bind(url);
 
-    usd::USDSystem usdSystem;
+    usd::UsdProcessor usdSystem;
     while (m_listening)
     {
         zmq::message_t request;
@@ -226,27 +216,35 @@ void EngineWorker::start()
                     }
                     break;
                 }
-                case EditorMessage_USD_CreateStageEvent:
+                case EditorMessage_USD_CreateStageCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_CreateStageEvent();
+                    const auto* e = envelope->payload_as_USD_CreateStageCommand();
                     usdSystem.createStage(e->path()->c_str());
-                    zmq::message_t response(0);
+                    zmq::message_t response("ACK");
                     rep.send(response, zmq::send_flags::none);
                     break;
                 }
-                case EditorMessage_USD_SaveStageEvent:
+                case EditorMessage_USD_SaveStageCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_SaveStageEvent();
+                    const auto* e = envelope->payload_as_USD_SaveStageCommand();
                     usdSystem.saveStage();
-                    zmq::message_t response(0);
+                    zmq::message_t response("ACK");
                     rep.send(response, zmq::send_flags::none);
                     break;
                 }
-                case EditorMessage_USD_AddLayerEvent:
+                case EditorMessage_USD_AddLayerCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_AddLayerEvent();
+                    const auto* e = envelope->payload_as_USD_AddLayerCommand();
                     usdSystem.addLayer(e->path()->c_str());
-                    zmq::message_t response(0);
+                    zmq::message_t response("ACK");
+                    rep.send(response, zmq::send_flags::none);
+                    break;
+                }
+                case EditorMessage_USD_AddPrimCommand:
+                {
+                    const auto* e = envelope->payload_as_USD_AddPrimCommand();
+                    usdSystem.addPrim(e->path()->c_str(), e->type()->c_str());
+                    zmq::message_t response("ACK");
                     rep.send(response, zmq::send_flags::none);
                     break;
                 }

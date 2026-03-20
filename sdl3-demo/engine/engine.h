@@ -30,42 +30,42 @@
 
 class Engine
 {
-	std::unique_ptr<Application> app;
-	uint64_t prevTime;
-	bool debugMode;
-	bool running;
-	constexpr static bool clampDeltaTime = true;
+    std::unique_ptr<Application> app;
+    uint64_t prevTime;
+    bool debugMode;
+    bool running;
+    constexpr static bool clampDeltaTime = true;
 
-	const float fixedStep = 1.0f / 120.0f;
-	const float dtThreshold = 1.0f / 30.0f;
-	float accumulator;
-	long frameCount;
-	double globalTime;
+    const float fixedStep = 1.0f / 120.0f;
+    const float dtThreshold = 1.0f / 30.0f;
+    float accumulator;
+    long frameCount;
+    double globalTime;
 
-	// core services
-	ComponentSystems compSys;
-	EventQueue eventQueue;
-	World world;
-	InputState inputState;
-	PrototypeInstancer protoInstancer;
-	Services services;
-	SDLState sdlState;
-	d3d12rs::D3D12RenderSystem *d3d12Renderer;
-	vks::VulkanRenderSystem* vkRenderer;
+    // core services
+    ComponentSystems compSys;
+    EventQueue eventQueue;
+    World world;
+    InputState inputState;
+    PrototypeInstancer protoInstancer;
+    Services services;
+    SDLState sdlState;
+    d3d12rs::D3D12RenderSystem *d3d12Renderer;
+    vks::VulkanRenderSystem *vkRenderer;
 
 public:
-	Engine(std::unique_ptr<Application> app);
-	~Engine();
+    Engine(std::unique_ptr<Application> app);
+    ~Engine();
 
-	bool initialize(int logW, int logH, int width, int height);
-	d3d12rs::D3D12RenderSystem* getRenderer() const;
-	Services& getServices();
-	void cleanup();
-	void run();
-	void stop();
-	void step();
+    bool initialize(int logW, int logH, int width, int height);
+    d3d12rs::D3D12RenderSystem* getRenderer() const;
+    Services& getServices();
+    void cleanup();
+    void run();
+    void stop();
+    void step();
 
 private:
-	static void emIterate(void* userData);
-	void processSystems(Node& obj, World& world);
+    static void emIterate(void *userData);
+    void processSystems(Node &obj, World &world);
 };
