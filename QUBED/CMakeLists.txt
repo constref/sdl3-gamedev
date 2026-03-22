@@ -9,6 +9,8 @@ qt_add_library(QUBED STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.h
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.cpp
 )
 
 target_link_libraries(QUBED

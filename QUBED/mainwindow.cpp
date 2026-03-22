@@ -1,11 +1,13 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+#include <QMainWindow>
+#include "ui_mainwindow.h"
+#include "viewportwidget.h"
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //HWND hWnd = reinterpret_cast<HWND>(ui->renderWidget->winId());
 }
 
 MainWindow::~MainWindow()
