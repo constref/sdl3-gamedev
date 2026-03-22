@@ -13,8 +13,8 @@ using namespace DirectX;
 
 namespace d3d12rs
 {
-    constexpr static uint16_t FramesInFlight = Config::ExecSelect(2, 1);
-    constexpr static uint16_t RenderTargetCount = Config::ExecSelect(3, 2);
+    constexpr static uint16_t FramesInFlight = 2;
+    constexpr static uint16_t RenderTargetCount = 3;
     constexpr static uint16_t MaxCopyOps = 32;
     constexpr static uint32_t MaxVertCount = 5000;
     constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
@@ -24,7 +24,7 @@ namespace d3d12rs
 using namespace Microsoft::WRL;
 using namespace d3d12rs;
 
-D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int width, int height, int logW,
+D3D12RenderSystem::D3D12RenderSystem(Services& services, HWND hWnd, int width, int height, int logW,
                                      int logH) : System(services)
 {
     m_width = width;
@@ -36,12 +36,7 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int
     m_frameResources.resize(FramesInFlight);
     m_camPosition = XMFLOAT4(0, 0, 0, 1);
     m_backBuffers.resize(RenderTargetCount);
-    if (Config::IsStandaloneMode())
-    {
-        m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER,
-                                              NULL);
-        assert(m_hWnd && "Unable to acquire HWND for provided window");
-    }
+    m_hWnd = hWnd;
 
     // Logger::logHandler = [](const std::string &message)
     // {
@@ -127,16 +122,6 @@ bool D3D12RenderSystem::initialize()
     commandQueueDesc.NodeMask = 0;
     DXCHK(m_device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&m_commandQueue)),
           "Couldn't create the command queue");
-
-    if constexpr (Config::IsToolingMode())
-    {
-        // need the 11on12 device to created keyed-mutex from textures later
-        DXCHK(D3D11On12CreateDevice(m_device.Get(), D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0,
-                  reinterpret_cast<IUnknown**>(m_commandQueue.GetAddressOf()), 1, 0,
-                  m_device11.GetAddressOf(), m_deviceContext11.GetAddressOf(), nullptr),
-              "Unable to create D3D11on12 device for texture-sharing");
-        DXCHK(m_device11.As(&m_device11on12), "Unable to acquire 11On12Device");
-    }
 
     // check if tearing is supported
     ComPtr<IDXGIFactory4> factory4;
@@ -304,35 +289,6 @@ void D3D12RenderSystem::setCamPosition(float x, float y, float z)
 void D3D12RenderSystem::setCamDirection(float x, float y, float z)
 {
     m_camDirection = XMFLOAT4(x, y, z, 0.0f);
-}
-
-std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID)
-{
-    assert(editorPID != 0 && "Tooling PID cannot be 0");
-    HANDLE editorProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, editorPID);
-
-    if (editorProcess == nullptr)
-    {
-        auto err = GetLastError();
-    }
-
-    std::vector<uint64_t> sharedHandles;
-    sharedHandles.reserve(RenderTargetCount);
-    for (uint16_t i = 0; i < RenderTargetCount; ++i)
-    {
-        HANDLE duplicatedHandle = nullptr;
-        BOOL success = DuplicateHandle(
-            GetCurrentProcess(),
-            m_ntHandles[i],
-            editorProcess,
-            &duplicatedHandle,
-            0,
-            FALSE,
-            DUPLICATE_SAME_ACCESS);
-        assert(success && "Unable to duplicate HANDLE");
-        sharedHandles.push_back(reinterpret_cast<uint64_t>(duplicatedHandle));
-    }
-    return sharedHandles;
 }
 
 GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
@@ -570,13 +526,13 @@ void D3D12RenderSystem::beginFrame()
     res.drawOperations.clear();
     if constexpr (Config::IsStandaloneMode())
     {
-        res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex(); 
+        res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
     }
     else
     {
         res.renderTargetIndex = m_frameIndex % RenderTargetCount;
     }
-    
+
     res.commandAllocator->Reset();
     res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
 
@@ -666,10 +622,8 @@ void D3D12RenderSystem::endFrame()
     static D3D12_RECT scissorRect{.left = 0, .top = 0, .right = m_width, .bottom = m_height};
     res.commandList->RSSetScissorRects(1, &scissorRect);
 
-    ComPtr<ID3D12Resource> renderTarget = Config::ExecSelect(m_backBuffers[res.renderTargetIndex],
-                                                             m_renderTargetTextures[res.renderTargetIndex]);
-    D3D12_RESOURCE_STATES rtStatePostDraw = Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT,
-                                                               D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    ComPtr<ID3D12Resource> renderTarget = m_backBuffers[res.renderTargetIndex];
+    D3D12_RESOURCE_STATES rtStatePostDraw = D3D12_RESOURCE_STATE_PRESENT;
     auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), rtStatePostDraw,
                                                           D3D12_RESOURCE_STATE_RENDER_TARGET);
     res.commandList->ResourceBarrier(1, &rtBarrier);
@@ -685,18 +639,6 @@ void D3D12RenderSystem::endFrame()
     res.commandList->OMSetRenderTargets(1, &rtvHandle, false, &m_dsvHandle);
     res.commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // ensure we can acquire the keyed-mutex lock
-    if constexpr (Config::IsToolingMode())
-    {
-        // TODO: Handle keyed mutex deadlock timeout properly
-        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, INFINITE);
-        if (hr == WAIT_TIMEOUT)
-        {
-            // do nothing if we can't acquire a lock
-            return;
-        }
-    }
-
     // draw all objects
     for (const DrawOperation& drawOp : res.drawOperations)
     {
@@ -710,16 +652,10 @@ void D3D12RenderSystem::endFrame()
         }
     }
 
-    D3D12_RESOURCE_STATES stateBeforePostDraw = Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT,
-                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    D3D12_RESOURCE_STATES stateBeforePostDraw = D3D12_RESOURCE_STATE_PRESENT;
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                                rtStatePostDraw);
     res.commandList->ResourceBarrier(1, &presentBarrier);
-
-    if constexpr (Config::IsToolingMode())
-    {
-        m_rtKeyedMutexes[res.renderTargetIndex]->ReleaseSync(1);
-    }
     res.commandList->Close();
 
     std::array<ID3D12CommandList*, 1> commandLists{res.commandList.Get()};
@@ -730,7 +666,7 @@ void D3D12RenderSystem::endFrame()
         UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
         m_swapchain->Present(1, presentFlags);
     }
-    
+
     res.fenceValue = ++m_fenceValue;
     m_commandQueue->Signal(m_fence.Get(), res.fenceValue);
     m_frameIndex++;
@@ -798,106 +734,46 @@ bool D3D12RenderSystem::createSwapchain()
     DXCHK(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DSVDescriptorHeap)),
           "Unable to create DSV descriptor heap");
 
-    m_renderTargetTextures.resize(RenderTargetCount);
-    if constexpr (Config::IsStandaloneMode())
+    Logger::info(this, "Creating and initializing swapchain resources");
+    ComPtr<IDXGISwapChain4> dxgiSwapchain;
+    ComPtr<IDXGIFactory4> dxgiFactory4;
+
+    UINT factoryFlags = Config::DebugSelect(DXGI_CREATE_FACTORY_DEBUG, 0);
+    DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory4)),
+          "Couldn't create DXGIFactory2 during swapchain init");
+
+    DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
+    swapchainDesc.Width = m_width;
+    swapchainDesc.Height = m_height;
+    swapchainDesc.Format = SwapchainFormat;
+    swapchainDesc.Stereo = FALSE;
+    swapchainDesc.SampleDesc = {1, 0};
+    swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapchainDesc.BufferCount = RenderTargetCount;
+    swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
+    swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    swapchainDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+    ComPtr<IDXGISwapChain1> swapchain;
+    DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr, &
+              swapchain), "Failed to create a swapchain for the given HWND");
+    DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER),
+          "Failed to disable full-screen shortcut.");
+    DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
+
+    // grab the swapchain image buffers
+    for (int i = 0; i < RenderTargetCount; ++i)
     {
-        // create internal render targets
-        constexpr auto rtFlags =
-            Config::ExecSelect(
-                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
-        auto renderTargetDesc = CD3DX12_RESOURCE_DESC::Tex2D(SwapchainFormat, m_logW, m_logH,
-                                                             1, 0, 1, 0, rtFlags);
-        auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT);
-
-        D3D12_CLEAR_VALUE clearValue{.Format = SwapchainFormat, .Color = {1, 0, 0, 1}};
-
-        m_renderTargetTextures.resize(RenderTargetCount);
-        for (auto& renderTarget : m_renderTargetTextures)
-        {
-            DXCHK(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &renderTargetDesc,
-                      D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(renderTarget.GetAddressOf())),
-                  "Unable to create internal render target texture");
-        }
-
-        Logger::info(this, "Creating and initializing swapchain resources");
-        ComPtr<IDXGISwapChain4> dxgiSwapchain;
-        ComPtr<IDXGIFactory4> dxgiFactory4;
-
-        UINT factoryFlags = Config::DebugSelect(DXGI_CREATE_FACTORY_DEBUG, 0);
-        DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory4)),
-              "Couldn't create DXGIFactory2 during swapchain init");
-
-        DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
-        swapchainDesc.Width = m_width;
-        swapchainDesc.Height = m_height;
-        swapchainDesc.Format = SwapchainFormat;
-        swapchainDesc.Stereo = FALSE;
-        swapchainDesc.SampleDesc = {1, 0};
-        swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapchainDesc.BufferCount = RenderTargetCount;
-        swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
-        swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-        swapchainDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-
-        ComPtr<IDXGISwapChain1> swapchain;
-        DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr, &
-                  swapchain), "Failed to create a swapchain for the given HWND");
-        DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER),
-              "Failed to disable full-screen shortcut.");
-        DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
-
-        // grab the swapchain image buffers
-        for (int i = 0; i < RenderTargetCount; ++i)
-        {
-            DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())),
-                  "Unable to get swapchain back buffer");
-        }
+        DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())),
+              "Unable to get swapchain back buffer");
     }
-    else
-    {
-        // create D3D11 textures, handles and keyed mutexes, mutecies? muti?
-        m_rtKeyedMutexes.resize(RenderTargetCount);
-        m_ntHandles.resize(RenderTargetCount);
-        m_d3d11Targets.resize(RenderTargetCount);
 
-        for (uint16_t i = 0; i < RenderTargetCount; ++i)
-        {
-            // offscreen render targets
-            D3D11_TEXTURE2D_DESC desc{0};
-            desc.Format = SwapchainFormat;
-            desc.Width = m_logW;
-            desc.Height = m_logH;
-            desc.MipLevels = 1;
-            desc.ArraySize = 1;
-            desc.SampleDesc = {.Count = 1, .Quality = 0};
-            desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-            desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX | D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
-            desc.Usage = D3D11_USAGE_DEFAULT;
-
-            // create the texture and handle
-            DXCHK(m_device11->CreateTexture2D(&desc, nullptr, m_d3d11Targets[i].GetAddressOf()),
-                  "Unable to create D3D11 shared texture2D");
-            ComPtr<IDXGIResource1> dxgiResource;
-            m_d3d11Targets[i].As(&dxgiResource);
-            dxgiResource->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE, nullptr,
-                                             &m_ntHandles[i]);
-
-            // acquire the keyed mutex
-            m_d3d11Targets[i].As(&m_rtKeyedMutexes[i]);
-            m_rtKeyedMutexes[i]->AcquireSync(0, 100);
-            m_rtKeyedMutexes[i]->ReleaseSync(0);
-
-            // acquire D3D12 textures from NT handles
-            m_device->OpenSharedHandle(m_ntHandles[i], IID_PPV_ARGS(m_renderTargetTextures[i].GetAddressOf()));
-        }
-    }
     // create the render target views
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
     for (int i = 0; i < RenderTargetCount; ++i)
     {
-        ComPtr<ID3D12Resource> renderTarget = Config::ExecSelect(m_backBuffers[i], m_renderTargetTextures[i]);
+        ComPtr<ID3D12Resource> renderTarget = m_backBuffers[i];
         m_device->CreateRenderTargetView(renderTarget.Get(), nullptr, rtvHandle);
         rtvHandle.Offset(1, m_descriptorSizes.RTV);
     }

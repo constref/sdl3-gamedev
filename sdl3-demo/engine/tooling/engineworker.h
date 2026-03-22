@@ -10,19 +10,12 @@
 class EngineWorker
 {
 	std::unique_ptr<Engine> m_engine;
-	int editorPID;
-	std::string url;
-
-	bool m_listening;
 	bool m_running;
 	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
-	std::thread publisherThread;
 	std::thread m_engineThread;
-	std::thread m_repThread;
-	std::thread m_pullThread;
 
 public:
-	EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url);
+	EngineWorker(std::unique_ptr<Application> app);
 	~EngineWorker();
 
 	void start();

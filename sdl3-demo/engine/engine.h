@@ -1,9 +1,12 @@
 #pragma once
 
+#ifndef EXECUTION_MODE_TOOLING
+#include <SDL3/SDL.h>
+#endif
+
 #include <format>
 #include <memory>
 #include <array>
-#include <SDL3/SDL.h>
 #include <sdlstate.h>
 #include <inputstate.h>
 #include <framecontext.h>
@@ -57,7 +60,7 @@ public:
     Engine(std::unique_ptr<Application> app);
     ~Engine();
 
-    bool initialize(int logW, int logH, int width, int height);
+    bool initialize(int logW, int logH, int width, int height, HWND hWnd);
     d3d12rs::D3D12RenderSystem* getRenderer() const;
     Services& services();
     void cleanup();

@@ -9,7 +9,9 @@ set(PLATFORMER_SOURCES
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORMER_SOURCES})
 
 add_executable(empty WIN32 ${PLATFORMER_SOURCES})
-target_link_libraries(empty PUBLIC engine)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+target_link_libraries(empty PUBLIC engine Qt::Core Qt::Widgets
+)
 
 # For MSVC, you often need the 'latest' flag specifically
 if(MSVC)
@@ -34,6 +36,6 @@ if (EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
-#if (EXECUTION_MODE STREQUAL "TOOLING")
+if (EXECUTION_MODE STREQUAL "TOOLING")
     target_link_libraries(empty PRIVATE enginetooling)
-#endif()
+endif()

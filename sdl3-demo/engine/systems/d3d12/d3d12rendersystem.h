@@ -8,18 +8,10 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include <rendering/mesh.h>
-#include <d3d11on12.h>
-
-#include <span>
-
-
-struct SDL_Window;
 
 namespace d3d12rs
 {
-
 using Microsoft::WRL::ComPtr;
-
 
 struct GPUSubMesh
 {
@@ -109,15 +101,6 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	DescriptorSizes m_descriptorSizes;
 	// internal render targets
 	ComPtr<ID3D12Heap> renderTargetHeap;
-	std::vector<ComPtr<ID3D12Resource>> m_renderTargetTextures;
-	std::vector<HANDLE> m_ntHandles;
-	std::vector<ComPtr<IDXGIKeyedMutex>> m_rtKeyedMutexes;
-	
-	// D3D11 Interop
-	std::vector<ComPtr<ID3D11Texture2D>> m_d3d11Targets;
-	ComPtr<ID3D11Device> m_device11;
-	ComPtr<ID3D11On12Device> m_device11on12;
-	ComPtr<ID3D11DeviceContext> m_deviceContext11;
 
 	// staging buffer
 	ComPtr<ID3D12Resource> m_stagingBuffer;
@@ -169,7 +152,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	D3D12_RESOURCE_STATES m_objBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
 public:
-	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);
+	D3D12RenderSystem(Services &services, HWND hWnd, int width, int height, int logW, int logH);
 	~D3D12RenderSystem() override;
 
 	bool initialize();

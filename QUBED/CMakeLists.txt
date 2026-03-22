@@ -5,19 +5,22 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
 qt_standard_project_setup()
 
-qt_add_executable(QUBED
-    WIN32 MACOSX_BUNDLE
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
+qt_add_library(QUBED STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui
 )
 
 target_link_libraries(QUBED
-    PRIVATE
+    PUBLIC
         Qt::Core
         Qt::Widgets
+        engine
 )
+
+target_include_directories(QUBED
+    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+        
 
 install(TARGETS QUBED
     BUNDLE  DESTINATION .

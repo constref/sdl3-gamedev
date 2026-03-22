@@ -1,5 +1,6 @@
 ﻿find_package(SDL3 REQUIRED)
 #find_package(SDL3_mixer REQUIRED)
+
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
@@ -149,10 +150,10 @@ set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
 message(STATUS ${FLATBUFF_DIR})
 
 target_link_libraries(engine PUBLIC
+	SDL3::SDL3
 	Vulkan::Vulkan
 	Vulkan::volk
 	Vulkan::shaderc_combined
-	SDL3::SDL3
 	glm::glm
 	tinyxml2::tinyxml2
 	flatbuffers::flatbuffers
@@ -168,9 +169,8 @@ target_include_directories(engine
 )
 
 # tooling specific
-#if (EXECUTION_MODE STREQUAL "TOOLING")
+if (EXECUTION_MODE STREQUAL "TOOLING")
     find_package(pxr REQUIRED)
-    find_package(cppzmq REQUIRED)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
@@ -189,8 +189,11 @@ target_include_directories(engine
         "tooling/usd/rootcomponent.h"
         "tooling/usd/rootcomponent.cpp"
         "tooling/usd/events.h"
+        "tooling/editorlauncher.h"
+        "tooling/editorlauncher.cpp"
     )
-
+    
     target_link_libraries(enginetooling
-        PRIVATE engine usd usdGeom usdImaging hd cppzmq)
-#endif()
+        PUBLIC QUBED engine
+        PRIVATE usd usdGeom usdImaging hd)
+endif()

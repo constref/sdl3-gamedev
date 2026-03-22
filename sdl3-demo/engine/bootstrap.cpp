@@ -5,8 +5,15 @@
 #include <engine.h>
 #include <tooling/engineworker.h>
 
+#include "tooling/editorlauncher.h"
+
+#ifdef EXECUTION_MODE_TOOLING
+#endif
+
 Bootstrap::Bootstrap(int argc, char *argv[])
 {
+	m_argc = argc;
+	m_argv = argv;
 	if constexpr (Config::IsToolingMode())
 	{
 		if (argc > 1)
@@ -21,33 +28,17 @@ Bootstrap::Bootstrap(int argc, char *argv[])
 						Sleep(100);
 					}
 				}
-				else if (strcmp(argv[i], "--pid") == 0)
-				{
-					if (i < argc)
-					{
-						editorPID = atoi(argv[i + 1]);
-					}
-				}
-				else if (strcmp(argv[i], "--url") == 0)
-				{
-					if (i < argc)
-					{
-						url = std::string(argv[i + 1]);
-					}
-				}
 			}
 		}
-		assert(editorPID != 0 && "Process ID for tooling needs to be provided via --pid <PID>");
-		assert(url.length() > 0 && "No URL provided via --url <URL> to connect the tooling");
 	}
 }
 
-int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH, int width, int height)
+int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH, int width, int height) const
 {
 	if constexpr (Config::IsStandaloneMode())
 	{
 		Engine engine(std::move(application));
-		if (!engine.initialize(logW, logH, width, height))
+		if (!engine.initialize(logW, logH, width, height, nullptr))
 		{
 			return 1;
 		}
@@ -55,8 +46,7 @@ int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH
 	}
 	else
 	{
-		EngineWorker worker(std::move(application), editorPID, url);
-		worker.start();
+		EditorLauncher::exec(std::move(application), m_argc, m_argv);
 	}
 
 	return 0;
