@@ -1,0 +1,32 @@
+include "usd.fbs";
+
+namespace NUBE.Interop;
+
+union EditorMessage {
+    KillWorkerCommand,
+	EngineStartupCommand,
+	EngineShutdownCommand,
+	USD.CreateStageCommand,
+	USD.OpenStageCommand,
+	USD.SaveStageCommand,
+	USD.AddLayerCommand,
+	USD.AddPrimCommand,
+	USD.BakeStageCommand
+}
+
+table EditorEnvelope {
+	payload:EditorMessage;
+}
+
+table KillWorkerCommand {
+    unused:bool = true;
+}
+
+table EngineStartupCommand {
+	unused:bool = true;
+}
+table EngineShutdownCommand {
+	unused:bool = true;
+}
+
+root_type EditorEnvelope;

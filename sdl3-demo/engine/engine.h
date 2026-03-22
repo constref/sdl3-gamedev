@@ -30,7 +30,7 @@
 
 class Engine
 {
-    std::unique_ptr<Application> app;
+    std::unique_ptr<Application> m_app;
     uint64_t prevTime;
     bool debugMode;
     bool running;
@@ -42,13 +42,13 @@ class Engine
     long frameCount;
     double globalTime;
 
-    // core services
+    // core m_services
     ComponentSystems compSys;
     EventQueue eventQueue;
     World world;
     InputState inputState;
     PrototypeInstancer protoInstancer;
-    Services services;
+    Services m_services;
     SDLState sdlState;
     d3d12rs::D3D12RenderSystem *d3d12Renderer;
     vks::VulkanRenderSystem *vkRenderer;
@@ -59,11 +59,13 @@ public:
 
     bool initialize(int logW, int logH, int width, int height);
     d3d12rs::D3D12RenderSystem* getRenderer() const;
-    Services& getServices();
+    Services& services();
     void cleanup();
     void run();
     void stop();
     void step();
+    
+    Application &application();
 
 private:
     static void emIterate(void *userData);

@@ -1,13 +1,8 @@
 #include "engineworker.h"
 #include <format>
-
 #include <zmq.hpp>
 
-#include "usd/usdprocessor.h"
-
-//static zmq::context_t g_context;
-
-EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
+EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
     m_listening = false;
@@ -82,7 +77,6 @@ void EngineWorker::start()
                 }
             }
 
-            Logger::info(this, std::format("{} header-bytes read", bytesRead));
             if (bytesRead != headerSize)
             {
                 Logger::error(this, "Invalid header size read");
@@ -109,7 +103,6 @@ void EngineWorker::start()
             }
 
             // message read incomplete
-            Logger::info(this, std::format("{} message-bytes read", bytesRead));
             if (bytesRead != msgSize)
             {
                 Logger::error(this, "Invalid message size read");
@@ -123,7 +116,7 @@ void EngineWorker::start()
             {
                 case Piped::PipedMessage_KeyboardEvent:
                 {
-                    const Piped::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
+                    const Piped::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
                     if (keyEvent->is_down())
                     {
                         pushEvent(KeyDown{.scancode = keyEvent->scancode()});
@@ -136,14 +129,16 @@ void EngineWorker::start()
                 }
                 case Piped::PipedMessage::PipedMessage_MouseMoveEvent:
                 {
-                    const auto* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
+                    const auto *mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
                     pushEvent(MouseMoveEvent{
                         .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
                         .yRel = mouseMoveEvent->y_rel()
                     });
                     break;
                 }
-                default: {}
+                default:
+                {
+                }
             }
         }
         CancelIoEx(hPipe, nullptr);
@@ -160,8 +155,12 @@ void EngineWorker::start()
     zmq::context_t ctx;
     zmq::socket_t rep = zmq::socket_t(ctx, ZMQ_REP);
     rep.bind(url);
+    
+    const auto ack = [&rep] {
+        zmq::message_t response("ACK");
+        rep.send(response, zmq::send_flags::none);
+    };
 
-    usd::UsdProcessor usdSystem;
     while (m_listening)
     {
         zmq::message_t request;
@@ -190,7 +189,7 @@ void EngineWorker::start()
                     auto span = builder.GetBufferSpan();
                     zmq::message_t response(span);
                     rep.send(response, zmq::send_flags::none);
-                    
+
                     m_running = true;
                     m_engineThread = std::thread([this]()
                     {
@@ -206,46 +205,50 @@ void EngineWorker::start()
                 }
                 case EditorMessage_EngineShutdownCommand:
                 {
-                    zmq::message_t response(0);
-                    rep.send(response, zmq::send_flags::none);
-                    
                     m_running = false;
                     if (m_engineThread.joinable())
                     {
                         m_engineThread.detach();
                     }
+                    ack();
                     break;
                 }
                 case EditorMessage_USD_CreateStageCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_CreateStageCommand();
-                    usdSystem.createStage(e->path()->c_str());
-                    zmq::message_t response("ACK");
-                    rep.send(response, zmq::send_flags::none);
+                    const auto *e = envelope->payload_as_USD_CreateStageCommand();
+                    m_engine->services().eventQueue().enqueue<usd::CreateStageEvent>(m_engine->application().getRoot(), 0, e->path()->str());
+                    ack();
+                    break;
+                }
+            case EditorMessage_USD_OpenStageCommand:
+                {
+					const auto *e = envelope->payload_as_USD_OpenStageCommand();
+                    m_engine->services().eventQueue().enqueue<usd::OpenStageEvent>(m_engine->application().getRoot(), 0, e->path()->str());
+                    ack();
                     break;
                 }
                 case EditorMessage_USD_SaveStageCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_SaveStageCommand();
-                    usdSystem.saveStage();
-                    zmq::message_t response("ACK");
-                    rep.send(response, zmq::send_flags::none);
+                    const auto *e = envelope->payload_as_USD_SaveStageCommand();
+                    ack();
                     break;
                 }
                 case EditorMessage_USD_AddLayerCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_AddLayerCommand();
-                    usdSystem.addLayer(e->path()->c_str());
-                    zmq::message_t response("ACK");
-                    rep.send(response, zmq::send_flags::none);
+                    const auto *e = envelope->payload_as_USD_AddLayerCommand();
+                    ack();
                     break;
                 }
                 case EditorMessage_USD_AddPrimCommand:
                 {
-                    const auto* e = envelope->payload_as_USD_AddPrimCommand();
-                    usdSystem.addPrim(e->path()->c_str(), e->type()->c_str());
-                    zmq::message_t response("ACK");
-                    rep.send(response, zmq::send_flags::none);
+                    const auto *e = envelope->payload_as_USD_AddPrimCommand();
+                    ack();
+                    break;
+                }
+                case EditorMessage_USD_BakeStageCommand:
+                {
+                    //Node &node = services.world().getNode(m_engine->application().getRoot());
+                    ack();
                     break;
                 }
                 default:
@@ -288,23 +291,23 @@ void EngineWorker::start()
 void EngineWorker::processEvents()
 {
     PlatformEvent e;
-    Services& serv = m_engine->getServices();
+    Services &serv = m_engine->services();
     while (eventBuffer.get(e))
     {
         // handle external events
         if (std::holds_alternative<KeyDown>(e))
         {
-            const KeyDown& keyEvent = std::get<KeyDown>(e);
+            const KeyDown &keyEvent = std::get<KeyDown>(e);
             serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<KeyUp>(e))
         {
-            const KeyUp& keyEvent = std::get<KeyUp>(e);
+            const KeyUp &keyEvent = std::get<KeyUp>(e);
             serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
-            const MouseMoveEvent& mouseEvent = std::get<MouseMoveEvent>(e);
+            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
             serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
                                                         mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }
@@ -313,25 +316,25 @@ void EngineWorker::processEvents()
             //const MouseButtonEvent &mouseButtonEvent = std::get<MouseButtonEvent>(e);
             //if (mouseButtonEvent.isDown)
             //{
-            //	app.onMouseButtonDown(mouseButtonEvent.buttonIndex);
+            //	m_app.onMouseButtonDown(mouseButtonEvent.buttonIndex);
             //}
             //else
             //{
-            //	app.onMouseButtonUp(mouseButtonEvent.buttonIndex);
+            //	m_app.onMouseButtonUp(mouseButtonEvent.buttonIndex);
             //}
         }
         else if (std::holds_alternative<ResizeEvent>(e))
         {
             //const ResizeEvent &event = std::get<ResizeEvent>(e);
-            //app.onResizeRenderer(event.x, event.y, event.width, event.height);
+            //m_app.onResizeRenderer(event.x, event.y, event.width, event.height);
         }
         else if (std::holds_alternative<ApplicationEnteredBackground>(e))
         {
-            //app.pause();
+            //m_app.pause();
         }
         else if (std::holds_alternative<ApplicationEnteredForeground>(e))
         {
-            //app.resume();
+            //m_app.resume();
         }
         else if (std::holds_alternative<ExitEvent>(e))
         {
@@ -355,7 +358,7 @@ void EngineWorker::processEvents()
     }
 }
 
-void EngineWorker::pushEvent(const PlatformEvent& event)
+void EngineWorker::pushEvent(const PlatformEvent &event)
 {
     eventBuffer.add(event);
 }
