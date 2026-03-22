@@ -18,7 +18,7 @@ public:
 	EngineWorker(std::unique_ptr<Application> app);
 	~EngineWorker();
 
-	void start();
+	void start(HWND hWnd, int width, int height);
 	void processEvents();
 	void pushEvent(const PlatformEvent &event);
 	Engine &getEngine();

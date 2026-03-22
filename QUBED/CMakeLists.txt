@@ -13,6 +13,10 @@ qt_add_library(QUBED STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.cpp
 )
 
+if(MSVC)
+    target_compile_options(QUBED PRIVATE /std:c++latest)
+endif()
+
 target_link_libraries(QUBED
     PUBLIC
         Qt::Core

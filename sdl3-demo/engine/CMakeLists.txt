@@ -139,13 +139,6 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
 endif()
 
-
-# For MSVC, you often need the 'latest' flag specifically
-if(MSVC)
-    target_compile_options(engine PRIVATE /std:c++latest)
-    target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
-endif()
-
 set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
 message(STATUS ${FLATBUFF_DIR})
 

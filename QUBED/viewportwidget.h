@@ -13,4 +13,6 @@ private:
 public:
     ViewportWidget(QWidget *parent);
     
+signals:
+    void viewportResized(QResizeEvent *event);
 };

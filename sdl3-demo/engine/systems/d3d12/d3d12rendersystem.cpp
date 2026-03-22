@@ -631,7 +631,7 @@ void D3D12RenderSystem::endFrame()
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
                                             res.renderTargetIndex, m_descriptorSizes.RTV);
 
-    FLOAT clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    FLOAT clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     FLOAT dsvClear[] = {0.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0,
@@ -661,11 +661,8 @@ void D3D12RenderSystem::endFrame()
     std::array<ID3D12CommandList*, 1> commandLists{res.commandList.Get()};
     m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
 
-    if constexpr (Config::IsStandaloneMode())
-    {
-        UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
-        m_swapchain->Present(1, presentFlags);
-    }
+    UINT presentFlags = m_allowTearing && m_syncInterval == 0 ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    m_swapchain->Present(1, presentFlags);
 
     res.fenceValue = ++m_fenceValue;
     m_commandQueue->Signal(m_fence.Get(), res.fenceValue);

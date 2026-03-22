@@ -10,11 +10,25 @@ EngineWorker::EngineWorker(std::unique_ptr<Application> app)
 EngineWorker::~EngineWorker()
 {
     m_running = false;
+    if (m_engineThread.joinable())
+    {
+        m_engineThread.join();
+    }
 }
 
-void EngineWorker::start()
+void EngineWorker::start(HWND hWnd, int width, int height)
 {
+    m_engine->initialize(width, height, width, height, hWnd);
+    
     m_running = true;
+    m_engineThread = std::thread([this]
+    {
+        while (m_running)
+        {
+            processEvents();
+            m_engine->step();
+        }
+    });
 }
 
 void EngineWorker::processEvents()
@@ -54,7 +68,7 @@ void EngineWorker::processEvents()
         }
         else if (std::holds_alternative<ResizeEvent>(e))
         {
-            //const ResizeEvent &event = std::get<ResizeEvent>(e);
+            const ResizeEvent &event = std::get<ResizeEvent>(e);
             //m_app.onResizeRenderer(event.x, event.y, event.width, event.height);
         }
         else if (std::holds_alternative<ApplicationEnteredBackground>(e))
