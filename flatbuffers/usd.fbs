@@ -1,0 +1,26 @@
+namespace NUBE.Interop.USD;
+
+table CreateStageCommand {
+   path:string;
+}
+
+table OpenStageCommand {
+   path:string;
+}
+
+table SaveStageCommand {
+    unused:bool = true;
+}
+
+table AddLayerCommand {
+    path:string;
+}
+
+table AddPrimCommand {
+    path:string;
+    type:string;
+}
+
+table BakeStageCommand {
+    unused:bool = true;
+}

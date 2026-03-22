@@ -218,7 +218,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor* self, UsdGeomMesh mesh)
 static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services &services,
                         std::unordered_map<std::string, PrimGeo> &meshes)
 {
-    Logger::info(self, std::format("Traversing {}", prim.GetPath().GetString()));
+    Logger::info(self, std::format("Processing path: {}", prim.GetPath().GetString()));
     World &world = services.world();
     d3d12rs::D3D12RenderSystem* renderer = services.compSys().getSystemRegistry().getSystem<
         d3d12rs::D3D12RenderSystem>();
@@ -227,6 +227,7 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
     auto processGeomMesh = [self, &meshes, &services, renderer](Node &node, UsdGeomMesh meshPrim)
     {
         const std::string path = meshPrim.GetPath().GetString();
+        Logger::info(self, std::format("Geomesh path: {}: ", path));
 
         auto meshItr = meshes.find(path);
         if (meshItr == meshes.end())
@@ -303,7 +304,11 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
             // look directly in prim's tree for mesh (not instance)
             for (UsdPrim child : prim.GetChildren())
             {
-                if (child.GetTypeName() == UsdGeomTokens->Mesh)
+                if (child.GetTypeName() == UsdGeomTokens->Xform)
+                {
+                    processPrim(self, child, parent, services, meshes);
+                }
+                else if (child.GetTypeName() == UsdGeomTokens->Mesh)
                 {
                     UsdGeomMesh meshPrim(child);
                     processGeomMesh(node, meshPrim);
@@ -351,7 +356,7 @@ public:
     }
 };
 
-UsdProcessor::UsdProcessor()
+UsdProcessor::UsdProcessor(Services &services) : System(services)
 {
     TfDiagnosticMgr::GetInstance().AddDelegate(&g_usdLogger);
     m_noticeHandler = new StageProcessor;
@@ -391,6 +396,12 @@ void UsdProcessor::createStage(const std::string &path)
     m_noticeHandler->setStage(pxr::UsdStage::CreateNew(path));
 }
 
+void UsdProcessor::openStage(const std::string &usdPath)
+{
+    auto stage = pxr::UsdStage::Open(usdPath);
+    m_noticeHandler->setStage(stage);
+}
+
 void UsdProcessor::saveStage()
 {
     m_noticeHandler->stage()->Save();
@@ -406,12 +417,6 @@ void UsdProcessor::addLayer(const std::string &layerPath)
     {
         Logger::error(this, "File path does not exist");
     }
-
-    UsdPrim rootPrim = m_noticeHandler->stage()->GetPseudoRoot();
-    for (auto child : rootPrim.GetChildren())
-    {
-        //processPrim(this, child, root, services, meshes);
-    }
 }
 
 void UsdProcessor::addPrim(const std::string &path, const std::string &type)
@@ -423,4 +428,17 @@ void UsdProcessor::addPrim(const std::string &path, const std::string &type)
         primType = UsdGeomTokens->Xform;
     }
     UsdPrim newPrim = m_noticeHandler->stage()->DefinePrim(primPath, primType);
+}
+
+void UsdProcessor::bakeStage(Node &root, Services &services)
+{
+    UsdPrim rootPrim = m_noticeHandler->stage()->GetPseudoRoot();
+    for (auto child : rootPrim.GetChildren())
+    {
+        processPrim(this, child, root, services, meshes);
+    }
+}
+
+void UsdProcessor::update(Node& node)
+{
 }

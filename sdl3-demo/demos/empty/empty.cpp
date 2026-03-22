@@ -31,6 +31,7 @@ bool Empty::initialize(Services &services, SDLState &state)
 	services.compSys().registerSystem(std::make_unique<EditorSystem>(services));
 	
 	services.compSys().registerSystem(std::make_unique<FPSCameraSystem>(services));
+	services.compSys().registerSystem(std::make_unique<usd::UsdProcessor	>(services));
 	return true;
 }
 
@@ -54,4 +55,8 @@ void Empty::start(Services &services, SDLState &state)
 	services.compSys().addComponent<CameraComponent>(player);
 	
 	root.addChild(player);
+
+	// usd::UsdProcessor proc;
+	// proc.openStage("S:\\projects\\constref\\sdl3-demo\\level_LAYOUT.usda");
+	// proc.bakeStage(root, services);
 }
