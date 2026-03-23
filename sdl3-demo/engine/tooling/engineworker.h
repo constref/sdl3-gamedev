@@ -1,11 +1,14 @@
 #pragma once
 
-#include <engine_generated.h>
 #include <thread>
-#include <engine.h>
 #include <memory>
 #include <containers/atomicringbuffer.h>
+#include <windowhandle.h>
 #include "platformevents.h"
+
+
+class Engine;
+class Application;
 
 class EngineWorker
 {
@@ -18,7 +21,7 @@ public:
 	EngineWorker(std::unique_ptr<Application> app);
 	~EngineWorker();
 
-	void start(HWND hWnd, int width, int height);
+	void start(WindowHandle hWnd, int width, int height);
 	void processEvents();
 	void pushEvent(const PlatformEvent &event);
 	Engine &getEngine();

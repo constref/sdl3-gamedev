@@ -7,7 +7,6 @@ find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
 find_package(DirectX-Headers REQUIRED)
 
-set(CMAKE_CXX_STANDARD 23)
 
 set(ENGINE_SOURCES
 	"tmx.cpp"
@@ -122,6 +121,7 @@ set(SHADER_SOURCES
 	"shaders/sprite.vert"
 	"shaders/sprite.frag"
 	"shaders/hlsl/basic.hlsl"
+		windowhandle.h
 )
 
 set_source_files_properties(${SHADER_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -129,8 +129,15 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_S
 
 add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
+if(MSVC)
+	target_compile_options(engine PRIVATE /std:c++latest)
+	#target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+endif()
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET engine PROPERTY CXX_STANDARD 23)
+	set_property(TARGET engine PROPERTY CXX_STANDARD 23)
+	set_property(TARGET engine PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+	set_property(TARGET engine PROPERTY CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
@@ -189,4 +196,10 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
     target_link_libraries(enginetooling
         PUBLIC QUBED engine
         PRIVATE usd usdGeom usdImaging hd)
+
+	if(MSVC)
+		target_compile_options(enginetooling PRIVATE /std:c++latest)
+		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+	endif()
+
 endif()

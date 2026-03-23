@@ -26,6 +26,7 @@
 #include <systems/d3d12/d3d12rendersystem.h>
 #include <prototypeinstancer.h>
 #include <executionmode.h>
+#include <windowhandle.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -60,7 +61,7 @@ public:
     Engine(std::unique_ptr<Application> app);
     ~Engine();
 
-    bool initialize(int logW, int logH, int width, int height, HWND hWnd);
+    bool initialize(int logW, int logH, int width, int height, WindowHandle winHandle);
     d3d12rs::D3D12RenderSystem* getRenderer() const;
     Services& services();
     void cleanup();

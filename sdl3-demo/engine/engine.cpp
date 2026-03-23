@@ -23,20 +23,18 @@ Engine::~Engine()
     cleanup();
 }
 
-bool Engine::initialize(int logW, int logH, int width, int height, HWND hWnd)
+bool Engine::initialize(int logW, int logH, int width, int height, WindowHandle winHandle)
 {
     sdlState.logW = logW;
     sdlState.logH = logH;
 
-    SDL_Window *window = nullptr;
-    HWND inithWnd = hWnd;
+    HWND hWnd = static_cast<HWND>(winHandle);
     if constexpr (Config::IsStandaloneMode())
     {
         auto windowSystem = std::make_unique<WindowingSystem>(m_services);
         windowSystem->initialize(width, height);
-        window = windowSystem->window();
         m_services.compSys().registerSystem(std::move(windowSystem));
-        inithWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER,  nullptr);
+        hWnd = static_cast<HWND>(SDL_GetPointerProperty(SDL_GetWindowProperties(windowSystem->window()), SDL_PROP_WINDOW_WIN32_HWND_POINTER,  nullptr));
         assert(hWnd && "Unable to acquire HWND for provided window");
     }
 
@@ -48,7 +46,7 @@ bool Engine::initialize(int logW, int logH, int width, int height, HWND hWnd)
     m_services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(m_services));
     
     auto &renderSys = m_services.compSys().registerSystem(
-        std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, inithWnd, width, height, logW, logH));
+        std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, hWnd, width, height, logW, logH));
     if (!renderSys.initialize())
     {
         return false;

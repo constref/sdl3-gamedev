@@ -1,8 +1,8 @@
 ﻿#include "viewportwidget.h"
 
 #include <QResizeEvent>
-
-#include <logger.h>
+#include <tooling/platformevents.h>
+#include <application.h>
 
 ViewportWidget::ViewportWidget(QWidget *parent) : QWidget(parent)
 {
@@ -47,13 +47,15 @@ void ViewportWidget::mouseMoveEvent(QMouseEvent *event)
 
 void ViewportWidget::keyPressEvent(QKeyEvent *event)
 {
-    m_engineWorker->pushEvent(KeyDown(event->key()));
+    uint16_t scancode = event->key();
+    m_engineWorker->pushEvent(KeyDown{scancode});
     QWidget::keyPressEvent(event);
 }
 
 void ViewportWidget::keyReleaseEvent(QKeyEvent *event)
 {
-    m_engineWorker->pushEvent(KeyUp(event->key()));
+    uint16_t scancode = event->key();
+    m_engineWorker->pushEvent(KeyUp{scancode});
     QWidget::keyReleaseEvent(event);
 }
 

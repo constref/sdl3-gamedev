@@ -1,5 +1,5 @@
 #include "engineworker.h"
-#include <format>
+#include <engine.h>
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app)
 {
@@ -16,7 +16,7 @@ EngineWorker::~EngineWorker()
     }
 }
 
-void EngineWorker::start(HWND hWnd, int width, int height)
+void EngineWorker::start(WindowHandle hWnd, int width, int height)
 {
     m_engine->initialize(width, height, width, height, hWnd);
     
