@@ -5,6 +5,8 @@
 #include "ui_mainwindow.h"
 #include "viewportwidget.h"
 
+#include <tooling/usd/usdprocessor.h>
+
 MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);

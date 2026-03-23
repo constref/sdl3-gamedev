@@ -40,7 +40,6 @@ void ViewportWidget::mouseMoveEvent(QMouseEvent *event)
         {
             QPoint delta = pos - globalCenter;
             QCursor::setPos(globalCenter);
-            Logger::info(this, std::format("{}, {}", delta.x(), delta.y()));
         }
     }
     QWidget::mouseMoveEvent(event);
