@@ -356,7 +356,7 @@ public:
     }
 };
 
-UsdProcessor::UsdProcessor(Services &services) : System(services)
+UsdProcessor::UsdProcessor()
 {
     TfDiagnosticMgr::GetInstance().AddDelegate(&g_usdLogger);
     m_noticeHandler = new StageProcessor;
@@ -374,7 +374,7 @@ UsdProcessor::UsdProcessor(Services &services) : System(services)
     for (auto itr = range.begin(); itr != range.end(); ++itr)
     {
         UsdPrim prim = *itr;
-        processPrim(this, prim, root, services, meshes);
+        processPrim(this, prim, root, services, m_meshes);
     }
     */
     /*
@@ -435,10 +435,6 @@ void UsdProcessor::bakeStage(Node &root, Services &services)
     UsdPrim rootPrim = m_noticeHandler->stage()->GetPseudoRoot();
     for (auto child : rootPrim.GetChildren())
     {
-        processPrim(this, child, root, services, meshes);
+        processPrim(this, child, root, services, m_meshes);
     }
-}
-
-void UsdProcessor::update(Node& node)
-{
 }

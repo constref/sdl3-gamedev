@@ -1,6 +1,8 @@
 #include "engineworker.h"
 #include <engine.h>
 
+#include "usd/usdprocessor.h"
+
 EngineWorker::EngineWorker(std::unique_ptr<Application> app)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
@@ -59,6 +61,7 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
             const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
+            Logger::info(this, std::format("{}, {} -- {}, {}", mouseEvent.x, mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel));
             serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
                                                         mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }
@@ -92,19 +95,16 @@ void EngineWorker::processEvents()
             Logger::info(this, "Engine exit event received, stopping run-loop");
             m_running = false;
         }
-        else if (std::holds_alternative<usd::CreateStageEvent>(e))
+        else if (std::holds_alternative<usd::BakeStageEvent>(e))
         {
-            serv.eventQueue().enqueue<usd::CreateStageEvent>(NodeHandle{}, 0,
-                std::get<usd::CreateStageEvent>(e).path());
-        }
-        else if (std::holds_alternative<usd::SaveStageEvent>(e))
-        {
-            serv.eventQueue().enqueue<usd::SaveStageEvent>(NodeHandle{}, 0);
-        }
-        else if (std::holds_alternative<usd::AddLayerEvent>(e))
-        {
-            serv.eventQueue().enqueue<usd::AddLayerEvent>(NodeHandle{}, 0,
-                std::get<usd::AddLayerEvent>(e).path());
+            const auto &event = std::get<usd::BakeStageEvent>(e);
+            if (event.currentProcessor)
+            {
+                NodeHandle hRoot = getEngine().application().getRoot();
+                Services &services = getEngine().services();
+                Node &root = services.world().getNode(hRoot);
+                event.currentProcessor->bakeStage(root, services);
+            }
         }
     }
 }

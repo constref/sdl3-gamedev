@@ -20,7 +20,6 @@
 #include "tooling/systems/editorsystem.h"
 #include "tooling/systems/editorinputsystem.h"
 #include "tooling/systems/nodeauthoringcomponent.h"
-#include "tooling/usd/usdprocessor.h"
 
 using namespace DirectX;
 
@@ -31,7 +30,6 @@ bool Empty::initialize(Services &services, SDLState &state)
 	services.compSys().registerSystem(std::make_unique<EditorSystem>(services));
 	
 	services.compSys().registerSystem(std::make_unique<FPSCameraSystem>(services));
-	services.compSys().registerSystem(std::make_unique<usd::UsdProcessor	>(services));
 	return true;
 }
 
