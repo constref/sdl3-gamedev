@@ -24,7 +24,8 @@ public:
 
 protected:
     void keyReleaseEvent(QKeyEvent *event) override;
-    
+    void closeEvent(QCloseEvent *event) override;
+
 signals:
     void mouseGrabToggled(bool isGrabbed);
 };

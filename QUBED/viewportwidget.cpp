@@ -29,6 +29,11 @@ void ViewportWidget::createWorker(std::unique_ptr<Application> app)
     m_engineWorker = std::make_unique<EngineWorker>(std::move(app));
 }
 
+void ViewportWidget::shutdownWorker()
+{
+    m_engineWorker->stop();
+}
+
 void ViewportWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_mouseGrabbed)

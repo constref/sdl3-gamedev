@@ -31,6 +31,14 @@ void EngineWorker::start(WindowHandle hWnd, int width, int height)
     });
 }
 
+void EngineWorker::stop()
+{
+    pushEvent(ExitEvent());
+    if (m_engineThread.joinable()) {
+        m_engineThread.join();
+    }
+}
+
 void EngineWorker::processEvents()
 {
     PlatformEvent e;
@@ -86,8 +94,8 @@ void EngineWorker::processEvents()
         }
         else if (std::holds_alternative<usd::CreateStageEvent>(e))
         {
-            serv.eventQueue().enqueue<
-                usd::CreateStageEvent>(NodeHandle{}, 0, std::get<usd::CreateStageEvent>(e).path());
+            serv.eventQueue().enqueue<usd::CreateStageEvent>(NodeHandle{}, 0,
+                std::get<usd::CreateStageEvent>(e).path());
         }
         else if (std::holds_alternative<usd::SaveStageEvent>(e))
         {
@@ -95,7 +103,8 @@ void EngineWorker::processEvents()
         }
         else if (std::holds_alternative<usd::AddLayerEvent>(e))
         {
-            serv.eventQueue().enqueue<usd::AddLayerEvent>(NodeHandle{}, 0, std::get<usd::AddLayerEvent>(e).path());
+            serv.eventQueue().enqueue<usd::AddLayerEvent>(NodeHandle{}, 0,
+                std::get<usd::AddLayerEvent>(e).path());
         }
     }
 }

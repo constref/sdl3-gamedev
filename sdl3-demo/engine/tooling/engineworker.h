@@ -22,6 +22,7 @@ public:
 	~EngineWorker();
 
 	void start(WindowHandle hWnd, int width, int height);
+	void stop();
 	void processEvents();
 	void pushEvent(const PlatformEvent &event);
 	Engine &getEngine();

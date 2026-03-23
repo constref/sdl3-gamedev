@@ -15,8 +15,9 @@ protected:
     
 public:
     ViewportWidget(QWidget *parent);
-    
+
     void createWorker(std::unique_ptr<Application> app);
+    void shutdownWorker();
 
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;
