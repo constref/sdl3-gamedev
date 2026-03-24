@@ -61,7 +61,6 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
             const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
-            Logger::info(this, std::format("{}, {} -- {}, {}", mouseEvent.x, mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel));
             serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
                                                         mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }

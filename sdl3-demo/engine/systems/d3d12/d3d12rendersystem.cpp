@@ -17,7 +17,8 @@ namespace d3d12rs
     constexpr static uint16_t RenderTargetCount = 3;
     constexpr static uint16_t MaxCopyOps = 32;
     constexpr static uint32_t MaxVertCount = 5000;
-    constexpr static size_t StagingBuffSize = 1024 * 1024 * 32;
+    constexpr static size_t CopyStagingSize = 1024 * 1024 * 32;
+    constexpr static size_t PerFrameStagingSize = 1024 * 1024;
     constexpr static uint16_t AlignmentVertexIndex = 4;
 }
 
@@ -139,16 +140,25 @@ bool D3D12RenderSystem::initialize()
         }
     }
 
+    // per-frame command resources
     for (int i = 0; i < FramesInFlight; ++i)
     {
         auto& res = m_frameResources[i];
-        DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&res.commandAllocator)),
+        DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(res.commandAllocator.GetAddressOf())),
               "Couldn't create the command allocator");
         DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, res.commandAllocator.Get(), nullptr,
                   IID_PPV_ARGS(&res.commandList)),
               "Couldn't create the command list");
         DXCHK(res.commandList->Close(), "Couldn't close command list");
     }
+
+    // asset loader command resources
+    DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_assetCmdAllocator.GetAddressOf())),
+          "Couldn't create the asset command allocator");
+    DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_assetCmdAllocator.Get(), nullptr,
+              IID_PPV_ARGS(m_assetCmdList.GetAddressOf())),
+          "Couldn't create the asset command list");
+    DXCHK(m_assetCmdList->Close(), "Couldn't close asset command list");
 
     DXCHK(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)), "Unable to create fence");
     m_fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -159,17 +169,27 @@ bool D3D12RenderSystem::initialize()
 
     auto uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-
-    // staging buffer for copy operations
-    constexpr size_t stagingBufferTotalSize = FramesInFlight * StagingBuffSize;
-    auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(stagingBufferTotalSize);
-    DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc,
-              D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
-          "Unable to create the main staging buffer");
-
     CD3DX12_RANGE readRange(0, 0);
-    DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingBasePtr), "Unable to map staging buffer");
-    m_stagingPtr = m_stagingBasePtr;
+
+    // general staging buffer
+    {
+        constexpr size_t stagingBufferTotalSize = FramesInFlight * PerFrameStagingSize;
+        auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(stagingBufferTotalSize);
+        DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc,
+                  D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
+              "Unable to create the main staging buffer");
+        DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingBasePtr), "Unable to map staging buffer");
+        m_stagingPtr = m_stagingBasePtr;
+
+    }
+    // asset loading staging buffer
+    {
+        auto assetStagingDesc = CD3DX12_RESOURCE_DESC::Buffer(CopyStagingSize);
+        DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &assetStagingDesc,
+                  D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_assetStagingBuffer.GetAddressOf())),
+              "Unable to create the asset staging buffer");
+        DXCHK(m_assetStagingBuffer->Map(0, &readRange, &m_assetStagingPtr), "Unable to map asset staging buffer");
+    }
 
     // descriptors and buffers
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc{};
@@ -255,7 +275,7 @@ uint32_t D3D12RenderSystem::stageData(const void* srcPtr, size_t byteSize, size_
 {
     size_t alignedSize = align(byteSize, alignment);
     assert(
-        m_stagingOffset + alignedSize < StagingBuffSize && "Not enough room in staging buffer for the copy operation");
+        m_stagingOffset + alignedSize < PerFrameStagingSize && "Not enough room in staging buffer for the copy operation");
     memcpy(static_cast<uint8_t*>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
     uint32_t dataOffset = m_stagingOffset;
     m_stagingOffset += alignedSize;
@@ -263,7 +283,7 @@ uint32_t D3D12RenderSystem::stageData(const void* srcPtr, size_t byteSize, size_
     return dataOffset;
 }
 
-void D3D12RenderSystem::scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer,
+void D3D12RenderSystem::scheduleAssetCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer,
                                         D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
 {
     assert(m_copyOperations.size() < MaxCopyOps && "Copy operations buffer at capacity");
@@ -274,6 +294,45 @@ void D3D12RenderSystem::scheduleGPUCopy(size_t stagingOffset, size_t dataSize, C
         .dstStateBefore = dstStateBefore,
         .dstStateAfter = dstStateAfter
     });
+}
+
+void D3D12RenderSystem::executeAssetCopyOps()
+{
+    m_assetCmdAllocator->Reset();
+    m_assetCmdList->Reset(m_assetCmdAllocator.Get(), nullptr);
+
+    std::vector<D3D12_RESOURCE_BARRIER> barriers;
+    barriers.reserve(m_copyOperations.size());
+
+    for (int i = 0; i < m_copyOperations.size(); ++i)
+    {
+        auto& copyOP = m_copyOperations[i];
+        m_assetCmdList->CopyBufferRegion(copyOP.dstBuffer.Get(), 0, m_assetStagingBuffer.Get(),
+            copyOP.stagingOffset, copyOP.byteSize);
+
+        if (copyOP.dstStateAfter != D3D12_RESOURCE_STATE_COMMON)
+        {
+            barriers.push_back( CD3DX12_RESOURCE_BARRIER::Transition(copyOP.dstBuffer.Get(),
+                copyOP.dstStateBefore, copyOP.dstStateAfter));
+        }
+    }
+    m_assetCmdList->ResourceBarrier(barriers.size(), barriers.data());
+    m_copyOperations.clear();
+
+    std::array<ID3D12CommandList*, 1> commandLists{m_assetCmdList.Get()};
+    m_assetCmdList->Close();
+    m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
+    m_commandQueue->Signal(m_fence.Get(), ++m_fenceValue);
+
+    if (m_fence->GetCompletedValue() < m_fenceValue)
+    {
+        if (FAILED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent)))
+        {
+            Logger::error(this, "Unable to set fence completion event");
+            return;
+        }
+        ::WaitForSingleObject(m_fenceEvent, UINT_MAX);
+    }
 }
 
 void D3D12RenderSystem::setViewMatrix(const DirectX::XMMATRIX& viewMatrix)
@@ -295,28 +354,12 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
 {
     auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-    //copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(vertices.data()), vertsSize), m_boxVerts.Get(),
-    //	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-    //const size_t idxsSize = indices.size_bytes();
-    //auto resDescI = CD3DX12_RESOURCE_DESC::Buffer(idxsSize);
-    //auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
-    //m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr, IID_PPV_ARGS(m_boxIndices.GetAddressOf()));
-    //copyBuffer(std::span<uint8_t>(reinterpret_cast<uint8_t *>(indices.data()), idxsSize), m_boxIndices.Get(),
-    //	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-
-    //ibv = D3D12_INDEX_BUFFER_VIEW{};
-    //ibv.BufferLocation = m_boxIndices->GetGPUVirtualAddress();
-    //ibv.SizeInBytes = idxsSize;
-    //ibv.Format = DXGI_FORMAT_R32_UINT;
-
-
     // pack verts for all submeshes into staging to prepare for GPU copy
     GPUMesh gpuMesh;
     gpuMesh.subMeshes.resize(mesh.subMeshes().size());
 
-    m_stagingOffset = align(m_stagingOffset, AlignmentVertexIndex);
-    const size_t vbStagingStart = m_stagingOffset;
+    m_assetStagingOffset = align(m_assetStagingOffset, AlignmentVertexIndex);
+    const size_t vbStagingStart = m_assetStagingOffset;
     size_t vertTotalSize = 0;
     uint16_t vertexStart = 0;
     for (int i = 0; i < mesh.subMeshes().size(); ++i)
@@ -326,15 +369,15 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
         gpuMesh.subMeshes[i].vertexCount = sm.vertices.size();
 
         const size_t vertDataSize = sm.vertices.size() * sm.vertexElementSize();
-        memcpy(static_cast<uint8_t*>(m_stagingPtr) + m_stagingOffset, sm.vertices.data(), vertDataSize);
-        m_stagingOffset += vertDataSize;
+        memcpy(static_cast<uint8_t*>(m_assetStagingPtr) + m_assetStagingOffset, sm.vertices.data(), vertDataSize);
+        m_assetStagingOffset += vertDataSize;
         vertTotalSize += vertDataSize;
         vertexStart += sm.vertices.size();
     }
 
     // pack indices for all submeshes into staging to prepare for GPU copy
-    m_stagingOffset = align(m_stagingOffset, AlignmentVertexIndex);
-    const size_t ibStagingStart = m_stagingOffset;
+    m_assetStagingOffset = align(m_assetStagingOffset, AlignmentVertexIndex);
+    const size_t ibStagingStart = m_assetStagingOffset;
     size_t indexTotalSize = 0;
     uint16_t indexStart = 0;
     for (int i = 0; i < mesh.subMeshes().size(); ++i)
@@ -344,8 +387,8 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
         gpuMesh.subMeshes[i].indexCount = sm.indices.size();
 
         const size_t indexDataSize = sm.indices.size() * sm.indexElementSize();
-        memcpy(static_cast<uint8_t*>(m_stagingPtr) + m_stagingOffset, sm.indices.data(), indexDataSize);
-        m_stagingOffset += indexDataSize;
+        memcpy(static_cast<uint8_t*>(m_assetStagingPtr) + m_assetStagingOffset, sm.indices.data(), indexDataSize);
+        m_assetStagingOffset += indexDataSize;
         indexTotalSize += indexDataSize;
         indexStart += sm.indices.size();
     }
@@ -355,7 +398,7 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     auto buffStateV = D3D12_RESOURCE_STATE_COMMON;
     m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr,
                                       IID_PPV_ARGS(gpuMesh.vertexBuffer.GetAddressOf()));
-    scheduleGPUCopy(vbStagingStart, vertTotalSize, gpuMesh.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+    scheduleAssetCopy(vbStagingStart, vertTotalSize, gpuMesh.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
                     D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
     gpuMesh.vertexView = D3D12_VERTEX_BUFFER_VIEW{};
@@ -367,7 +410,7 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     auto buffStateI = D3D12_RESOURCE_STATE_COMMON;
     m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr,
                                       IID_PPV_ARGS(gpuMesh.indexBuffer.GetAddressOf()));
-    scheduleGPUCopy(ibStagingStart, indexTotalSize, gpuMesh.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+    scheduleAssetCopy(ibStagingStart, indexTotalSize, gpuMesh.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
                     D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
     gpuMesh.indexView = D3D12_INDEX_BUFFER_VIEW{};
@@ -522,41 +565,11 @@ void D3D12RenderSystem::beginFrame()
     // initialize frame data
     m_nextROIndex = 0;
     m_nextMatrixIndex = 0;
-    m_stagingPtr = static_cast<uint8_t*>(m_stagingBasePtr) + m_frameResIndex * StagingBuffSize;
+    m_stagingPtr = static_cast<uint8_t*>(m_stagingBasePtr) + m_frameResIndex * PerFrameStagingSize;
     res.drawOperations.clear();
-    if constexpr (Config::IsStandaloneMode())
-    {
-        res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
-    }
-    else
-    {
-        res.renderTargetIndex = m_frameIndex % RenderTargetCount;
-    }
-
+    res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
     res.commandAllocator->Reset();
     res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
-
-    // process pending copy operations
-    if (m_copyOperations.size())
-    {
-        std::vector<D3D12_RESOURCE_BARRIER> barriers(MaxCopyOps);
-        barriers.clear();
-        for (int i = 0; i < m_copyOperations.size(); ++i)
-        {
-            auto& copyOP = m_copyOperations[i];
-            res.commandList->CopyBufferRegion(copyOP.dstBuffer.Get(), 0, m_stagingBuffer.Get(), copyOP.stagingOffset,
-                                              copyOP.byteSize);
-
-            if (copyOP.dstStateAfter != D3D12_RESOURCE_STATE_COMMON)
-            {
-                barriers.push_back(
-                    CD3DX12_RESOURCE_BARRIER::Transition(copyOP.dstBuffer.Get(), copyOP.dstStateBefore,
-                                                         copyOP.dstStateAfter));
-            }
-        }
-        res.commandList->ResourceBarrier(barriers.size(), barriers.data());
-        m_copyOperations.clear();
-    }
 
     // transition the matrix and RO buffers to copy-dest
     std::array barriersPreCopy

@@ -437,4 +437,6 @@ void UsdProcessor::bakeStage(Node &root, Services &services)
     {
         processPrim(this, child, root, services, m_meshes);
     }
+    d3d12rs::D3D12RenderSystem* renderer = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
+    renderer->executeAssetCopyOps();
 }
