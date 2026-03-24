@@ -63,23 +63,24 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	QMainWindow::closeEvent(event);
 }
 
-void MainWindow::onViewportResized(QResizeEvent *event)
+void MainWindow::onViewportResized(QSize size)
 {
 	if (!m_isEngineInit)
 	{
 		HWND hWnd = reinterpret_cast<HWND>(ui->viewportWidget->winId());
-		m_engineWorker->start(hWnd, event->size().width(), event->size().height());
+		m_engineWorker->start(hWnd, size.width(), size.height());
 		m_isEngineInit = true;
 	}
 	else
 	{
-		m_engineWorker->pushEvent(ResizeEvent(0, 0, event->size().width(), event->size().height()));
+		m_engineWorker->pushEvent(ResizeEvent(0, 0, size.width(), size.height()));
 	}
 }
 
 void MainWindow::onViewportMouseMoved(int x, int y, int xRel, int yRel)
 {
-	m_engineWorker->pushEvent(MouseMoveEvent{ x, y, xRel, yRel });
+	float sensitivity = 0.5f;
+	m_engineWorker->pushEvent(MouseMoveEvent{ x, y, xRel * sensitivity, yRel * sensitivity });
 }
 
 void MainWindow::onNewStage()

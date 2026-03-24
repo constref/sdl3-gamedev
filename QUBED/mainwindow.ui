@@ -20,8 +20,21 @@
       <property name="orientation">
        <enum>Qt::Orientation::Horizontal</enum>
       </property>
-      <widget class="QTreeView" name="stageView"/>
+      <widget class="QTreeView" name="stageView">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
       <widget class="ViewportWidget" name="viewportWidget" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>3</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>640</width>

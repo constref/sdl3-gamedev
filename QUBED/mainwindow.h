@@ -44,7 +44,7 @@ signals:
     void mouseGrabToggled(bool isGrabbed);
 
 public slots:
-    void onViewportResized(QResizeEvent *event);
+    void onViewportResized(QSize size);
     void onViewportMouseMoved(int x, int y, int xRel, int yRel);
     void onNewStage();
     void onOpenStage();

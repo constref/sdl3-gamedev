@@ -1,15 +1,24 @@
 ﻿#include "viewportwidget.h"
 
 #include <QResizeEvent>
+#include <QTimer>
 
 ViewportWidget::ViewportWidget(QWidget *parent) : QWidget(parent)
 {
+	m_resizeTimer = new QTimer();
+	connect(m_resizeTimer, &QTimer::timeout, this, &ViewportWidget::performResize);
+}
+
+void ViewportWidget::performResize()
+{
+	m_resizeTimer->stop();
+	emit viewportResized(size());
 }
 
 void ViewportWidget::resizeEvent(QResizeEvent *event)
 {
 	QWidget::resizeEvent(event);
-	emit viewportResized(event);
+	m_resizeTimer->start(500);
 }
 
 void ViewportWidget::mouseMoveEvent(QMouseEvent *event)

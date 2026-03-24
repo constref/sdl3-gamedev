@@ -8,7 +8,7 @@ int EditorLauncher::exec(std::unique_ptr<Application> app, int argc, char* argv[
 {
     QApplication a(argc, argv);
     MainWindow w(std::move(app));
-    w.show();
+    w.showMaximized();
 		
     return QCoreApplication::exec();
 }
