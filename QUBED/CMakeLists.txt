@@ -11,6 +11,8 @@ qt_add_library(QUBED STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.h
     ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/usdstagemodel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/usdstagemodel.cpp
 )
 
 target_link_libraries(QUBED
