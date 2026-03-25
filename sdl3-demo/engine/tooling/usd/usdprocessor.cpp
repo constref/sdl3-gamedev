@@ -31,26 +31,46 @@ using namespace pxr;
 using namespace DirectX;
 using namespace usd;
 
+namespace usd
+{
+class StageProcessor : public pxr::TfWeakBase
+{
+    pxr::UsdStageRefPtr m_stage;
+
+public:
+    pxr::UsdStageRefPtr stage() const { return m_stage; }
+    void setStage(const pxr::UsdStageRefPtr& stage) { m_stage = stage; }
+
+    void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged& notice)
+    {
+        for (auto& path : notice.GetResyncedPaths())
+        {
+            Logger::info(this, std::format("Affected path: {}", path.GetAsString()));
+        }
+    }
+};
+}
+
 class UsdLogger : public TfDiagnosticMgr::Delegate
 {
 public:
-    void IssueError(const TfError &err) override
+    void IssueError(const TfError& err) override
     {
         Logger::error(this, std::format("{}", err.GetErrorCodeAsString()));
     }
 
-    void IssueFatalError(const TfCallContext &context,
-                         const std::string &msg) override
+    void IssueFatalError(const TfCallContext& context,
+                         const std::string& msg) override
     {
         Logger::error(this, std::format("USD Fatal Error: {}", msg));
     }
 
-    void IssueStatus(const TfStatus &status) override
+    void IssueStatus(const TfStatus& status) override
     {
         Logger::info(this, std::format("USD Status: {}", status.GetCommentary()));
     }
 
-    void IssueWarning(const TfWarning &warning) override
+    void IssueWarning(const TfWarning& warning) override
     {
         Logger::warn(this, std::format("{}", warning.GetCommentary()));
     }
@@ -65,7 +85,7 @@ struct VertexId
     GfVec2f uv;
     constexpr static float epsilon = 0.001f;
 
-    bool operator==(const VertexId &o) const
+    bool operator==(const VertexId& o) const
     {
         const float nDot = GfDot(normal, o.normal);
         return index == o.index && nDot > 0.999f &&
@@ -75,7 +95,7 @@ struct VertexId
 
     struct Hasher
     {
-        size_t operator()(const VertexId &ve) const
+        size_t operator()(const VertexId& ve) const
         {
             size_t seed = 0;
             auto combine = [&](size_t value)
@@ -109,7 +129,7 @@ private:
 };
 
 
-static std::unique_ptr<Mesh> processMesh(UsdProcessor* self, UsdGeomMesh mesh)
+static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
 {
     Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
 
@@ -149,7 +169,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor* self, UsdGeomMesh mesh)
         Logger::error(self, "Error triangulating face normals");
     }
     VtVec3fArray triNormals = triNormalsVal.Get<VtArray<GfVec3f>>();
-    for (GfVec3f &n : triNormals)
+    for (GfVec3f& n : triNormals)
     {
         n.Normalize();
     }
@@ -215,16 +235,16 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor* self, UsdGeomMesh mesh)
     return std::move(newMesh);
 }
 
-static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services &services,
-                        std::unordered_map<std::string, PrimGeo> &meshes)
+static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services& services,
+                        std::unordered_map<std::string, PrimGeo>& meshes)
 {
     Logger::info(self, std::format("Processing path: {}", prim.GetPath().GetString()));
-    World &world = services.world();
-    d3d12rs::D3D12RenderSystem* renderer = services.compSys().getSystemRegistry().getSystem<
+    World& world = services.world();
+    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
         d3d12rs::D3D12RenderSystem>();
 
     // lambda to process geom mesh and attach component to runtime Node
-    auto processGeomMesh = [self, &meshes, &services, renderer](Node &node, UsdGeomMesh meshPrim)
+    auto processGeomMesh = [self, &meshes, &services, renderer](Node& node, UsdGeomMesh meshPrim)
     {
         const std::string path = meshPrim.GetPath().GetString();
         Logger::info(self, std::format("Geomesh path: {}: ", path));
@@ -247,7 +267,7 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
         services.compSys().addComponent<MeshComponent>(node, meshItr->second.gpuHandle);
     };
 
-    auto extractTransform = [](UsdPrim prim, Node &node)
+    auto extractTransform = [](UsdPrim prim, Node& node)
     {
         UsdGeomXformable xf(prim);
         bool resetsXformStack = false;
@@ -277,12 +297,12 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
         }
     };
 
-    auto &typeInfo = prim.GetPrimTypeInfo();
+    auto& typeInfo = prim.GetPrimTypeInfo();
     if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
     {
         // Xform, create a node with transform
         NodeHandle hNode = world.createNode();
-        Node &node = world.getNode(hNode);
+        Node& node = world.getNode(hNode);
         parent.addChild(node);
 
         extractTransform(prim, node);
@@ -331,7 +351,7 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
     else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
     {
         NodeHandle hNode = world.createNode();
-        Node &node = world.getNode(hNode);
+        Node& node = world.getNode(hNode);
         parent.addChild(node);
 
         extractTransform(prim, node);
@@ -340,78 +360,44 @@ static void processPrim(UsdProcessor* self, UsdPrim prim, Node &parent, Services
     }
 }
 
-class StageProcessor : public TfWeakBase
-{
-    pxr::UsdStageRefPtr m_stage;
-public:
-    UsdStageRefPtr stage() const { return m_stage; }
-    void setStage(UsdStageRefPtr stage) { m_stage = stage; }
-    
-    void onObjectsChanged(const UsdNotice::ObjectsChanged &notice)
-    {
-        for (auto &path : notice.GetResyncedPaths())
-        {
-            Logger::info(this, std::format("Affected path: {}", path.GetAsString()));
-        }
-    }
-};
-
 UsdProcessor::UsdProcessor()
 {
     TfDiagnosticMgr::GetInstance().AddDelegate(&g_usdLogger);
-    m_noticeHandler = new StageProcessor;
-    TfNotice::Register(TfCreateWeakPtr(m_noticeHandler), &StageProcessor::onObjectsChanged);
-    
-    // if (!std::filesystem::exists(""))
-    // {
-    // 	throw std::runtime_error("Unable to find USD file");
-    // }
-    //
-    // auto stage = pxr::UsdStage::Open("");
-
-    /*
-    auto range = stage->Traverse();
-    for (auto itr = range.begin(); itr != range.end(); ++itr)
-    {
-        UsdPrim prim = *itr;
-        processPrim(this, prim, root, services, m_meshes);
-    }
-    */
-    /*
-    UsdPrim rootPrim = stage-e->GetPseudoRoot();
-    for (auto child : rootPrim.GetChildren())
-    {
-        processPrim(this, child, root, services, meshes);
-    }
-*/
+    m_stageProc = new StageProcessor;
+    TfNotice::Register(TfCreateWeakPtr(m_stageProc), &StageProcessor::onObjectsChanged);
 }
 
 UsdProcessor::~UsdProcessor()
 {
-    delete m_noticeHandler;
+    delete m_stageProc;
 }
 
-void UsdProcessor::createStage(const std::string &path)
+pxr::UsdStageRefPtr UsdProcessor::stage() const
 {
-    m_noticeHandler->setStage(pxr::UsdStage::CreateNew(path));
+    return m_stageProc->stage();
 }
 
-void UsdProcessor::openStage(const std::string &usdPath)
+void UsdProcessor::createStage(const std::string& path) const
+{
+    m_stageProc->setStage(pxr::UsdStage::CreateNew(path));
+}
+
+void UsdProcessor::openStage(const std::string& usdPath) const
 {
     auto stage = pxr::UsdStage::Open(usdPath);
-    m_noticeHandler->setStage(stage);
+    m_stageProc->setStage(stage);
 }
 
-void UsdProcessor::saveStage()
+void UsdProcessor::saveStage() const
 {
-    m_noticeHandler->stage()->Save();
+    m_stageProc->stage()->Save();
 }
 
-void UsdProcessor::addLayer(const std::string &layerPath)
+void UsdProcessor::addLayer(const std::string& layerPath)
 {
     if (std::filesystem::exists(layerPath))
     {
-        m_noticeHandler->stage()->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
+        m_stageProc->stage()->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
     }
     else
     {
@@ -419,7 +405,7 @@ void UsdProcessor::addLayer(const std::string &layerPath)
     }
 }
 
-void UsdProcessor::addPrim(const std::string &path, const std::string &type)
+void UsdProcessor::addPrim(const std::string& path, const std::string& type) const
 {
     SdfPath primPath(path);
     TfToken primType = UsdGeomTokens->Scope;
@@ -427,16 +413,17 @@ void UsdProcessor::addPrim(const std::string &path, const std::string &type)
     {
         primType = UsdGeomTokens->Xform;
     }
-    UsdPrim newPrim = m_noticeHandler->stage()->DefinePrim(primPath, primType);
+    UsdPrim newPrim = m_stageProc->stage()->DefinePrim(primPath, primType);
 }
 
-void UsdProcessor::bakeStage(Node &root, Services &services)
+void UsdProcessor::bakeStage(Node& root, Services& services)
 {
-    UsdPrim rootPrim = m_noticeHandler->stage()->GetPseudoRoot();
+    UsdPrim rootPrim = m_stageProc->stage()->GetPseudoRoot();
     for (auto child : rootPrim.GetChildren())
     {
         processPrim(this, child, root, services, m_meshes);
     }
-    d3d12rs::D3D12RenderSystem* renderer = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
+    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
+        d3d12rs::D3D12RenderSystem>();
     renderer->executeAssetCopyOps();
 }

@@ -186,6 +186,8 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/events.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp"
+		"tooling/usd/stageprocessor.h"
+		"tooling/usd/stageprocessor.cpp"
         "tooling/usd/rootcomponent.h"
         "tooling/usd/rootcomponent.cpp"
         "tooling/usd/events.h"
@@ -195,7 +197,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
     
     target_link_libraries(enginetooling
         PUBLIC QUBED engine
-        PRIVATE usd usdGeom usdImaging hd)
+		INTERFACE usd usdGeom usdImaging hd)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)

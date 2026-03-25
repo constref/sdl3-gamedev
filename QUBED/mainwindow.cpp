@@ -8,7 +8,7 @@
 #include <tooling/usd/usdprocessor.h>
 
 #include "engine.h"
-#include "usdstagemodel.h"
+#include "usd/usdstagemodel.h"
 
 MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow)
@@ -86,7 +86,7 @@ void MainWindow::onViewportMouseMoved(int x, int y, int xRel, int yRel)
 void MainWindow::onNewStage()
 {
 	usdProc().createStage("mynewstage.usda");
-	ui->stageView->setModel(new UsdStageModel(this));
+	ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
 }
 
 void MainWindow::onOpenStage()

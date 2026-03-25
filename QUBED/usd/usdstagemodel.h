@@ -2,10 +2,19 @@
 
 #include <QAbstractItemModel>
 
+namespace usd
+{
+class UsdProcessor;
+}
+
+class PrimNode;
+
 class UsdStageModel : public QAbstractItemModel
 {
+	PrimNode *rootPrim;
+
 public:
-	UsdStageModel(QObject *parent);
+	UsdStageModel(usd::UsdProcessor &usdProc, QObject *parent);
 	QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 	QModelIndex parent(const QModelIndex &child) const override;
 	int rowCount(const QModelIndex &parent) const override;

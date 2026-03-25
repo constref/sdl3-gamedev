@@ -6,28 +6,26 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
 qt_add_library(QUBED STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/viewportwidget.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/usdstagemodel.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/usdstagemodel.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+        viewportwidget.h
+        viewportwidget.cpp
+        usd/usdstagemodel.h
+        usd/usdstagemodel.cpp
+        usd/primnode.cpp
+        usd/primnode.h
 )
 
 target_link_libraries(QUBED
     PUBLIC
         Qt::Core
         Qt::Widgets
-        engine
+        enginetooling
 )
 
 target_include_directories(QUBED
     INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-
-if(MSVC)
-    target_compile_options(QUBED PRIVATE /std:c++latest)
-endif()
 
 install(TARGETS QUBED
     BUNDLE  DESTINATION .
