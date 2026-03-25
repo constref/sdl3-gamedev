@@ -27,6 +27,10 @@ target_link_libraries(QUBED
 target_include_directories(QUBED
     INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(MSVC)
+    target_compile_options(QUBED PRIVATE /std:c++latest)
+endif()
+
 install(TARGETS QUBED
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

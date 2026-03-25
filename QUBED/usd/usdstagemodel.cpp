@@ -1,104 +1,120 @@
 #include "usdstagemodel.h"
-
-#include <tooling/usd/usdprocessor.h>
-#include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usd/prim.h>
-
 #include "primnode.h"
 
+#include <tooling/usd/usdprocessor.h>
 using namespace pxr;
 
-UsdStageModel::UsdStageModel(usd::UsdProcessor& usdProc, QObject *parent) : QAbstractItemModel(parent)
+void UsdStageModel::walkStage(UsdPrim prim, PrimNode *parent)
 {
-    auto stage = usdProc.stage();
-    UsdPrim root = stage->GetPseudoRoot();
+	int rowNum = 0;
+	for (auto child : prim.GetChildren())
+	{
+		auto *node = new PrimNode(child, parent, rowNum);
+		parent->children().push_back(node);
+		rowNum++;
 
-    rootPrim = new PrimNode(root, nullptr);
-    for (auto child : root.GetChildren())
-    {
-        auto *node = new PrimNode(child.GetName().GetString(), rootPrim);
-        rootPrim->children().push_back(node);
-    }
+		walkStage(child, node);
+	}
 }
 
-QModelIndex UsdStageModel::index(int row, int column, const QModelIndex& parent) const
+UsdStageModel::UsdStageModel(usd::UsdProcessor &usdProc, QObject *parent) : QAbstractItemModel(parent)
 {
-    return createIndex(row, column, nullptr);
+	auto stage = usdProc.stage();
+	UsdPrim root = stage->GetPseudoRoot();
+	m_rootPrim = new PrimNode(root, nullptr, 0);
+	walkStage(root, m_rootPrim);
 }
 
-QModelIndex UsdStageModel::parent(const QModelIndex& child) const
+QModelIndex UsdStageModel::index(int row, int column, const QModelIndex &parent) const
 {
-    return QModelIndex();
+	if (!parent.isValid())
+	{
+		// parent is qt tree-root
+		return createIndex(row, column, m_rootPrim->children()[row]);
+	}
+	else
+	{
+		auto *parentNode = static_cast<PrimNode *>(parent.internalPointer());
+		auto *node = parentNode->children()[row];
+		return createIndex(row, column, node);
+	}
 }
 
-int UsdStageModel::rowCount(const QModelIndex& parent) const
+QModelIndex UsdStageModel::parent(const QModelIndex &child) const
 {
-    if (!parent.isValid())
-    {
-        return 1;
-    }
-    return 0;
+	if (!child.isValid())
+	{
+		return {};
+	}
+
+	PrimNode *childNode = static_cast<PrimNode *>(child.internalPointer());
+	PrimNode *parentNode = childNode->parent();
+	if (!parentNode || parentNode == m_rootPrim)
+	{
+		return {};
+	}
+	return createIndex(parentNode->row(), 0, parentNode);
 }
 
-int UsdStageModel::columnCount(const QModelIndex& parent) const
+int UsdStageModel::rowCount(const QModelIndex &parent) const
 {
-    return 3;
+	if (!parent.isValid())
+	{
+		return m_rootPrim->children().size();
+	}
+	PrimNode *parentNode = static_cast<PrimNode *>(parent.internalPointer());
+	return parentNode->children().size();
 }
 
-QVariant UsdStageModel::data(const QModelIndex& index, int role) const
+int UsdStageModel::columnCount(const QModelIndex &parent) const
 {
-    if (!index.isValid())
-    {
-        return QVariant();
-    }
+	return 2;
+}
 
-    if (role == Qt::DisplayRole)
-    {
-        switch (index.column())
-        {
-        case 0:
-            {
-                return QString("Library");
-            }
-        case 1:
-            {
-                return QString("Scope");
-            }
-        case 3:
-            {
-                return QString("");
-            }
-        default:
-            {
-                return QVariant();
-            }
-        }
-    }
-    else
-    {
-        return QVariant();
-    }
+QVariant UsdStageModel::data(const QModelIndex &index, int role) const
+{
+	if (!index.isValid())
+	{
+		return {};
+	}
+
+	if (role == Qt::DisplayRole)
+	{
+		PrimNode *node = static_cast<PrimNode *>(index.internalPointer());
+		switch (index.column())
+		{
+			case 0:
+			{
+				return node->name();
+			}
+			case 1:
+			{
+				return QString("");
+			}
+			default:
+			{
+				return {};
+			}
+		}
+	}
+	return {};
 }
 
 QVariant UsdStageModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role == Qt::ItemDataRole::DisplayRole && orientation == Qt::Horizontal)
-    {
-        switch (section)
-        {
-        case 0:
-            {
-                return QString("Name");
-            }
-        case 1:
-            {
-                return QString("Scope");
-            }
-        case 2:
-            {
-                return QString("Kind");
-            }
-        }
-    }
-    return QAbstractItemModel::headerData(section, orientation, role);
+	if (role == Qt::ItemDataRole::DisplayRole && orientation == Qt::Horizontal)
+	{
+		switch (section)
+		{
+			case 0:
+			{
+				return QString("Name");
+			}
+			case 1:
+			{
+				return QString("Kind");
+			}
+		}
+	}
+	return QAbstractItemModel::headerData(section, orientation, role);
 }

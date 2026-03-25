@@ -34,44 +34,52 @@
 
 class Engine
 {
-    std::unique_ptr<Application> m_app;
-    uint64_t prevTime;
-    bool debugMode;
-    bool running;
-    constexpr static bool clampDeltaTime = true;
+	std::unique_ptr<Application> m_app;
+	uint64_t prevTime;
+	bool debugMode;
+	bool running;
+	constexpr static bool clampDeltaTime = true;
 
-    const float fixedStep = 1.0f / 120.0f;
-    const float dtThreshold = 1.0f / 30.0f;
-    float accumulator;
-    long frameCount;
-    double globalTime;
+	const float fixedStep = 1.0f / 120.0f;
+	const float dtThreshold = 1.0f / 30.0f;
+	float accumulator;
+	long frameCount;
+	double globalTime;
 
-    // core m_services
-    ComponentSystems compSys;
-    EventQueue eventQueue;
-    World world;
-    InputState inputState;
-    PrototypeInstancer protoInstancer;
-    Services m_services;
-    SDLState sdlState;
-    d3d12rs::D3D12RenderSystem *d3d12Renderer;
-    vks::VulkanRenderSystem *vkRenderer;
+	// core m_services
+	ComponentSystems compSys;
+	EventQueue eventQueue;
+	World world;
+	InputState inputState;
+	PrototypeInstancer protoInstancer;
+	Services m_services;
+	SDLState sdlState;
+	d3d12rs::D3D12RenderSystem *d3d12Renderer;
+	vks::VulkanRenderSystem *vkRenderer;
 
 public:
-    Engine(std::unique_ptr<Application> app);
-    ~Engine();
+	Engine(std::unique_ptr<Application> app);
 
-    bool initialize(int logW, int logH, int width, int height, WindowHandle winHandle);
-    d3d12rs::D3D12RenderSystem* getRenderer() const;
-    Services& services();
-    void cleanup();
-    void run();
-    void stop();
-    void step();
-    
-    Application &application();
+	~Engine();
+
+	bool initialize(int logW, int logH, int width, int height, WindowHandle winHandle);
+
+	d3d12rs::D3D12RenderSystem *getRenderer() const;
+
+	Services &services();
+
+	void cleanup();
+
+	void run();
+
+	void stop();
+
+	void step();
+
+	Application &application();
 
 private:
-    static void emIterate(void *userData);
-    void processSystems(Node &obj, World &world);
+	static void emIterate(void *userData);
+
+	void processSystems(Node &obj, World &world);
 };

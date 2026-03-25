@@ -184,6 +184,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/systems/editorsystem.h"
         "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
+		"tooling/usd.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp"
 		"tooling/usd/stageprocessor.h"

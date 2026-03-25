@@ -1,6 +1,10 @@
 #pragma once
 
 #include <QAbstractItemModel>
+#include <unordered_map>
+#include <tooling/usd.h>
+#include <pxr/usd/usd/prim.h>
+
 
 namespace usd
 {
@@ -11,9 +15,11 @@ class PrimNode;
 
 class UsdStageModel : public QAbstractItemModel
 {
-	PrimNode *rootPrim;
+	PrimNode *m_rootPrim;
 
+	void walkStage(pxr::UsdPrim prim, PrimNode *parent);
 public:
+
 	UsdStageModel(usd::UsdProcessor &usdProc, QObject *parent);
 	QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 	QModelIndex parent(const QModelIndex &child) const override;

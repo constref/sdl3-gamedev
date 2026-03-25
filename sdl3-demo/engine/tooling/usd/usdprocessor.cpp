@@ -1,9 +1,9 @@
 #include "usdprocessor.h"
-#include <filesystem>
-#include <unordered_map>
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
+#include <unordered_map>
+#include <filesystem>
+
+#include <tooling/usd.h>
 #include <pxr/base/tf/diagnosticMgr.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/usd/stage.h>
@@ -35,12 +35,7 @@ namespace usd
 {
 class StageProcessor : public pxr::TfWeakBase
 {
-    pxr::UsdStageRefPtr m_stage;
-
 public:
-    pxr::UsdStageRefPtr stage() const { return m_stage; }
-    void setStage(const pxr::UsdStageRefPtr& stage) { m_stage = stage; }
-
     void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged& notice)
     {
         for (auto& path : notice.GetResyncedPaths())
@@ -213,7 +208,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
                 .uv = usdSt
             };
 
-            auto [itr, isNewVertex] = vertexMap.try_emplace(ve, static_cast<size_t>(submeshVerts.size()));
+            auto [itr, isNewVertex] = vertexMap.try_emplace(ve, static_cast<uint32_t>(submeshVerts.size()));
             if (isNewVertex)
             {
                 // vertex wasn't in the map, create a new mesh vert
@@ -372,32 +367,26 @@ UsdProcessor::~UsdProcessor()
     delete m_stageProc;
 }
 
-pxr::UsdStageRefPtr UsdProcessor::stage() const
+void UsdProcessor::createStage(const std::string& path)
 {
-    return m_stageProc->stage();
+    m_stage = pxr::UsdStage::CreateNew(path);
 }
 
-void UsdProcessor::createStage(const std::string& path) const
+void UsdProcessor::openStage(const std::string& usdPath)
 {
-    m_stageProc->setStage(pxr::UsdStage::CreateNew(path));
-}
-
-void UsdProcessor::openStage(const std::string& usdPath) const
-{
-    auto stage = pxr::UsdStage::Open(usdPath);
-    m_stageProc->setStage(stage);
+    m_stage = pxr::UsdStage::Open(usdPath);
 }
 
 void UsdProcessor::saveStage() const
 {
-    m_stageProc->stage()->Save();
+    m_stage->Save();
 }
 
 void UsdProcessor::addLayer(const std::string& layerPath)
 {
     if (std::filesystem::exists(layerPath))
     {
-        m_stageProc->stage()->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
+        m_stage->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
     }
     else
     {
@@ -413,12 +402,12 @@ void UsdProcessor::addPrim(const std::string& path, const std::string& type) con
     {
         primType = UsdGeomTokens->Xform;
     }
-    UsdPrim newPrim = m_stageProc->stage()->DefinePrim(primPath, primType);
+    UsdPrim newPrim = m_stage->DefinePrim(primPath, primType);
 }
 
 void UsdProcessor::bakeStage(Node& root, Services& services)
 {
-    UsdPrim rootPrim = m_stageProc->stage()->GetPseudoRoot();
+    UsdPrim rootPrim = m_stage->GetPseudoRoot();
     for (auto child : rootPrim.GetChildren())
     {
         processPrim(this, child, root, services, m_meshes);

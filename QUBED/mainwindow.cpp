@@ -7,8 +7,11 @@
 #include <QFileDialog>
 #include <tooling/usd/usdprocessor.h>
 
-#include "engine.h"
 #include "usd/usdstagemodel.h"
+
+#include <SDL3/SDL.h>
+
+std::array<uint32_t, 256> mappedKeys;
 
 MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow)
@@ -34,9 +37,18 @@ usd::UsdProcessor &MainWindow::usdProc()
 	return *m_usdProc;
 }
 
+uint16_t mapScancode(int qtKey)
+{
+	mappedKeys[Qt::Key_W] = SDL_SCANCODE_W;
+	mappedKeys[Qt::Key_A] = SDL_SCANCODE_A;
+	mappedKeys[Qt::Key_S] = SDL_SCANCODE_S;
+	mappedKeys[Qt::Key_D] = SDL_SCANCODE_D;
+	return mappedKeys[qtKey];
+}
+
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-	uint16_t scancode = event->key();
+	uint16_t scancode = mapScancode(event->key());
 	m_engineWorker->pushEvent(KeyDown{scancode});
 	QMainWindow::keyPressEvent(event);
 }
@@ -50,7 +62,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 	}
 	else
 	{
-		uint16_t scancode = event->key();
+		uint16_t scancode = mapScancode(event->key());
 		m_engineWorker->pushEvent(KeyUp{scancode});
 	}
 
@@ -97,6 +109,7 @@ void MainWindow::onOpenStage()
 	{
 		usdProc().openStage(filepath.toStdString());
 	}
+	ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
 }
 
 void MainWindow::onAddLayer()

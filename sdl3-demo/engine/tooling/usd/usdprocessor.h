@@ -5,9 +5,9 @@
 
 #include <systems/system.h>
 #include <components/meshcomponent.h>
-#include <pxr/pxr.h>
-#include <pxr/usd/usd/common.h>
 #include <rendering/mesh.h>
+
+#include <tooling/usd.h>
 
 class Node;
 
@@ -25,16 +25,17 @@ class UsdProcessor
 {
     std::unordered_map<std::string, PrimGeo> m_meshes;
     StageProcessor *m_stageProc;
+    pxr::UsdStageRefPtr m_stage;
 
 public:
     UsdProcessor();
     ~UsdProcessor();
 
-    pxr::UsdStageRefPtr stage() const;
-    void createStage(const std::string &path) const;
+    pxr::UsdStageRefPtr stage() const { return m_stage; }
+    void createStage(const std::string &path);
     void saveStage() const;
     void addLayer(const std::string &layerPath);
-    void openStage(const std::string &usdPath) const;
+    void openStage(const std::string &usdPath);
     void addPrim(const std::string &path, const std::string &type) const;
     void bakeStage(Node &root, Services &services);
 };
