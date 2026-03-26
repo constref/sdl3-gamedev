@@ -51,5 +51,6 @@ public slots:
     void onSaveStage();
     void onAddLayer();
     void onBakeStage() const;
+    void onAddMesh();
 };
 #endif // MAINWINDOW_H

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QUBED</string>
+   <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -74,8 +74,15 @@
     <addaction name="separator"/>
     <addaction name="actionBake_Stage"/>
    </widget>
+   <widget class="QMenu" name="menuAssets">
+    <property name="title">
+     <string>Assets</string>
+    </property>
+    <addaction name="actionAdd_Mesh"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuStage"/>
+   <addaction name="menuAssets"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -138,6 +145,11 @@
    </property>
    <property name="text">
     <string>Open Stage</string>
+   </property>
+  </action>
+  <action name="actionAdd_Mesh">
+   <property name="text">
+    <string>Add Mesh</string>
    </property>
   </action>
  </widget>

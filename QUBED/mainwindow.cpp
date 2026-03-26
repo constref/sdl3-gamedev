@@ -25,6 +25,7 @@ MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	connect(ui->actionSave_Stage, &QAction::triggered, this, &MainWindow::onSaveStage);
 	connect(ui->actionAdd_SubLayer, &QAction::triggered, this, &MainWindow::onAddLayer);
 	connect(ui->actionBake_Stage, &QAction::triggered, this, &MainWindow::onBakeStage);
+	connect(ui->actionAdd_Mesh, &QAction::triggered, this, &MainWindow::onAddMesh);
 
     m_engineWorker = std::make_unique<EngineWorker>(std::move(app));
 	m_usdProc = std::make_unique<usd::UsdProcessor>();
@@ -113,19 +114,25 @@ void MainWindow::onViewportMouseMoved(int x, int y, int xRel, int yRel)
 
 void MainWindow::onNewStage()
 {
-	usdProc().createStage("mynewstage.usda");
-	ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
+	QString filepath = QFileDialog::getSaveFileName(this, tr("Open Stage"), QDir::homePath(),
+		tr("USD Files (*.usd *.usdc *.usda)"));
+	if (!filepath.isEmpty())
+	{
+		usdProc().createStage(filepath.toStdString());
+
+		ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
+	}
 }
 
 void MainWindow::onOpenStage()
 {
 	QString filepath = QFileDialog::getOpenFileName(this, tr("Open Stage"), QDir::homePath(),
-													tr("USD Files (*.usd *.usdc *.usda)"));
+		tr("USD Files (*.usd *.usdc *.usda)"));
 	if (!filepath.isEmpty())
 	{
 		usdProc().openStage(filepath.toStdString());
+		ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
 	}
-	ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
 }
 
 void MainWindow::onAddLayer()
@@ -147,4 +154,8 @@ void MainWindow::onSaveStage()
 void MainWindow::onBakeStage() const
 {
 	m_engineWorker->pushEvent(usd::BakeStageEvent{ .currentProcessor = m_usdProc.get() });
+}
+
+void MainWindow::onAddMesh()
+{
 }

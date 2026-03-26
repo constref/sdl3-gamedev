@@ -368,7 +368,13 @@ UsdProcessor::~UsdProcessor()
 
 void UsdProcessor::createStage(const std::string& path)
 {
+    static SdfPath worldPath("/World");
+    static SdfPath libPath("/Library");
+
     m_stage = pxr::UsdStage::CreateNew(path);
+    UsdPrim world = m_stage->DefinePrim(worldPath, UsdGeomTokens->Xform);
+    UsdPrim lib = m_stage->DefinePrim(libPath, UsdGeomTokens->Scope);
+    m_stage->SetDefaultPrim(world);
 }
 
 void UsdProcessor::openStage(const std::string& usdPath)
