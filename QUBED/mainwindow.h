@@ -36,9 +36,8 @@ private:
     usd::UsdProcessor &usdProc();
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+	bool eventFilter(QObject *obj, QEvent *event) override;
 
 signals:
     void mouseGrabToggled(bool isGrabbed);

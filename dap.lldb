@@ -1,0 +1,15 @@
+;; Eval Buffer with `M-x eval-buffer' to register the newly created template.
+
+(setq dap-print-io t)
+
+(dap-register-debug-template
+  "LLDB::Run"
+  (list :type "lldb-vscode"
+        :cwd "C:/Developer/projects/sdl3-gamedev"
+        :request "launch"
+        :program "C:/Developer/projects/sdl3-gamedev/build/sdl3-demo/demos/empty/empty.exe"
+		:env '(
+			("PATH" . "C:/Qt/6.10.2/msvc2022_64/bin;C:/SDKs/SDL3-3.4.2/lib/x64;C:/Users/nikol/AppData/Local/Python/pythoncore-3.14-64;")
+			("PYTHONHOME" . "C:/Users/nikol/AppData/Local/Python/pythoncore-3.10-64/")
+			("PYTHONPATH" . "C:/Users/nikol/AppData/Local/Python/pythoncore-3.11-64/Lib;"))
+        :name "LLDB::Run"))

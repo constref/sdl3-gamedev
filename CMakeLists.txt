@@ -9,6 +9,10 @@ endif()
 project ("sdl3-demo" LANGUAGES C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+set(CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_subdirectory("sdl3-demo/engine")
 add_subdirectory("QUBED")
 add_subdirectory("sdl3-demo/demos/empty")

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QAbstractItemModel>
-#include <unordered_map>
 #include <tooling/usd.h>
 #include <pxr/usd/usd/prim.h>
 

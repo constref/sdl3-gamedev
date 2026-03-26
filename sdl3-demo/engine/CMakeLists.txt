@@ -134,12 +134,6 @@ if(MSVC)
 	#target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-	set_property(TARGET engine PROPERTY CXX_STANDARD 23)
-	set_property(TARGET engine PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
-	set_property(TARGET engine PROPERTY CMAKE_CXX_EXTENSIONS OFF)
-endif()
-
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
 if (EXECUTION_MODE STREQUAL "TOOLING")
 	message(STATUS "Configuring Tooling Build")
@@ -170,7 +164,7 @@ target_include_directories(engine
 
 # tooling specific
 if (EXECUTION_MODE STREQUAL "TOOLING")
-    find_package(pxr REQUIRED)
+    find_package(pxr REQUIRED SYSTEM)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")

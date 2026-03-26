@@ -28,6 +28,8 @@ MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 
     m_engineWorker = std::make_unique<EngineWorker>(std::move(app));
 	m_usdProc = std::make_unique<usd::UsdProcessor>();
+
+	qApp->installEventFilter(this);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -46,33 +48,37 @@ uint16_t mapScancode(int qtKey)
 	return mappedKeys[qtKey];
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-	uint16_t scancode = mapScancode(event->key());
-	m_engineWorker->pushEvent(KeyDown{scancode});
-	QMainWindow::keyPressEvent(event);
-}
-
-void MainWindow::keyReleaseEvent(QKeyEvent *event)
-{
-	if (event->key() == Qt::Key_QuoteLeft)
-	{
-		m_mouseGrabbed = !m_mouseGrabbed;
-		emit mouseGrabToggled(m_mouseGrabbed);
-	}
-	else
-	{
-		uint16_t scancode = mapScancode(event->key());
-		m_engineWorker->pushEvent(KeyUp{scancode});
-	}
-
-	QMainWindow::keyReleaseEvent(event);
-}
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	m_engineWorker->stop();
 	QMainWindow::closeEvent(event);
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+	if (event->type() == QEvent::KeyPress)
+	{
+		auto *keyEvent = static_cast<QKeyEvent *>(event);
+		uint16_t scancode = mapScancode(keyEvent->key());
+		m_engineWorker->pushEvent(KeyDown{scancode});
+		return true;
+	}
+	else if (event->type() == QEvent::KeyRelease)
+	{
+		auto *keyEvent = static_cast<QKeyEvent *>(event);
+		if (keyEvent->key() == Qt::Key_QuoteLeft)
+		{
+			m_mouseGrabbed = !m_mouseGrabbed;
+			emit mouseGrabToggled(m_mouseGrabbed);
+		}
+		else
+		{
+			uint16_t scancode = mapScancode(keyEvent->key());
+			m_engineWorker->pushEvent(KeyUp{scancode});
+		}
+		return true;
+	}
+	return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::onViewportResized(QSize size)
