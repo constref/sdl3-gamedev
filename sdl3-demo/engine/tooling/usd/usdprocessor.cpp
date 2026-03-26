@@ -235,8 +235,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
 {
     Logger::info(self, std::format("Processing path: {}", prim.GetPath().GetString()));
     World& world = services.world();
-    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
-        d3d12rs::D3D12RenderSystem>();
+    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
 
     // lambda to process geom mesh and attach component to runtime Node
     auto processGeomMesh = [self, &meshes, &services, renderer](Node& node, UsdGeomMesh meshPrim)
@@ -319,14 +318,14 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
             // look directly in prim's tree for mesh (not instance)
             for (UsdPrim child : prim.GetChildren())
             {
-                if (child.GetTypeName() == UsdGeomTokens->Xform)
-                {
-                    processPrim(self, child, parent, services, meshes);
-                }
-                else if (child.GetTypeName() == UsdGeomTokens->Mesh)
+                if (child.GetTypeName() == UsdGeomTokens->Mesh)
                 {
                     UsdGeomMesh meshPrim(child);
                     processGeomMesh(node, meshPrim);
+                }
+                else
+                {
+                    processPrim(self, child, parent, services, meshes);
                 }
             }
         }
