@@ -59,6 +59,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 	if (event->type() == QEvent::KeyPress)
 	{
 		auto *keyEvent = static_cast<QKeyEvent *>(event);
+		if (keyEvent->isAutoRepeat())
+		{
+			return true;
+		}
+		Logger::info(this, std::format("Down {}", keyEvent->key()));
 		uint16_t scancode = mapScancode(keyEvent->key());
 		m_engineWorker->pushEvent(KeyDown{scancode});
 		return true;
@@ -73,12 +78,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 		}
 		else
 		{
+			if (keyEvent->isAutoRepeat())
+			{
+				return true;
+			}
+			Logger::info(this, std::format("Up {}", keyEvent->key()));
 			uint16_t scancode = mapScancode(keyEvent->key());
 			m_engineWorker->pushEvent(KeyUp{scancode});
 		}
 		return true;
 	}
-	return QMainWindow::eventFilter(obj, event);
+	return false;
 }
 
 void MainWindow::onViewportResized(QSize size)

@@ -38,11 +38,6 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, HWND hWnd, int width, i
     m_camPosition = XMFLOAT4(0, 0, 0, 1);
     m_backBuffers.resize(RenderTargetCount);
     m_hWnd = hWnd;
-
-    // Logger::logHandler = [](const std::string &message)
-    // {
-    // 	OutputDebugStringA(std::format("{}\n", message).c_str());
-    // };
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()

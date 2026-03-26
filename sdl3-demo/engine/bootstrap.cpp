@@ -46,6 +46,10 @@ int Bootstrap::exec(std::unique_ptr<Application> application, int logW, int logH
 	}
 	else
 	{
+		Logger::logHandler = [](const std::string &message)
+		{
+			OutputDebugStringA(std::format("{}\n", message).c_str());
+		};
 		EditorLauncher::exec(std::move(application), m_argc, m_argv);
 	}
 
