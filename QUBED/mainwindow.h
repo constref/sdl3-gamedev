@@ -11,6 +11,8 @@ class UsdProcessor;
 }
 
 class EngineWorker;
+class UsdStageModel;
+class TreeViewStageListener;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -27,7 +29,8 @@ class MainWindow : public QMainWindow
     bool m_isEngineInit = false;
     std::unique_ptr<EngineWorker> m_engineWorker;
     std::unique_ptr<usd::UsdProcessor> m_usdProc;
-	int m_lastKeyDown = 0;
+    std::shared_ptr<TreeViewStageListener> m_stageListener;
+    UsdStageModel *m_stageModel = nullptr;
 
 public:
     MainWindow(std::unique_ptr<Application> app, QWidget *parent = nullptr);

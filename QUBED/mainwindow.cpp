@@ -2,14 +2,15 @@
 
 #include "ui_mainwindow.h"
 #include "viewportwidget.h"
+#include <SDL3/SDL.h>
 #include <QMainWindow>
 #include <QResizeEvent>
 #include <QFileDialog>
 #include <tooling/usd/usdprocessor.h>
 
 #include "usd/usdstagemodel.h"
+#include "usd/treeviewstagelistener.h"
 
-#include <SDL3/SDL.h>
 
 std::array<uint32_t, 256> mappedKeys;
 
@@ -17,9 +18,9 @@ MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	connect(this, &MainWindow::mouseGrabToggled, ui->viewportWidget, &ViewportWidget::onMouseGrabToggle);
 	connect(ui->viewportWidget, &ViewportWidget::viewportResized, this, &MainWindow::onViewportResized);
 	connect(ui->viewportWidget, &ViewportWidget::mouseMoved, this, &MainWindow::onViewportMouseMoved, Qt::DirectConnection);
-	connect(this, &MainWindow::mouseGrabToggled, ui->viewportWidget, &ViewportWidget::onMouseGrabToggle);
 	connect(ui->actionNew_Stage, &QAction::triggered, this, &MainWindow::onNewStage);
 	connect(ui->actionOpen_Stage, &QAction::triggered, this, &MainWindow::onOpenStage);
 	connect(ui->actionSave_Stage, &QAction::triggered, this, &MainWindow::onSaveStage);
@@ -28,8 +29,8 @@ MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	connect(ui->actionAdd_Mesh, &QAction::triggered, this, &MainWindow::onAddMesh);
 
     m_engineWorker = std::make_unique<EngineWorker>(std::move(app));
-	m_usdProc = std::make_unique<usd::UsdProcessor>();
-
+	m_stageListener = std::make_shared<TreeViewStageListener>();
+	m_usdProc = std::make_unique<usd::UsdProcessor>(m_stageListener);
 	qApp->installEventFilter(this);
 }
 
@@ -120,7 +121,14 @@ void MainWindow::onNewStage()
 	{
 		usdProc().createStage(filepath.toStdString());
 
-		ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
+		if (m_stageModel)
+		{
+			delete m_stageModel;
+		}
+		m_stageModel = new UsdStageModel(this);
+		m_stageModel->rebuildTree(usdProc().stage());
+		connect(m_stageListener.get(), &TreeViewStageListener::primChanged, m_stageModel, &UsdStageModel::onPrimChanged);
+		ui->stageView->setModel(m_stageModel);
 	}
 }
 
@@ -131,7 +139,15 @@ void MainWindow::onOpenStage()
 	if (!filepath.isEmpty())
 	{
 		usdProc().openStage(filepath.toStdString());
-		ui->stageView->setModel(new UsdStageModel(*m_usdProc, this));
+
+		if (m_stageModel)
+		{
+			delete m_stageModel;
+		}
+		m_stageModel = new UsdStageModel(this);
+		m_stageModel->rebuildTree(usdProc().stage());
+		connect(m_stageListener.get(), &TreeViewStageListener::primChanged, m_stageModel, &UsdStageModel::onPrimChanged);
+		ui->stageView->setModel(m_stageModel);
 	}
 }
 
@@ -158,4 +174,11 @@ void MainWindow::onBakeStage() const
 
 void MainWindow::onAddMesh()
 {
+	QString filepath = QFileDialog::getOpenFileName(this, tr("Reference USD"), QDir::homePath(),
+													tr("USD Files (*.usd *.usdc *.usda)"));
+
+	if (!filepath.isEmpty())
+	{
+		usdProc().addMesh(filepath.toStdString());
+	}
 }

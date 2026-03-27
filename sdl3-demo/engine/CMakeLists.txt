@@ -181,14 +181,15 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp"
-		"tooling/usd/stageprocessor.h"
-		"tooling/usd/stageprocessor.cpp"
-        "tooling/usd/rootcomponent.h"
+		"tooling/usd/rootcomponent.h"
         "tooling/usd/rootcomponent.cpp"
         "tooling/usd/events.h"
         "tooling/editorlauncher.h"
         "tooling/editorlauncher.cpp"
-    )
+		tooling/usd/usdlogger.cpp
+		tooling/usd/usdlogger.h
+		tooling/usd/usdstagelistener.h
+	)
     
     target_link_libraries(enginetooling
         PUBLIC QUBED engine

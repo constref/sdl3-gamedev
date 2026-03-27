@@ -16,6 +16,7 @@ class PrimNode
 
 public:
     PrimNode(pxr::UsdPrim prim, PrimNode *parent, int row);
+    ~PrimNode();
 
     auto *parent() const { return m_parent; }
     auto &children() { return m_children; }

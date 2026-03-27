@@ -13,7 +13,8 @@ class Node;
 
 namespace usd
 {
-class StageProcessor;
+class UsdMembers;
+class UsdStageListener;
 
 struct PrimGeo
 {
@@ -24,19 +25,19 @@ struct PrimGeo
 class UsdProcessor
 {
     std::unordered_map<std::string, PrimGeo> m_meshes;
-    StageProcessor *m_stageProc;
-    pxr::UsdStageRefPtr m_stage;
+    std::unique_ptr<UsdMembers> m_usdMembers;
 
 public:
-    UsdProcessor();
+    UsdProcessor(std::shared_ptr<UsdStageListener> listener);
     ~UsdProcessor();
 
-    pxr::UsdStageRefPtr stage() const { return m_stage; }
+    pxr::UsdStageRefPtr stage();
     void createStage(const std::string &path);
     void saveStage() const;
     void addLayer(const std::string &layerPath);
     void openStage(const std::string &usdPath);
     void addPrim(const std::string &path, const std::string &type) const;
+    void addMesh(const std::string &path);
     void bakeStage(Node &root, Services &services);
 };
 }
