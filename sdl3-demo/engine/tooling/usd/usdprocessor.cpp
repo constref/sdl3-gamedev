@@ -42,6 +42,7 @@ namespace usd
 class UsdMembers : public pxr::TfWeakBase
 {
     UsdStageRefPtr m_stage;
+    SdfLayerRefPtr m_worldLayer;
     UsdLogger m_usdLogger;
     std::shared_ptr<usd::UsdStageListener> m_stageListener;
 
@@ -61,6 +62,8 @@ public:
 
     auto stage() const { return m_stage; }
     void setStage(UsdStageRefPtr stage) { m_stage = stage; }
+    auto worldLayer() { return m_worldLayer; }
+    void setWorldLayer(SdfLayerRefPtr layer) { m_worldLayer = layer; }
 };
 
 }
@@ -366,14 +369,28 @@ UsdStageRefPtr UsdProcessor::stage()
 void UsdProcessor::createStage(const std::string& path)
 {
     auto stage = pxr::UsdStage::CreateNew(path);
+
+    // setup /Library structure
+    UsdPrim libPrim = stage->DefinePrim(LibPath, UsdGeomTokens->Scope);
+    UsdGeomImageable libImg(libPrim);
+    libImg.GetVisibilityAttr().Set(UsdGeomTokens->invisible);
+
+    stage->DefinePrim(MeshesPath, UsdGeomTokens->Scope);
+    stage->DefinePrim(BrushesPath, UsdGeomTokens->Scope);
+
+    // setup /World
     UsdPrim world = stage->DefinePrim(WorldPath, UsdGeomTokens->Xform);
     stage->SetDefaultPrim(world);
 
-    // setup /Library structure
-    stage->DefinePrim(LibPath, UsdGeomTokens->Scope);
-    stage->DefinePrim(MeshesPath, UsdGeomTokens->Scope);
-    stage->DefinePrim(BrushesPath, UsdGeomTokens->Scope);
+    std::filesystem::path stagePath(path);
+    auto worldLayer = SdfLayer::CreateNew("layout.usda");
+
+    stage->GetRootLayer()->GetSubLayerPaths().push_back(worldLayer->GetRealPath());
+    stage->GetLayerStack(false).push_back(worldLayer);
+    worldLayer->Save();
+
     m_usdMembers->setStage(stage);
+    m_usdMembers->setWorldLayer(worldLayer);
 }
 
 void UsdProcessor::openStage(const std::string& usdPath)
@@ -460,6 +477,13 @@ void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
     UsdPrim brushPrim = stage()->GetPrimAtPath(brushPath);
     const std::string brushName = brushPrim.GetName();
     const std::string objName = std::format("{}_01", brushName);
-    SdfPath objPath = WorldPath.AppendPath(SdfPath(brushName));
-    UsdPrim objPrim = stage()->DefinePrim(objPath, UsdGeomTokens->Xform);
+    SdfPath objPath = WorldPath.AppendPath(SdfPath(objName));
+    UsdPrim prim = stage()->DefinePrim(objPath, UsdGeomTokens->Xform);
+    prim.GetReferences().AddInternalReference(brushPath);
+    prim.SetInstanceable(true);
+
+    // auto primSpecHandle = SdfCreatePrimInLayer(m_usdMembers->worldLayer(), objPath);
+    // primSpecHandle->SetTypeName(UsdGeomTokens->Xform);
+    // primSpecHandle->GetReferenceList().Add(brushPath.GetAsString());
+    // m_usdMembers->worldLayer()->Save();
 }

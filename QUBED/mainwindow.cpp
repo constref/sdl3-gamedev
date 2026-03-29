@@ -200,6 +200,7 @@ void MainWindow::onAddBrush()
 	{
 		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
 		usdProc().addBrush(node->path());
+		m_selectedBrush = node;
 	}
 }
 
