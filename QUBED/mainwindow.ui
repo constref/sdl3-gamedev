@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1589</width>
-    <height>845</height>
+    <width>931</width>
+    <height>669</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,7 +51,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1589</width>
+     <width>931</width>
      <height>33</height>
     </rect>
    </property>
@@ -78,7 +78,22 @@
     <property name="title">
      <string>Assets</string>
     </property>
+    <widget class="QMenu" name="menuBrushes">
+     <property name="title">
+      <string>Brushes</string>
+     </property>
+     <addaction name="actionAdd_Brush"/>
+     <addaction name="actionSelect_Brush"/>
+     <addaction name="actionPlace_Brush"/>
+    </widget>
+    <widget class="QMenu" name="menuType_Here">
+     <property name="title">
+      <string>Type Here</string>
+     </property>
+    </widget>
     <addaction name="actionAdd_Mesh"/>
+    <addaction name="menuBrushes"/>
+    <addaction name="menuType_Here"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuStage"/>
@@ -150,6 +165,21 @@
   <action name="actionAdd_Mesh">
    <property name="text">
     <string>Add Mesh</string>
+   </property>
+  </action>
+  <action name="actionAdd_Brush">
+   <property name="text">
+    <string>Add Brush</string>
+   </property>
+  </action>
+  <action name="actionPlace_Brush">
+   <property name="text">
+    <string>Place Brush</string>
+   </property>
+  </action>
+  <action name="actionSelect_Brush">
+   <property name="text">
+    <string>Select Brush</string>
    </property>
   </action>
  </widget>

@@ -5,6 +5,8 @@
 #include <application.h>
 #include <memory>
 
+class PrimNode;
+
 namespace usd
 {
 class UsdProcessor;
@@ -31,6 +33,7 @@ class MainWindow : public QMainWindow
     std::unique_ptr<usd::UsdProcessor> m_usdProc;
     std::shared_ptr<TreeViewStageListener> m_stageListener;
     UsdStageModel *m_stageModel = nullptr;
+    PrimNode *m_selectedBrush;
 
 public:
     MainWindow(std::unique_ptr<Application> app, QWidget *parent = nullptr);
@@ -55,5 +58,8 @@ public slots:
     void onAddLayer();
     void onBakeStage() const;
     void onAddMesh();
+    void onAddBrush();
+    void onSelectBrush();
+    void onPlaceBrush();
 };
 #endif // MAINWINDOW_H

@@ -157,12 +157,4 @@ void UsdStageModel::onPrimChanged(SdfPath path, UsdStageRefPtr stage)
             m_primMap[path] = node;
         }
     }
-    // TODO: Handle this per prim to avoid full tree rebuilds
-    // if (m_rootPrim)
-    // {
-    //     delete m_rootPrim;
-    // }
-    // beginResetModel();
-    // rebuildTree(stage);
-    // endResetModel();
 }

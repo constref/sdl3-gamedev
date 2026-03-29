@@ -22,4 +22,5 @@ public:
     auto &children() { return m_children; }
     auto &name() const { return m_name; }
     auto row() const { return static_cast<int>(m_children.size()); }
+    auto path() const { return m_path; }
 };

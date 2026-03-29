@@ -412,8 +412,24 @@ void UsdProcessor::addPrim(const std::string& path, const std::string& type) con
 
 void UsdProcessor::addMesh(const std::string& path)
 {
-    UsdPrim meshes = m_usdMembers->stage()->GetPrimAtPath(MeshesPath);
-    m_usdMembers->stage()->DefinePrim(MeshesPath.AppendPath(SdfPath("Wall_Interior_A")), UsdGeomTokens->Xform);
+    if (std::filesystem::exists(path))
+    {
+        auto assetStage = pxr::UsdStage::Open(path);
+        UsdPrim prim = assetStage->GetDefaultPrim();
+        SdfPath primPath = prim.GetPath();
+        std::string name = primPath.GetName();
+        if (name == "root")
+        {
+            // take child of root, don't want the top-most root
+            prim = prim.GetChildren().front();
+            primPath = prim.GetPath();
+            name = primPath.GetName();
+        }
+
+        UsdPrim meshes = m_usdMembers->stage()->GetPrimAtPath(MeshesPath);
+        UsdPrim meshPrim = m_usdMembers->stage()->DefinePrim(MeshesPath.AppendPath(SdfPath(name)), UsdGeomTokens->Xform);
+        meshPrim.GetReferences().AddReference(path, primPath);
+    }
 }
 
 void UsdProcessor::bakeStage(Node& root, Services& services)
@@ -426,4 +442,24 @@ void UsdProcessor::bakeStage(Node& root, Services& services)
     d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
         d3d12rs::D3D12RenderSystem>();
     renderer->executeAssetCopyOps();
+}
+
+void UsdProcessor::addBrush(pxr::SdfPath meshPath)
+{
+    UsdPrim meshPrim = stage()->GetPrimAtPath(meshPath);
+    const std::string meshName = meshPrim.GetName();
+    const std::string brushName = std::format("{}", meshName);
+    SdfPath brushPath = BrushesPath.AppendPath(SdfPath(brushName));
+    UsdPrim brushPrim = stage()->DefinePrim(brushPath, UsdGeomTokens->Xform);
+    brushPrim.GetReferences().AddReference(SdfReference("", meshPath));
+    brushPrim.SetInstanceable(true);
+}
+
+void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
+{
+    UsdPrim brushPrim = stage()->GetPrimAtPath(brushPath);
+    const std::string brushName = brushPrim.GetName();
+    const std::string objName = std::format("{}_01", brushName);
+    SdfPath objPath = WorldPath.AppendPath(SdfPath(brushName));
+    UsdPrim objPrim = stage()->DefinePrim(objPath, UsdGeomTokens->Xform);
 }

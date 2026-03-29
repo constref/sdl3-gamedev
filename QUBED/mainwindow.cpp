@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include <tooling/usd/usdprocessor.h>
 
+#include "usd/primnode.h"
 #include "usd/usdstagemodel.h"
 #include "usd/treeviewstagelistener.h"
 
@@ -27,10 +28,19 @@ MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
 	connect(ui->actionAdd_SubLayer, &QAction::triggered, this, &MainWindow::onAddLayer);
 	connect(ui->actionBake_Stage, &QAction::triggered, this, &MainWindow::onBakeStage);
 	connect(ui->actionAdd_Mesh, &QAction::triggered, this, &MainWindow::onAddMesh);
+	connect(ui->actionAdd_Brush, &QAction::triggered, this, &MainWindow::onAddBrush);
+	connect(ui->actionSelect_Brush, &QAction::triggered, this, &MainWindow::onSelectBrush);
+	connect(ui->actionPlace_Brush, &QAction::triggered, this, &MainWindow::onPlaceBrush);
 
     m_engineWorker = std::make_unique<EngineWorker>(std::move(app));
 	m_stageListener = std::make_shared<TreeViewStageListener>();
 	m_usdProc = std::make_unique<usd::UsdProcessor>(m_stageListener);
+
+	mappedKeys[Qt::Key_W] = SDL_SCANCODE_W;
+	mappedKeys[Qt::Key_A] = SDL_SCANCODE_A;
+	mappedKeys[Qt::Key_S] = SDL_SCANCODE_S;
+	mappedKeys[Qt::Key_D] = SDL_SCANCODE_D;
+
 	qApp->installEventFilter(this);
 }
 
@@ -43,11 +53,11 @@ usd::UsdProcessor &MainWindow::usdProc()
 
 uint16_t mapScancode(int qtKey)
 {
-	mappedKeys[Qt::Key_W] = SDL_SCANCODE_W;
-	mappedKeys[Qt::Key_A] = SDL_SCANCODE_A;
-	mappedKeys[Qt::Key_S] = SDL_SCANCODE_S;
-	mappedKeys[Qt::Key_D] = SDL_SCANCODE_D;
-	return mappedKeys[qtKey];
+	if (qtKey < mappedKeys.size())
+	{
+		return mappedKeys[qtKey];
+	}
+	return 0;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -180,5 +190,34 @@ void MainWindow::onAddMesh()
 	if (!filepath.isEmpty())
 	{
 		usdProc().addMesh(filepath.toStdString());
+	}
+}
+
+void MainWindow::onAddBrush()
+{
+	auto selections =  ui->stageView->selectionModel()->selectedIndexes();
+	if (!selections.isEmpty())
+	{
+		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
+		usdProc().addBrush(node->path());
+	}
+}
+
+void MainWindow::onSelectBrush()
+{
+	auto selections =  ui->stageView->selectionModel()->selectedIndexes();
+	if (!selections.isEmpty())
+	{
+		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
+		m_selectedBrush = node;
+	}
+}
+
+void MainWindow::onPlaceBrush()
+{
+	auto selections =  ui->stageView->selectionModel()->selectedIndexes();
+	if (!selections.isEmpty())
+	{
+		usdProc().placeBrush(m_selectedBrush->path());
 	}
 }

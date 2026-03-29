@@ -39,5 +39,7 @@ public:
     void addPrim(const std::string &path, const std::string &type) const;
     void addMesh(const std::string &path);
     void bakeStage(Node &root, Services &services);
+    void addBrush(pxr::SdfPath meshPath);
+    void placeBrush(pxr::SdfPath brushPath);
 };
 }
