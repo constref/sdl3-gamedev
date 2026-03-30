@@ -469,7 +469,7 @@ void UsdProcessor::addMesh(const std::string& path, SdfPath primPath)
 
 void UsdProcessor::bakeStage(Node& root, Services& services)
 {
-    UsdPrim rootPrim = m_usdMembers->stage()->GetPseudoRoot();
+    UsdPrim rootPrim = m_usdMembers->stage()->GetPrimAtPath(WorldPath);
     for (auto child : rootPrim.GetChildren())
     {
         processPrim(this, child, root, services, m_meshes);

@@ -34,7 +34,6 @@ class MainWindow : public QMainWindow
     std::unique_ptr<usd::UsdProcessor> m_usdProc;
     std::shared_ptr<TreeViewStageListener> m_stageListener;
     UsdStageModel *m_stageModel = nullptr;
-    PrimNode *m_selectedBrush;
     PrimPicker *m_primPicker;
 
 public:

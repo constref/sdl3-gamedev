@@ -206,12 +206,11 @@ void MainWindow::onAddMesh()
 
 void MainWindow::onAddBrush()
 {
-	auto selections =  ui->stageView->selectionModel()->selectedIndexes();
-	if (!selections.isEmpty())
+	for (QModelIndex idx : ui->stageView->selectionModel()->selectedIndexes())
 	{
-		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
+
+		PrimNode *node = static_cast<PrimNode *>(idx.internalPointer());
 		usdProc().addBrush(node->path());
-		m_selectedBrush = node;
 	}
 }
 
@@ -222,15 +221,14 @@ void MainWindow::onSelectBrush()
 	{
 		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
 		Logger::info(this, std::format("{} selected", node->path().GetString()));
-		m_selectedBrush = node;
 	}
 }
 
 void MainWindow::onPlaceBrush()
 {
-	auto selections =  ui->stageView->selectionModel()->selectedIndexes();
-	if (!selections.isEmpty())
+	for (QModelIndex idx : ui->stageView->selectionModel()->selectedIndexes())
 	{
-		usdProc().placeBrush(m_selectedBrush->path());
+		PrimNode *node = static_cast<PrimNode *>(idx.internalPointer());
+		usdProc().placeBrush(node->path());
 	}
 }

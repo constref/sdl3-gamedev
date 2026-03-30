@@ -27,6 +27,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
+       </property>
       </widget>
       <widget class="ViewportWidget" name="viewportWidget" native="true">
        <property name="sizePolicy">
@@ -86,14 +89,8 @@
      <addaction name="actionSelect_Brush"/>
      <addaction name="actionPlace_Brush"/>
     </widget>
-    <widget class="QMenu" name="menuType_Here">
-     <property name="title">
-      <string>Type Here</string>
-     </property>
-    </widget>
     <addaction name="actionAdd_Mesh"/>
     <addaction name="menuBrushes"/>
-    <addaction name="menuType_Here"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuStage"/>
