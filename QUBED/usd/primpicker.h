@@ -1,5 +1,6 @@
 #pragma once
 
+#include <qabstractitemmodel.h>
 #include <tooling/usd.h>
 
 #include <QDialog>
@@ -21,13 +22,9 @@ class PrimPicker : public QDialog
 {
 	Q_OBJECT
 	Ui::PrimPicker *ui;
-	PrimNode *m_selection;
 
 public:
 	explicit PrimPicker(usd::UsdProcessor *usdProc, QWidget *parent = nullptr);
 	~PrimPicker() override;
-	PrimNode *selection() const;
-
-public slots:
-	void onSelectionChanged();
+	QModelIndexList selections() const;
 };

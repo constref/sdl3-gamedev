@@ -124,11 +124,6 @@ void MainWindow::onViewportMouseMoved(int x, int y, int xRel, int yRel)
 	m_engineWorker->pushEvent(MouseMoveEvent{ x, y, xRel * sensitivity, yRel * sensitivity });
 }
 
-void MainWindow::onPrimPickerAccepted()
-{
-	disconnect(m_primPicker, &QDialog::accepted, this, &MainWindow::onPrimPickerAccepted);
-}
-
 void MainWindow::onNewStage()
 {
 	QString filepath = QFileDialog::getSaveFileName(this, tr("Open Stage"), QDir::homePath(),
@@ -201,8 +196,11 @@ void MainWindow::onAddMesh()
 		m_primPicker->setWindowModality(Qt::WindowModal);
 		m_primPicker->exec();
 
-		PrimNode *node = m_primPicker->selection();
-		usdProc().addMesh(filepath.toStdString(), node->path());
+		for (QModelIndex idx : m_primPicker->selections())
+		{
+			PrimNode *node = static_cast<PrimNode *>(idx.internalPointer());
+			usdProc().addMesh(filepath.toStdString(), node->path());
+		}
 	}
 }
 

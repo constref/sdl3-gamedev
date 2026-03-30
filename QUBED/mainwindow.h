@@ -54,7 +54,6 @@ signals:
 public slots:
     void onViewportResized(QSize size);
     void onViewportMouseMoved(int x, int y, int xRel, int yRel);
-    void onPrimPickerAccepted();
     void onNewStage();
     void onOpenStage();
     void onSaveStage();
