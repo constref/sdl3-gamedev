@@ -478,9 +478,14 @@ void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
     const std::string brushName = brushPrim.GetName();
     const std::string objName = std::format("{}_01", brushName);
     SdfPath objPath = WorldPath.AppendPath(SdfPath(objName));
+
+    stage()->SetEditTarget(m_usdMembers->worldLayer());
+
     UsdPrim prim = stage()->DefinePrim(objPath, UsdGeomTokens->Xform);
     prim.GetReferences().AddInternalReference(brushPath);
     prim.SetInstanceable(true);
+
+    stage()->SetEditTarget(stage()->GetRootLayer());
 
     // auto primSpecHandle = SdfCreatePrimInLayer(m_usdMembers->worldLayer(), objPath);
     // primSpecHandle->SetTypeName(UsdGeomTokens->Xform);

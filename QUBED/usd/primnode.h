@@ -6,16 +6,24 @@
 #include <pxr/usd/sdf/path.h>
 #include  <pxr/usd/usd/prim.h>
 
+enum class PrimSpecialization
+{
+    general,
+    mesh,
+    brush
+};
+
 class PrimNode
 {
     QString m_name;
+    PrimSpecialization m_spec;
     pxr::SdfPath m_path;
     PrimNode *m_parent;
     std::vector<PrimNode *> m_children;
     uint32_t m_row;
 
 public:
-    PrimNode(pxr::UsdPrim prim, PrimNode *parent, int row);
+    PrimNode(pxr::UsdPrim prim, PrimNode *parent, int row, PrimSpecialization spec = PrimSpecialization::general);
     ~PrimNode();
 
     auto *parent() const { return m_parent; }
@@ -23,4 +31,5 @@ public:
     auto &name() const { return m_name; }
     auto row() const { return static_cast<int>(m_children.size()); }
     auto path() const { return m_path; }
+    auto spec() const { return m_spec; }
 };
