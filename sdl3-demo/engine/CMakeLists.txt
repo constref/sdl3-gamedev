@@ -121,7 +121,7 @@ set(SHADER_SOURCES
 	"shaders/sprite.vert"
 	"shaders/sprite.frag"
 	"shaders/hlsl/basic.hlsl"
-		windowhandle.h
+	"windowhandle.h"
 )
 
 set_source_files_properties(${SHADER_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -186,9 +186,10 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/usd/events.h"
         "tooling/editorlauncher.h"
         "tooling/editorlauncher.cpp"
-		tooling/usd/usdlogger.cpp
-		tooling/usd/usdlogger.h
-		tooling/usd/usdstagelistener.h
+		"tooling/usd/usdlogger.cpp"
+		"tooling/usd/usdlogger.h"
+		"tooling/usd/usdstagelistener.h"
+		"tooling/usd/usdstagelistener.cpp"
 	)
     
     target_link_libraries(enginetooling

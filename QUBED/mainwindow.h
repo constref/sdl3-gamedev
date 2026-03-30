@@ -15,6 +15,7 @@ class UsdProcessor;
 class EngineWorker;
 class UsdStageModel;
 class TreeViewStageListener;
+class PrimPicker;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -34,6 +35,7 @@ class MainWindow : public QMainWindow
     std::shared_ptr<TreeViewStageListener> m_stageListener;
     UsdStageModel *m_stageModel = nullptr;
     PrimNode *m_selectedBrush;
+    PrimPicker *m_primPicker;
 
 public:
     MainWindow(std::unique_ptr<Application> app, QWidget *parent = nullptr);
@@ -52,6 +54,7 @@ signals:
 public slots:
     void onViewportResized(QSize size);
     void onViewportMouseMoved(int x, int y, int xRel, int yRel);
+    void onPrimPickerAccepted();
     void onNewStage();
     void onOpenStage();
     void onSaveStage();

@@ -10,6 +10,15 @@ UsdStageModel::UsdStageModel(QObject *parent) : QAbstractItemModel(parent)
 {
 }
 
+UsdStageModel::~UsdStageModel()
+{
+    if (m_rootPrim)
+    {
+        delete m_rootPrim;
+        m_rootPrim = nullptr;
+    }
+}
+
 QModelIndex UsdStageModel::index(int row, int column, const QModelIndex& parent) const
 {
     if (!parent.isValid())

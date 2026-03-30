@@ -31,10 +31,23 @@ using namespace pxr;
 using namespace DirectX;
 using namespace usd;
 
-static SdfPath WorldPath("/World");
-static SdfPath LibPath("/Library");
-static SdfPath MeshesPath(LibPath.AppendPath(SdfPath("Meshes")));
-static SdfPath BrushesPath(LibPath.AppendPath(SdfPath("Brushes")));
+const SdfPath WorldPath("/World");
+const SdfPath LibPath("/Library");
+const SdfPath MeshesPath(LibPath.AppendPath(SdfPath("Meshes")));
+const SdfPath BrushesPath(LibPath.AppendPath(SdfPath("Brushes")));
+
+namespace QUBED
+{
+    namespace Keys
+    {
+		const TfToken Type("qubed:type");
+    }
+    namespace Values
+    {
+		const VtValue MeshType("mesh");
+		const VtValue BrushType("brush");
+    }
+}
 
 namespace usd
 {
@@ -50,14 +63,6 @@ public:
     UsdMembers(std::shared_ptr<usd::UsdStageListener> stageListener) : m_stageListener(stageListener)
     {
         TfDiagnosticMgr::GetInstance().AddDelegate(&m_usdLogger);
-    }
-
-    void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged& notice)
-    {
-        for (auto& path : notice.GetResyncedPaths())
-        {
-            m_stageListener->notifyPrimChanged(path, stage());
-        }
     }
 
     auto stage() const { return m_stage; }
@@ -353,7 +358,10 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
 UsdProcessor::UsdProcessor(std::shared_ptr<usd::UsdStageListener> listener)
 {
     m_usdMembers = std::make_unique<UsdMembers>(listener);
-    TfNotice::Register(TfCreateWeakPtr(m_usdMembers.get()), &UsdMembers::onObjectsChanged);
+    if (listener)
+    {
+        TfNotice::Register(TfCreateWeakPtr(listener.get()), &UsdStageListener::onObjectsChanged);
+    }
 }
 
 UsdProcessor::~UsdProcessor()
@@ -388,6 +396,7 @@ void UsdProcessor::createStage(const std::string& path)
     stage->GetRootLayer()->GetSubLayerPaths().push_back(worldLayer->GetRealPath());
     stage->GetLayerStack(false).push_back(worldLayer);
     worldLayer->Save();
+    stage->Save();
 
     m_usdMembers->setStage(stage);
     m_usdMembers->setWorldLayer(worldLayer);
@@ -427,25 +436,34 @@ void UsdProcessor::addPrim(const std::string& path, const std::string& type) con
     UsdPrim newPrim = m_usdMembers->stage()->DefinePrim(primPath, primType);
 }
 
-void UsdProcessor::addMesh(const std::string& path)
+void UsdProcessor::addMesh(const std::string& path, SdfPath primPath)
 {
     if (std::filesystem::exists(path))
     {
         auto assetStage = pxr::UsdStage::Open(path);
-        UsdPrim prim = assetStage->GetDefaultPrim();
-        SdfPath primPath = prim.GetPath();
-        std::string name = primPath.GetName();
-        if (name == "root")
+        std::string name;
+        if (!primPath.IsEmpty())
         {
-            // take child of root, don't want the top-most root
-            prim = prim.GetChildren().front();
-            primPath = prim.GetPath();
             name = primPath.GetName();
+        }
+        else
+        {
+            UsdPrim prim = assetStage->GetDefaultPrim();
+            SdfPath primPath = prim.GetPath();
+            name = primPath.GetName();
+            if (name == "root")
+            {
+                // take child of root, don't want the top-most root
+                prim = prim.GetChildren().front();
+                primPath = prim.GetPath();
+                name = primPath.GetName();
+            }
         }
 
         UsdPrim meshes = m_usdMembers->stage()->GetPrimAtPath(MeshesPath);
         UsdPrim meshPrim = m_usdMembers->stage()->DefinePrim(MeshesPath.AppendPath(SdfPath(name)), UsdGeomTokens->Xform);
         meshPrim.GetReferences().AddReference(path, primPath);
+		meshPrim.SetCustomDataByKey(QUBED::Keys::Type, QUBED::Values::MeshType);
     }
 }
 
@@ -467,9 +485,11 @@ void UsdProcessor::addBrush(pxr::SdfPath meshPath)
     const std::string meshName = meshPrim.GetName();
     const std::string brushName = std::format("{}", meshName);
     SdfPath brushPath = BrushesPath.AppendPath(SdfPath(brushName));
+
     UsdPrim brushPrim = stage()->DefinePrim(brushPath, UsdGeomTokens->Xform);
     brushPrim.GetReferences().AddReference(SdfReference("", meshPath));
     brushPrim.SetInstanceable(true);
+    brushPrim.SetCustomDataByKey(QUBED::Keys::Type, QUBED::Values::BrushType);
 }
 
 void UsdProcessor::placeBrush(pxr::SdfPath brushPath)

@@ -15,9 +15,11 @@ qt_add_library(QUBED STATIC
         usd/usdstagemodel.cpp
         usd/primnode.cpp
         usd/primnode.h
-        ../sdl3-demo/engine/tooling/usd/usdstagelistener.h
         usd/treeviewstagelistener.cpp
         usd/treeviewstagelistener.h
+        usd/primpicker.h
+        usd/primpicker.cpp
+        usd/primpicker.ui
 )
 
 target_link_libraries(QUBED

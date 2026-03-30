@@ -24,6 +24,7 @@ class UsdStageModel : public QAbstractItemModel
 	void walkStage(pxr::UsdPrim prim, PrimNode *parent);
 public:
 	UsdStageModel(QObject *parent = nullptr);
+	~UsdStageModel() override;
 
 	QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 	QModelIndex parent(const QModelIndex &child) const override;

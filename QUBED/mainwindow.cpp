@@ -11,6 +11,7 @@
 #include "usd/primnode.h"
 #include "usd/usdstagemodel.h"
 #include "usd/treeviewstagelistener.h"
+#include "usd/primpicker.h"
 
 
 std::array<uint32_t, 256> mappedKeys;
@@ -123,6 +124,11 @@ void MainWindow::onViewportMouseMoved(int x, int y, int xRel, int yRel)
 	m_engineWorker->pushEvent(MouseMoveEvent{ x, y, xRel * sensitivity, yRel * sensitivity });
 }
 
+void MainWindow::onPrimPickerAccepted()
+{
+	disconnect(m_primPicker, &QDialog::accepted, this, &MainWindow::onPrimPickerAccepted);
+}
+
 void MainWindow::onNewStage()
 {
 	QString filepath = QFileDialog::getSaveFileName(this, tr("Open Stage"), QDir::homePath(),
@@ -189,7 +195,14 @@ void MainWindow::onAddMesh()
 
 	if (!filepath.isEmpty())
 	{
-		usdProc().addMesh(filepath.toStdString());
+		usd::UsdProcessor *assetProc = new usd::UsdProcessor;
+		assetProc->openStage(filepath.toStdString());
+		m_primPicker = new PrimPicker(assetProc, this);
+		m_primPicker->setWindowModality(Qt::WindowModal);
+		m_primPicker->exec();
+
+		PrimNode *node = m_primPicker->selection();
+		usdProc().addMesh(filepath.toStdString(), node->path());
 	}
 }
 
@@ -210,6 +223,7 @@ void MainWindow::onSelectBrush()
 	if (!selections.isEmpty())
 	{
 		PrimNode *node = static_cast<PrimNode *>(selections.first().internalPointer());
+		Logger::info(this, std::format("{} selected", node->path().GetString()));
 		m_selectedBrush = node;
 	}
 }

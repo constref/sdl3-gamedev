@@ -28,7 +28,7 @@ class UsdProcessor
     std::unique_ptr<UsdMembers> m_usdMembers;
 
 public:
-    UsdProcessor(std::shared_ptr<UsdStageListener> listener);
+    UsdProcessor(std::shared_ptr<UsdStageListener> listener = nullptr);
     ~UsdProcessor();
 
     pxr::UsdStageRefPtr stage();
@@ -37,7 +37,7 @@ public:
     void addLayer(const std::string &layerPath);
     void openStage(const std::string &usdPath);
     void addPrim(const std::string &path, const std::string &type) const;
-    void addMesh(const std::string &path);
+    void addMesh(const std::string &path, pxr::SdfPath primPath);
     void bakeStage(Node &root, Services &services);
     void addBrush(pxr::SdfPath meshPath);
     void placeBrush(pxr::SdfPath brushPath);
