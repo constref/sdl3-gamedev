@@ -5,6 +5,7 @@
 #include <application.h>
 #include <memory>
 
+class UsdStageItemDelegate;
 class PrimNode;
 
 namespace usd
@@ -34,6 +35,7 @@ class MainWindow : public QMainWindow
     std::unique_ptr<usd::UsdProcessor> m_usdProc;
     std::shared_ptr<TreeViewStageListener> m_stageListener;
     UsdStageModel *m_stageModel = nullptr;
+    UsdStageItemDelegate *m_stageItemDelegate = nullptr;
     PrimPicker *m_primPicker;
 
 public:

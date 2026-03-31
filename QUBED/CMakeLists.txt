@@ -20,6 +20,9 @@ qt_add_library(QUBED STATIC
         usd/primpicker.h
         usd/primpicker.cpp
         usd/primpicker.ui
+        usd/usdstageitemdelegate.cpp
+        usd/usdstageitemdelegate.h
+        usd/usdstageitemdelegate.ui
 )
 
 target_link_libraries(QUBED

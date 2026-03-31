@@ -28,7 +28,10 @@
         </sizepolicy>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+       </property>
+       <property name="uniformRowHeights">
+        <bool>true</bool>
        </property>
       </widget>
       <widget class="ViewportWidget" name="viewportWidget" native="true">
