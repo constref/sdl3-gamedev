@@ -2,6 +2,8 @@
 #include <bootstrap.h>
 #include "empty.h"
 
+#include <QtResource>
+
 using namespace std;
 
 int main(int argc, char *argv[])

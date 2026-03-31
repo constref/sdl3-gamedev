@@ -138,15 +138,21 @@ void UsdStageModel::rebuildTree(UsdStageRefPtr stage)
 
 void UsdStageModel::onPrimChanged(SdfPath path, UsdStageRefPtr stage)
 {
+    UsdPrim prim = stage->GetPrimAtPath(path);
+    if (prim.IsPrototype())
+    {
+        return; // ignore prototype prims
+    }
+
     auto itr = m_primMap.find(path);
-    Logger::info(this, std::format("{} path changed", path.GetString()));
     if (itr != m_primMap.end())
     {
-        UsdPrim prim = stage->GetPrimAtPath(path);
         PrimNode *node = itr->second;
+        Logger::info(this, std::format("{} path changed", path.GetString()));
     }
     else
     {
+        Logger::info(this, std::format("{} path added", path.GetString()));
         // new prim, get parent and add it
         auto itr = m_primMap.find(path.GetParentPath());
         if (itr != m_primMap.end())
@@ -158,7 +164,6 @@ void UsdStageModel::onPrimChanged(SdfPath path, UsdStageRefPtr stage)
 
             beginInsertRows(parentIndex, parentNode->children().size(), parentNode->children().size());
 
-            UsdPrim prim = stage->GetPrimAtPath(path);
             PrimNode *node = new PrimNode(prim, parentNode, parentNode->children().size());
             parentNode->children().push_back(node);
 

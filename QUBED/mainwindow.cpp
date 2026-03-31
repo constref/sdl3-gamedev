@@ -14,7 +14,6 @@
 #include "usd/primpicker.h"
 #include "usd/usdstageitemdelegate.h"
 
-
 std::array<uint32_t, 256> mappedKeys;
 
 MainWindow::MainWindow(std::unique_ptr<Application> app, QWidget *parent)
@@ -141,6 +140,8 @@ void MainWindow::onNewStage()
 		m_stageModel->rebuildTree(usdProc().stage());
 		connect(m_stageListener.get(), &TreeViewStageListener::primChanged, m_stageModel, &UsdStageModel::onPrimChanged);
 		ui->stageView->setModel(m_stageModel);
+		m_stageItemDelegate = new UsdStageItemDelegate;
+		ui->stageView->setItemDelegate(m_stageItemDelegate);
 	}
 }
 

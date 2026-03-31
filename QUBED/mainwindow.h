@@ -5,6 +5,10 @@
 #include <application.h>
 #include <memory>
 
+#include <QResource>
+#include <QPixmap>
+
+
 class UsdStageItemDelegate;
 class PrimNode;
 

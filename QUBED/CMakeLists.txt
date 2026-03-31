@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.19)
 project(QUBED LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
-
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Svg)
 qt_standard_project_setup()
+set(CMAKE_AUTORCC ON)
 
 qt_add_library(QUBED STATIC
         mainwindow.cpp
@@ -22,13 +22,14 @@ qt_add_library(QUBED STATIC
         usd/primpicker.ui
         usd/usdstageitemdelegate.cpp
         usd/usdstageitemdelegate.h
-        usd/usdstageitemdelegate.ui
+        resources.qrc
 )
 
 target_link_libraries(QUBED
     PUBLIC
         Qt::Core
         Qt::Widgets
+        Qt::Svg
         enginetooling
 )
 

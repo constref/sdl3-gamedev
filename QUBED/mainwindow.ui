@@ -58,7 +58,7 @@
      <x>0</x>
      <y>0</y>
      <width>931</width>
-     <height>33</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -117,7 +117,8 @@
   </widget>
   <action name="actionNew_Stage">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
+    <iconset resource="resources.qrc">
+     <normaloff>:/assets/svg/mingcute/MingcuteFileLine.svg</normaloff>:/assets/svg/mingcute/MingcuteFileLine.svg</iconset>
    </property>
    <property name="text">
     <string>New Stage</string>
@@ -125,7 +126,8 @@
   </action>
   <action name="actionSave_Stage">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+    <iconset>
+     <normaloff>:/svgs/assets/svg/mingcute/MingcuteFolderOpenLine.svg</normaloff>:/svgs/assets/svg/mingcute/MingcuteFolderOpenLine.svg</iconset>
    </property>
    <property name="text">
     <string>Save Stage</string>
@@ -138,7 +140,8 @@
   </action>
   <action name="actionAdd_Prim">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+    <iconset>
+     <normaloff>:/svgs/assets/svg/mingcute/MingcuteFileLine.svg</normaloff>:/svgs/assets/svg/mingcute/MingcuteFileLine.svg</iconset>
    </property>
    <property name="text">
     <string>Add Prim</string>
@@ -156,7 +159,8 @@
   </action>
   <action name="actionOpen_Stage">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+    <iconset>
+     <normaloff>:/svgs/assets/svg/mingcute/MingcuteFolderOpenLine.svg</normaloff>:/svgs/assets/svg/mingcute/MingcuteFolderOpenLine.svg</iconset>
    </property>
    <property name="text">
     <string>Open Stage</string>
@@ -191,6 +195,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

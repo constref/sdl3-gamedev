@@ -5,6 +5,7 @@
 #include <pxr/usd/usd/prim.h>
 
 #include "primnode.h"
+#include "usdstageitemdelegate.h"
 #include "tooling/usd/usdprocessor.h"
 
 PrimPicker::PrimPicker(usd::UsdProcessor *usdProc, QWidget *parent) : QDialog(parent), ui(new Ui::PrimPicker)
@@ -13,6 +14,7 @@ PrimPicker::PrimPicker(usd::UsdProcessor *usdProc, QWidget *parent) : QDialog(pa
 	UsdStageModel *stageModel = new UsdStageModel(this);
 	stageModel->rebuildTree(usdProc->stage());
 	ui->primTree->setModel(stageModel);
+	ui->primTree->setItemDelegate(new UsdStageItemDelegate);
 }
 
 PrimPicker::~PrimPicker()

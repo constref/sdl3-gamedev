@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/svg/mingcute/MingcuteFileLine.svg</file>
+        <file>assets/svg/mingcute/MingcuteFolderOpenLine.svg</file>
+    </qresource>
+</RCC>

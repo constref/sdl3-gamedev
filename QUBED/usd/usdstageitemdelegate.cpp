@@ -11,6 +11,6 @@ UsdStageItemDelegate::~UsdStageItemDelegate()
 QSize UsdStageItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     QSize size = QStyledItemDelegate::sizeHint(option, index);
-    size.setHeight(24);
+    size.setHeight(28);
     return size;
 }
