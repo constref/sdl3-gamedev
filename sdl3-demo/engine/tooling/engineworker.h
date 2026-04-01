@@ -1,15 +1,17 @@
 #pragma once
 
-#include <engine_generated.h>
+#include "platformevents.h"
 #include <thread>
 #include <engine.h>
 #include <memory>
 #include <containers/atomicringbuffer.h>
-#include "platformevents.h"
+
+namespace usd { class UsdProcessor; }
 
 class EngineWorker
 {
 	std::unique_ptr<Engine> m_engine;
+	std::unique_ptr<usd::UsdProcessor> m_usdProcessor;
 	int editorPID;
 	std::string url;
 

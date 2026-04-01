@@ -5,7 +5,6 @@ find_package(tinyxml2 REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
 find_package(flatbuffers REQUIRED)
 find_package(DirectX-Headers REQUIRED)
-
 set(CMAKE_CXX_STANDARD 23)
 
 set(ENGINE_SOURCES
@@ -128,8 +127,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_S
 
 add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET engine PROPERTY CXX_STANDARD 23)
+if(MSVC)
+	target_compile_options(engine PRIVATE /std:c++latest)
+	#target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
@@ -138,21 +138,14 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
 endif()
 
-
-# For MSVC, you often need the 'latest' flag specifically
-if(MSVC)
-    target_compile_options(engine PRIVATE /std:c++latest)
-    target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
-endif()
-
 set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
 message(STATUS ${FLATBUFF_DIR})
 
 target_link_libraries(engine PUBLIC
+	SDL3::SDL3
 	Vulkan::Vulkan
 	Vulkan::volk
 	Vulkan::shaderc_combined
-	SDL3::SDL3
 	glm::glm
 	tinyxml2::tinyxml2
 	flatbuffers::flatbuffers
@@ -168,8 +161,8 @@ target_include_directories(engine
 )
 
 # tooling specific
-#if (EXECUTION_MODE STREQUAL "TOOLING")
-    find_package(pxr REQUIRED)
+if (EXECUTION_MODE STREQUAL "TOOLING")
+    find_package(pxr REQUIRED SYSTEM)
     find_package(cppzmq REQUIRED)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
@@ -184,13 +177,22 @@ target_include_directories(engine
         "tooling/systems/editorsystem.h"
         "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
+		"tooling/usd.h"
         "tooling/usd/usdprocessor.h"
         "tooling/usd/usdprocessor.cpp"
-        "tooling/usd/rootcomponent.h"
+		"tooling/usd/rootcomponent.h"
         "tooling/usd/rootcomponent.cpp"
         "tooling/usd/events.h"
-    )
-
+		"tooling/usd/usdlogger.cpp"
+		"tooling/usd/usdlogger.h"
+	)
+    
     target_link_libraries(enginetooling
-        PRIVATE engine usd usdGeom usdImaging hd cppzmq)
-#endif()
+        PRIVATE engine cppzmq usd usdGeom usdImaging hd)
+
+	if(MSVC)
+		target_compile_options(enginetooling PRIVATE /std:c++latest)
+		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+	endif()
+
+endif()

@@ -30,7 +30,7 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	
 	const XMVECTOR oldLocalZ = XMLoadFloat3(&localZ);
 	const XMVECTOR rotAxisY = XMLoadFloat3(&localY);
-	const XMVECTOR quatRotY = XMQuaternionRotationAxis(rotAxisY, static_cast<float>(event.xRel()) * 0.5f * FrameContext::dt());
+	const XMVECTOR quatRotY = XMQuaternionRotationAxis(rotAxisY, event.xRel() * 0.5f * FrameContext::dt());
 	XMVECTOR newLocalZ = XMVector3Rotate(oldLocalZ, quatRotY);
 	
 	// calculate new local x axis
@@ -40,7 +40,7 @@ void FPSCameraSystem::onEvent(NodeHandle target, const MouseMotionEvent& event)
 	pc->setLocalX(localX);
 	
 	const XMVECTOR rotAxisX = XMLoadFloat3(&localX);
-	const XMVECTOR quatRotX = XMQuaternionRotationAxis(rotAxisX, static_cast<float>(event.yRel()) * 0.5f * FrameContext::dt());
+	const XMVECTOR quatRotX = XMQuaternionRotationAxis(rotAxisX, event.yRel() * 0.5f * FrameContext::dt());
 	newLocalZ = XMVector3Rotate(newLocalZ, quatRotX);
 	
 	// finally set local z

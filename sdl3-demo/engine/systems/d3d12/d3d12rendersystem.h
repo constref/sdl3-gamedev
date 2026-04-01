@@ -8,6 +8,7 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include <rendering/mesh.h>
+
 #include <d3d11on12.h>
 
 #include <span>
@@ -17,9 +18,7 @@ struct SDL_Window;
 
 namespace d3d12rs
 {
-
 using Microsoft::WRL::ComPtr;
-
 
 struct GPUSubMesh
 {
@@ -125,6 +124,12 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
 	void *m_stagingPtr = nullptr;
 	size_t m_stagingOffset = 0;
 
+	ComPtr<ID3D12Resource> m_assetStagingBuffer;
+	void *m_assetStagingPtr = nullptr;
+	size_t m_assetStagingOffset = 0;
+	ComPtr<ID3D12CommandAllocator> m_assetCmdAllocator;
+	ComPtr<ID3D12GraphicsCommandList> m_assetCmdList;
+
 	std::vector<CopyOperation> m_copyOperations;
 	std::vector<FrameResources> m_frameResources;
 
@@ -188,7 +193,8 @@ public:
 	bool createSwapchain();
 	void flushGPU();
 	uint32_t stageData(const void *srcPtr, size_t byteSize, size_t alignment);
-	void scheduleGPUCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
+	void scheduleAssetCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer, D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter);
+	void executeAssetCopyOps();
 	
 	void setViewMatrix(const DirectX::XMMATRIX &viewMatrix);
 	void setCamPosition(float x, float y, float z);

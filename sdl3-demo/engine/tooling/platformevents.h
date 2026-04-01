@@ -6,7 +6,7 @@
 
 struct MouseMoveEvent
 {
-    int x;
+	int x;
 	int y;
 	int xRel;
 	int yRel;
@@ -22,6 +22,7 @@ struct KeyUp
 {
 	uint16_t scancode;
 };
+
 struct KeyDown
 {
 	uint16_t scancode;
@@ -33,7 +34,10 @@ struct ResizeEvent
 	int y;
 	int width;
 	int height;
-	ResizeEvent(int x, int y, int width, int height) : x(x), y(y), width(width), height(height) {}
+
+	ResizeEvent(int x, int y, int width, int height) : x(x), y(y), width(width), height(height)
+	{
+	}
 };
 
 struct ExitEvent
@@ -49,15 +53,13 @@ struct ApplicationEnteredForeground
 };
 
 using PlatformEvent = std::variant<
-ApplicationEnteredBackground,
-ApplicationEnteredForeground,
-KeyUp,
-KeyDown,
-MouseMoveEvent,
-MouseButtonEvent,
-ResizeEvent,
-ExitEvent,
-usd::CreateStageEvent,
-usd::SaveStageEvent,
-usd::AddLayerEvent
+	ApplicationEnteredBackground,
+	ApplicationEnteredForeground,
+	KeyUp,
+	KeyDown,
+	MouseMoveEvent,
+	MouseButtonEvent,
+	ResizeEvent,
+	ExitEvent,
+	usd::BakeStageEvent
 >;

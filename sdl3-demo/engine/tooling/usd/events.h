@@ -12,7 +12,6 @@ public:
 	CreateStageEvent(const std::string &path) : m_path(std::move(path)) {}
 	auto &path() const { return m_path; }
 };
-
 class OpenStageEvent : public Event<OpenStageEvent, FrameStage::Start>
 {
 	std::string m_path;
@@ -29,5 +28,13 @@ class AddLayerEvent : public Event<AddLayerEvent, FrameStage::Start>
 public:
 	AddLayerEvent(const std::string &path) : m_path(std::move(path)) {}
 	auto &path() const { return m_path; }
+};
+class UsdProcessor;
+
+class BakeStageEvent : public Event<BakeStageEvent, FrameStage::Start>
+{
+	usd::UsdProcessor *m_processor;
+public:
+	BakeStageEvent(usd::UsdProcessor *processor) : m_processor(processor) {}
 };
 }

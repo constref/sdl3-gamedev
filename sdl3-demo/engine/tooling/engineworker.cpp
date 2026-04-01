@@ -1,10 +1,13 @@
+#include <engine_generated.h>
 #include "engineworker.h"
 #include <format>
 #include <zmq.hpp>
+#include <tooling/usd/usdprocessor.h>
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
+    m_usdProcessor = std::make_unique<usd::UsdProcessor>(nullptr);
     m_listening = false;
     m_running = false;
     this->editorPID = editorPID;
@@ -216,20 +219,20 @@ void EngineWorker::start()
                 case EditorMessage_USD_CreateStageCommand:
                 {
                     const auto *e = envelope->payload_as_USD_CreateStageCommand();
-                    m_engine->services().eventQueue().enqueue<usd::CreateStageEvent>(m_engine->application().getRoot(), 0, e->path()->str());
+                    m_usdProcessor->createStage(e->path()->str());
                     ack();
                     break;
                 }
             case EditorMessage_USD_OpenStageCommand:
                 {
 					const auto *e = envelope->payload_as_USD_OpenStageCommand();
-                    m_engine->services().eventQueue().enqueue<usd::OpenStageEvent>(m_engine->application().getRoot(), 0, e->path()->str());
+                    m_usdProcessor->openStage(e->path()->str());
                     ack();
                     break;
                 }
                 case EditorMessage_USD_SaveStageCommand:
                 {
-                    const auto *e = envelope->payload_as_USD_SaveStageCommand();
+                    m_usdProcessor->saveStage();
                     ack();
                     break;
                 }
@@ -247,7 +250,7 @@ void EngineWorker::start()
                 }
                 case EditorMessage_USD_BakeStageCommand:
                 {
-                    //Node &node = services.world().getNode(m_engine->application().getRoot());
+                    pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
                     ack();
                     break;
                 }
@@ -342,18 +345,12 @@ void EngineWorker::processEvents()
             m_listening = false;
             m_running = false;
         }
-        else if (std::holds_alternative<usd::CreateStageEvent>(e))
+        else if (std::holds_alternative<usd::BakeStageEvent>(e))
         {
-            serv.eventQueue().enqueue<
-                usd::CreateStageEvent>(NodeHandle{}, 0, std::get<usd::CreateStageEvent>(e).path());
-        }
-        else if (std::holds_alternative<usd::SaveStageEvent>(e))
-        {
-            serv.eventQueue().enqueue<usd::SaveStageEvent>(NodeHandle{}, 0);
-        }
-        else if (std::holds_alternative<usd::AddLayerEvent>(e))
-        {
-            serv.eventQueue().enqueue<usd::AddLayerEvent>(NodeHandle{}, 0, std::get<usd::AddLayerEvent>(e).path());
+            NodeHandle hRoot = m_engine->application().getRoot();
+            Node &root = serv.world().getNode(hRoot);
+            m_usdProcessor->bakeStage(root, serv);
+            //serv.eventQueue().enqueue<usd::BakeStageEvent>(NodeHandle{}, 0, m_usdProcessor.get());
         }
     }
 }

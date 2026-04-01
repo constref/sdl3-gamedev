@@ -6,11 +6,15 @@
 #include <systems/system.h>
 #include <components/meshcomponent.h>
 #include <rendering/mesh.h>
-#include "rootcomponent.h"
+
+#include <tooling/usd.h>
 
 class Node;
-class Services;
-class StageProcessor;
+
+namespace usd
+{
+class UsdMembers;
+class UsdStageListener;
 
 struct PrimGeo
 {
@@ -18,22 +22,24 @@ struct PrimGeo
     GPUMeshHandle gpuHandle;
 };
 
-namespace usd
+class UsdProcessor
 {
-class UsdProcessor : public System<FrameStage::End, RootComponent>
-{
-    std::unordered_map<std::string, PrimGeo> meshes;
-    StageProcessor *m_noticeHandler;
+    std::unordered_map<std::string, PrimGeo> m_meshes;
+    std::unique_ptr<UsdMembers> m_usdMembers;
 
 public:
-    UsdProcessor(Services &services);
-    ~UsdProcessor() override;
+    UsdProcessor(std::shared_ptr<UsdStageListener> listener = nullptr);
+    ~UsdProcessor();
+
+    pxr::UsdStageRefPtr stage();
     void createStage(const std::string &path);
-    void saveStage();
+    void saveStage() const;
     void addLayer(const std::string &layerPath);
     void openStage(const std::string &usdPath);
-    void addPrim(const std::string &path, const std::string &type);
+    void addPrim(const std::string &path, const std::string &type) const;
+    void addMesh(const std::string &path, pxr::SdfPath primPath);
     void bakeStage(Node &root, Services &services);
-    void update(Node& node) override;
+    void addBrush(pxr::SdfPath meshPath);
+    void placeBrush(pxr::SdfPath brushPath);
 };
 }
