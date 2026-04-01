@@ -186,7 +186,8 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/usdlogger.cpp"
 		"tooling/usd/usdlogger.h"
 	)
-    
+
+	target_include_directories(enginetooling PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(enginetooling
         PRIVATE engine cppzmq usd usdGeom usdImaging hd)
 
@@ -194,5 +195,12 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		target_compile_options(enginetooling PRIVATE /std:c++latest)
 		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 	endif()
+
+	add_library(nubedusd SHARED
+		"tooling/usd/nubedusd.h"
+		"tooling/usd/nubedusd.cpp"
+	)
+
+	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom)
 
 endif()

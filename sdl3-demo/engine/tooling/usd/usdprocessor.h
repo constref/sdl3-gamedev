@@ -3,18 +3,27 @@
 #include <string>
 #include <unordered_map>
 
-#include <systems/system.h>
 #include <components/meshcomponent.h>
-#include <rendering/mesh.h>
 
 #include <tooling/usd.h>
 
+class Mesh;
 class Node;
+class Services;
 
 namespace usd
 {
 class UsdMembers;
 class UsdStageListener;
+    
+#pragma pack(push, 8)
+struct Prim
+{
+    uint32_t id;
+    uint32_t parentId;
+    std::string name;
+};
+#pragma pack(pop)
 
 struct PrimGeo
 {
@@ -41,5 +50,6 @@ public:
     void bakeStage(Node &root, Services &services);
     void addBrush(pxr::SdfPath meshPath);
     void placeBrush(pxr::SdfPath brushPath);
+    void flatten();
 };
 }

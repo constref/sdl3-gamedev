@@ -25,6 +25,7 @@
 #include <tooling/platformutils.h>
 #include <tooling/usd/usdstagelistener.h>
 #include <componentsystems.h>
+#include <rendering/mesh.h>
 #include "usdlogger.h"
 
 using namespace pxr;
@@ -512,4 +513,34 @@ void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
     // primSpecHandle->SetTypeName(UsdGeomTokens->Xform);
     // primSpecHandle->GetReferenceList().Add(brushPath.GetAsString());
     // m_usdMembers->worldLayer()->Save();
+}
+
+
+void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
+{
+    flatList.push_back(parent);
+    
+    for (UsdPrim child : prim.GetChildren())
+    {
+		const Prim childPrim {
+			.id = currentId++,
+			.parentId = parent.id,
+			.name = child.GetName()
+		};
+        work(child, childPrim, flatList, currentId);
+    }
+}
+
+void UsdProcessor::flatten()
+{
+    std::vector<Prim> flatList;
+    uint32_t currentId = 1;
+    
+    UsdPrim root = stage()->GetPseudoRoot();
+    const Prim rootPrim {
+        .id = currentId++,
+        .parentId = 0,
+        .name = root.GetName()
+    };
+    work(root, rootPrim, flatList, currentId);
 }
