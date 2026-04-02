@@ -21,7 +21,7 @@ struct Prim
 {
     uint32_t id;
     uint32_t parentId;
-    std::string name;
+    const char *name;
 };
 #pragma pack(pop)
 
@@ -50,6 +50,6 @@ public:
     void bakeStage(Node &root, Services &services);
     void addBrush(pxr::SdfPath meshPath);
     void placeBrush(pxr::SdfPath brushPath);
-    void flatten();
+    void flatten(std::vector<Prim> &flatList);
 };
 }

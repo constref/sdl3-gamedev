@@ -525,22 +525,21 @@ void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_
 		const Prim childPrim {
 			.id = currentId++,
 			.parentId = parent.id,
-			.name = child.GetName()
+			.name = child.GetName().GetString().c_str()
 		};
         work(child, childPrim, flatList, currentId);
     }
 }
 
-void UsdProcessor::flatten()
+void UsdProcessor::flatten(std::vector<Prim> &flatList)
 {
-    std::vector<Prim> flatList;
     uint32_t currentId = 1;
     
     UsdPrim root = stage()->GetPseudoRoot();
     const Prim rootPrim {
         .id = currentId++,
         .parentId = 0,
-        .name = root.GetName()
+        .name = root.GetName().GetString().c_str()
     };
     work(root, rootPrim, flatList, currentId);
 }

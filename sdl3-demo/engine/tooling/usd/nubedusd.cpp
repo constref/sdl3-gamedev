@@ -1,15 +1,14 @@
 #include "nubedusd.h"
 #include <tooling/usd/usdprocessor.h>
 
-usd::UsdProcessor* CreateStage(const char *path)
+usd::UsdProcessor *CreateStage(const char *path)
 {
     auto usdProc = new usd::UsdProcessor(nullptr);
     usdProc->createStage(path);
-    usdProc->flatten();
     return usdProc;
 }
 
-usd::UsdProcessor* OpenStage(const char *path)
+usd::UsdProcessor *OpenStage(const char *path)
 {
     auto usdProc = new usd::UsdProcessor(nullptr);
     usdProc->openStage(path);
@@ -21,8 +20,25 @@ void SaveStage(usd::UsdProcessor *proc)
     proc->saveStage();
 }
 
-uint32_t BuildFlatTree(usd::UsdProcessor *proc)
+void DestroyUsdProcessor(usd::UsdProcessor *proc)
 {
-    //proc->flatten();
-    return 0;
+    delete proc;
+}
+
+PrimList *BuildPrimList(usd::UsdProcessor *proc)
+{
+    PrimList *list = new PrimList();
+    proc->flatten(*list);
+    return list;
+}
+
+usd::Prim *GetPrimListData(PrimList *list, uint32_t *outSize)
+{
+    *outSize = static_cast<uint32_t>(list->size());
+    return list->data();
+}
+
+void DestroyPrimList(PrimList *list)
+{
+    delete list;
 }
