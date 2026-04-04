@@ -1,14 +1,25 @@
 from pxr import Usd, UsdGeom
 
+_projectStage: Usd.Stage | None = None
 
-def create_stage(path):
-    stage = Usd.Stage.CreateNew(path)
-    stage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
-    stage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)
-    stage.DefinePrim("/Library/Brushes", UsdGeom.Tokens.Scope)
-    stage.DefinePrim("/World", UsdGeom.Tokens.Xform)
-    stage.Save()
-    return stage
+
+def create_project(path):
+    _projectStage = Usd.Stage.CreateNew(path)
+    _projectStage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
+    _projectStage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)
+    _projectStage.DefinePrim("/Library/Brushes", UsdGeom.Tokens.Scope)
+    _projectStage.DefinePrim("/World", UsdGeom.Tokens.Xform)
+    _projectStage.Save()
+    return _projectStage
+
+
+def save_project():
+    if _projectStage is not None:
+        _projectStage.Save()
+
+
+def close_project():
+    _projectStage = None
 
 
 def add_mesh(stage, primPath):
