@@ -23,7 +23,7 @@ DLL_API usd::UsdProcessor *OpenStage(const char *path);
 DLL_API void SaveStage(usd::UsdProcessor *proc);
 DLL_API void DestroyUsdProcessor(usd::UsdProcessor *proc);
 
-DLL_API PrimList *BuildPrimList(usd::UsdProcessor *proc);
+DLL_API PrimList *BuildPrimList(usd::UsdProcessor *proc, bool useDefaultPrim);
 DLL_API usd::Prim *GetPrimListData(PrimList *list, uint32_t *outSize);
 DLL_API void DestroyPrimList(PrimList *list);
 }

@@ -515,7 +515,6 @@ void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
     // m_usdMembers->worldLayer()->Save();
 }
 
-
 void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
 {
     flatList.push_back(parent);
@@ -531,11 +530,11 @@ void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_
     }
 }
 
-void UsdProcessor::flatten(std::vector<Prim> &flatList)
+void UsdProcessor::flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
 {
     uint32_t currentId = 1;
     
-    UsdPrim root = stage()->GetPseudoRoot();
+    UsdPrim root = useDefaultPrim ? stage()->GetDefaultPrim() : stage()->GetPseudoRoot();
     const Prim rootPrim {
         .id = currentId++,
         .parentId = 0,

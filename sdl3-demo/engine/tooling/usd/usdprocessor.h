@@ -50,6 +50,6 @@ public:
     void bakeStage(Node &root, Services &services);
     void addBrush(pxr::SdfPath meshPath);
     void placeBrush(pxr::SdfPath brushPath);
-    void flatten(std::vector<Prim> &flatList);
+    void flatten(std::vector<Prim> &flatList, bool usdDefaultPrim);
 };
 }

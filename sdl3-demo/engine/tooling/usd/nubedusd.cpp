@@ -1,4 +1,6 @@
 #include "nubedusd.h"
+
+#include <pxr/usd/usd/stage.h>
 #include <tooling/usd/usdprocessor.h>
 
 usd::UsdProcessor *CreateStage(const char *path)
@@ -25,10 +27,10 @@ void DestroyUsdProcessor(usd::UsdProcessor *proc)
     delete proc;
 }
 
-PrimList *BuildPrimList(usd::UsdProcessor *proc)
+PrimList *BuildPrimList(usd::UsdProcessor *proc, bool useDefaultPrim)
 {
     PrimList *list = new PrimList();
-    proc->flatten(*list);
+    proc->flatten(*list, useDefaultPrim);
     return list;
 }
 

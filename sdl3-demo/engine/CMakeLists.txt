@@ -162,7 +162,7 @@ target_include_directories(engine
 
 # tooling specific
 if (EXECUTION_MODE STREQUAL "TOOLING")
-    find_package(pxr REQUIRED SYSTEM)
+    find_package(pxr REQUIRED)
     find_package(cppzmq REQUIRED)
 
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
