@@ -4,7 +4,7 @@
 #include <zmq.hpp>
 #include <tooling/usd/usdprocessor.h>
 
-EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
+EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
     m_usdProcessor = std::make_unique<usd::UsdProcessor>(nullptr);
@@ -23,131 +23,54 @@ EngineWorker::~EngineWorker()
 void EngineWorker::start()
 {
     m_listening = true;
-    const std::string engineUrl = "NUBEEngine";
+    zmq::context_t ctx;
 
-    // pull socket for high-frequency, low-latency data
-    m_pullThread = std::thread([this, engineUrl]()
+    m_pullThread = std::thread([this, &ctx]()
     {
-        HANDLE hPipe = CreateNamedPipeA(std::format("\\\\.\\pipe\\{}", engineUrl).c_str(),
-                                        PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-                                        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
-                                        1, 1024 * 64, 1024 * 64, 0, NULL);
+        zmq::socket_t sub(ctx, zmq::socket_type::sub);
+        sub.connect(std::format("{}-EditorPub", url));
+        sub.set(zmq::sockopt::subscribe, "");
+		sub.set(zmq::sockopt::rcvtimeo, 100);
 
-        OVERLAPPED ov{};
-        ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-
-        // perform async connect
-        BOOL connected = ConnectNamedPipe(hPipe, &ov);
-        if (!connected)
-        {
-            if (GetLastError() == ERROR_IO_PENDING)
-            {
-                WaitForSingleObject(ov.hEvent, INFINITE);
-            }
-            else
-            {
-                CloseHandle(ov.hEvent);
-                CloseHandle(hPipe);
-                return;
-            }
-        }
-        ResetEvent(ov.hEvent);
-
-        Logger::info(this, "Engine runtime server started, listening for incoming commands...");
         while (m_listening)
         {
-            constexpr size_t headerSize{sizeof(uint32_t)};
-            constexpr size_t bufferSize{1024uz * 64uz};
-            uint8_t buffer[bufferSize];
-            uint32_t msgSize = 0;
-            DWORD bytesRead = 0;
-
-            // read the message size, followed by the payload
-            BOOL success = ReadFile(hPipe, &msgSize, headerSize, &bytesRead, &ov);
-            if (!success)
+            zmq::message_t msg;
+            auto result = sub.recv(msg, zmq::recv_flags::none);
+            if (result.has_value() && result.value() > 0)
             {
-                if (GetLastError() == ERROR_IO_PENDING)
+                using namespace NUBE::Interop;
+                auto envelope = Piped::GetPipedEnvelope(msg.data());
+                switch (envelope->payload_type())
                 {
-                    WaitForSingleObject(ov.hEvent, INFINITE);
-                    if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
+                    case Piped::PipedMessage_KeyboardEvent:
                     {
+						Logger::info(this, "Received keyboard event from editor");
+                        const Piped::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
+                        if (keyEvent->is_down())
+                        {
+                            pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+                        }
+                        else
+                        {
+                            pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+                        }
                         break;
                     }
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (bytesRead != headerSize)
-            {
-                Logger::error(this, "Invalid header size read");
-                break;
-            }
-
-            ResetEvent(ov.hEvent);
-            // read payload
-            success = ReadFile(hPipe, &buffer, msgSize, &bytesRead, &ov);
-            if (!success)
-            {
-                if (GetLastError() == ERROR_IO_PENDING)
-                {
-                    WaitForSingleObject(ov.hEvent, INFINITE);
-                    if (!GetOverlappedResult(hPipe, &ov, &bytesRead, false))
+                    case Piped::PipedMessage::PipedMessage_MouseMoveEvent:
                     {
+                        const auto* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
+                        pushEvent(MouseMoveEvent{
+                            .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
+                            .yRel = mouseMoveEvent->y_rel()
+                        });
                         break;
                     }
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // message read incomplete
-            if (bytesRead != msgSize)
-            {
-                Logger::error(this, "Invalid message size read");
-                break;
-            }
-
-            // handle specific message
-            using namespace NUBE::Interop;
-            auto envelope = Piped::GetPipedEnvelope(buffer);
-            switch (envelope->payload_type())
-            {
-                case Piped::PipedMessage_KeyboardEvent:
-                {
-                    const Piped::KeyboardEvent *keyEvent = envelope->payload_as_KeyboardEvent();
-                    if (keyEvent->is_down())
+                    default:
                     {
-                        pushEvent(KeyDown{.scancode = keyEvent->scancode()});
                     }
-                    else
-                    {
-                        pushEvent(KeyUp{.scancode = keyEvent->scancode()});
-                    }
-                    break;
-                }
-                case Piped::PipedMessage::PipedMessage_MouseMoveEvent:
-                {
-                    const auto *mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
-                    pushEvent(MouseMoveEvent{
-                        .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
-                        .yRel = mouseMoveEvent->y_rel()
-                    });
-                    break;
-                }
-                default:
-                {
                 }
             }
         }
-        CancelIoEx(hPipe, nullptr);
-        CloseHandle(hPipe);
-        CloseHandle(ov.hEvent);
-        Logger::info(this, "Engine runtime server finished.");
     });
     if (m_pullThread.joinable())
     {
@@ -155,11 +78,11 @@ void EngineWorker::start()
     }
 
     // create socket for engine->tooling data
-    zmq::context_t ctx;
-    zmq::socket_t rep = zmq::socket_t(ctx, ZMQ_REP);
+    zmq::socket_t rep = zmq::socket_t(ctx, zmq::socket_type::rep);
     rep.bind(url);
-    
-    const auto ack = [&rep] {
+
+    const auto ack = [&rep]
+    {
         zmq::message_t response("ACK");
         rep.send(response, zmq::send_flags::none);
     };
@@ -185,7 +108,7 @@ void EngineWorker::start()
                     flatbuffers::FlatBufferBuilder builder(1024);
                     auto initDetails = CreateInitializationDetails(builder, texHandles.size(),
                                                                    builder.CreateVector(texHandles),
-                                                                   builder.CreateString(engineUrl));
+                                                                   builder.CreateString("ipc://"));
 
                     auto env = CreateEngineEnvelope(builder, EngineMessage_InitializationDetails, initDetails.Union());
                     builder.Finish(env);
@@ -218,14 +141,14 @@ void EngineWorker::start()
                 }
                 case EditorMessage_USD_CreateStageCommand:
                 {
-                    const auto *e = envelope->payload_as_USD_CreateStageCommand();
+                    const auto* e = envelope->payload_as_USD_CreateStageCommand();
                     m_usdProcessor->createStage(e->path()->str());
                     ack();
                     break;
                 }
-            case EditorMessage_USD_OpenStageCommand:
+                case EditorMessage_USD_OpenStageCommand:
                 {
-					const auto *e = envelope->payload_as_USD_OpenStageCommand();
+                    const auto* e = envelope->payload_as_USD_OpenStageCommand();
                     m_usdProcessor->openStage(e->path()->str());
                     ack();
                     break;
@@ -238,13 +161,13 @@ void EngineWorker::start()
                 }
                 case EditorMessage_USD_AddLayerCommand:
                 {
-                    const auto *e = envelope->payload_as_USD_AddLayerCommand();
+                    const auto* e = envelope->payload_as_USD_AddLayerCommand();
                     ack();
                     break;
                 }
                 case EditorMessage_USD_AddPrimCommand:
                 {
-                    const auto *e = envelope->payload_as_USD_AddPrimCommand();
+                    const auto* e = envelope->payload_as_USD_AddPrimCommand();
                     ack();
                     break;
                 }
@@ -294,23 +217,23 @@ void EngineWorker::start()
 void EngineWorker::processEvents()
 {
     PlatformEvent e;
-    Services &serv = m_engine->services();
+    Services& serv = m_engine->services();
     while (eventBuffer.get(e))
     {
         // handle external events
         if (std::holds_alternative<KeyDown>(e))
         {
-            const KeyDown &keyEvent = std::get<KeyDown>(e);
+            const KeyDown& keyEvent = std::get<KeyDown>(e);
             serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<KeyUp>(e))
         {
-            const KeyUp &keyEvent = std::get<KeyUp>(e);
+            const KeyUp& keyEvent = std::get<KeyUp>(e);
             serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
-            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
+            const MouseMoveEvent& mouseEvent = std::get<MouseMoveEvent>(e);
             serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
                                                         mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }
@@ -348,14 +271,14 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<usd::BakeStageEvent>(e))
         {
             NodeHandle hRoot = m_engine->application().getRoot();
-            Node &root = serv.world().getNode(hRoot);
+            Node& root = serv.world().getNode(hRoot);
             m_usdProcessor->bakeStage(root, serv);
             //serv.eventQueue().enqueue<usd::BakeStageEvent>(NodeHandle{}, 0, m_usdProcessor.get());
         }
     }
 }
 
-void EngineWorker::pushEvent(const PlatformEvent &event)
+void EngineWorker::pushEvent(const PlatformEvent& event)
 {
     eventBuffer.add(event);
 }

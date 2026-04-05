@@ -86,8 +86,7 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
 {
     zmq::message_t msg;
     auto result = socket->recv(msg, zmq::recv_flags::none);
-    if (result.has_value())
-    {
+    if (result.has_value()) {
         memcpy(buffer, msg.data(), result.value());
         return result.value();
     }
