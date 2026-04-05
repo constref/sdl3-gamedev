@@ -30,7 +30,7 @@ DLL_API void DestroyPrimList(PrimList *list);
 
 DLL_API zmq::context_t* CreateContext();
 DLL_API void DestroyContext(zmq::context_t *context);
-DLL_API zmq::socket_t* CreateRequestSocket(zmq::context_t *context);
+DLL_API zmq::socket_t* CreateSocket(zmq::context_t *context, int socketType);
 DLL_API void BindSocket(zmq::socket_t *socket, const char *address);
 DLL_API void ConnectSocket(zmq::socket_t *socket, const char *address);
 DLL_API void DestroySocket(zmq::socket_t *socket);

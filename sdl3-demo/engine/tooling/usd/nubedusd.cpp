@@ -55,9 +55,9 @@ void DestroyContext(zmq::context_t *context)
     delete context;
 }
 
-zmq::socket_t *CreateRequestSocket(zmq::context_t *context)
+zmq::socket_t *CreateSocket(zmq::context_t *context, int socketType)
 {
-    zmq::socket_t *socket = new zmq::socket_t(*context, ZMQ_REQ);
+    zmq::socket_t *socket = new zmq::socket_t(*context, socketType);
     return socket;
 }
 
