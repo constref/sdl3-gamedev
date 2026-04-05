@@ -4,6 +4,7 @@ _projectStage: Usd.Stage | None = None
 
 
 def create_project(path):
+    global _projectStage
     _projectStage = Usd.Stage.CreateNew(path)
     _projectStage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
     _projectStage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)

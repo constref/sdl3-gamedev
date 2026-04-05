@@ -201,6 +201,6 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/nubedusd.cpp"
 	)
 
-	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom)
+	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom cppzmq)
 
 endif()
