@@ -15,3 +15,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory("sdl3-demo/engine")
 add_subdirectory("sdl3-demo/demos/empty")
+add_subdirectory("sdl3-demo/demos/platformer")

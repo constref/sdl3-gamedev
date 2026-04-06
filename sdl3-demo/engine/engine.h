@@ -23,6 +23,7 @@
 #include <systems/d3d12/d3d12rendersystem.h>
 #include <prototypeinstancer.h>
 #include <executionmode.h>
+#include <rendering/renderer.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -50,15 +51,14 @@ class Engine
     PrototypeInstancer protoInstancer;
     Services m_services;
     SDLState sdlState;
-    d3d12rs::D3D12RenderSystem *d3d12Renderer;
-    vks::VulkanRenderSystem *vkRenderer;
+    Renderer *renderer;
 
 public:
     Engine(std::unique_ptr<Application> app);
     ~Engine();
 
     bool initialize(int logW, int logH, int width, int height);
-    d3d12rs::D3D12RenderSystem* getRenderer() const;
+    Renderer *getRenderer() const;
     Services& services();
     void cleanup();
     void run();

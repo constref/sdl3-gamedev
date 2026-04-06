@@ -43,21 +43,23 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     m_services.compSys().registerSystem(std::make_unique<PhysicsSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<CollisionSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(m_services));
-    auto &renderSys = m_services.compSys().registerSystem(
-        std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, window, width, height, logW, logH));
+    
+    // D3D 12
+    // auto &renderSys = m_services.compSys().registerSystem(
+    //     std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, window, width, height, logW, logH));
+    // if (!renderSys.initialize())
+    // {
+    //     return false;
+    // }
+    // renderer = &renderSys;
+    // m_services.compSys().registerSystem(std::make_unique<EngineSystem>(m_services, *this));
+
+    auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(window, width, height, logW, logH, m_services));
     if (!renderSys.initialize())
     {
-        return false;
+    	return false;
     }
-    d3d12Renderer = &renderSys;
-    m_services.compSys().registerSystem(std::make_unique<EngineSystem>(m_services, *this));
-
-    //auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(sdlState.window, sdlState.width, sdlState.height, sdlState.logW, sdlState.logH, m_services));
-    //if (!renderSys.initialize())
-    //{
-    //	return false;
-    //}
-    //vkRenderer = &renderSys;
+    renderer = &renderSys;
 
     // initialize and start the app
     if (!m_app->initialize(m_services, sdlState))
@@ -68,14 +70,14 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     m_app->start(m_services, sdlState);
 
     // TODO: This should move
-    //renderSys.updateTextures();
+    renderer->updateGPUTextures();
 
     return true;
 }
 
-d3d12rs::D3D12RenderSystem* Engine::getRenderer() const
+Renderer *Engine::getRenderer() const
 {
-    return d3d12Renderer;
+    return renderer;
 }
 
 Services& Engine::services()

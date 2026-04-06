@@ -1,6 +1,7 @@
 #include "windowingsystem.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include <messaging/events.h>
 #include <inputstate.h>
 #include "tooling/events.h"
@@ -37,7 +38,7 @@ bool WindowingSystem::initialize(int width, int height)
         return false;
     }
 
-    m_window = SDL_CreateWindow("NUBE Engine", width, height, SDL_WINDOW_RESIZABLE);
+    m_window = SDL_CreateWindow("NUBE Engine", width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
     if (!m_window)
     {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", nullptr);
