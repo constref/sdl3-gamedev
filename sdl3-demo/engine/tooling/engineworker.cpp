@@ -173,45 +173,15 @@ void EngineWorker::start()
                 }
                 case EditorMessage_USD_BakeStageCommand:
                 {
+                    m_usdProcessor->openStage("C:/Users/nikol/Documents/maya/projects/USD concept/usd/suzanne.usda");
                     pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
                     ack();
                     break;
                 }
-                default:
-                {
-                    Logger::error(this, "Unrecognized command received by editor");
-                };
+                default: Logger::error(this, "Unrecognized command received by editor");
             }
         }
     }
-
-
-    // Push data into editor for INIT
-    /*
-        HANDLE hPipe = CreateFile(TEXT("\\\\.\\pipe\\NUBEEditor"), GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-        if (hPipe != INVALID_HANDLE_VALUE)
-        {
-            using namespace NUBE::Interop;
-            std::vector<uint64_t> texHandles = engine->getRenderer()->getSharedTextureHandles(editorPID);
-
-            auto* builder = new flatbuffers::FlatBufferBuilder(1024);
-            auto initDetails = NUBE::Interop::CreateInitializationDetails(*builder,
-                                                                          texHandles.size(),
-                                                                          builder->CreateVector(texHandles),
-                                                                          builder->CreateString(engineUrl)
-            );
-
-            auto msg = NUBE::Interop::CreateEditorEnvelope(*builder, EditorMessage::EditorMessage_InitializationDetails,
-                                                           initDetails.Union());
-            builder->FinishSizePrefixed(msg);
-            auto span = builder->GetBufferSpan();
-
-            DWORD bytesWritten = 0;
-            BOOL success = WriteFile(hPipe, span.data(), span.size(), &bytesWritten, NULL);
-            delete builder;
-        }
-    }
-    */
 }
 
 void EngineWorker::processEvents()
