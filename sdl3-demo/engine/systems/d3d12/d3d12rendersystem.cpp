@@ -970,5 +970,4 @@ void D3D12RenderSystem::flushGPU()
 
 void D3D12RenderSystem::updateGPUTextures()
 {
-	throw std::logic_error("The method or operation is not implemented.");
 }
