@@ -17,6 +17,7 @@
 #include <resourceid.h>
 #include <nodehandle.h>
 #include <messaging/events.h>
+#include <rendering/renderer.h>
 
 struct SDL_Window;
 struct VmaAllocator_T;
@@ -155,7 +156,7 @@ struct Barrier
 	uint32_t dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 };
 
-class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>
+class VulkanRenderSystem : public System<FrameStage::Render, SpriteComponent>, public Renderer
 {
 public:
 	constexpr static uint32_t VulkanVersion{ VK_API_VERSION_1_4 };
@@ -293,10 +294,10 @@ public:
 	void endFrame() override;
 
 	ResourceId loadTexture(const std::string &filepath, bool flipY = false);
-	void updateTextures();
+	void updateGPUTextures() override;
 
 	// tooling related methods
-	std::vector<uint64_t> getSharedTextureHandles(int editorPID) const;
+	std::vector<uint64_t> getSharedTextureHandles(int editorPID) const override;
 	intptr_t exportWorkCompleteSemaphore(uint32_t index) const;
 	intptr_t exportImageReadySemaphore(uint32_t index) const;
 

@@ -8,6 +8,7 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include <rendering/mesh.h>
+#include <rendering/renderer.h>
 
 #include <d3d11on12.h>
 
@@ -88,7 +89,7 @@ struct FrameResources
 	std::vector<DrawOperation> drawOperations;
 };
 
-class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>
+class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, public Renderer
 {
 	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	constexpr static inline DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
@@ -199,7 +200,9 @@ public:
 	void setViewMatrix(const DirectX::XMMATRIX &viewMatrix);
 	void setCamPosition(float x, float y, float z);
 	void setCamDirection(float x, float y, float z);
-	std::vector<uint64_t> getSharedTextureHandles(int editorPID);
+	std::vector<uint64_t> getSharedTextureHandles(int editorPID) const override;
+	void updateGPUTextures() override;
+
 };
 
 }

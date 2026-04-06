@@ -2505,7 +2505,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderSystem::debugCallback(
 	return VK_FALSE;
 }
 
-void VulkanRenderSystem::updateTextures()
+void VulkanRenderSystem::updateGPUTextures()
 {
 	std::vector<VkDescriptorImageInfo> descriptorWrites;
 	descriptorWrites.reserve(images.size());

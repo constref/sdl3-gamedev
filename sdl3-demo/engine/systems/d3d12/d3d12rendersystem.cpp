@@ -364,7 +364,8 @@ void D3D12RenderSystem::setCamDirection(float x, float y, float z)
 {
     m_camDirection = XMFLOAT4(x, y, z, 0.0f);
 }
-std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID)
+
+std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID) const
 {
     assert(editorPID != 0 && "Tooling PID cannot be 0");
     HANDLE editorProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, editorPID);
@@ -965,4 +966,9 @@ void D3D12RenderSystem::flushGPU()
         }
         ::WaitForSingleObject(m_fenceEvent, UINT_MAX);
     }
+}
+
+void D3D12RenderSystem::updateGPUTextures()
+{
+	throw std::logic_error("The method or operation is not implemented.");
 }
