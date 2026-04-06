@@ -25,12 +25,13 @@ void EngineWorker::start()
     m_listening = true;
     zmq::context_t ctx;
 
+    // subscribe to editor event publisher
     m_pullThread = std::thread([this, &ctx]()
     {
         zmq::socket_t sub(ctx, zmq::socket_type::sub);
         sub.connect(std::format("{}-EditorPub", url));
         sub.set(zmq::sockopt::subscribe, "");
-		sub.set(zmq::sockopt::rcvtimeo, 100);
+		sub.set(zmq::sockopt::rcvtimeo, 1000);
 
         while (m_listening)
         {
@@ -44,7 +45,6 @@ void EngineWorker::start()
                 {
                     case Piped::PipedMessage_KeyboardEvent:
                     {
-						Logger::info(this, "Received keyboard event from editor");
                         const Piped::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
                         if (keyEvent->is_down())
                         {
@@ -65,9 +65,7 @@ void EngineWorker::start()
                         });
                         break;
                     }
-                    default:
-                    {
-                    }
+                    default: break;
                 }
             }
         }
@@ -87,6 +85,7 @@ void EngineWorker::start()
         rep.send(response, zmq::send_flags::none);
     };
 
+    // incoming editor requests
     while (m_listening)
     {
         zmq::message_t request;
@@ -100,7 +99,7 @@ void EngineWorker::start()
             {
                 case EditorMessage_EngineStartupCommand:
                 {
-                    m_engine->initialize(1920, 1080, 1920, 1080);
+                    m_engine->initialize(512, 288, 512, 288);
                     // shared handles for GPU interop
                     std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
 
@@ -125,7 +124,6 @@ void EngineWorker::start()
                             m_engine->step();
                         }
                         m_engine->cleanup();
-                        Logger::info(this, "Engine worker shutting down");
                     });
                     break;
                 }
@@ -136,38 +134,6 @@ void EngineWorker::start()
                     {
                         m_engineThread.detach();
                     }
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_CreateStageCommand:
-                {
-                    const auto* e = envelope->payload_as_USD_CreateStageCommand();
-                    m_usdProcessor->createStage(e->path()->str());
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_OpenStageCommand:
-                {
-                    const auto* e = envelope->payload_as_USD_OpenStageCommand();
-                    m_usdProcessor->openStage(e->path()->str());
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_SaveStageCommand:
-                {
-                    m_usdProcessor->saveStage();
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_AddLayerCommand:
-                {
-                    const auto* e = envelope->payload_as_USD_AddLayerCommand();
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_AddPrimCommand:
-                {
-                    const auto* e = envelope->payload_as_USD_AddPrimCommand();
                     ack();
                     break;
                 }
