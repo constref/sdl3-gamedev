@@ -405,7 +405,7 @@ void UsdProcessor::createStage(const std::string& path)
 
 void UsdProcessor::openStage(const std::string& usdPath)
 {
-    auto stage = pxr::UsdStage::Open(usdPath);
+    UsdStageRefPtr stage = pxr::UsdStage::Open(usdPath);
     m_usdMembers->setStage(stage);
 }
 
