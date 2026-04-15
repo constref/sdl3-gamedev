@@ -1,35 +1,43 @@
 from pxr import Usd, UsdGeom, Tf
 
+class StageProxy:
+    stage: Usd.Stage
+    listener: Tf.Notice.Listener | None
 
-def create_project(path):
-    project_stage = Usd.Stage.CreateNew(path)
-    project_stage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
-    project_stage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)
-    project_stage.DefinePrim("/Library/Brushes", UsdGeom.Tokens.Scope)
-    world = project_stage.DefinePrim("/World", UsdGeom.Tokens.Xform)
-    project_stage.SetDefaultPrim(world)
-    return project_stage
+    def __init__(self, stage: Usd.Stage, delegate):
+        self.stage = stage
+        self.delegate = delegate
+        self.listener = Tf.Notice.Register(Usd.Notice.ObjectsChanged, self.on_objects_changed, stage)
 
+    def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
+        path_list = [p.pathString for p in notice.GetResyncedPaths()]
+        self.delegate(path_list)
 
-def open_project(path):
-    project_stage = Usd.Stage.Open(path)
-    return project_stage
+    def revoke(self):
+        if self.listener:
+            self.listener.Revoke()
+            self.listener = None
 
+def create_project(path, delegate):
+    stage = Usd.Stage.CreateNew(path)
+    stage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
+    stage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)
+    stage.DefinePrim("/Library/Brushes", UsdGeom.Tokens.Scope)
+    world = stage.DefinePrim("/World", UsdGeom.Tokens.Xform)
+    stage.SetDefaultPrim(world)
 
-def save_project(stage: Usd.Stage):
-    stage.Save()
+    return StageProxy(stage, delegate)
 
+def open_project(path, delegate):
+    stage = Usd.Stage.Open(path)
+    return StageProxy(stage, delegate)
 
-def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
-    print("Stage updated")
-
-def listen_on_stage(stage: Usd.Stage):
-    return Tf.Notice.Register(Usd.Notice.ObjectsChanged, )
+def save_project(stage_proxy: StageProxy):
+    stage_proxy.stage.Save()
 
 def open_stage(path):
     stage = Usd.Stage.Open(path)
     return stage
-
 
 class PrimId:
     value: int
@@ -39,7 +47,6 @@ class PrimId:
 
     def inc(self):
         self.value += 1
-
 
 class Prim:
     id: PrimId
@@ -58,7 +65,6 @@ class Prim:
     def __repr__(self):
         return f"Prim(id={self.id.value}, name={self.name}, type={self.type}, path={self.path} parent_id={self.parent_id.value})"
 
-
 def flatten_prim(
     prim: Usd.Prim, parent_id: PrimId, flat_list: list[Prim], current_id: PrimId
 ):
@@ -74,7 +80,6 @@ def flatten_prim(
         flat_list.append(child_prim)
         current_id.inc()
         flatten_prim(child, child_prim.id, flat_list, current_id)
-
 
 def build_flat_list(stage: Usd.Stage):
     flat_list: list[Prim] = []
@@ -94,10 +99,9 @@ def build_flat_list(stage: Usd.Stage):
     flatten_prim(root, root_prim.id, flat_list, current_id)
     return flat_list
 
-
-def add_mesh(stage: Usd.Stage, asset_path, prim_path):
+def add_mesh(proxy: StageProxy, asset_path, prim_path):
     asset_stage = Usd.Stage.Open(asset_path)
     prim = asset_stage.GetPrimAtPath(prim_path)
 
-    new_prim = stage.DefinePrim(f"/Library/Meshes/{prim.GetName()}")
+    new_prim = proxy.stage.DefinePrim(f"/Library/Meshes/{prim.GetName()}")
     new_prim.GetReferences().AddReference(asset_path, prim_path)

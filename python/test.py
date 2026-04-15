@@ -4,47 +4,44 @@ from typing import Optional
 from pxr import Tf, Usd
 
 import usd
+from usd import StageProxy
 
 
 class UsdTester:
-    stage: Optional[Usd.Stage]
-    listener: Optional[Tf.Notice.Listener]
+    proxy: Optional[StageProxy]
 
     def __init__(self):
-        self.stage = None
+        self.proxy = None
 
-    def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
-        print("Stage changed")
+    def on_objects_changed(self, list):
+        pprint.pprint(list)
 
     def main_menu(self):
-        print("USD Main Menu")
+        print("\nUSD Main Menu")
         print("create, open, exit")
 
         ans = input("Command:> ")
         if ans == "create":
             file_path = input("Create project:> ")
-            self.stage = usd.create_project(file_path)
-            self.listener = Tf.Notice.Register(
-                Usd.Notice.ObjectsChanged, self.on_objects_changed, self.stage
-            )
+            self.proxy = usd.create_project(file_path, self.on_objects_changed)
             print("Project created")
         elif ans == "open":
             file_path = input("Open project:> ")
-            self.stage = usd.open_project(file_path)
+            self.proxy = usd.open_project(file_path, self.on_objects_changed)
         elif ans == "exit":
             return None
         return True
 
     def project_menu(self):
-        if self.stage:
-            print("Project Menu")
+        if self.proxy:
+            print("\nProject Menu")
             print("addm, addb, info, save, close")
 
             ans = input("Command:> ")
             if ans == "info":
                 pprint.pprint(self.stage)
             elif ans == "save":
-                usd.save_project(self.stage)
+                usd.save_project(self.proxy)
                 print("Project saved")
             elif ans == "close":
                 self.stage = None
@@ -56,12 +53,12 @@ class UsdTester:
                 prim_id = int(input("Enter prim id:> "))
                 prim = prim_list[prim_id - 1]
                 pprint.pprint(prim)
-                usd.add_mesh(self.stage, file_path, prim.path)
+                usd.add_mesh(self.proxy, file_path, prim.path)
                 print("Mesh added")
             elif ans == "addb":
                 print("Brush added")
             elif ans == "G":
-                flat_list = usd.build_flat_list(self.stage)
+                flat_list = usd.build_flat_list(self.proxy.stage)
                 pprint.pprint(flat_list)
             elif ans == "exit":
                 return None
@@ -72,7 +69,7 @@ class UsdTester:
     def show_menu(self):
         ans = True
         while ans:
-            if not self.stage:
+            if not self.proxy:
                 ans = self.main_menu()
             else:
                 ans = self.project_menu()
