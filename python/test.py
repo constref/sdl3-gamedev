@@ -1,28 +1,35 @@
 import pprint
+from typing import Optional
 
-from pxr import Usd
+from pxr import Tf, Usd
 
 import usd
 
 
 class UsdTester:
-    stage: Usd.Stage | None
+    stage: Optional[Usd.Stage]
+    listener: Optional[Tf.Notice.Listener]
 
     def __init__(self):
         self.stage = None
 
+    def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
+        print("Stage changed")
+
     def main_menu(self):
-        print("""
-        C. Create Project
-        O. Open Project
-        """)
-        ans = input("Make a selection: ")
-        if ans == "C":
-            file_path = input("Enter path: ")
+        print("USD Main Menu")
+        print("create, open, exit")
+
+        ans = input("Command:> ")
+        if ans == "create":
+            file_path = input("Create project:> ")
             self.stage = usd.create_project(file_path)
+            self.listener = Tf.Notice.Register(
+                Usd.Notice.ObjectsChanged, self.on_objects_changed, self.stage
+            )
             print("Project created")
-        elif ans == "O":
-            file_path = input("Enter path: ")
+        elif ans == "open":
+            file_path = input("Open project:> ")
             self.stage = usd.open_project(file_path)
         elif ans == "exit":
             return None
@@ -30,13 +37,10 @@ class UsdTester:
 
     def project_menu(self):
         if self.stage:
-            print("""
-            M. Add Mesh
-            B. Add Brush
-            G. Graph
-            """)
+            print("Project Menu")
+            print("addm, addb, info, save, close")
 
-            ans = input("Make a selection: ")
+            ans = input("Command:> ")
             if ans == "info":
                 pprint.pprint(self.stage)
             elif ans == "save":
@@ -44,21 +48,17 @@ class UsdTester:
                 print("Project saved")
             elif ans == "close":
                 self.stage = None
-            elif ans == "S":
-                usd.save_project(self.stage)
-                print("Project saved")
-            elif ans == "M":
-                file_path = input("Enter File Path: ")
+            elif ans == "addm":
+                file_path = input("Enter file path:> ")
                 stage = usd.open_stage(file_path)
                 prim_list = usd.build_flat_list(stage)
                 pprint.pprint(prim_list)
-                prim_id = int(input("Enter Prim Id: "))
+                prim_id = int(input("Enter prim id:> "))
                 prim = prim_list[prim_id - 1]
                 pprint.pprint(prim)
                 usd.add_mesh(self.stage, file_path, prim.path)
-
                 print("Mesh added")
-            elif ans == "B":
+            elif ans == "addb":
                 print("Brush added")
             elif ans == "G":
                 flat_list = usd.build_flat_list(self.stage)

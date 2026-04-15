@@ -1,4 +1,4 @@
-from pxr import Usd, UsdGeom
+from pxr import Usd, UsdGeom, Tf
 
 
 def create_project(path):
@@ -19,6 +19,12 @@ def open_project(path):
 def save_project(stage: Usd.Stage):
     stage.Save()
 
+
+def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
+    print("Stage updated")
+
+def listen_on_stage(stage: Usd.Stage):
+    return Tf.Notice.Register(Usd.Notice.ObjectsChanged, )
 
 def open_stage(path):
     stage = Usd.Stage.Open(path)
@@ -62,7 +68,7 @@ def flatten_prim(
             PrimId(current_id.value),
             PrimId(parent_id.value),
             child.GetName(),
-            child.GetPath(),
+            child.GetPath().pathString,
             child.GetTypeName(),
         )
         flat_list.append(child_prim)
@@ -79,7 +85,7 @@ def build_flat_list(stage: Usd.Stage):
         PrimId(current_id.value),
         PrimId(0),
         root.GetName(),
-        root.GetPath(),
+        root.GetPath().pathString,
         root.GetTypeName(),
     )
     flat_list.append(root_prim)
