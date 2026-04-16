@@ -105,3 +105,8 @@ def add_mesh(proxy: StageProxy, asset_path, prim_path):
 
     new_prim = proxy.stage.DefinePrim(f"/Library/Meshes/{prim.GetName()}")
     new_prim.GetReferences().AddReference(asset_path, prim_path)
+
+def add_brush(proxy: StageProxy, mesh_path):
+    mesh = proxy.stage.GetPrimAtPath(mesh_path)
+    brush = proxy.stage.DefinePrim(f"/Library/Brushes/brush_{mesh.GetName()}")
+    brush.GetReferences().AddInternalReference(mesh.GetPath())
