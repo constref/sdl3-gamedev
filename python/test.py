@@ -23,11 +23,16 @@ class UsdTester:
         ans = input("Command:> ")
         if ans == "create":
             file_path = input("Create project:> ")
-            self.proxy = usd.create_project(file_path, self.on_objects_changed)
+            stage = usd.create_project(file_path)
+            self.proxy = usd.create_proxy(stage)
+            usd.register_listener(self.proxy, self.on_objects_changed)
             print("Project created")
         elif ans == "open":
             file_path = input("Open project:> ")
-            self.proxy = usd.open_project(file_path, self.on_objects_changed)
+            stage = usd.open_project(file_path)
+            self.proxy = usd.create_proxy(stage)
+            usd.register_listener(self.proxy, self.on_objects_changed)
+            print("Project opened")
         elif ans == "exit":
             return None
         return True

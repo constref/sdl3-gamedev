@@ -1,36 +1,45 @@
-from pxr import Usd, UsdGeom, Tf
+from pxr import Usd, UsdGeom, Tf, Sdf
 
 class StageProxy:
     stage: Usd.Stage
     listener: Tf.Notice.Listener | None
 
-    def __init__(self, stage: Usd.Stage, delegate):
+    def __init__(self, stage: Usd.Stage):
         self.stage = stage
-        self.delegate = delegate
-        self.listener = Tf.Notice.Register(Usd.Notice.ObjectsChanged, self.on_objects_changed, stage)
+        self.delegate = None
 
     def on_objects_changed(self, notice: Usd.Notice.ObjectsChanged, stage: Usd.Stage):
-        path_list = [p.pathString for p in notice.GetResyncedPaths()]
-        self.delegate(path_list)
+        if self.delegate:
+            path_list = [p.pathString for p in notice.GetResyncedPaths()]
+            self.delegate(path_list)
 
     def revoke(self):
         if self.listener:
             self.listener.Revoke()
             self.listener = None
 
-def create_project(path, delegate):
+    def get_prim(self, path):
+        prim = self.stage.GetPrimAtPath(path)
+        return Prim(None, None, prim.GetName(), path, prim.GetTypeName())
+
+def create_project(path):
     stage = Usd.Stage.CreateNew(path)
     stage.DefinePrim("/Library", UsdGeom.Tokens.Scope)
     stage.DefinePrim("/Library/Meshes", UsdGeom.Tokens.Scope)
     stage.DefinePrim("/Library/Brushes", UsdGeom.Tokens.Scope)
     world = stage.DefinePrim("/World", UsdGeom.Tokens.Xform)
     stage.SetDefaultPrim(world)
+    return stage
 
-    return StageProxy(stage, delegate)
+def open_project(path):
+    return Usd.Stage.Open(path)
 
-def open_project(path, delegate):
-    stage = Usd.Stage.Open(path)
-    return StageProxy(stage, delegate)
+def create_proxy(stage: Usd.Stage):
+    return StageProxy(stage)
+
+def register_listener(proxy: StageProxy, delegate):
+    proxy.delegate = delegate
+    proxy.listener = Tf.Notice.Register(Usd.Notice.ObjectsChanged, proxy.on_objects_changed, proxy.stage)
 
 def save_project(stage_proxy: StageProxy):
     stage_proxy.stage.Save()
@@ -102,9 +111,13 @@ def build_flat_list(stage: Usd.Stage):
 def add_mesh(proxy: StageProxy, asset_path, prim_path):
     asset_stage = Usd.Stage.Open(asset_path)
     prim = asset_stage.GetPrimAtPath(prim_path)
+    mesh_path = f"/Library/Meshes/{prim.GetName()}"
 
-    new_prim = proxy.stage.DefinePrim(f"/Library/Meshes/{prim.GetName()}")
-    new_prim.GetReferences().AddReference(asset_path, prim_path)
+    with Sdf.ChangeBlock():
+        layer = proxy.stage.GetEditTarget().GetLayer()
+        spec = Sdf.CreatePrimInLayer(layer, mesh_path)
+        ref = Sdf.Reference(asset_path, prim_path)
+        spec.referenceList.Add(ref)
 
 def add_brush(proxy: StageProxy, mesh_path):
     mesh = proxy.stage.GetPrimAtPath(mesh_path)
