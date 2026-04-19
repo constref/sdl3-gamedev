@@ -2,8 +2,7 @@
 #find_package(SDL3_mixer REQUIRED)
 find_package(glm REQUIRED)
 find_package(tinyxml2 REQUIRED)
-find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
-find_package(flatbuffers REQUIRED)
+find_package(Vulkan REQUIRED volk shaderc_combined)
 find_package(DirectX-Headers REQUIRED)
 set(CMAKE_CXX_STANDARD 23)
 
@@ -152,7 +151,6 @@ target_link_libraries(engine PUBLIC
 	Vulkan::shaderc_combined
 	glm::glm
 	tinyxml2::tinyxml2
-	flatbuffers::flatbuffers
 	dxgi d3d11 d3d12 d3dcompiler
 	Microsoft::DirectX-Headers
 )
@@ -168,7 +166,10 @@ target_include_directories(engine
 if (EXECUTION_MODE STREQUAL "TOOLING")
     find_package(pxr REQUIRED)
     find_package(cppzmq REQUIRED)
+	find_package(flatbuffers REQUIRED)
+	find_package(Protobuf CONFIG REQUIRED)
 
+	set(PROTOBUF_DIR ${CMAKE_SOURCE_DIR}/protobuf/cpp)
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
 
@@ -189,11 +190,16 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/usd/events.h"
 		"tooling/usd/usdlogger.cpp"
 		"tooling/usd/usdlogger.h"
+		"${PROTOBUF_DIR}/nube.pb.cc"
+		"${PROTOBUF_DIR}/nube.pb.h"
 	)
 
-	target_include_directories(enginetooling PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+	target_include_directories(enginetooling
+		PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${PROTOBUF_DIR})
     target_link_libraries(enginetooling
-        PRIVATE engine cppzmq usd usdGeom usdImaging hd)
+        PRIVATE engine cppzmq usd usdGeom usdImaging hd flatbuffers::flatbuffers protobuf::libprotobuf)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)

@@ -1,7 +1,7 @@
 #include "usdprocessor.h"
 
-#include <unordered_map>
 #include <filesystem>
+#include <functional>
 
 #define NOMINMAX
 #include <pxr/base/tf/diagnosticMgr.h>

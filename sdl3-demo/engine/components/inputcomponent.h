@@ -3,7 +3,6 @@
 #include <DirectXMath.h>
 #include <glm/glm.hpp>
 #include <components/component.h>
-#include <nodehandle.h>
 
 class InputComponent : public Component
 {

@@ -1,0 +1,29 @@
+edition = "2023";
+
+package NUBE;
+
+option csharp_namespace = "AvaloniaEditor.Proto.NUBE";
+
+message EditorEnvelope {
+  oneof payload {
+    EngineStartupCommanad startup = 1;
+    KeyboardEvent keyboardEvent = 2;
+    MouseMoveEvent mouseMoveEvent = 3;
+  }
+}
+message EngineStartupCommanad {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
+message KeyboardEvent {
+  uint32 scancode = 1;
+  bool isDown = 2;
+}
+
+message MouseMoveEvent {
+  int32 x = 1;
+  int32 y = 2;
+  int32 xRel = 3;
+  int32 yRel = 4;
+}

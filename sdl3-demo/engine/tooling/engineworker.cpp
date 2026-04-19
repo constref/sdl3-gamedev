@@ -3,6 +3,7 @@
 #include <format>
 #include <zmq.hpp>
 #include <tooling/usd/usdprocessor.h>
+#include <nube.pb.h>
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
 {
@@ -39,33 +40,37 @@ void EngineWorker::start()
             auto result = sub.recv(msg, zmq::recv_flags::none);
             if (result.has_value() && result.value() > 0)
             {
-                using namespace NUBE::Interop;
-                auto envelope = Piped::GetPipedEnvelope(msg.data());
-                switch (envelope->payload_type())
+                NUBE::EditorEnvelope editorEnvelope;
+				bool parseSuccess = editorEnvelope.ParseFromArray(msg.data(), msg.size());
+                if (parseSuccess)
                 {
-                    case Piped::PipedMessage_KeyboardEvent:
+                    switch (editorEnvelope.payload_case())
                     {
-                        const Piped::KeyboardEvent* keyEvent = envelope->payload_as_KeyboardEvent();
-                        if (keyEvent->is_down())
+                        case NUBE::EditorEnvelope::kKeyboardEvent:
                         {
-                            pushEvent(KeyDown{ .scancode = keyEvent->scancode() });
+							const auto &keyEvent = editorEnvelope.keyboardevent();
+                            if (keyEvent.isdown())
+                            {
+                                pushEvent(KeyDown{ .scancode = keyEvent.scancode() });
+                            }
+                            else
+                            {
+                                pushEvent(KeyUp{ .scancode = keyEvent.scancode() });
+                            }
+                            break;
                         }
-                        else
+                        case NUBE::EditorEnvelope::kMouseMoveEvent:
                         {
-                            pushEvent(KeyUp{ .scancode = keyEvent->scancode() });
+							const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
+                            pushEvent(MouseMoveEvent {
+                                .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
+                                .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
+                            });
+                            break;
                         }
-                        break;
+                        case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
+                            break;
                     }
-                    case Piped::PipedMessage::PipedMessage_MouseMoveEvent:
-                    {
-                        const auto* mouseMoveEvent = envelope->payload_as_MouseMoveEvent();
-                        pushEvent(MouseMoveEvent{
-                            .x = mouseMoveEvent->x(), .y = mouseMoveEvent->y(), .xRel = mouseMoveEvent->x_rel(),
-                            .yRel = mouseMoveEvent->y_rel()
-                        });
-                        break;
-                    }
-                    default: break;
                 }
             }
         }
@@ -139,7 +144,7 @@ void EngineWorker::start()
                 }
                 case EditorMessage_USD_BakeStageCommand:
                 {
-                    m_usdProcessor->openStage("C:/Users/nikol/Documents/maya/projects/USD concept/usd/suzanne.usda");
+                    m_usdProcessor->openStage("C:/Users/nikol/Desktop/monkey.usda");
                     pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
                     ack();
                     break;

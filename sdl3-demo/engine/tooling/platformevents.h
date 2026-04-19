@@ -20,12 +20,12 @@ struct MouseButtonEvent
 
 struct KeyUp
 {
-	uint16_t scancode;
+	uint32_t scancode;
 };
 
 struct KeyDown
 {
-	uint16_t scancode;
+	uint32_t scancode;
 };
 
 struct ResizeEvent
