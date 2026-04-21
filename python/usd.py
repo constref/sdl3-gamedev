@@ -1,4 +1,5 @@
 from pxr import Usd, UsdGeom, Tf, Sdf
+import debugpy
 
 class StageProxy:
     stage: Usd.Stage
@@ -21,6 +22,45 @@ class StageProxy:
     def get_prim(self, path):
         prim = self.stage.GetPrimAtPath(path)
         return Prim(None, None, prim.GetName(), path, prim.GetTypeName())
+
+    def add_mesh(self, asset_path, prim_path):
+        asset_stage = Usd.Stage.Open(asset_path)
+        prim = asset_stage.GetPrimAtPath(prim_path)
+        mesh_path = f"/Library/Meshes/{prim.GetName()}"
+        with Sdf.ChangeBlock():
+            layer = self.stage.GetEditTarget().GetLayer()
+            spec = Sdf.CreatePrimInLayer(layer, mesh_path)
+            spec.specifier = Sdf.SpecifierDef
+            spec.typeName = UsdGeom.Tokens.Xform
+            ref = Sdf.Reference(assetPath=asset_path, primPath=prim_path)
+            spec.referenceList.Add(ref)
+
+    def add_brush(self, mesh_path):
+        mesh = self.stage.GetPrimAtPath(mesh_path)
+        brush_path = f"/Library/Brushes/{mesh.GetName()}"
+        with Sdf.ChangeBlock():
+            layer = self.stage.GetEditTarget().GetLayer()
+            spec = Sdf.CreatePrimInLayer(layer, brush_path)
+            spec.specifier = Sdf.SpecifierDef
+            spec.typeName = UsdGeom.Tokens.Xform
+            ref = Sdf.Reference("", primPath=mesh.GetPath())
+            spec.referenceList.Add(ref)
+
+    def place_brush(self, brush_path):
+        brush = self.stage.GetPrimAtPath(brush_path)
+
+        with Sdf.ChangeBlock():
+            layer = self.stage.GetEditTarget().GetLayer()
+            spec = Sdf.CreatePrimInLayer(layer, f"/World/{brush.GetName()}_001")
+            spec.specifier = Sdf.SpecifierDef
+            spec.typeName = UsdGeom.Tokens.Xform
+            spec.instanceable = True
+            ref = Sdf.Reference("", primPath=brush.GetPath())
+            spec.referenceList.Add(ref)
+
+def init_debugger():
+    debugpy.configure({"subProcess": False})
+    debugpy.listen(5678)
 
 def create_project(path):
     stage = Usd.Stage.CreateNew(path)
@@ -107,19 +147,3 @@ def build_flat_list(stage: Usd.Stage):
     current_id.inc()
     flatten_prim(root, root_prim.id, flat_list, current_id)
     return flat_list
-
-def add_mesh(proxy: StageProxy, asset_path, prim_path):
-    asset_stage = Usd.Stage.Open(asset_path)
-    prim = asset_stage.GetPrimAtPath(prim_path)
-    mesh_path = f"/Library/Meshes/{prim.GetName()}"
-
-    with Sdf.ChangeBlock():
-        layer = proxy.stage.GetEditTarget().GetLayer()
-        spec = Sdf.CreatePrimInLayer(layer, mesh_path)
-        ref = Sdf.Reference(asset_path, prim_path)
-        spec.referenceList.Add(ref)
-
-def add_brush(proxy: StageProxy, mesh_path):
-    mesh = proxy.stage.GetPrimAtPath(mesh_path)
-    brush = proxy.stage.DefinePrim(f"/Library/Brushes/brush_{mesh.GetName()}")
-    brush.GetReferences().AddInternalReference(mesh.GetPath())

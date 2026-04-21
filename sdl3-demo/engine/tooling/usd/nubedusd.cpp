@@ -1,7 +1,128 @@
 #include "nubedusd.h"
 
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/tokens.h>
 #include <tooling/usd/usdprocessor.h>
+
+using namespace pxr;
+using namespace usd;
+
+namespace usd
+{
+    class StageProxy
+    {
+        UsdStageRefPtr m_stage;
+        
+    public:
+        StageProxy(const UsdStageRefPtr &stage)
+        {
+            m_stage = stage;
+        }
+        
+        UsdStageRefPtr stage()
+        {
+            return m_stage;
+        }
+        
+        void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
+        {
+            flatList.push_back(parent);
+    
+            for (UsdPrim child : prim.GetChildren())
+            {
+                const Prim childPrim {
+                    .id = currentId++,
+                    .parentId = parent.id,
+                    .name = child.GetName().GetString().c_str(),
+                    .type = child.GetTypeName().GetText(),
+                    .path = child.GetPath().GetString().c_str()
+                };
+                work(child, childPrim, flatList, currentId);
+            }
+        }
+
+        void flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
+        {
+            uint32_t currentId = 1;
+    
+            UsdPrim root = useDefaultPrim ? stage()->GetDefaultPrim() : stage()->GetPseudoRoot();
+            const Prim rootPrim {
+                .id = currentId++,
+                .parentId = 0,
+                .name = root.GetName().GetString().c_str(),
+                .type = root.GetTypeName().GetText(),
+                .path = root.GetPath().GetString().c_str()
+            };
+            work(root, rootPrim, flatList, currentId);
+        }
+        
+        void addMesh(const char *assetPath, const char *primPath)
+        {
+            const std::string name = SdfPath(primPath).GetName();
+            {
+                SdfChangeBlock changeBlock;
+                auto layer = stage()->GetEditTarget().GetLayer();
+                SdfPath meshPath = SdfPath("/Library/Meshes").AppendChild(TfToken(name));
+                
+                auto spec = SdfCreatePrimInLayer(layer, meshPath);
+                spec->SetSpecifier(SdfSpecifierDef);
+                spec->SetTypeName(UsdGeomTokens->Xform);
+                SdfReference ref(assetPath, SdfPath(primPath));
+                spec->GetReferenceList().Add(ref);
+            }
+        }
+        
+        void addBrush(const char *meshPath)
+        {
+            const std::string name = SdfPath(meshPath).GetName();
+            {
+                SdfChangeBlock changeBlock;
+                auto layer = stage()->GetEditTarget().GetLayer();
+                SdfPath brushPath = SdfPath("/Library/Brushes").AppendChild(TfToken(name));
+                
+                auto spec = SdfCreatePrimInLayer(layer, brushPath);
+                spec->SetSpecifier(SdfSpecifierDef);
+                spec->SetTypeName(UsdGeomTokens->Xform);
+                SdfReference ref("", SdfPath(meshPath));
+                spec->GetReferenceList().Add(ref);
+            }
+        }
+    };
+}
+
+StageProxy *CreateProject(const char *path)
+{
+    UsdStageRefPtr stage = UsdStage::CreateNew(path);
+    stage->DefinePrim(SdfPath("/Library"), UsdGeomTokens->Scope);
+    stage->DefinePrim(SdfPath("/Library/Meshes"), UsdGeomTokens->Scope);
+    stage->DefinePrim(SdfPath("/Library/Brushes"), UsdGeomTokens->Scope);
+    UsdPrim world = stage->DefinePrim(SdfPath("/World"), UsdGeomTokens->Xform);
+    stage->SetDefaultPrim(world);
+    return new StageProxy(stage);
+}
+
+StageProxy *OpenProject(const char *path)
+{
+    UsdStageRefPtr stage = UsdStage::Open(path);
+    return new StageProxy(stage);
+}
+
+void SaveProject(usd::StageProxy *proxy)
+{
+    proxy->stage()->Save();
+}
+
+void DestroyProxy(usd::StageProxy *proxy)
+{
+    delete proxy;
+}
+
+usd::StageProxy *OpenStage(const char *path)
+{
+    UsdStageRefPtr stage = UsdStage::Open(path);
+    return new StageProxy(stage);
+}
 
 usd::UsdProcessor *CreateStage(const char *path)
 {
@@ -10,28 +131,16 @@ usd::UsdProcessor *CreateStage(const char *path)
     return usdProc;
 }
 
-usd::UsdProcessor *OpenStage(const char *path)
-{
-    auto usdProc = new usd::UsdProcessor(nullptr);
-    usdProc->openStage(path);
-    return usdProc;
-}
-
-void SaveStage(usd::UsdProcessor *proc)
-{
-    proc->saveStage();
-}
-
 void DestroyUsdProcessor(usd::UsdProcessor *proc)
 {
     delete proc;
 }
 
-PrimList *BuildPrimList(usd::UsdProcessor *proc, bool useDefaultPrim)
+PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim)
 {
-    PrimList *list = new PrimList();
-    proc->flatten(*list, useDefaultPrim);
-    return list;
+    auto flatList = new std::vector<Prim>();
+    proxy->flatten(*flatList, useDefaultPrim);
+    return flatList;
 }
 
 usd::Prim *GetPrimListData(PrimList *list, uint32_t *outSize)
@@ -91,4 +200,9 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
         return result.value();
     }
     return 0;
+}
+
+void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath)
+{
+    proxy->addMesh(assetPath, primPath);
 }

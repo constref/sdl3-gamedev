@@ -524,7 +524,9 @@ void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_
 		const Prim childPrim {
 			.id = currentId++,
 			.parentId = parent.id,
-			.name = child.GetName().GetString().c_str()
+			.name = child.GetName().GetString().c_str(),
+		    .type = child.GetTypeName().GetText(),
+		    .path = child.GetPath().GetString().c_str()
 		};
         work(child, childPrim, flatList, currentId);
     }
@@ -538,7 +540,9 @@ void UsdProcessor::flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
     const Prim rootPrim {
         .id = currentId++,
         .parentId = 0,
-        .name = root.GetName().GetString().c_str()
+        .name = root.GetName().GetString().c_str(),
+        .type = root.GetTypeName().GetText(),
+        .path = root.GetPath().GetString().c_str()
     };
     work(root, rootPrim, flatList, currentId);
 }

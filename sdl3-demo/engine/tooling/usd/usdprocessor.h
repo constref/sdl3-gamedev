@@ -22,6 +22,8 @@ struct Prim
     uint32_t id;
     uint32_t parentId;
     const char *name;
+    const char *type;
+    const char *path;
 };
 #pragma pack(pop)
 

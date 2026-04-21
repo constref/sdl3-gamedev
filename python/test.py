@@ -40,7 +40,7 @@ class UsdTester:
     def project_menu(self):
         if self.proxy:
             print("\nProject Menu")
-            print("addm, addb, flat, info, save, close")
+            print("addm, addb, place, flat, info, save, close")
 
             ans = input("Command:> ")
             if ans == "info":
@@ -59,7 +59,7 @@ class UsdTester:
                 prim_id = int(input("Enter prim id:> "))
                 prim = prim_list[prim_id - 1]
                 pprint.pprint(prim)
-                usd.add_mesh(self.proxy, file_path, prim.path)
+                self.proxy.add_mesh(file_path, prim.path)
                 print("Mesh added")
             elif ans == "addb":
                 # add brush command
@@ -68,8 +68,15 @@ class UsdTester:
                 for idx, path in enumerate(meshes):
                     print(f"{idx}:{path}")
                 mesh_index = int(input("Enter mesh index:> "))
-                usd.add_brush(self.proxy, meshes[mesh_index].GetPath().pathString)
+                self.proxy.add_brush(meshes[mesh_index].GetPath().pathString)
                 print("Brush added")
+            elif ans == "place":
+                brushes_prim = self.proxy.stage.GetPrimAtPath("/Library/Meshes")
+                brushes = brushes_prim.GetChildren()
+                for idx, path in enumerate(brushes):
+                    print(f"{idx}:{path}")
+                brush_index = int(input("Enter brush index:> "))
+                self.proxy.place_brush(brushes[brush_index].GetPath().pathString)
             elif ans == "flat":
                 flat_list = usd.build_flat_list(self.proxy.stage)
                 pprint.pprint(flat_list)

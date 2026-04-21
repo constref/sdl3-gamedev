@@ -6,7 +6,9 @@
 
 namespace usd
 {
+    class StageProxy;
     class UsdProcessor;
+    using PrimList = std::vector<usd::Prim>;
 };
 
 #define DLL_EXPORT
@@ -17,16 +19,23 @@ namespace usd
 #endif
 
 extern "C" {
-using PrimList = std::vector<usd::Prim>;
+
+DLL_API usd::StageProxy *CreateProject(const char *path);
+DLL_API usd::StageProxy *OpenProject(const char *path);
+DLL_API void SaveProject(usd::StageProxy *proxy);
+DLL_API void DestroyProxy(usd::StageProxy *proxy);
+DLL_API usd::StageProxy *OpenStage(const char *path);
+
+DLL_API usd::PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim);
+DLL_API usd::Prim* GetPrimListData(usd::PrimList *list, uint32_t *outSize);
+DLL_API void DestroyPrimList(usd::PrimList *list);
+
+DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath);
 
 DLL_API usd::UsdProcessor* CreateStage(const char *path);
-DLL_API usd::UsdProcessor* OpenStage(const char *path);
+//DLL_API usd::UsdProcessor* OpenStage(const char *path);
 DLL_API void SaveStage(usd::UsdProcessor *proc);
 DLL_API void DestroyUsdProcessor(usd::UsdProcessor *proc);
-
-DLL_API PrimList* BuildPrimList(usd::UsdProcessor *proc, bool useDefaultPrim);
-DLL_API usd::Prim* GetPrimListData(PrimList *list, uint32_t *outSize);
-DLL_API void DestroyPrimList(PrimList *list);
 
 DLL_API zmq::context_t* CreateContext();
 DLL_API void DestroyContext(zmq::context_t *context);
