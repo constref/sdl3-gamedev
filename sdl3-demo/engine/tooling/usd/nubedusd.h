@@ -3,6 +3,7 @@
 
 #include "usdprocessor.h"
 #include <zmq.hpp>
+#include "common.h"
 
 namespace usd
 {
@@ -20,7 +21,7 @@ namespace usd
 
 extern "C" {
 
-DLL_API usd::StageProxy *CreateProject(const char *path);
+DLL_API usd::StageProxy *CreateProject(const char *path, usd::ObjectsChangedFunc objectsChangedCallback);
 DLL_API usd::StageProxy *OpenProject(const char *path);
 DLL_API void SaveProject(usd::StageProxy *proxy);
 DLL_API void DestroyProxy(usd::StageProxy *proxy);

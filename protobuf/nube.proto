@@ -27,3 +27,7 @@ message MouseMoveEvent {
   int32 xRel = 3;
   int32 yRel = 4;
 }
+
+message USDObjectsChanged {
+  repeated string resynced_paths = 1;
+}

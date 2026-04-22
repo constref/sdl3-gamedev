@@ -3,26 +3,48 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usd/notice.h>
 #include <tooling/usd/usdprocessor.h>
+#include <nube.pb.h>
+
+#include "common.h"
 
 using namespace pxr;
 using namespace usd;
 
 namespace usd
 {
-    class StageProxy
+    class StageProxy : public TfWeakBase
     {
         UsdStageRefPtr m_stage;
+        ObjectsChangedFunc m_objectsChangedCallback;
+        uint8_t m_msgBuffer[1024];
         
     public:
-        StageProxy(const UsdStageRefPtr &stage)
+        StageProxy(const UsdStageRefPtr &stage, ObjectsChangedFunc objectsChangedCallback)
         {
             m_stage = stage;
+            m_objectsChangedCallback = objectsChangedCallback;
+            TfNotice::Register(TfCreateWeakPtr(this), &StageProxy::onObjectsChanged);
         }
         
         UsdStageRefPtr stage()
         {
             return m_stage;
+        }
+        
+        void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged &notice)
+        {
+            NUBE::USDObjectsChanged msg;
+            for (auto &path: notice.GetResyncedPaths())
+            {
+                msg.add_resynced_paths(path.GetString());
+            }
+            size_t byteSize = msg.ByteSizeLong();
+            if (msg.SerializeToArray(m_msgBuffer, byteSize))
+            {
+                m_objectsChangedCallback(m_msgBuffer, byteSize);
+            }
         }
         
         void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
@@ -91,7 +113,7 @@ namespace usd
     };
 }
 
-StageProxy *CreateProject(const char *path)
+StageProxy *CreateProject(const char *path, ObjectsChangedFunc objectsChangedCallback)
 {
     UsdStageRefPtr stage = UsdStage::CreateNew(path);
     stage->DefinePrim(SdfPath("/Library"), UsdGeomTokens->Scope);
@@ -99,13 +121,13 @@ StageProxy *CreateProject(const char *path)
     stage->DefinePrim(SdfPath("/Library/Brushes"), UsdGeomTokens->Scope);
     UsdPrim world = stage->DefinePrim(SdfPath("/World"), UsdGeomTokens->Xform);
     stage->SetDefaultPrim(world);
-    return new StageProxy(stage);
+    return new StageProxy(stage, objectsChangedCallback);
 }
 
 StageProxy *OpenProject(const char *path)
 {
     UsdStageRefPtr stage = UsdStage::Open(path);
-    return new StageProxy(stage);
+    return new StageProxy(stage, nullptr);
 }
 
 void SaveProject(usd::StageProxy *proxy)
@@ -121,7 +143,7 @@ void DestroyProxy(usd::StageProxy *proxy)
 usd::StageProxy *OpenStage(const char *path)
 {
     UsdStageRefPtr stage = UsdStage::Open(path);
-    return new StageProxy(stage);
+    return new StageProxy(stage, nullptr);
 }
 
 usd::UsdProcessor *CreateStage(const char *path)

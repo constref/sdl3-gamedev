@@ -70,6 +70,10 @@ class MouseMoveEvent;
 struct MouseMoveEventDefaultTypeInternal;
 extern MouseMoveEventDefaultTypeInternal _MouseMoveEvent_default_instance_;
 extern const ::google::protobuf::internal::ClassDataFull MouseMoveEvent_class_data_;
+class USDObjectsChanged;
+struct USDObjectsChangedDefaultTypeInternal;
+extern USDObjectsChangedDefaultTypeInternal _USDObjectsChanged_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull USDObjectsChanged_class_data_;
 }  // namespace NUBE
 namespace google {
 namespace protobuf {
@@ -81,6 +85,217 @@ namespace NUBE {
 // ===================================================================
 
 
+// -------------------------------------------------------------------
+
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED USDObjectsChanged final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:NUBE.USDObjectsChanged) */ {
+ public:
+  inline USDObjectsChanged() : USDObjectsChanged(nullptr) {}
+  ~USDObjectsChanged() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(USDObjectsChanged* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(USDObjectsChanged));
+  }
+#endif
+
+  template <typename = void>
+  explicit constexpr USDObjectsChanged(::google::protobuf::internal::ConstantInitialized);
+
+  inline USDObjectsChanged(const USDObjectsChanged& from) : USDObjectsChanged(nullptr, from) {}
+  inline USDObjectsChanged(USDObjectsChanged&& from) noexcept
+      : USDObjectsChanged(nullptr, ::std::move(from)) {}
+  inline USDObjectsChanged& operator=(const USDObjectsChanged& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline USDObjectsChanged& operator=(USDObjectsChanged&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+    return GetDescriptor();
+  }
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  [[nodiscard]] static const USDObjectsChanged& default_instance() {
+    return *reinterpret_cast<const USDObjectsChanged*>(
+        &_USDObjectsChanged_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 4;
+  friend void swap(USDObjectsChanged& a, USDObjectsChanged& b) { a.Swap(&b); }
+  inline void Swap(USDObjectsChanged* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(USDObjectsChanged* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  [[nodiscard]] USDObjectsChanged* PROTOBUF_NONNULL
+  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<USDObjectsChanged>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const USDObjectsChanged& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const USDObjectsChanged& from) { USDObjectsChanged::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  [[nodiscard]] bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] ::size_t ByteSizeLong() const final;
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] int GetCachedSize() const {
+    return _impl_._cached_size_.Get();
+  }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(USDObjectsChanged* PROTOBUF_NONNULL other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "NUBE.USDObjectsChanged"; }
+
+  explicit USDObjectsChanged(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  USDObjectsChanged(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const USDObjectsChanged& from);
+  USDObjectsChanged(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, USDObjectsChanged&& from) noexcept
+      : USDObjectsChanged(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+  static void* PROTOBUF_NONNULL PlacementNew_(
+      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr auto InternalNewImpl_();
+
+ public:
+  static constexpr auto InternalGenerateClassData_();
+
+  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kResyncedPathsFieldNumber = 1,
+  };
+  // repeated string resynced_paths = 1;
+  [[nodiscard]] int resynced_paths_size()
+      const;
+  private:
+  int _internal_resynced_paths_size() const;
+
+  public:
+  void clear_resynced_paths() ;
+  [[nodiscard]] const ::std::string& resynced_paths(int index) const;
+  ::std::string* PROTOBUF_NONNULL mutable_resynced_paths(int index);
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_resynced_paths(int index, Arg_&& value, Args_... args);
+  ::std::string* PROTOBUF_NONNULL add_resynced_paths();
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void add_resynced_paths(Arg_&& value, Args_... args);
+  [[nodiscard]] const ::google::protobuf::RepeatedPtrField<::std::string>&
+  resynced_paths() const;
+  [[nodiscard]] ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+  mutable_resynced_paths();
+
+  private:
+  const ::google::protobuf::RepeatedPtrField<::std::string>& _internal_resynced_paths() const;
+  ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL _internal_mutable_resynced_paths();
+
+  public:
+  // @@protoc_insertion_point(class_scope:NUBE.USDObjectsChanged)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<0, 1,
+                                   0, 45,
+                                   2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  friend ::google::protobuf::internal::PrivateAccess;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+        const USDObjectsChanged& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::google::protobuf::RepeatedPtrField<::std::string> resynced_paths_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_nube_2eproto;
+};
+
+extern const ::google::protobuf::internal::ClassDataFull USDObjectsChanged_class_data_;
 // -------------------------------------------------------------------
 
 class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED MouseMoveEvent final : public ::google::protobuf::Message
@@ -1526,6 +1741,82 @@ inline ::int32_t MouseMoveEvent::_internal_yrel() const {
 inline void MouseMoveEvent::_internal_set_yrel(::int32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.yrel_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// USDObjectsChanged
+
+// repeated string resynced_paths = 1;
+inline int USDObjectsChanged::_internal_resynced_paths_size() const {
+  return _internal_resynced_paths().size();
+}
+inline int USDObjectsChanged::resynced_paths_size() const {
+  return _internal_resynced_paths_size();
+}
+inline void USDObjectsChanged::clear_resynced_paths() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.resynced_paths_.Clear();
+  ClearHasBitForRepeated(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline ::std::string* PROTOBUF_NONNULL USDObjectsChanged::add_resynced_paths()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::std::string* _s =
+      _internal_mutable_resynced_paths()->InternalAddWithArena(
+          ::google::protobuf::MessageLite::internal_visibility(), GetArena());
+  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
+  // @@protoc_insertion_point(field_add_mutable:NUBE.USDObjectsChanged.resynced_paths)
+  return _s;
+}
+inline const ::std::string& USDObjectsChanged::resynced_paths(int index) const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.USDObjectsChanged.resynced_paths)
+  return _internal_resynced_paths().Get(index);
+}
+inline ::std::string* PROTOBUF_NONNULL USDObjectsChanged::mutable_resynced_paths(int index)
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_mutable:NUBE.USDObjectsChanged.resynced_paths)
+  return _internal_mutable_resynced_paths()->Mutable(index);
+}
+template <typename Arg_, typename... Args_>
+inline void USDObjectsChanged::set_resynced_paths(int index, Arg_&& value, Args_... args) {
+  ::google::protobuf::internal::AssignToString(*_internal_mutable_resynced_paths()->Mutable(index), ::std::forward<Arg_>(value),
+                        args... );
+  // @@protoc_insertion_point(field_set:NUBE.USDObjectsChanged.resynced_paths)
+}
+template <typename Arg_, typename... Args_>
+inline void USDObjectsChanged::add_resynced_paths(Arg_&& value, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::google::protobuf::internal::AddToRepeatedPtrField(
+      ::google::protobuf::MessageLite::internal_visibility(), GetArena(),
+      *_internal_mutable_resynced_paths(), ::std::forward<Arg_>(value),
+      args... );
+  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
+  // @@protoc_insertion_point(field_add:NUBE.USDObjectsChanged.resynced_paths)
+}
+inline const ::google::protobuf::RepeatedPtrField<::std::string>& USDObjectsChanged::resynced_paths()
+    const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_list:NUBE.USDObjectsChanged.resynced_paths)
+  return _internal_resynced_paths();
+}
+inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+USDObjectsChanged::mutable_resynced_paths() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
+  // @@protoc_insertion_point(field_mutable_list:NUBE.USDObjectsChanged.resynced_paths)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _internal_mutable_resynced_paths();
+}
+inline const ::google::protobuf::RepeatedPtrField<::std::string>&
+USDObjectsChanged::_internal_resynced_paths() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.resynced_paths_;
+}
+inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+USDObjectsChanged::_internal_mutable_resynced_paths() {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return &_impl_.resynced_paths_;
 }
 
 #ifdef __GNUC__

@@ -27,6 +27,40 @@ namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
 namespace NUBE {
 
+inline constexpr USDObjectsChanged::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+        resynced_paths_{visibility, ::_pbi::InternalMetadataOffset::Build<
+            ::NUBE::USDObjectsChanged,
+            PROTOBUF_FIELD_OFFSET(::NUBE::USDObjectsChanged, _impl_.resynced_paths_)>()
+        }
+        #else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+        resynced_paths_ {}
+        #endif
+     {}
+
+template <typename>
+constexpr USDObjectsChanged::USDObjectsChanged(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(USDObjectsChanged_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
+}
+struct USDObjectsChangedDefaultTypeInternal {
+  constexpr USDObjectsChangedDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~USDObjectsChangedDefaultTypeInternal() {}
+  union {
+    USDObjectsChanged _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 USDObjectsChangedDefaultTypeInternal _USDObjectsChanged_default_instance_;
+
 inline constexpr MouseMoveEvent::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
@@ -175,6 +209,11 @@ const ::uint32_t
         1,
         2,
         3,
+        0x081, // bitmap
+        PROTOBUF_FIELD_OFFSET(::NUBE::USDObjectsChanged, _impl_._has_bits_),
+        4, // hasbit index offset
+        PROTOBUF_FIELD_OFFSET(::NUBE::USDObjectsChanged, _impl_.resynced_paths_),
+        0,
 };
 
 static const ::_pbi::MigrationSchema
@@ -183,12 +222,14 @@ static const ::_pbi::MigrationSchema
         {6, sizeof(::NUBE::EngineStartupCommanad)},
         {13, sizeof(::NUBE::KeyboardEvent)},
         {20, sizeof(::NUBE::MouseMoveEvent)},
+        {31, sizeof(::NUBE::USDObjectsChanged)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::NUBE::_EditorEnvelope_default_instance_._instance,
     &::NUBE::_EngineStartupCommanad_default_instance_._instance,
     &::NUBE::_KeyboardEvent_default_instance_._instance,
     &::NUBE::_MouseMoveEvent_default_instance_._instance,
+    &::NUBE::_USDObjectsChanged_default_instance_._instance,
 };
 const char descriptor_table_protodef_nube_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
@@ -201,20 +242,21 @@ const char descriptor_table_protodef_nube_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIA
     "\030\002 \001(\r\"1\n\rKeyboardEvent\022\020\n\010scancode\030\001 \001("
     "\r\022\016\n\006isDown\030\002 \001(\010\"B\n\016MouseMoveEvent\022\t\n\001x"
     "\030\001 \001(\005\022\t\n\001y\030\002 \001(\005\022\014\n\004xRel\030\003 \001(\005\022\014\n\004yRel\030"
-    "\004 \001(\005B\034\252\002\031AvaloniaEditor.Proto.NUBEb\010edi"
-    "tionsp\350\007"
+    "\004 \001(\005\"+\n\021USDObjectsChanged\022\026\n\016resynced_p"
+    "aths\030\001 \003(\tB\034\252\002\031AvaloniaEditor.Proto.NUBE"
+    "b\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nube_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nube_2eproto = {
     false,
     false,
-    408,
+    453,
     descriptor_table_protodef_nube_2eproto,
     "nube.proto",
     &descriptor_table_nube_2eproto_once,
     nullptr,
     0,
-    4,
+    5,
     schemas,
     file_default_instances,
     TableStruct_nube_2eproto::offsets,
@@ -1512,6 +1554,312 @@ void MouseMoveEvent::InternalSwap(MouseMoveEvent* PROTOBUF_RESTRICT PROTOBUF_NON
 }
 
 ::google::protobuf::Metadata MouseMoveEvent::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class USDObjectsChanged::_Internal {
+ public:
+  using HasBits =
+      decltype(::std::declval<USDObjectsChanged>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_._has_bits_);
+};
+
+USDObjectsChanged::USDObjectsChanged(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, USDObjectsChanged_class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:NUBE.USDObjectsChanged)
+}
+PROTOBUF_NDEBUG_INLINE USDObjectsChanged::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+    [[maybe_unused]] const ::NUBE::USDObjectsChanged& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+        resynced_paths_{visibility, ::_pbi::InternalMetadataOffset::Build<
+            ::NUBE::USDObjectsChanged,
+            PROTOBUF_FIELD_OFFSET(::NUBE::USDObjectsChanged, _impl_.resynced_paths_)>()
+        , from.resynced_paths_}
+        #else
+        resynced_paths_ { visibility, arena, from.resynced_paths_ }
+        #endif
+     {}
+
+USDObjectsChanged::USDObjectsChanged(
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
+    const USDObjectsChanged& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, USDObjectsChanged_class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  USDObjectsChanged* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+
+  // @@protoc_insertion_point(copy_constructor:NUBE.USDObjectsChanged)
+}
+PROTOBUF_NDEBUG_INLINE USDObjectsChanged::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+      : _cached_size_{0},
+        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+        resynced_paths_{visibility, ::_pbi::InternalMetadataOffset::Build<
+            ::NUBE::USDObjectsChanged,
+            PROTOBUF_FIELD_OFFSET(::NUBE::USDObjectsChanged, _impl_.resynced_paths_)>()
+        }
+        #else
+        resynced_paths_ { visibility, arena }
+        #endif
+     {}
+
+inline void USDObjectsChanged::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+USDObjectsChanged::~USDObjectsChanged() {
+  // @@protoc_insertion_point(destructor:NUBE.USDObjectsChanged)
+  SharedDtor(*this);
+}
+inline void USDObjectsChanged::SharedDtor(MessageLite& self) {
+  USDObjectsChanged& this_ = static_cast<USDObjectsChanged&>(self);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.~Impl_();
+}
+
+inline void* PROTOBUF_NONNULL USDObjectsChanged::PlacementNew_(
+    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
+  return ::new (mem) USDObjectsChanged(arena);
+}
+#ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+constexpr auto USDObjectsChanged::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(USDObjectsChanged),
+                                            alignof(USDObjectsChanged));
+}
+#else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
+constexpr auto USDObjectsChanged::InternalNewImpl_() {
+  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
+      PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_.resynced_paths_) +
+          decltype(USDObjectsChanged::_impl_.resynced_paths_)::
+              InternalGetArenaOffset(
+                  ::google::protobuf::Message::internal_visibility()),
+  });
+  if (arena_bits.has_value()) {
+    return ::google::protobuf::internal::MessageCreator::ZeroInit(
+        sizeof(USDObjectsChanged), alignof(USDObjectsChanged), *arena_bits);
+  } else {
+    return ::google::protobuf::internal::MessageCreator(&USDObjectsChanged::PlacementNew_,
+                                 sizeof(USDObjectsChanged),
+                                 alignof(USDObjectsChanged));
+  }
+}
+#endif
+constexpr auto USDObjectsChanged::InternalGenerateClassData_() {
+  return ::google::protobuf::internal::ClassDataFull{
+      ::google::protobuf::internal::ClassData{
+          &_USDObjectsChanged_default_instance_._instance,
+          &_table_.header,
+          nullptr,  // IsInitialized
+          &USDObjectsChanged::MergeImpl,
+          ::google::protobuf::Message::GetNewImpl<USDObjectsChanged>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+          &USDObjectsChanged::SharedDtor,
+          ::google::protobuf::Message::GetClearImpl<USDObjectsChanged>(), &USDObjectsChanged::ByteSizeLong,
+              &USDObjectsChanged::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_._cached_size_),
+          false,
+      },
+      &USDObjectsChanged::kDescriptorMethods,
+      &descriptor_table_nube_2eproto,
+      nullptr,  // tracker
+  };
+}
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
+    ::google::protobuf::internal::ClassDataFull USDObjectsChanged_class_data_ =
+        USDObjectsChanged::InternalGenerateClassData_();
+
+PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+USDObjectsChanged::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&USDObjectsChanged_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(USDObjectsChanged_class_data_.tc_table);
+  return USDObjectsChanged_class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 1, 0, 45, 2>
+USDObjectsChanged::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_._has_bits_),
+    0, // no _extensions_
+    1, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967294,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    1,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    USDObjectsChanged_class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::NUBE::USDObjectsChanged>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // repeated string resynced_paths = 1;
+    {::_pbi::TcParser::FastUR1,
+     {10, 0, 0,
+      PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_.resynced_paths_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // repeated string resynced_paths = 1;
+    {PROTOBUF_FIELD_OFFSET(USDObjectsChanged, _impl_.resynced_paths_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcRepeated | ::_fl::kUtf8String | ::_fl::kRepSString)},
+  }},
+  // no aux_entries
+  {{
+    "\26\16\0\0\0\0\0\0"
+    "NUBE.USDObjectsChanged"
+    "resynced_paths"
+  }},
+};
+PROTOBUF_NOINLINE void USDObjectsChanged::Clear() {
+// @@protoc_insertion_point(message_clear_start:NUBE.USDObjectsChanged)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
+    _impl_.resynced_paths_.Clear();
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::uint8_t* PROTOBUF_NONNULL USDObjectsChanged::_InternalSerialize(
+    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
+  const USDObjectsChanged& this_ = static_cast<const USDObjectsChanged&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::uint8_t* PROTOBUF_NONNULL USDObjectsChanged::_InternalSerialize(
+    ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  const USDObjectsChanged& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  // @@protoc_insertion_point(serialize_to_array_start:NUBE.USDObjectsChanged)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = this_._impl_._has_bits_[0];
+  // repeated string resynced_paths = 1;
+  if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
+    for (int i = 0, n = this_._internal_resynced_paths_size(); i < n; ++i) {
+      const auto& s = this_._internal_resynced_paths().Get(i);
+      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          s.data(), static_cast<int>(s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "NUBE.USDObjectsChanged.resynced_paths");
+      target = stream->WriteString(1, s, target);
+    }
+  }
+
+  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:NUBE.USDObjectsChanged)
+  return target;
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::size_t USDObjectsChanged::ByteSizeLong(const MessageLite& base) {
+  const USDObjectsChanged& this_ = static_cast<const USDObjectsChanged&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::size_t USDObjectsChanged::ByteSizeLong() const {
+  const USDObjectsChanged& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(message_byte_size_start:NUBE.USDObjectsChanged)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void)cached_has_bits;
+
+  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+   {
+    // repeated string resynced_paths = 1;
+    cached_has_bits = this_._impl_._has_bits_[0];
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
+      total_size +=
+          1 * ::google::protobuf::internal::FromIntSize(this_._internal_resynced_paths().size());
+      for (int i = 0, n = this_._internal_resynced_paths().size(); i < n; ++i) {
+        total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+            this_._internal_resynced_paths().Get(i));
+      }
+    }
+  }
+  return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                             &this_._impl_._cached_size_);
+}
+
+void USDObjectsChanged::MergeImpl(::google::protobuf::MessageLite& to_msg,
+                            const ::google::protobuf::MessageLite& from_msg) {
+   auto* const _this =
+      static_cast<USDObjectsChanged*>(&to_msg);
+  auto& from = static_cast<const USDObjectsChanged&>(from_msg);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    from.CheckHasBitConsistency();
+  }
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:NUBE.USDObjectsChanged)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
+    _this->_internal_mutable_resynced_paths()->InternalMergeFromWithArena(
+        ::google::protobuf::MessageLite::internal_visibility(), arena,
+        from._internal_resynced_paths());
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+}
+
+void USDObjectsChanged::CopyFrom(const USDObjectsChanged& from) {
+  // @@protoc_insertion_point(class_specific_copy_from_start:NUBE.USDObjectsChanged)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void USDObjectsChanged::InternalSwap(USDObjectsChanged* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
+  using ::std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.resynced_paths_.InternalSwap(&other->_impl_.resynced_paths_);
+}
+
+::google::protobuf::Metadata USDObjectsChanged::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)

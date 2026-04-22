@@ -172,8 +172,14 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	set(PROTOBUF_DIR ${CMAKE_SOURCE_DIR}/protobuf/cpp)
     message(STATUS "USD Libs: ${PXR_LIBRARIES}")
     message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
+	
+	add_library(nubeproto STATIC
+		"${PROTOBUF_DIR}/nube.pb.cc"
+		"${PROTOBUF_DIR}/nube.pb.h")
+	target_link_libraries(nubeproto PUBLIC protobuf::libprotobuf)
+	target_include_directories(nubeproto PUBLIC ${PROTOBUF_DIR})
 
-    add_library(enginetooling
+	add_library(enginetooling
         "tooling/engineworker.h"
         "tooling/engineworker.cpp"
         "tooling/platformevents.h"
@@ -190,16 +196,15 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/usd/events.h"
 		"tooling/usd/usdlogger.cpp"
 		"tooling/usd/usdlogger.h"
-		"${PROTOBUF_DIR}/nube.pb.cc"
-		"${PROTOBUF_DIR}/nube.pb.h"
 	)
 
 	target_include_directories(enginetooling
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
-		${PROTOBUF_DIR})
+		${PROTOBUF_DIR}
+	)
     target_link_libraries(enginetooling
-        PRIVATE engine cppzmq usd usdGeom usdImaging hd flatbuffers::flatbuffers protobuf::libprotobuf)
+        PRIVATE engine cppzmq usd usdGeom usdImaging hd flatbuffers::flatbuffers nubeproto)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)
@@ -211,6 +216,5 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/nubedusd.cpp"
 	)
 
-	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom cppzmq)
-
+	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom cppzmq nubeproto)
 endif()
