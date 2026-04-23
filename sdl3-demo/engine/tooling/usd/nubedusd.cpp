@@ -5,113 +5,14 @@
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usd/notice.h>
 #include <tooling/usd/usdprocessor.h>
-#include <nube.pb.h>
 
 #include "common.h"
+#include "stageproxy.h"
+
+#include <nube.pb.h>
 
 using namespace pxr;
 using namespace usd;
-
-namespace usd
-{
-    class StageProxy : public TfWeakBase
-    {
-        UsdStageRefPtr m_stage;
-        ObjectsChangedFunc m_objectsChangedCallback;
-        uint8_t m_msgBuffer[1024];
-        
-    public:
-        StageProxy(const UsdStageRefPtr &stage, ObjectsChangedFunc objectsChangedCallback)
-        {
-            m_stage = stage;
-            m_objectsChangedCallback = objectsChangedCallback;
-            TfNotice::Register(TfCreateWeakPtr(this), &StageProxy::onObjectsChanged);
-        }
-        
-        UsdStageRefPtr stage()
-        {
-            return m_stage;
-        }
-        
-        void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged &notice)
-        {
-            NUBE::USDObjectsChanged msg;
-            for (auto &path: notice.GetResyncedPaths())
-            {
-                msg.add_resynced_paths(path.GetString());
-            }
-            size_t byteSize = msg.ByteSizeLong();
-            if (msg.SerializeToArray(m_msgBuffer, byteSize))
-            {
-                m_objectsChangedCallback(m_msgBuffer, byteSize);
-            }
-        }
-        
-        void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
-        {
-            flatList.push_back(parent);
-    
-            for (UsdPrim child : prim.GetChildren())
-            {
-                const Prim childPrim {
-                    .id = currentId++,
-                    .parentId = parent.id,
-                    .name = child.GetName().GetString().c_str(),
-                    .type = child.GetTypeName().GetText(),
-                    .path = child.GetPath().GetString().c_str()
-                };
-                work(child, childPrim, flatList, currentId);
-            }
-        }
-
-        void flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
-        {
-            uint32_t currentId = 1;
-    
-            UsdPrim root = useDefaultPrim ? stage()->GetDefaultPrim() : stage()->GetPseudoRoot();
-            const Prim rootPrim {
-                .id = currentId++,
-                .parentId = 0,
-                .name = root.GetName().GetString().c_str(),
-                .type = root.GetTypeName().GetText(),
-                .path = root.GetPath().GetString().c_str()
-            };
-            work(root, rootPrim, flatList, currentId);
-        }
-        
-        void addMesh(const char *assetPath, const char *primPath)
-        {
-            const std::string name = SdfPath(primPath).GetName();
-            {
-                SdfChangeBlock changeBlock;
-                auto layer = stage()->GetEditTarget().GetLayer();
-                SdfPath meshPath = SdfPath("/Library/Meshes").AppendChild(TfToken(name));
-                
-                auto spec = SdfCreatePrimInLayer(layer, meshPath);
-                spec->SetSpecifier(SdfSpecifierDef);
-                spec->SetTypeName(UsdGeomTokens->Xform);
-                SdfReference ref(assetPath, SdfPath(primPath));
-                spec->GetReferenceList().Add(ref);
-            }
-        }
-        
-        void addBrush(const char *meshPath)
-        {
-            const std::string name = SdfPath(meshPath).GetName();
-            {
-                SdfChangeBlock changeBlock;
-                auto layer = stage()->GetEditTarget().GetLayer();
-                SdfPath brushPath = SdfPath("/Library/Brushes").AppendChild(TfToken(name));
-                
-                auto spec = SdfCreatePrimInLayer(layer, brushPath);
-                spec->SetSpecifier(SdfSpecifierDef);
-                spec->SetTypeName(UsdGeomTokens->Xform);
-                SdfReference ref("", SdfPath(meshPath));
-                spec->GetReferenceList().Add(ref);
-            }
-        }
-    };
-}
 
 StageProxy *CreateProject(const char *path, ObjectsChangedFunc objectsChangedCallback)
 {
@@ -227,4 +128,10 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
 void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath)
 {
     proxy->addMesh(assetPath, primPath);
+    proxy->flushChanged();
+}
+
+void FlushChanges(usd::StageProxy *proxy)
+{
+    proxy->flushChanged();
 }

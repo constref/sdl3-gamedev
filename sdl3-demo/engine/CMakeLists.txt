@@ -175,7 +175,10 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	
 	add_library(nubeproto STATIC
 		"${PROTOBUF_DIR}/nube.pb.cc"
-		"${PROTOBUF_DIR}/nube.pb.h")
+		"${PROTOBUF_DIR}/nube.pb.h"
+		"${PROTOBUF_DIR}/usd.pb.cc"
+		"${PROTOBUF_DIR}/usd.pb.h")
+	
 	target_link_libraries(nubeproto PUBLIC protobuf::libprotobuf)
 	target_include_directories(nubeproto PUBLIC ${PROTOBUF_DIR})
 
@@ -214,6 +217,8 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	add_library(nubedusd SHARED
 		"tooling/usd/nubedusd.h"
 		"tooling/usd/nubedusd.cpp"
+		"tooling/usd/stageproxy.h"
+		"tooling/usd/stageproxy.cpp"
 	)
 
 	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom cppzmq nubeproto)

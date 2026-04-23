@@ -1,0 +1,6 @@
+package NUBE.USD;
+
+
+message ObjectsChanged {
+  repeated string resynced_paths = 1;
+}

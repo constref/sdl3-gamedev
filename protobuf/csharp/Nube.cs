@@ -24,25 +24,33 @@ namespace AvaloniaEditor.Proto.NUBE {
     static NubeReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpudWJlLnByb3RvEgROVUJFIqkBCg5FZGl0b3JFbnZlbG9wZRIuCgdzdGFy",
-            "dHVwGAEgASgLMhsuTlVCRS5FbmdpbmVTdGFydHVwQ29tbWFuYWRIABIsCg1r",
-            "ZXlib2FyZEV2ZW50GAIgASgLMhMuTlVCRS5LZXlib2FyZEV2ZW50SAASLgoO",
-            "bW91c2VNb3ZlRXZlbnQYAyABKAsyFC5OVUJFLk1vdXNlTW92ZUV2ZW50SABC",
-            "CQoHcGF5bG9hZCI2ChVFbmdpbmVTdGFydHVwQ29tbWFuYWQSDQoFd2lkdGgY",
-            "ASABKA0SDgoGaGVpZ2h0GAIgASgNIjEKDUtleWJvYXJkRXZlbnQSEAoIc2Nh",
-            "bmNvZGUYASABKA0SDgoGaXNEb3duGAIgASgIIkIKDk1vdXNlTW92ZUV2ZW50",
-            "EgkKAXgYASABKAUSCQoBeRgCIAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwY",
-            "BCABKAUiKwoRVVNET2JqZWN0c0NoYW5nZWQSFgoOcmVzeW5jZWRfcGF0aHMY",
-            "ASADKAlCHKoCGUF2YWxvbmlhRWRpdG9yLlByb3RvLk5VQkViCGVkaXRpb25z",
-            "cOgH"));
+            "CgpudWJlLnByb3RvEgROVUJFIoYCCg5FZGl0b3JFbnZlbG9wZRItCgdzdGFy",
+            "dHVwGAEgASgLMhouTlVCRS5FbmdpbmVTdGFydHVwQ29tbWFuZEgAEi8KCHNo",
+            "dXRkb3duGAIgASgLMhsuTlVCRS5FbmdpbmVTaHV0ZG93bkNvbW1hbmRIABIs",
+            "Cg1rZXlib2FyZEV2ZW50GAMgASgLMhMuTlVCRS5LZXlib2FyZEV2ZW50SAAS",
+            "LgoObW91c2VNb3ZlRXZlbnQYBCABKAsyFC5OVUJFLk1vdXNlTW92ZUV2ZW50",
+            "SAASKwoJYmFrZVN0YWdlGAUgASgLMhYuTlVCRS5CYWtlU3RhZ2VDb21tYW5k",
+            "SABCCQoHcGF5bG9hZCI1ChRFbmdpbmVTdGFydHVwQ29tbWFuZBINCgV3aWR0",
+            "aBgBIAEoDRIOCgZoZWlnaHQYAiABKA0iFwoVRW5naW5lU2h1dGRvd25Db21t",
+            "YW5kIjEKDUtleWJvYXJkRXZlbnQSEAoIc2NhbmNvZGUYASABKA0SDgoGaXNE",
+            "b3duGAIgASgIIkIKDk1vdXNlTW92ZUV2ZW50EgkKAXgYASABKAUSCQoBeRgC",
+            "IAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwYBCABKAUiEgoQQmFrZVN0YWdl",
+            "Q29tbWFuZCJPCg5FbmdpbmVFbnZlbG9wZRIyCgtpbml0RGV0YWlscxgBIAEo",
+            "CzIbLk5VQkUuSW5pdGlhbGl6YXRpb25EZXRhaWxzSABCCQoHcGF5bG9hZCJc",
+            "ChVJbml0aWFsaXphdGlvbkRldGFpbHMSGQoRbWF4RnJhbWVzSW5GbGlnaHQY",
+            "ASABKA0SFQoNdGFyZ2V0SGFuZGxlcxgCIAMoBBIRCgllbmdpbmVVcmwYAyAB",
+            "KAlCHKoCGUF2YWxvbmlhRWRpdG9yLlByb3RvLk5VQkViCGVkaXRpb25zcOgH"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "KeyboardEvent", "MouseMoveEvent" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad), global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad.Parser, new[]{ "Width", "Height" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "Shutdown", "KeyboardEvent", "MouseMoveEvent", "BakeStage" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand), global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand.Parser, new[]{ "Width", "Height" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand), global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.KeyboardEvent), global::AvaloniaEditor.Proto.NUBE.KeyboardEvent.Parser, new[]{ "Scancode", "IsDown" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent), global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent.Parser, new[]{ "X", "Y", "XRel", "YRel" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.USDObjectsChanged), global::AvaloniaEditor.Proto.NUBE.USDObjectsChanged.Parser, new[]{ "ResyncedPaths" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.InitializationDetails), global::AvaloniaEditor.Proto.NUBE.InitializationDetails.Parser, new[]{ "MaxFramesInFlight", "TargetHandles", "EngineUrl" }, null, null, null, null)
           }));
     }
     #endregion
@@ -88,11 +96,17 @@ namespace AvaloniaEditor.Proto.NUBE {
         case PayloadOneofCase.Startup:
           Startup = other.Startup.Clone();
           break;
+        case PayloadOneofCase.Shutdown:
+          Shutdown = other.Shutdown.Clone();
+          break;
         case PayloadOneofCase.KeyboardEvent:
           KeyboardEvent = other.KeyboardEvent.Clone();
           break;
         case PayloadOneofCase.MouseMoveEvent:
           MouseMoveEvent = other.MouseMoveEvent.Clone();
+          break;
+        case PayloadOneofCase.BakeStage:
+          BakeStage = other.BakeStage.Clone();
           break;
       }
 
@@ -109,16 +123,28 @@ namespace AvaloniaEditor.Proto.NUBE {
     public const int StartupFieldNumber = 1;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad Startup {
-      get { return payloadCase_ == PayloadOneofCase.Startup ? (global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad) payload_ : null; }
+    public global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand Startup {
+      get { return payloadCase_ == PayloadOneofCase.Startup ? (global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand) payload_ : null; }
       set {
         payload_ = value;
         payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Startup;
       }
     }
 
+    /// <summary>Field number for the "shutdown" field.</summary>
+    public const int ShutdownFieldNumber = 2;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand Shutdown {
+      get { return payloadCase_ == PayloadOneofCase.Shutdown ? (global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Shutdown;
+      }
+    }
+
     /// <summary>Field number for the "keyboardEvent" field.</summary>
-    public const int KeyboardEventFieldNumber = 2;
+    public const int KeyboardEventFieldNumber = 3;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public global::AvaloniaEditor.Proto.NUBE.KeyboardEvent KeyboardEvent {
@@ -130,7 +156,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     }
 
     /// <summary>Field number for the "mouseMoveEvent" field.</summary>
-    public const int MouseMoveEventFieldNumber = 3;
+    public const int MouseMoveEventFieldNumber = 4;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent MouseMoveEvent {
@@ -141,13 +167,27 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
     }
 
+    /// <summary>Field number for the "bakeStage" field.</summary>
+    public const int BakeStageFieldNumber = 5;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.BakeStageCommand BakeStage {
+      get { return payloadCase_ == PayloadOneofCase.BakeStage ? (global::AvaloniaEditor.Proto.NUBE.BakeStageCommand) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.BakeStage;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
       None = 0,
       Startup = 1,
-      KeyboardEvent = 2,
-      MouseMoveEvent = 3,
+      Shutdown = 2,
+      KeyboardEvent = 3,
+      MouseMoveEvent = 4,
+      BakeStage = 5,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -179,8 +219,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         return true;
       }
       if (!object.Equals(Startup, other.Startup)) return false;
+      if (!object.Equals(Shutdown, other.Shutdown)) return false;
       if (!object.Equals(KeyboardEvent, other.KeyboardEvent)) return false;
       if (!object.Equals(MouseMoveEvent, other.MouseMoveEvent)) return false;
+      if (!object.Equals(BakeStage, other.BakeStage)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -190,8 +232,10 @@ namespace AvaloniaEditor.Proto.NUBE {
     public override int GetHashCode() {
       int hash = 1;
       if (payloadCase_ == PayloadOneofCase.Startup) hash ^= Startup.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Shutdown) hash ^= Shutdown.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.KeyboardEvent) hash ^= KeyboardEvent.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) hash ^= MouseMoveEvent.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.BakeStage) hash ^= BakeStage.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -215,13 +259,21 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteMessage(Startup);
       }
-      if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
+      if (payloadCase_ == PayloadOneofCase.Shutdown) {
         output.WriteRawTag(18);
+        output.WriteMessage(Shutdown);
+      }
+      if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
+        output.WriteRawTag(26);
         output.WriteMessage(KeyboardEvent);
       }
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(MouseMoveEvent);
+      }
+      if (payloadCase_ == PayloadOneofCase.BakeStage) {
+        output.WriteRawTag(42);
+        output.WriteMessage(BakeStage);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -237,13 +289,21 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteMessage(Startup);
       }
-      if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
+      if (payloadCase_ == PayloadOneofCase.Shutdown) {
         output.WriteRawTag(18);
+        output.WriteMessage(Shutdown);
+      }
+      if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
+        output.WriteRawTag(26);
         output.WriteMessage(KeyboardEvent);
       }
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(MouseMoveEvent);
+      }
+      if (payloadCase_ == PayloadOneofCase.BakeStage) {
+        output.WriteRawTag(42);
+        output.WriteMessage(BakeStage);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -258,11 +318,17 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (payloadCase_ == PayloadOneofCase.Startup) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Startup);
       }
+      if (payloadCase_ == PayloadOneofCase.Shutdown) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Shutdown);
+      }
       if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(KeyboardEvent);
       }
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(MouseMoveEvent);
+      }
+      if (payloadCase_ == PayloadOneofCase.BakeStage) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(BakeStage);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -279,9 +345,15 @@ namespace AvaloniaEditor.Proto.NUBE {
       switch (other.PayloadCase) {
         case PayloadOneofCase.Startup:
           if (Startup == null) {
-            Startup = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad();
+            Startup = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand();
           }
           Startup.MergeFrom(other.Startup);
+          break;
+        case PayloadOneofCase.Shutdown:
+          if (Shutdown == null) {
+            Shutdown = new global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand();
+          }
+          Shutdown.MergeFrom(other.Shutdown);
           break;
         case PayloadOneofCase.KeyboardEvent:
           if (KeyboardEvent == null) {
@@ -294,6 +366,12 @@ namespace AvaloniaEditor.Proto.NUBE {
             MouseMoveEvent = new global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent();
           }
           MouseMoveEvent.MergeFrom(other.MouseMoveEvent);
+          break;
+        case PayloadOneofCase.BakeStage:
+          if (BakeStage == null) {
+            BakeStage = new global::AvaloniaEditor.Proto.NUBE.BakeStageCommand();
+          }
+          BakeStage.MergeFrom(other.BakeStage);
           break;
       }
 
@@ -317,7 +395,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad();
+            global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand();
             if (payloadCase_ == PayloadOneofCase.Startup) {
               subBuilder.MergeFrom(Startup);
             }
@@ -326,6 +404,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             break;
           }
           case 18: {
+            global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand();
+            if (payloadCase_ == PayloadOneofCase.Shutdown) {
+              subBuilder.MergeFrom(Shutdown);
+            }
+            input.ReadMessage(subBuilder);
+            Shutdown = subBuilder;
+            break;
+          }
+          case 26: {
             global::AvaloniaEditor.Proto.NUBE.KeyboardEvent subBuilder = new global::AvaloniaEditor.Proto.NUBE.KeyboardEvent();
             if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
               subBuilder.MergeFrom(KeyboardEvent);
@@ -334,13 +421,22 @@ namespace AvaloniaEditor.Proto.NUBE {
             KeyboardEvent = subBuilder;
             break;
           }
-          case 26: {
+          case 34: {
             global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent subBuilder = new global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent();
             if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) {
               subBuilder.MergeFrom(MouseMoveEvent);
             }
             input.ReadMessage(subBuilder);
             MouseMoveEvent = subBuilder;
+            break;
+          }
+          case 42: {
+            global::AvaloniaEditor.Proto.NUBE.BakeStageCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.BakeStageCommand();
+            if (payloadCase_ == PayloadOneofCase.BakeStage) {
+              subBuilder.MergeFrom(BakeStage);
+            }
+            input.ReadMessage(subBuilder);
+            BakeStage = subBuilder;
             break;
           }
         }
@@ -363,7 +459,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommanad();
+            global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand();
             if (payloadCase_ == PayloadOneofCase.Startup) {
               subBuilder.MergeFrom(Startup);
             }
@@ -372,6 +468,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             break;
           }
           case 18: {
+            global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand();
+            if (payloadCase_ == PayloadOneofCase.Shutdown) {
+              subBuilder.MergeFrom(Shutdown);
+            }
+            input.ReadMessage(subBuilder);
+            Shutdown = subBuilder;
+            break;
+          }
+          case 26: {
             global::AvaloniaEditor.Proto.NUBE.KeyboardEvent subBuilder = new global::AvaloniaEditor.Proto.NUBE.KeyboardEvent();
             if (payloadCase_ == PayloadOneofCase.KeyboardEvent) {
               subBuilder.MergeFrom(KeyboardEvent);
@@ -380,13 +485,22 @@ namespace AvaloniaEditor.Proto.NUBE {
             KeyboardEvent = subBuilder;
             break;
           }
-          case 26: {
+          case 34: {
             global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent subBuilder = new global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent();
             if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) {
               subBuilder.MergeFrom(MouseMoveEvent);
             }
             input.ReadMessage(subBuilder);
             MouseMoveEvent = subBuilder;
+            break;
+          }
+          case 42: {
+            global::AvaloniaEditor.Proto.NUBE.BakeStageCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.BakeStageCommand();
+            if (payloadCase_ == PayloadOneofCase.BakeStage) {
+              subBuilder.MergeFrom(BakeStage);
+            }
+            input.ReadMessage(subBuilder);
+            BakeStage = subBuilder;
             break;
           }
         }
@@ -397,17 +511,17 @@ namespace AvaloniaEditor.Proto.NUBE {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
-  public sealed partial class EngineStartupCommanad : pb::IMessage<EngineStartupCommanad>
+  public sealed partial class EngineStartupCommand : pb::IMessage<EngineStartupCommand>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<EngineStartupCommanad> _parser = new pb::MessageParser<EngineStartupCommanad>(() => new EngineStartupCommanad());
+    private static readonly pb::MessageParser<EngineStartupCommand> _parser = new pb::MessageParser<EngineStartupCommand>(() => new EngineStartupCommand());
     private pb::UnknownFieldSet _unknownFields;
     private int _hasBits0;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<EngineStartupCommanad> Parser { get { return _parser; } }
+    public static pb::MessageParser<EngineStartupCommand> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -423,7 +537,7 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public EngineStartupCommanad() {
+    public EngineStartupCommand() {
       OnConstruction();
     }
 
@@ -431,7 +545,7 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public EngineStartupCommanad(EngineStartupCommanad other) : this() {
+    public EngineStartupCommand(EngineStartupCommand other) : this() {
       _hasBits0 = other._hasBits0;
       width_ = other.width_;
       height_ = other.height_;
@@ -440,8 +554,8 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public EngineStartupCommanad Clone() {
-      return new EngineStartupCommanad(this);
+    public EngineStartupCommand Clone() {
+      return new EngineStartupCommand(this);
     }
 
     /// <summary>Field number for the "width" field.</summary>
@@ -501,12 +615,12 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
-      return Equals(other as EngineStartupCommanad);
+      return Equals(other as EngineStartupCommand);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(EngineStartupCommanad other) {
+    public bool Equals(EngineStartupCommand other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
@@ -592,7 +706,7 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(EngineStartupCommanad other) {
+    public void MergeFrom(EngineStartupCommand other) {
       if (other == null) {
         return;
       }
@@ -664,6 +778,167 @@ namespace AvaloniaEditor.Proto.NUBE {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class EngineShutdownCommand : pb::IMessage<EngineShutdownCommand>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<EngineShutdownCommand> _parser = new pb::MessageParser<EngineShutdownCommand>(() => new EngineShutdownCommand());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<EngineShutdownCommand> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineShutdownCommand() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineShutdownCommand(EngineShutdownCommand other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineShutdownCommand Clone() {
+      return new EngineShutdownCommand(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as EngineShutdownCommand);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(EngineShutdownCommand other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(EngineShutdownCommand other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class KeyboardEvent : pb::IMessage<KeyboardEvent>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -679,7 +954,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[2]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -946,7 +1221,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[3]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1302,21 +1577,21 @@ namespace AvaloniaEditor.Proto.NUBE {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
-  public sealed partial class USDObjectsChanged : pb::IMessage<USDObjectsChanged>
+  public sealed partial class BakeStageCommand : pb::IMessage<BakeStageCommand>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
   #endif
   {
-    private static readonly pb::MessageParser<USDObjectsChanged> _parser = new pb::MessageParser<USDObjectsChanged>(() => new USDObjectsChanged());
+    private static readonly pb::MessageParser<BakeStageCommand> _parser = new pb::MessageParser<BakeStageCommand>(() => new BakeStageCommand());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<USDObjectsChanged> Parser { get { return _parser; } }
+    public static pb::MessageParser<BakeStageCommand> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[4]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1327,7 +1602,7 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public USDObjectsChanged() {
+    public BakeStageCommand() {
       OnConstruction();
     }
 
@@ -1335,44 +1610,31 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public USDObjectsChanged(USDObjectsChanged other) : this() {
-      resyncedPaths_ = other.resyncedPaths_.Clone();
+    public BakeStageCommand(BakeStageCommand other) : this() {
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public USDObjectsChanged Clone() {
-      return new USDObjectsChanged(this);
-    }
-
-    /// <summary>Field number for the "resynced_paths" field.</summary>
-    public const int ResyncedPathsFieldNumber = 1;
-    private static readonly pb::FieldCodec<string> _repeated_resyncedPaths_codec
-        = pb::FieldCodec.ForString(10);
-    private readonly pbc::RepeatedField<string> resyncedPaths_ = new pbc::RepeatedField<string>();
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<string> ResyncedPaths {
-      get { return resyncedPaths_; }
+    public BakeStageCommand Clone() {
+      return new BakeStageCommand(this);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
-      return Equals(other as USDObjectsChanged);
+      return Equals(other as BakeStageCommand);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(USDObjectsChanged other) {
+    public bool Equals(BakeStageCommand other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if(!resyncedPaths_.Equals(other.resyncedPaths_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1380,7 +1642,6 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      hash ^= resyncedPaths_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1399,7 +1660,6 @@ namespace AvaloniaEditor.Proto.NUBE {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      resyncedPaths_.WriteTo(output, _repeated_resyncedPaths_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1410,7 +1670,6 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      resyncedPaths_.WriteTo(ref output, _repeated_resyncedPaths_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1421,7 +1680,6 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      size += resyncedPaths_.CalculateSize(_repeated_resyncedPaths_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1430,11 +1688,233 @@ namespace AvaloniaEditor.Proto.NUBE {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(USDObjectsChanged other) {
+    public void MergeFrom(BakeStageCommand other) {
       if (other == null) {
         return;
       }
-      resyncedPaths_.Add(other.resyncedPaths_);
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class EngineEnvelope : pb::IMessage<EngineEnvelope>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<EngineEnvelope> _parser = new pb::MessageParser<EngineEnvelope>(() => new EngineEnvelope());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<EngineEnvelope> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[6]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineEnvelope() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineEnvelope(EngineEnvelope other) : this() {
+      switch (other.PayloadCase) {
+        case PayloadOneofCase.InitDetails:
+          InitDetails = other.InitDetails.Clone();
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public EngineEnvelope Clone() {
+      return new EngineEnvelope(this);
+    }
+
+    /// <summary>Field number for the "initDetails" field.</summary>
+    public const int InitDetailsFieldNumber = 1;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.InitializationDetails InitDetails {
+      get { return payloadCase_ == PayloadOneofCase.InitDetails ? (global::AvaloniaEditor.Proto.NUBE.InitializationDetails) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.InitDetails;
+      }
+    }
+
+    private object payload_;
+    /// <summary>Enum of possible cases for the "payload" oneof.</summary>
+    public enum PayloadOneofCase {
+      None = 0,
+      InitDetails = 1,
+    }
+    private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PayloadOneofCase PayloadCase {
+      get { return payloadCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearPayload() {
+      payloadCase_ = PayloadOneofCase.None;
+      payload_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as EngineEnvelope);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(EngineEnvelope other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(InitDetails, other.InitDetails)) return false;
+      if (PayloadCase != other.PayloadCase) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (payloadCase_ == PayloadOneofCase.InitDetails) hash ^= InitDetails.GetHashCode();
+      hash ^= (int) payloadCase_;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (payloadCase_ == PayloadOneofCase.InitDetails) {
+        output.WriteRawTag(10);
+        output.WriteMessage(InitDetails);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (payloadCase_ == PayloadOneofCase.InitDetails) {
+        output.WriteRawTag(10);
+        output.WriteMessage(InitDetails);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (payloadCase_ == PayloadOneofCase.InitDetails) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(InitDetails);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(EngineEnvelope other) {
+      if (other == null) {
+        return;
+      }
+      switch (other.PayloadCase) {
+        case PayloadOneofCase.InitDetails:
+          if (InitDetails == null) {
+            InitDetails = new global::AvaloniaEditor.Proto.NUBE.InitializationDetails();
+          }
+          InitDetails.MergeFrom(other.InitDetails);
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -1455,7 +1935,12 @@ namespace AvaloniaEditor.Proto.NUBE {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            resyncedPaths_.AddEntriesFrom(input, _repeated_resyncedPaths_codec);
+            global::AvaloniaEditor.Proto.NUBE.InitializationDetails subBuilder = new global::AvaloniaEditor.Proto.NUBE.InitializationDetails();
+            if (payloadCase_ == PayloadOneofCase.InitDetails) {
+              subBuilder.MergeFrom(InitDetails);
+            }
+            input.ReadMessage(subBuilder);
+            InitDetails = subBuilder;
             break;
           }
         }
@@ -1478,7 +1963,306 @@ namespace AvaloniaEditor.Proto.NUBE {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            resyncedPaths_.AddEntriesFrom(ref input, _repeated_resyncedPaths_codec);
+            global::AvaloniaEditor.Proto.NUBE.InitializationDetails subBuilder = new global::AvaloniaEditor.Proto.NUBE.InitializationDetails();
+            if (payloadCase_ == PayloadOneofCase.InitDetails) {
+              subBuilder.MergeFrom(InitDetails);
+            }
+            input.ReadMessage(subBuilder);
+            InitDetails = subBuilder;
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class InitializationDetails : pb::IMessage<InitializationDetails>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<InitializationDetails> _parser = new pb::MessageParser<InitializationDetails>(() => new InitializationDetails());
+    private pb::UnknownFieldSet _unknownFields;
+    private int _hasBits0;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<InitializationDetails> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[7]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InitializationDetails() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InitializationDetails(InitializationDetails other) : this() {
+      _hasBits0 = other._hasBits0;
+      maxFramesInFlight_ = other.maxFramesInFlight_;
+      targetHandles_ = other.targetHandles_.Clone();
+      engineUrl_ = other.engineUrl_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InitializationDetails Clone() {
+      return new InitializationDetails(this);
+    }
+
+    /// <summary>Field number for the "maxFramesInFlight" field.</summary>
+    public const int MaxFramesInFlightFieldNumber = 1;
+    private readonly static uint MaxFramesInFlightDefaultValue = 0;
+
+    private uint maxFramesInFlight_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint MaxFramesInFlight {
+      get { if ((_hasBits0 & 1) != 0) { return maxFramesInFlight_; } else { return MaxFramesInFlightDefaultValue; } }
+      set {
+        _hasBits0 |= 1;
+        maxFramesInFlight_ = value;
+      }
+    }
+    /// <summary>Gets whether the "maxFramesInFlight" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasMaxFramesInFlight {
+      get { return (_hasBits0 & 1) != 0; }
+    }
+    /// <summary>Clears the value of the "maxFramesInFlight" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearMaxFramesInFlight() {
+      _hasBits0 &= ~1;
+    }
+
+    /// <summary>Field number for the "targetHandles" field.</summary>
+    public const int TargetHandlesFieldNumber = 2;
+    private static readonly pb::FieldCodec<ulong> _repeated_targetHandles_codec
+        = pb::FieldCodec.ForUInt64(18);
+    private readonly pbc::RepeatedField<ulong> targetHandles_ = new pbc::RepeatedField<ulong>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<ulong> TargetHandles {
+      get { return targetHandles_; }
+    }
+
+    /// <summary>Field number for the "engineUrl" field.</summary>
+    public const int EngineUrlFieldNumber = 3;
+    private readonly static string EngineUrlDefaultValue = "";
+
+    private string engineUrl_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string EngineUrl {
+      get { return engineUrl_ ?? EngineUrlDefaultValue; }
+      set {
+        engineUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+    /// <summary>Gets whether the "engineUrl" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasEngineUrl {
+      get { return engineUrl_ != null; }
+    }
+    /// <summary>Clears the value of the "engineUrl" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearEngineUrl() {
+      engineUrl_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as InitializationDetails);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(InitializationDetails other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (MaxFramesInFlight != other.MaxFramesInFlight) return false;
+      if(!targetHandles_.Equals(other.targetHandles_)) return false;
+      if (EngineUrl != other.EngineUrl) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (HasMaxFramesInFlight) hash ^= MaxFramesInFlight.GetHashCode();
+      hash ^= targetHandles_.GetHashCode();
+      if (HasEngineUrl) hash ^= EngineUrl.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (HasMaxFramesInFlight) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(MaxFramesInFlight);
+      }
+      targetHandles_.WriteTo(output, _repeated_targetHandles_codec);
+      if (HasEngineUrl) {
+        output.WriteRawTag(26);
+        output.WriteString(EngineUrl);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (HasMaxFramesInFlight) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(MaxFramesInFlight);
+      }
+      targetHandles_.WriteTo(ref output, _repeated_targetHandles_codec);
+      if (HasEngineUrl) {
+        output.WriteRawTag(26);
+        output.WriteString(EngineUrl);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (HasMaxFramesInFlight) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(MaxFramesInFlight);
+      }
+      size += targetHandles_.CalculateSize(_repeated_targetHandles_codec);
+      if (HasEngineUrl) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(EngineUrl);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(InitializationDetails other) {
+      if (other == null) {
+        return;
+      }
+      if (other.HasMaxFramesInFlight) {
+        MaxFramesInFlight = other.MaxFramesInFlight;
+      }
+      targetHandles_.Add(other.targetHandles_);
+      if (other.HasEngineUrl) {
+        EngineUrl = other.EngineUrl;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            MaxFramesInFlight = input.ReadUInt32();
+            break;
+          }
+          case 18:
+          case 16: {
+            targetHandles_.AddEntriesFrom(input, _repeated_targetHandles_codec);
+            break;
+          }
+          case 26: {
+            EngineUrl = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            MaxFramesInFlight = input.ReadUInt32();
+            break;
+          }
+          case 18:
+          case 16: {
+            targetHandles_.AddEntriesFrom(ref input, _repeated_targetHandles_codec);
+            break;
+          }
+          case 26: {
+            EngineUrl = input.ReadString();
             break;
           }
         }

@@ -6,14 +6,19 @@ option csharp_namespace = "AvaloniaEditor.Proto.NUBE";
 
 message EditorEnvelope {
   oneof payload {
-    EngineStartupCommanad startup = 1;
-    KeyboardEvent keyboardEvent = 2;
-    MouseMoveEvent mouseMoveEvent = 3;
+    EngineStartupCommand startup = 1;
+    EngineShutdownCommand shutdown = 2;
+    KeyboardEvent keyboardEvent = 3;
+    MouseMoveEvent mouseMoveEvent = 4;
+    BakeStageCommand bakeStage = 5;
   }
 }
-message EngineStartupCommanad {
+message EngineStartupCommand {
   uint32 width = 1;
   uint32 height = 2;
+}
+
+message EngineShutdownCommand {
 }
 
 message KeyboardEvent {
@@ -28,6 +33,17 @@ message MouseMoveEvent {
   int32 yRel = 4;
 }
 
-message USDObjectsChanged {
-  repeated string resynced_paths = 1;
+message BakeStageCommand {
+}
+
+message EngineEnvelope {
+  oneof payload {
+    InitializationDetails initDetails = 1;
+  }
+}
+
+message InitializationDetails {
+  uint32 maxFramesInFlight = 1;
+  repeated uint64 targetHandles = 2;
+  string engineUrl = 3;
 }

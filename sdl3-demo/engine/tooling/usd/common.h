@@ -3,5 +3,5 @@
 
 namespace usd
 {
-typedef void(__stdcall *ObjectsChangedFunc)(const uint8_t *data, size_t size);
+typedef void(*ObjectsChangedFunc)(const uint8_t *data, size_t size);
 }

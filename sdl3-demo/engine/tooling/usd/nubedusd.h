@@ -32,6 +32,7 @@ DLL_API usd::Prim* GetPrimListData(usd::PrimList *list, uint32_t *outSize);
 DLL_API void DestroyPrimList(usd::PrimList *list);
 
 DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath);
+DLL_API void FlushChanges(usd::StageProxy *proxy);
 
 DLL_API usd::UsdProcessor* CreateStage(const char *path);
 //DLL_API usd::UsdProcessor* OpenStage(const char *path);

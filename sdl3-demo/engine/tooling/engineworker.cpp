@@ -5,6 +5,8 @@
 #include <tooling/usd/usdprocessor.h>
 #include <nube.pb.h>
 
+#include "usd.pb.h"
+
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
@@ -32,7 +34,7 @@ void EngineWorker::start()
         zmq::socket_t sub(ctx, zmq::socket_type::sub);
         sub.connect(std::format("{}-EditorPub", url));
         sub.set(zmq::sockopt::subscribe, "");
-		sub.set(zmq::sockopt::rcvtimeo, 1000);
+        sub.set(zmq::sockopt::rcvtimeo, 1000);
 
         while (m_listening)
         {
@@ -41,40 +43,40 @@ void EngineWorker::start()
             if (result.has_value() && result.value() > 0)
             {
                 NUBE::EditorEnvelope editorEnvelope;
-				bool parseSuccess = editorEnvelope.ParseFromArray(msg.data(), msg.size());
+                bool parseSuccess = editorEnvelope.ParseFromArray(msg.data(), msg.size());
                 if (parseSuccess)
                 {
                     switch (editorEnvelope.payload_case())
                     {
                         case NUBE::EditorEnvelope::kKeyboardEvent:
-                        {
-							const auto &keyEvent = editorEnvelope.keyboardevent();
-                            if (keyEvent.isdown())
                             {
-                                pushEvent(KeyDown{ .scancode = keyEvent.scancode() });
+                                const auto &keyEvent = editorEnvelope.keyboardevent();
+                                if (keyEvent.isdown())
+                                {
+                                    pushEvent(KeyDown{ .scancode = keyEvent.scancode() });
+                                }
+                                else
+                                {
+                                    pushEvent(KeyUp{ .scancode = keyEvent.scancode() });
+                                }
+                                break;
                             }
-                            else
+                            case NUBE::EditorEnvelope::kMouseMoveEvent:
                             {
-                                pushEvent(KeyUp{ .scancode = keyEvent.scancode() });
+                                const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
+                                pushEvent(MouseMoveEvent {
+                                    .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
+                                    .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
+                                });
+                                break;
                             }
-                            break;
-                        }
-                        case NUBE::EditorEnvelope::kMouseMoveEvent:
-                        {
-							const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
-                            pushEvent(MouseMoveEvent {
-                                .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
-                                .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
-                            });
-                            break;
-                        }
-                        case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
-                            break;
-                    }
+                            case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
+                        break;
                 }
             }
         }
-    });
+    }
+});
     if (m_pullThread.joinable())
     {
         m_pullThread.detach();
@@ -94,62 +96,73 @@ void EngineWorker::start()
     while (m_listening)
     {
         zmq::message_t request;
-        auto msg = rep.recv(request, zmq::recv_flags::none);
-
-        using namespace NUBE::Interop;
-        if (msg.has_value())
+        auto result = rep.recv(request, zmq::recv_flags::none);
+        if (result.has_value())
         {
-            auto envelope = GetEditorEnvelope(request.data());
-            switch (envelope->payload_type())
+            NUBE::EditorEnvelope editorEnvelope;
+            bool parseSuccess = editorEnvelope.ParseFromArray(request.data(), request.size());
+            if (parseSuccess)
             {
-                case EditorMessage_EngineStartupCommand:
+                switch (editorEnvelope.payload_case())
                 {
-                    m_engine->initialize(512, 288, 512, 288);
-                    // shared handles for GPU interop
-                    std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
-
-                    // send back the render-init response
-                    flatbuffers::FlatBufferBuilder builder(1024);
-                    auto initDetails = CreateInitializationDetails(builder, texHandles.size(),
-                                                                   builder.CreateVector(texHandles),
-                                                                   builder.CreateString("ipc://"));
-
-                    auto env = CreateEngineEnvelope(builder, EngineMessage_InitializationDetails, initDetails.Union());
-                    builder.Finish(env);
-                    auto span = builder.GetBufferSpan();
-                    zmq::message_t response(span);
-                    rep.send(response, zmq::send_flags::none);
-
-                    m_running = true;
-                    m_engineThread = std::thread([this]()
+                case NUBE::EditorEnvelope::kStartup:
                     {
-                        while (m_running)
+                        m_engine->initialize(512, 288, 512, 288);
+                        // shared handles for GPU interop
+                        std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
+
+                        // send back the render-init response
+                        NUBE::InitializationDetails initDetails;
+                        initDetails.set_engineurl("ipc://");
+                        initDetails.set_maxframesinflight(texHandles.size());
+                        for (uint64_t texHandle : texHandles)
                         {
-                            processEvents();
-                            m_engine->step();
+                            initDetails.add_targethandles(texHandle);
                         }
-                        m_engine->cleanup();
-                    });
-                    break;
-                }
-                case EditorMessage_EngineShutdownCommand:
-                {
-                    m_running = false;
-                    if (m_engineThread.joinable())
-                    {
-                        m_engineThread.detach();
+                        
+                        NUBE::EngineEnvelope envelope;
+                        envelope.set_allocated_initdetails(&initDetails);
+                        size_t size = envelope.ByteSizeLong();
+                        std::vector<uint8_t> buffer(size);
+                        bool success = envelope.SerializeToArray(buffer.data(), buffer.size());
+                        if (success)
+                        {
+                            std::span<uint8_t> span(buffer.data(), buffer.size());
+                            zmq::message_t response(span);
+                            rep.send(response, zmq::send_flags::none);
+                        }
+
+                        m_running = true;
+                        m_engineThread = std::thread([this]()
+                        {
+                            while (m_running)
+                            {
+                                processEvents();
+                                m_engine->step();
+                            }
+                            m_engine->cleanup();
+                        });
+                        break;
                     }
-                    ack();
-                    break;
-                }
-                case EditorMessage_USD_BakeStageCommand:
-                {
-                    m_usdProcessor->openStage("C:/Users/nikol/Desktop/monkey.usda");
-                    pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
-                    ack();
-                    break;
-                }
+                case NUBE::EditorEnvelope::kShutdown:
+                    {
+                        m_running = false;
+                        if (m_engineThread.joinable())
+                        {
+                            m_engineThread.detach();
+                        }
+                        ack();
+                        break;
+                    }
+                case NUBE::EditorEnvelope::kBakeStage:
+                    {
+                        m_usdProcessor->openStage("C:/Users/nikol/Desktop/monkey.usda");
+                        pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
+                        ack();
+                        break;
+                    }
                 default: Logger::error(this, "Unrecognized command received by editor");
+                }
             }
         }
     }
