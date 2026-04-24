@@ -34,12 +34,13 @@ namespace AvaloniaEditor.Proto.NUBE {
             "aBgBIAEoDRIOCgZoZWlnaHQYAiABKA0iFwoVRW5naW5lU2h1dGRvd25Db21t",
             "YW5kIjEKDUtleWJvYXJkRXZlbnQSEAoIc2NhbmNvZGUYASABKA0SDgoGaXNE",
             "b3duGAIgASgIIkIKDk1vdXNlTW92ZUV2ZW50EgkKAXgYASABKAUSCQoBeRgC",
-            "IAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwYBCABKAUiEgoQQmFrZVN0YWdl",
-            "Q29tbWFuZCJPCg5FbmdpbmVFbnZlbG9wZRIyCgtpbml0RGV0YWlscxgBIAEo",
-            "CzIbLk5VQkUuSW5pdGlhbGl6YXRpb25EZXRhaWxzSABCCQoHcGF5bG9hZCJc",
-            "ChVJbml0aWFsaXphdGlvbkRldGFpbHMSGQoRbWF4RnJhbWVzSW5GbGlnaHQY",
-            "ASABKA0SFQoNdGFyZ2V0SGFuZGxlcxgCIAMoBBIRCgllbmdpbmVVcmwYAyAB",
-            "KAlCHKoCGUF2YWxvbmlhRWRpdG9yLlByb3RvLk5VQkViCGVkaXRpb25zcOgH"));
+            "IAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwYBCABKAUiIwoQQmFrZVN0YWdl",
+            "Q29tbWFuZBIPCgd1c2RQYXRoGAEgASgJIk8KDkVuZ2luZUVudmVsb3BlEjIK",
+            "C2luaXREZXRhaWxzGAEgASgLMhsuTlVCRS5Jbml0aWFsaXphdGlvbkRldGFp",
+            "bHNIAEIJCgdwYXlsb2FkIlwKFUluaXRpYWxpemF0aW9uRGV0YWlscxIZChFt",
+            "YXhGcmFtZXNJbkZsaWdodBgBIAEoDRIVCg10YXJnZXRIYW5kbGVzGAIgAygE",
+            "EhEKCWVuZ2luZVVybBgDIAEoCUIcqgIZQXZhbG9uaWFFZGl0b3IuUHJvdG8u",
+            "TlVCRWIIZWRpdGlvbnNw6Ac="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -48,7 +49,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand), global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.KeyboardEvent), global::AvaloniaEditor.Proto.NUBE.KeyboardEvent.Parser, new[]{ "Scancode", "IsDown" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent), global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent.Parser, new[]{ "X", "Y", "XRel", "YRel" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, new[]{ "UsdPath" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.InitializationDetails), global::AvaloniaEditor.Proto.NUBE.InitializationDetails.Parser, new[]{ "MaxFramesInFlight", "TargetHandles", "EngineUrl" }, null, null, null, null)
           }));
@@ -1611,6 +1612,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public BakeStageCommand(BakeStageCommand other) : this() {
+      usdPath_ = other.usdPath_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1618,6 +1620,32 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public BakeStageCommand Clone() {
       return new BakeStageCommand(this);
+    }
+
+    /// <summary>Field number for the "usdPath" field.</summary>
+    public const int UsdPathFieldNumber = 1;
+    private readonly static string UsdPathDefaultValue = "";
+
+    private string usdPath_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string UsdPath {
+      get { return usdPath_ ?? UsdPathDefaultValue; }
+      set {
+        usdPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+    /// <summary>Gets whether the "usdPath" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasUsdPath {
+      get { return usdPath_ != null; }
+    }
+    /// <summary>Clears the value of the "usdPath" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearUsdPath() {
+      usdPath_ = null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1635,6 +1663,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (ReferenceEquals(other, this)) {
         return true;
       }
+      if (UsdPath != other.UsdPath) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1642,6 +1671,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
+      if (HasUsdPath) hash ^= UsdPath.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1660,6 +1690,10 @@ namespace AvaloniaEditor.Proto.NUBE {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
+      if (HasUsdPath) {
+        output.WriteRawTag(10);
+        output.WriteString(UsdPath);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1670,6 +1704,10 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (HasUsdPath) {
+        output.WriteRawTag(10);
+        output.WriteString(UsdPath);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1680,6 +1718,9 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
+      if (HasUsdPath) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(UsdPath);
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1691,6 +1732,9 @@ namespace AvaloniaEditor.Proto.NUBE {
     public void MergeFrom(BakeStageCommand other) {
       if (other == null) {
         return;
+      }
+      if (other.HasUsdPath) {
+        UsdPath = other.UsdPath;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1711,6 +1755,10 @@ namespace AvaloniaEditor.Proto.NUBE {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
+          case 10: {
+            UsdPath = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -1730,6 +1778,10 @@ namespace AvaloniaEditor.Proto.NUBE {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
+          case 10: {
+            UsdPath = input.ReadString();
+            break;
+          }
         }
       }
     }

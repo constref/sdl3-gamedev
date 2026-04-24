@@ -7,7 +7,7 @@
 
 #include "usd.pb.h"
 
-EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string& url)
+EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
     m_usdProcessor = std::make_unique<usd::UsdProcessor>(nullptr);
@@ -49,34 +49,34 @@ void EngineWorker::start()
                     switch (editorEnvelope.payload_case())
                     {
                         case NUBE::EditorEnvelope::kKeyboardEvent:
+                        {
+                            const auto &keyEvent = editorEnvelope.keyboardevent();
+                            if (keyEvent.isdown())
                             {
-                                const auto &keyEvent = editorEnvelope.keyboardevent();
-                                if (keyEvent.isdown())
-                                {
-                                    pushEvent(KeyDown{ .scancode = keyEvent.scancode() });
-                                }
-                                else
-                                {
-                                    pushEvent(KeyUp{ .scancode = keyEvent.scancode() });
-                                }
-                                break;
+                                pushEvent(KeyDown{.scancode = keyEvent.scancode()});
                             }
-                            case NUBE::EditorEnvelope::kMouseMoveEvent:
+                            else
                             {
-                                const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
-                                pushEvent(MouseMoveEvent {
-                                    .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
-                                    .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
-                                });
-                                break;
+                                pushEvent(KeyUp{.scancode = keyEvent.scancode()});
                             }
-                            case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
-                        break;
+                            break;
+                        }
+                        case NUBE::EditorEnvelope::kMouseMoveEvent:
+                        {
+                            const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
+                            pushEvent(MouseMoveEvent{
+                                .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
+                                .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
+                            });
+                            break;
+                        }
+                        case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
+                            break;
+                    }
                 }
             }
         }
-    }
-});
+    });
     if (m_pullThread.joinable())
     {
         m_pullThread.detach();
@@ -105,7 +105,7 @@ void EngineWorker::start()
             {
                 switch (editorEnvelope.payload_case())
                 {
-                case NUBE::EditorEnvelope::kStartup:
+                    case NUBE::EditorEnvelope::kStartup:
                     {
                         m_engine->initialize(512, 288, 512, 288);
                         // shared handles for GPU interop
@@ -119,7 +119,7 @@ void EngineWorker::start()
                         {
                             initDetails.add_targethandles(texHandle);
                         }
-                        
+
                         NUBE::EngineEnvelope envelope;
                         envelope.set_allocated_initdetails(&initDetails);
                         size_t size = envelope.ByteSizeLong();
@@ -144,7 +144,7 @@ void EngineWorker::start()
                         });
                         break;
                     }
-                case NUBE::EditorEnvelope::kShutdown:
+                    case NUBE::EditorEnvelope::kShutdown:
                     {
                         m_running = false;
                         if (m_engineThread.joinable())
@@ -154,14 +154,14 @@ void EngineWorker::start()
                         ack();
                         break;
                     }
-                case NUBE::EditorEnvelope::kBakeStage:
+                    case NUBE::EditorEnvelope::kBakeStage:
                     {
-                        m_usdProcessor->openStage("C:/Users/nikol/Desktop/monkey.usda");
+                        m_usdProcessor->openStage(editorEnvelope.bakestage().usdpath());
                         pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
                         ack();
                         break;
                     }
-                default: Logger::error(this, "Unrecognized command received by editor");
+                    default: Logger::error(this, "Unrecognized command received by editor");
                 }
             }
         }
@@ -171,23 +171,23 @@ void EngineWorker::start()
 void EngineWorker::processEvents()
 {
     PlatformEvent e;
-    Services& serv = m_engine->services();
+    Services &serv = m_engine->services();
     while (eventBuffer.get(e))
     {
         // handle external events
         if (std::holds_alternative<KeyDown>(e))
         {
-            const KeyDown& keyEvent = std::get<KeyDown>(e);
+            const KeyDown &keyEvent = std::get<KeyDown>(e);
             serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<KeyUp>(e))
         {
-            const KeyUp& keyEvent = std::get<KeyUp>(e);
+            const KeyUp &keyEvent = std::get<KeyUp>(e);
             serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
         }
         else if (std::holds_alternative<MouseMoveEvent>(e))
         {
-            const MouseMoveEvent& mouseEvent = std::get<MouseMoveEvent>(e);
+            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
             serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
                                                         mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
         }
@@ -225,14 +225,14 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<usd::BakeStageEvent>(e))
         {
             NodeHandle hRoot = m_engine->application().getRoot();
-            Node& root = serv.world().getNode(hRoot);
+            Node &root = serv.world().getNode(hRoot);
             m_usdProcessor->bakeStage(root, serv);
             //serv.eventQueue().enqueue<usd::BakeStageEvent>(NodeHandle{}, 0, m_usdProcessor.get());
         }
     }
 }
 
-void EngineWorker::pushEvent(const PlatformEvent& event)
+void EngineWorker::pushEvent(const PlatformEvent &event)
 {
     eventBuffer.add(event);
 }

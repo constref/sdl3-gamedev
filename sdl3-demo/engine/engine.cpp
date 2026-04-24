@@ -43,23 +43,23 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     m_services.compSys().registerSystem(std::make_unique<PhysicsSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<CollisionSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(m_services));
-    
+
     // D3D 12
-    //auto &renderSys = m_services.compSys().registerSystem(
-    //    std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, window, width, height, logW, logH));
-    //if (!renderSys.initialize())
-    //{
-    //    return false;
-    //}
-    //renderer = &renderSys;
+    auto &renderSys = m_services.compSys().registerSystem(
+        std::make_unique<d3d12rs::D3D12RenderSystem>(m_services, window, width, height, logW, logH));
+    if (!renderSys.initialize())
+    {
+        return false;
+    }
+    renderer = &renderSys;
 
     // Vulkan
-     auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(window, width, height, logW, logH, m_services));
-     if (!renderSys.initialize())
-     {
-     	return false;
-     }
-     renderer = &renderSys;
+    // auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(window, width, height, logW, logH, m_services));
+    // if (!renderSys.initialize())
+    // {
+    // 	return false;
+    // }
+    // renderer = &renderSys;
 
     m_services.compSys().registerSystem(std::make_unique<EngineSystem>(m_services, *this));
 
@@ -198,7 +198,7 @@ void Engine::step()
     m_services.compSys().removeScheduled();
 }
 
-Application &Engine::application()
+Application& Engine::application()
 {
     return *m_app;
 }

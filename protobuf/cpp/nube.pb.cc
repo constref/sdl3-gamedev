@@ -166,14 +166,24 @@ struct EngineShutdownCommandDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EngineShutdownCommandDefaultTypeInternal _EngineShutdownCommand_default_instance_;
+
+inline constexpr BakeStageCommand::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        usdpath_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()) {}
+
 template <typename>
 constexpr BakeStageCommand::BakeStageCommand(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(BakeStageCommand_class_data_.base()){}
+    : ::google::protobuf::Message(BakeStageCommand_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase() {
-}
+    : ::google::protobuf::Message(),
 #endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
+}
 struct BakeStageCommandDefaultTypeInternal {
   constexpr BakeStageCommandDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
   ~BakeStageCommandDefaultTypeInternal() {}
@@ -280,7 +290,11 @@ const ::uint32_t
         1,
         2,
         3,
-        0x000, // bitmap
+        0x081, // bitmap
+        PROTOBUF_FIELD_OFFSET(::NUBE::BakeStageCommand, _impl_._has_bits_),
+        4, // hasbit index offset
+        PROTOBUF_FIELD_OFFSET(::NUBE::BakeStageCommand, _impl_.usdpath_),
+        0,
         0x004, // bitmap
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_._oneof_case_[0]),
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_.payload_),
@@ -304,8 +318,8 @@ static const ::_pbi::MigrationSchema
         {16, sizeof(::NUBE::KeyboardEvent)},
         {23, sizeof(::NUBE::MouseMoveEvent)},
         {34, sizeof(::NUBE::BakeStageCommand)},
-        {35, sizeof(::NUBE::EngineEnvelope)},
-        {39, sizeof(::NUBE::InitializationDetails)},
+        {39, sizeof(::NUBE::EngineEnvelope)},
+        {43, sizeof(::NUBE::InitializationDetails)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::NUBE::_EditorEnvelope_default_instance_._instance,
@@ -331,18 +345,19 @@ const char descriptor_table_protodef_nube_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIA
     "and\"1\n\rKeyboardEvent\022\020\n\010scancode\030\001 \001(\r\022\016"
     "\n\006isDown\030\002 \001(\010\"B\n\016MouseMoveEvent\022\t\n\001x\030\001 "
     "\001(\005\022\t\n\001y\030\002 \001(\005\022\014\n\004xRel\030\003 \001(\005\022\014\n\004yRel\030\004 \001"
-    "(\005\"\022\n\020BakeStageCommand\"O\n\016EngineEnvelope"
-    "\0222\n\013initDetails\030\001 \001(\0132\033.NUBE.Initializat"
-    "ionDetailsH\000B\t\n\007payload\"\\\n\025Initializatio"
-    "nDetails\022\031\n\021maxFramesInFlight\030\001 \001(\r\022\025\n\rt"
-    "argetHandles\030\002 \003(\004\022\021\n\tengineUrl\030\003 \001(\tB\034\252"
-    "\002\031AvaloniaEditor.Proto.NUBEb\010editionsp\350\007"
+    "(\005\"#\n\020BakeStageCommand\022\017\n\007usdPath\030\001 \001(\t\""
+    "O\n\016EngineEnvelope\0222\n\013initDetails\030\001 \001(\0132\033"
+    ".NUBE.InitializationDetailsH\000B\t\n\007payload"
+    "\"\\\n\025InitializationDetails\022\031\n\021maxFramesIn"
+    "Flight\030\001 \001(\r\022\025\n\rtargetHandles\030\002 \003(\004\022\021\n\te"
+    "ngineUrl\030\003 \001(\tB\034\252\002\031AvaloniaEditor.Proto."
+    "NUBEb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nube_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nube_2eproto = {
     false,
     false,
-    720,
+    737,
     descriptor_table_protodef_nube_2eproto,
     "nube.proto",
     &descriptor_table_nube_2eproto_once,
@@ -1855,30 +1870,67 @@ void MouseMoveEvent::InternalSwap(MouseMoveEvent* PROTOBUF_RESTRICT PROTOBUF_NON
 
 class BakeStageCommand::_Internal {
  public:
+  using HasBits =
+      decltype(::std::declval<BakeStageCommand>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(BakeStageCommand, _impl_._has_bits_);
 };
 
 BakeStageCommand::BakeStageCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, BakeStageCommand_class_data_.base()) {
+    : ::google::protobuf::Message(arena, BakeStageCommand_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+    : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
   // @@protoc_insertion_point(arena_constructor:NUBE.BakeStageCommand)
 }
+PROTOBUF_NDEBUG_INLINE BakeStageCommand::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+    [[maybe_unused]] const ::NUBE::BakeStageCommand& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        usdpath_(arena, from.usdpath_) {}
+
 BakeStageCommand::BakeStageCommand(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
     const BakeStageCommand& from)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, BakeStageCommand_class_data_.base()) {
+    : ::google::protobuf::Message(arena, BakeStageCommand_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+    : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   BakeStageCommand* const _this = this;
   (void)_this;
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
 
   // @@protoc_insertion_point(copy_constructor:NUBE.BakeStageCommand)
+}
+PROTOBUF_NDEBUG_INLINE BakeStageCommand::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+      : _cached_size_{0},
+        usdpath_(arena) {}
+
+inline void BakeStageCommand::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+BakeStageCommand::~BakeStageCommand() {
+  // @@protoc_insertion_point(destructor:NUBE.BakeStageCommand)
+  SharedDtor(*this);
+}
+inline void BakeStageCommand::SharedDtor(MessageLite& self) {
+  BakeStageCommand& this_ = static_cast<BakeStageCommand&>(self);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.usdpath_.Destroy();
+  this_._impl_.~Impl_();
 }
 
 inline void* PROTOBUF_NONNULL BakeStageCommand::PlacementNew_(
@@ -1887,7 +1939,7 @@ inline void* PROTOBUF_NONNULL BakeStageCommand::PlacementNew_(
   return ::new (mem) BakeStageCommand(arena);
 }
 constexpr auto BakeStageCommand::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(BakeStageCommand),
+  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(BakeStageCommand),
                                             alignof(BakeStageCommand));
 }
 constexpr auto BakeStageCommand::InternalGenerateClassData_() {
@@ -1897,10 +1949,10 @@ constexpr auto BakeStageCommand::InternalGenerateClassData_() {
           &_table_.header,
           nullptr,  // IsInitialized
           &BakeStageCommand::MergeImpl,
-          ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<BakeStageCommand>(),
+          ::google::protobuf::Message::GetNewImpl<BakeStageCommand>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
           &BakeStageCommand::SharedDtor,
-          ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<BakeStageCommand>(), &BakeStageCommand::ByteSizeLong,
+          ::google::protobuf::Message::GetClearImpl<BakeStageCommand>(), &BakeStageCommand::ByteSizeLong,
               &BakeStageCommand::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
           PROTOBUF_FIELD_OFFSET(BakeStageCommand, _impl_._cached_size_),
@@ -1923,17 +1975,16 @@ BakeStageCommand::GetClassData() const {
   return BakeStageCommand_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 0, 0, 0, 2>
+const ::_pbi::TcParseTable<0, 1, 0, 37, 2>
 BakeStageCommand::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(BakeStageCommand,
-                          _impl_._cached_size_),  // no hasbits
+    PROTOBUF_FIELD_OFFSET(BakeStageCommand, _impl_._has_bits_),
     0, // no _extensions_
-    0, 0,  // max_field_number, fast_idx_mask
+    1, 0,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967295,  // skipmap
-    offsetof(decltype(_table_), field_names),  // no field_entries
-    0,  // num_field_entries
+    4294967294,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    1,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     BakeStageCommand_class_data_.base(),
@@ -1943,22 +1994,141 @@ BakeStageCommand::_table_ = {
     ::_pbi::TcParser::GetTable<::NUBE::BakeStageCommand>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
+    // string usdPath = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 0, 0,
+      PROTOBUF_FIELD_OFFSET(BakeStageCommand, _impl_.usdpath_)}},
   }}, {{
     65535, 65535
-  }}, // no field_entries, or aux_entries
+  }}, {{
+    // string usdPath = 1;
+    {PROTOBUF_FIELD_OFFSET(BakeStageCommand, _impl_.usdpath_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+  }},
+  // no aux_entries
   {{
+    "\25\7\0\0\0\0\0\0"
+    "NUBE.BakeStageCommand"
+    "usdPath"
   }},
 };
+PROTOBUF_NOINLINE void BakeStageCommand::Clear() {
+// @@protoc_insertion_point(message_clear_start:NUBE.BakeStageCommand)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+    _impl_.usdpath_.ClearNonDefaultToEmpty();
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::uint8_t* PROTOBUF_NONNULL BakeStageCommand::_InternalSerialize(
+    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
+  const BakeStageCommand& this_ = static_cast<const BakeStageCommand&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::uint8_t* PROTOBUF_NONNULL BakeStageCommand::_InternalSerialize(
+    ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  const BakeStageCommand& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  // @@protoc_insertion_point(serialize_to_array_start:NUBE.BakeStageCommand)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = this_._impl_._has_bits_[0];
+  // string usdPath = 1;
+  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+    const ::std::string& _s = this_._internal_usdpath();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "NUBE.BakeStageCommand.usdPath");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:NUBE.BakeStageCommand)
+  return target;
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::size_t BakeStageCommand::ByteSizeLong(const MessageLite& base) {
+  const BakeStageCommand& this_ = static_cast<const BakeStageCommand&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::size_t BakeStageCommand::ByteSizeLong() const {
+  const BakeStageCommand& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(message_byte_size_start:NUBE.BakeStageCommand)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void)cached_has_bits;
+
+   {
+    // string usdPath = 1;
+    cached_has_bits = this_._impl_._has_bits_[0];
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+      total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                      this_._internal_usdpath());
+    }
+  }
+  return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                             &this_._impl_._cached_size_);
+}
+
+void BakeStageCommand::MergeImpl(::google::protobuf::MessageLite& to_msg,
+                            const ::google::protobuf::MessageLite& from_msg) {
+   auto* const _this =
+      static_cast<BakeStageCommand*>(&to_msg);
+  auto& from = static_cast<const BakeStageCommand&>(from_msg);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    from.CheckHasBitConsistency();
+  }
+  // @@protoc_insertion_point(class_specific_merge_from_start:NUBE.BakeStageCommand)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+    _this->_internal_set_usdpath(from._internal_usdpath());
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+}
+
+void BakeStageCommand::CopyFrom(const BakeStageCommand& from) {
+  // @@protoc_insertion_point(class_specific_copy_from_start:NUBE.BakeStageCommand)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
 
 
-
-
-
-
+void BakeStageCommand::InternalSwap(BakeStageCommand* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
+  using ::std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.usdpath_, &other->_impl_.usdpath_, arena);
+}
 
 ::google::protobuf::Metadata BakeStageCommand::GetMetadata() const {
-  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
 

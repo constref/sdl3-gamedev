@@ -18,8 +18,7 @@ message EngineStartupCommand {
   uint32 height = 2;
 }
 
-message EngineShutdownCommand {
-}
+message EngineShutdownCommand {}
 
 message KeyboardEvent {
   uint32 scancode = 1;
@@ -34,6 +33,7 @@ message MouseMoveEvent {
 }
 
 message BakeStageCommand {
+  string usdPath = 1;
 }
 
 message EngineEnvelope {

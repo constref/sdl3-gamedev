@@ -1140,10 +1140,11 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EngineShutdownCommand final : publi
 extern const ::google::protobuf::internal::ClassDataFull EngineShutdownCommand_class_data_;
 // -------------------------------------------------------------------
 
-class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::google::protobuf::internal::ZeroFieldsBase
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:NUBE.BakeStageCommand) */ {
  public:
   inline BakeStageCommand() : BakeStageCommand(nullptr) {}
+  ~BakeStageCommand() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
   void operator delete(BakeStageCommand* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
@@ -1215,21 +1216,50 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::g
 
   [[nodiscard]] BakeStageCommand* PROTOBUF_NONNULL
   New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::internal::ZeroFieldsBase::DefaultConstruct<BakeStageCommand>(arena);
+    return ::google::protobuf::Message::DefaultConstruct<BakeStageCommand>(arena);
   }
-  using ::google::protobuf::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const BakeStageCommand& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::CopyImpl(*this, from);
-  }
-  using ::google::protobuf::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const BakeStageCommand& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::MergeImpl(*this, from);
-  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const BakeStageCommand& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const BakeStageCommand& from) { BakeStageCommand::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
 
   public:
   [[nodiscard]] bool IsInitialized() const {
     return true;
   }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] ::size_t ByteSizeLong() const final;
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] int GetCachedSize() const {
+    return _impl_._cached_size_.Get();
+  }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(BakeStageCommand* PROTOBUF_NONNULL other);
  private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
@@ -1255,12 +1285,32 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::g
   // nested types ----------------------------------------------------
 
   // accessors -------------------------------------------------------
+  enum : int {
+    kUsdPathFieldNumber = 1,
+  };
+  // string usdPath = 1;
+  [[nodiscard]] bool has_usdpath()
+      const;
+  void clear_usdpath() ;
+  [[nodiscard]] const ::std::string& usdpath() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_usdpath(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_usdpath();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_usdpath();
+  void set_allocated_usdpath(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_usdpath() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_usdpath(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_usdpath();
+
+  public:
   // @@protoc_insertion_point(class_scope:NUBE.BakeStageCommand)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<0, 0,
-                                   0, 0,
+  static const ::google::protobuf::internal::TcParseTable<0, 1,
+                                   0, 37,
                                    2>
       _table_;
 
@@ -1271,6 +1321,22 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::g
   friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+        const BakeStageCommand& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::google::protobuf::internal::ArenaStringPtr usdpath_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
   friend struct ::TableStruct_nube_2eproto;
 };
 
@@ -2496,6 +2562,75 @@ inline void MouseMoveEvent::_internal_set_yrel(::int32_t value) {
 // -------------------------------------------------------------------
 
 // BakeStageCommand
+
+// string usdPath = 1;
+inline bool BakeStageCommand::has_usdpath() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+  return value;
+}
+inline void BakeStageCommand::clear_usdpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.usdpath_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline const ::std::string& BakeStageCommand::usdpath() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.BakeStageCommand.usdPath)
+  return _internal_usdpath();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void BakeStageCommand::set_usdpath(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  _impl_.usdpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.BakeStageCommand.usdPath)
+}
+inline ::std::string* PROTOBUF_NONNULL BakeStageCommand::mutable_usdpath()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::std::string* _s = _internal_mutable_usdpath();
+  // @@protoc_insertion_point(field_mutable:NUBE.BakeStageCommand.usdPath)
+  return _s;
+}
+inline const ::std::string& BakeStageCommand::_internal_usdpath() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.usdpath_.Get();
+}
+inline void BakeStageCommand::_internal_set_usdpath(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.usdpath_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL BakeStageCommand::_internal_mutable_usdpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.usdpath_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE BakeStageCommand::release_usdpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.BakeStageCommand.usdPath)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  auto* released = _impl_.usdpath_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.usdpath_.Set("", GetArena());
+  }
+  return released;
+}
+inline void BakeStageCommand::set_allocated_usdpath(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+  _impl_.usdpath_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.usdpath_.IsDefault()) {
+    _impl_.usdpath_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.BakeStageCommand.usdPath)
+}
 
 // -------------------------------------------------------------------
 
