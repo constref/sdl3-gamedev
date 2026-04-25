@@ -112,16 +112,16 @@ void EngineWorker::start()
                         std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
 
                         // send back the render-init response
-                        NUBE::InitializationDetails initDetails;
-                        initDetails.set_engineurl("ipc://");
-                        initDetails.set_maxframesinflight(texHandles.size());
+                        auto *initDetails = new NUBE::InitializationDetails();
+                        initDetails->set_engineurl("ipc://");
+                        initDetails->set_maxframesinflight(texHandles.size());
                         for (uint64_t texHandle : texHandles)
                         {
-                            initDetails.add_targethandles(texHandle);
+                            initDetails->add_targethandles(texHandle);
                         }
 
                         NUBE::EngineEnvelope envelope;
-                        envelope.set_allocated_initdetails(&initDetails);
+                        envelope.set_allocated_initdetails(initDetails);
                         size_t size = envelope.ByteSizeLong();
                         std::vector<uint8_t> buffer(size);
                         bool success = envelope.SerializeToArray(buffer.data(), buffer.size());
