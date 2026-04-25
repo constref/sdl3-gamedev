@@ -313,6 +313,11 @@ void D3D12RenderSystem::scheduleAssetCopy(size_t stagingOffset, size_t dataSize,
 
 void D3D12RenderSystem::executeAssetCopyOps()
 {
+    if (m_copyOperations.size() == 0)
+    {
+        // nothing to do
+        return;
+    }
     m_assetCmdAllocator->Reset();
     m_assetCmdList->Reset(m_assetCmdAllocator.Get(), nullptr);
 
