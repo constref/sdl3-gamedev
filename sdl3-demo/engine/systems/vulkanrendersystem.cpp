@@ -146,14 +146,8 @@ void VulkanRenderSystem::shutdown()
 	{
 		vkDestroyDescriptorPool(device, descPool, nullptr);
 	}
-
-	// clean up images
-	for (const Image &image : images)
-	{
-		vmaDestroyImage(vmaAllocator, image.handle, image.allocation);
-		vkDestroyImageView(device, image.view, nullptr);
-	}
-	images.clear();
+	
+	releaseAssets();
 
 	// single-use command buffer pool
 	vkDestroyCommandPool(device, commandPool, nullptr);
@@ -2157,6 +2151,17 @@ uint32_t vks::VulkanRenderSystem::findMemoryType(uint32_t typeFilter, VkMemoryPr
 		}
 	}
 	return UINT32_MAX;
+}
+
+void VulkanRenderSystem::releaseAssets()
+{
+	// clean up images
+	for (const Image &image : images)
+	{
+		vmaDestroyImage(vmaAllocator, image.handle, image.allocation);
+		vkDestroyImageView(device, image.view, nullptr);
+	}
+	images.clear();
 }
 
 void loadNode(tinygltf::Node &node, tinygltf::Model &model)

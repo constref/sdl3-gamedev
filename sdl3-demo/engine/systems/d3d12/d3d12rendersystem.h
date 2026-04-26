@@ -58,6 +58,8 @@ struct ConstsPerFrame
 {
 	DirectX::XMFLOAT4 camPosition;
 	DirectX::XMFLOAT4X4 viewProj;
+	int numDirectionalLights;
+	int numPointLights;
 };
 
 struct RenderObject
@@ -182,6 +184,7 @@ public:
 	GPUMeshHandle loadMesh(const Mesh &mesh);
 	const GPUMesh &getMesh(GPUMeshHandle handle);
 	void loadAssets();
+	void releaseAssets() override;
 	void shutdown();
 	ComPtr<ID3D12PipelineState> createPipelineStateObject();
 	ComPtr<ID3DBlob> compileShader(const std::string &file, const std::string &entryPoint, const std::string &target);

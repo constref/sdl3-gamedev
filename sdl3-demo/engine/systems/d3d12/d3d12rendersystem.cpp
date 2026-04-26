@@ -486,6 +486,13 @@ void D3D12RenderSystem::loadAssets()
     m_pso = createPipelineStateObject();
 }
 
+void D3D12RenderSystem::releaseAssets()
+{
+    m_gpuMeshes.clear();
+    m_stagingOffset = 0;
+    m_assetStagingOffset = 0;
+}
+
 void D3D12RenderSystem::shutdown()
 {
     // flush the GPU, wait for one final fence value
@@ -640,12 +647,7 @@ void D3D12RenderSystem::beginFrame()
     // view and projection calculations
     XMVECTOR camPosition = XMLoadFloat4(&m_camPosition);
     XMVECTOR camDirection = XMLoadFloat4(&m_camDirection);
-    /*
-    XMVECTOR camPosition = XMVectorSet(-1, 0, 1, 0);
-    XMVECTOR camDirection = XMVectorSet(0, 0, 1, 1);
-    */
     XMVECTOR camUp = XMVectorSet(0, 1, 0, 0);
-    //m_viewMatrix = XMMatrixLookAtLH(camPosition, camPosition + camDirection, camUp);
     m_viewMatrix = XMMatrixLookAtLH(camPosition, camPosition + camDirection, camUp);
     const float aspectRatio = m_width / static_cast<float>(m_height);
     m_projMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspectRatio, 0.1f, 100.0f);

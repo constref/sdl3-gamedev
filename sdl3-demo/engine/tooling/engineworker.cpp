@@ -107,7 +107,9 @@ void EngineWorker::start()
                 {
                     case NUBE::EditorEnvelope::kStartup:
                     {
-                        m_engine->initialize(512, 288, 512, 288);
+                        uint32_t width  =editorEnvelope.startup().width();
+                        uint32_t height  =editorEnvelope.startup().height();
+                        m_engine->initialize(width, height, width, height);
                         // shared handles for GPU interop
                         std::vector<uint64_t> texHandles = m_engine->getRenderer()->getSharedTextureHandles(editorPID);
 

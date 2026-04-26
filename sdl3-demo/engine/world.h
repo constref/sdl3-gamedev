@@ -15,10 +15,17 @@ class ObjectPool
 public:
 	ObjectPool()
 	{
+		reset();
+	}
+	
+	void reset()
+	{
 		// preallocate objects
+		objects.clear(); // needed for subsequent resets
 		objects.resize(MaxObjects);
 
 		// generate freelist
+		freeList.clear();
 		freeList.reserve(MaxObjects);
 		for (size_t i = 0; i < objects.size(); ++i)
 		{

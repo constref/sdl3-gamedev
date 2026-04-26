@@ -278,6 +278,7 @@ private:
 	bool updatePerFrameDescriptors();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+	void releaseAssets() override;
 	void loadModel();
 	VkCommandBuffer startTransientCommandBuffer();
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);

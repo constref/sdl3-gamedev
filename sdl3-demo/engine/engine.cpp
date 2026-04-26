@@ -68,12 +68,9 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     {
         return false;
     }
-
-    m_app->start(m_services, sdlState);
-
-    // TODO: This should move
-    renderer->updateGPUTextures();
-
+    
+    start();
+    
     return true;
 }
 
@@ -108,9 +105,21 @@ void Engine::run()
 #endif
 }
 
+void Engine::start()
+{
+    m_app->start(m_services, sdlState);
+    // TODO: This should move
+    renderer->updateGPUTextures();
+}
+
 void Engine::stop()
 {
     running = false;
+}
+
+void Engine::clear()
+{
+    services().world().reset();
 }
 
 void Engine::step()

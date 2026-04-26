@@ -62,7 +62,9 @@ public:
     Services& services();
     void cleanup();
     void run();
+    void start();
     void stop();
+    void clear();
     void step();
     
     Application &application();
