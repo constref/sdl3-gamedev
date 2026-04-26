@@ -22,7 +22,7 @@ namespace usd
 extern "C" {
 
 DLL_API usd::StageProxy *CreateProject(const char *path, usd::ObjectsChangedFunc objectsChangedCallback);
-DLL_API usd::StageProxy *OpenProject(const char *path);
+DLL_API usd::StageProxy *OpenProject(const char *path, usd::ObjectsChangedFunc objectsChangedCallback);
 DLL_API void SaveProject(usd::StageProxy *proxy);
 DLL_API void DestroyProxy(usd::StageProxy *proxy);
 DLL_API usd::StageProxy *OpenStage(const char *path);
@@ -32,6 +32,8 @@ DLL_API usd::Prim* GetPrimListData(usd::PrimList *list, uint32_t *outSize);
 DLL_API void DestroyPrimList(usd::PrimList *list);
 
 DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath);
+DLL_API void CreateBrush(usd::StageProxy *proxy, const char *primPath);
+DLL_API void PlaceBrush(usd::StageProxy *proxy, const char *brushPath);
 DLL_API void FlushChanges(usd::StageProxy *proxy);
 
 DLL_API usd::UsdProcessor* CreateStage(const char *path);

@@ -25,10 +25,10 @@ StageProxy *CreateProject(const char *path, ObjectsChangedFunc objectsChangedCal
     return new StageProxy(stage, objectsChangedCallback);
 }
 
-StageProxy *OpenProject(const char *path)
+StageProxy *OpenProject(const char *path, ObjectsChangedFunc objectsChangedCallback)
 {
     UsdStageRefPtr stage = UsdStage::Open(path);
-    return new StageProxy(stage, nullptr);
+    return new StageProxy(stage, objectsChangedCallback);
 }
 
 void SaveProject(usd::StageProxy *proxy)
@@ -125,13 +125,26 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
     return 0;
 }
 
-void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath)
+void AddMesh(StageProxy *proxy, const char *assetPath, const char *primPath)
 {
     proxy->addMesh(assetPath, primPath);
     proxy->flushChanged();
 }
 
-void FlushChanges(usd::StageProxy *proxy)
+void CreateBrush(StageProxy *proxy, const char *primPath)
+{
+    proxy->createBrush(primPath);
+    proxy->flushChanged();
+}
+
+void PlaceBrush(StageProxy *proxy, const char *brushPath)
+{
+    proxy->placeBrush(brushPath);
+    proxy->flushChanged();
+}
+
+
+void FlushChanges(StageProxy *proxy)
 {
     proxy->flushChanged();
 }

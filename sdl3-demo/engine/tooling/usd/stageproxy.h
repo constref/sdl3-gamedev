@@ -18,15 +18,16 @@ namespace usd
         
     public:
         StageProxy(const pxr::UsdStageRefPtr &stage, ObjectsChangedFunc objectsChangedCallback);
+        ObjectsChangedFunc objectsChangedCallback() const;
         
         pxr::UsdStageRefPtr stage();
         void onObjectsChanged(const pxr::UsdNotice::ObjectsChanged &notice);
         void flushChanged();
-    
         
         void work(pxr::UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId);
         void flatten(std::vector<Prim> &flatList, bool useDefaultPrim);
         void addMesh(const char *assetPath, const char *primPath);
-        void addBrush(const char *meshPath);
+        void createBrush(const char *meshPath);
+        void placeBrush(const char *brushPath);
     };
 }

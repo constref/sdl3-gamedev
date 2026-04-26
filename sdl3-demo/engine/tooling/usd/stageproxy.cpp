@@ -13,6 +13,11 @@ StageProxy::StageProxy(const UsdStageRefPtr &stage, ObjectsChangedFunc objectsCh
     TfNotice::Register(TfCreateWeakPtr(this), &StageProxy::onObjectsChanged);
 }
 
+ObjectsChangedFunc StageProxy::objectsChangedCallback() const
+{
+    return m_objectsChangedCallback;
+}
+
 UsdStageRefPtr StageProxy::stage()
 {
     return m_stage;
@@ -101,18 +106,35 @@ void StageProxy::addMesh(const char *assetPath, const char *primPath)
     }
 }
 
-void StageProxy::addBrush(const char *meshPath)
+void StageProxy::createBrush(const char *meshPath)
 {
     const std::string name = SdfPath(meshPath).GetName();
     {
         SdfChangeBlock changeBlock;
         auto layer = stage()->GetEditTarget().GetLayer();
-        SdfPath brushPath = SdfPath("/Library/Brushes").AppendChild(TfToken(name));
+        SdfPath brushPath = SdfPath("/Library/Brushes").AppendChild(TfToken(std::format("brush_{}", name)));
                 
         auto spec = SdfCreatePrimInLayer(layer, brushPath);
         spec->SetSpecifier(SdfSpecifierDef);
         spec->SetTypeName(UsdGeomTokens->Xform);
         SdfReference ref("", SdfPath(meshPath));
+        spec->GetReferenceList().Add(ref);
+    }
+}
+
+void StageProxy::placeBrush(const char *brushPath)
+{
+    const std::string name = SdfPath(brushPath).GetName();
+    {
+        SdfChangeBlock changeBlock;
+        auto layer = stage()->GetEditTarget().GetLayer();
+        SdfPath primPath = SdfPath("/World").AppendChild(TfToken(std::format("{}_001", name)));
+                
+        auto spec = SdfCreatePrimInLayer(layer, primPath);
+        spec->SetSpecifier(SdfSpecifierDef);
+        spec->SetTypeName(UsdGeomTokens->Xform);
+        spec->SetInstanceable(true);
+        SdfReference ref("", SdfPath(brushPath));
         spec->GetReferenceList().Add(ref);
     }
 }

@@ -227,7 +227,6 @@ void EngineWorker::processEvents()
             NodeHandle hRoot = m_engine->application().getRoot();
             Node &root = serv.world().getNode(hRoot);
             m_usdProcessor->bakeStage(root, serv);
-            //serv.eventQueue().enqueue<usd::BakeStageEvent>(NodeHandle{}, 0, m_usdProcessor.get());
         }
     }
 }
