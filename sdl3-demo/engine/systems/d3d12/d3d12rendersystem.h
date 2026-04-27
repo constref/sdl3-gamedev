@@ -67,6 +67,14 @@ struct RenderObject
 	uint32_t baseMatrixIndex = 0;
 };
 
+struct Light
+{
+	DirectX::XMFLOAT4 position;
+	DirectX::XMFLOAT4 direction;
+	DirectX::XMFLOAT4 color;
+	float falloff;
+};
+
 struct ObjectMatrices
 {
 	DirectX::XMFLOAT4X4 world;
@@ -163,7 +171,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, publ
 
 	// render objects
 	constexpr static uint32_t CBVCount = 1;
-	constexpr static uint32_t SRVCount = 2;
+	constexpr static uint32_t SRVCount = 3;
 	constexpr static uint32_t DescriptorsPerFrame = CBVCount + SRVCount;
 	constexpr static size_t ROFrameSize = sizeof(RenderObject) * World::capacity();
 	constexpr static size_t ROPerFrame = World::capacity();
@@ -175,6 +183,12 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, publ
 	D3D12_RESOURCE_STATES m_matrixBuffState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	ComPtr<ID3D12Resource> m_objBuffer;
 	D3D12_RESOURCE_STATES m_objBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	
+	// lighting
+	constexpr static size_t MaxLights = 32;
+	constexpr static size_t LightsFrameSize = sizeof(Light) * MaxLights;
+	ComPtr<ID3D12Resource> m_lightsBuffer;
+	D3D12_RESOURCE_STATES m_lightsBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
 public:
 	D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH);

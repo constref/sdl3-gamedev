@@ -278,7 +278,6 @@ private:
 	bool updatePerFrameDescriptors();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-	void releaseAssets() override;
 	void loadModel();
 	VkCommandBuffer startTransientCommandBuffer();
 	void submitTransientCommandBuffer(VkCommandBuffer commandBuffer, VkFence waitFence = nullptr);
@@ -289,6 +288,7 @@ public:
 	VulkanRenderSystem(SDL_Window *window, uint32_t width, uint32_t height, uint32_t logW, uint32_t logH, Services &services);
 	~VulkanRenderSystem();
 	bool initialize();
+	void releaseAssets() override;
 	void shutdown();
 	void beginFrame() override;
 	void update(Node &node) override;

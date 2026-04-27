@@ -233,6 +233,11 @@ bool D3D12RenderSystem::initialize()
     DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc,
               D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
           "Unable to create render-object buffer");
+    
+    // Light buffer
+    auto srvLightDesc = CD3DX12_RESOURCE_DESC::Buffer(LightsFrameSize * FramesInFlight);
+    DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvLightDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_lightsBuffer.GetAddressOf())),
+        "Unable to create lights buffer");
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
     for (uint32_t i = 0; i < FramesInFlight; ++i)
@@ -258,13 +263,18 @@ bool D3D12RenderSystem::initialize()
             ROPerFrame, sizeof(RenderObject), i * ROPerFrame);
         m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, handle);
         handle.Offset(1, m_descriptorSizes.CBV);
+        
+        // lights srv
+        auto lightsSrvDesv = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(MaxLights, sizeof(Light), i * MaxLights);
+        m_device->CreateShaderResourceView(m_lightsBuffer.Get(), &lightsSrvDesv, handle);
+        handle.Offset(1, m_descriptorSizes.CBV);
     }
 
     // create a root signature
     std::array descTable
     {
-        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1),
-        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0)
+        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CBVCount, 1),
+        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, SRVCount, 0)
     };
 
     std::array<CD3DX12_ROOT_PARAMETER1, 2> rootParameters{};
@@ -640,7 +650,8 @@ void D3D12RenderSystem::beginFrame()
     std::array barriersPreCopy
     {
         CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), m_matrixBuffState, D3D12_RESOURCE_STATE_COPY_DEST),
-        CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
+        CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), m_lightsBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
     };
     res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
 
@@ -659,6 +670,19 @@ void D3D12RenderSystem::beginFrame()
     const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
     memcpy(static_cast<uint8_t*>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame,
            sizeof(cbPerFrame));
+    
+    // update lights
+    std::array lights = {
+        Light {
+            .position = XMFLOAT4(3, 0.7, -3, 1),
+            .color = XMFLOAT4(1.0, 0.2, 0.1, 0.0),
+            .falloff = 4
+        },
+    };
+    
+    uint32_t stageOffset = stageData(&lights, sizeof(lights), 4);
+    res.commandList->CopyBufferRegion(m_lightsBuffer.Get(), m_frameResIndex * LightsFrameSize, 
+        m_stagingBuffer.Get(), stageOffset, sizeof(lights));
 }
 
 void D3D12RenderSystem::endFrame()
@@ -670,12 +694,14 @@ void D3D12RenderSystem::endFrame()
     std::array barriersPostCopy
     {
         CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState),
-        CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState)
+        CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState)
     };
     res.commandList->ResourceBarrier(barriersPostCopy.size(), barriersPostCopy.data());
 
     m_matrixBuffState = endState;
     m_objBufferState = endState;
+    m_lightsBufferState = endState;
 
     // bind root signature
     static std::array descriptorHeaps{m_descriptorHeap.Get()};
@@ -698,9 +724,9 @@ void D3D12RenderSystem::endFrame()
     ComPtr<ID3D12Resource> renderTarget = Config::ExecSelect(m_backBuffers[res.renderTargetIndex],
                                                              m_renderTargetTextures[res.renderTargetIndex]);
     D3D12_RESOURCE_STATES rtStatePostDraw = Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT,
-                                                               D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), rtStatePostDraw,
-                                                          D3D12_RESOURCE_STATE_RENDER_TARGET);
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
     res.commandList->ResourceBarrier(1, &rtBarrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),

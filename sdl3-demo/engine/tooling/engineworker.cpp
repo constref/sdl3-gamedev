@@ -29,7 +29,7 @@ void EngineWorker::start()
     zmq::context_t ctx;
 
     // subscribe to editor event publisher
-    m_pullThread = std::thread([this, &ctx]()
+    m_subThread = std::thread([this, &ctx]()
     {
         zmq::socket_t sub(ctx, zmq::socket_type::sub);
         sub.connect(std::format("{}-EditorPub", url));
@@ -77,9 +77,9 @@ void EngineWorker::start()
             }
         }
     });
-    if (m_pullThread.joinable())
+    if (m_subThread.joinable())
     {
-        m_pullThread.detach();
+        m_subThread.detach();
     }
 
     // create socket for engine->tooling data
@@ -151,7 +151,7 @@ void EngineWorker::start()
                         m_running = false;
                         if (m_engineThread.joinable())
                         {
-                            m_engineThread.detach();
+                            m_engineThread.join();
                         }
                         ack();
                         break;

@@ -11,8 +11,16 @@ struct Material
     float4 reflect;
 };
 
+struct Light
+{
+    float4 position;
+    float4 direction;
+    float range;
+};
+
 StructuredBuffer<float4x4> matrices : register(t0);
 StructuredBuffer<RenderObject> renderObjects : register(t1);
+StructuredBuffer<Light> lights : register(t2);
 
 uint roIdx : register(b0);
 

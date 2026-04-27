@@ -470,7 +470,6 @@ void UsdProcessor::addMesh(const std::string& path, SdfPath primPath)
 
 void UsdProcessor::bakeStage(Node& root, Services& services)
 {
-    //UsdPrim rootPrim = m_usdMembers->stage()->GetPrimAtPath(WorldPath);
     UsdPrim rootPrim = m_usdMembers->stage()->GetDefaultPrim();
     for (auto child : rootPrim.GetChildren())
     {
