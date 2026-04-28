@@ -744,7 +744,7 @@ void D3D12RenderSystem::endFrame()
     if constexpr (Config::IsToolingMode())
     {
         // TODO: Handle keyed mutex deadlock timeout properly
-        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, INFINITE);
+        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, 1000);
         if (hr == WAIT_TIMEOUT)
         {
             // do nothing if we can't acquire a lock

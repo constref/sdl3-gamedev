@@ -153,6 +153,7 @@ void EngineWorker::start()
                         {
                             m_engineThread.join();
                         }
+                        m_listening = false;
                         ack();
                         break;
                     }
