@@ -36,8 +36,6 @@ DLL_API void CreateBrush(usd::StageProxy *proxy, const char *primPath);
 DLL_API void PlaceBrush(usd::StageProxy *proxy, const char *brushPath);
 DLL_API void FlushChanges(usd::StageProxy *proxy);
 
-DLL_API usd::UsdProcessor* CreateStage(const char *path);
-//DLL_API usd::UsdProcessor* OpenStage(const char *path);
 DLL_API void SaveStage(usd::UsdProcessor *proc);
 DLL_API void DestroyUsdProcessor(usd::UsdProcessor *proc);
 

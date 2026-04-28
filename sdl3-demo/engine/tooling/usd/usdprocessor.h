@@ -2,10 +2,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-
 #include <components/meshcomponent.h>
-
-#include <tooling/usd.h>
 
 class Mesh;
 class Node;
@@ -42,16 +39,7 @@ public:
     UsdProcessor(std::shared_ptr<UsdStageListener> listener = nullptr);
     ~UsdProcessor();
 
-    pxr::UsdStageRefPtr stage();
-    void createStage(const std::string &path);
-    void saveStage() const;
-    void addLayer(const std::string &layerPath);
     void openStage(const std::string &usdPath);
-    void addPrim(const std::string &path, const std::string &type) const;
-    void addMesh(const std::string &path, pxr::SdfPath primPath);
     void bakeStage(Node &root, Services &services);
-    void addBrush(pxr::SdfPath meshPath);
-    void placeBrush(pxr::SdfPath brushPath);
-    void flatten(std::vector<Prim> &flatList, bool usdDefaultPrim);
 };
 }

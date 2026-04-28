@@ -47,13 +47,6 @@ usd::StageProxy *OpenStage(const char *path)
     return new StageProxy(stage, nullptr);
 }
 
-usd::UsdProcessor *CreateStage(const char *path)
-{
-    auto usdProc = new usd::UsdProcessor(nullptr);
-    usdProc->createStage(path);
-    return usdProc;
-}
-
 void DestroyUsdProcessor(usd::UsdProcessor *proc)
 {
     delete proc;

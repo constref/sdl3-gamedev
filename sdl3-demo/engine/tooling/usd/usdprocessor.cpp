@@ -32,23 +32,6 @@ using namespace pxr;
 using namespace DirectX;
 using namespace usd;
 
-const SdfPath WorldPath("/World");
-const SdfPath LibPath("/Library");
-const SdfPath MeshesPath(LibPath.AppendPath(SdfPath("Meshes")));
-const SdfPath BrushesPath(LibPath.AppendPath(SdfPath("Brushes")));
-
-namespace QUBED
-{
-    namespace Keys
-    {
-		const TfToken Type("qubed:type");
-    }
-    namespace Values
-    {
-		const VtValue MeshType("mesh");
-		const VtValue BrushType("brush");
-    }
-}
 
 namespace usd
 {
@@ -370,102 +353,10 @@ UsdProcessor::~UsdProcessor()
     //TfNotice::Revoke(m_revokeKey);
 }
 
-UsdStageRefPtr UsdProcessor::stage()
-{
-    return m_usdMembers->stage();
-}
-
-void UsdProcessor::createStage(const std::string& path)
-{
-    auto stage = pxr::UsdStage::CreateNew(path);
-
-    // setup /Library structure
-    UsdPrim libPrim = stage->DefinePrim(LibPath, UsdGeomTokens->Scope);
-    UsdGeomImageable libImg(libPrim);
-    libImg.GetVisibilityAttr().Set(UsdGeomTokens->invisible);
-
-    stage->DefinePrim(MeshesPath, UsdGeomTokens->Scope);
-    stage->DefinePrim(BrushesPath, UsdGeomTokens->Scope);
-
-    // setup /World
-    UsdPrim world = stage->DefinePrim(WorldPath, UsdGeomTokens->Xform);
-    stage->SetDefaultPrim(world);
-
-    std::filesystem::path stagePath(path);
-    auto worldLayer = SdfLayer::CreateNew("layout.usda");
-
-    stage->GetRootLayer()->GetSubLayerPaths().push_back(worldLayer->GetRealPath());
-    stage->GetLayerStack(false).push_back(worldLayer);
-    worldLayer->Save();
-    stage->Save();
-
-    m_usdMembers->setStage(stage);
-    m_usdMembers->setWorldLayer(worldLayer);
-}
-
 void UsdProcessor::openStage(const std::string& usdPath)
 {
     UsdStageRefPtr stage = pxr::UsdStage::Open(usdPath);
     m_usdMembers->setStage(stage);
-}
-
-void UsdProcessor::saveStage() const
-{
-    m_usdMembers->stage()->Save();
-}
-
-void UsdProcessor::addLayer(const std::string& layerPath)
-{
-    if (std::filesystem::exists(layerPath))
-    {
-        m_usdMembers->stage()->GetRootLayer()->GetSubLayerPaths().push_back(layerPath);
-    }
-    else
-    {
-        Logger::error(this, "File path does not exist");
-    }
-}
-
-void UsdProcessor::addPrim(const std::string& path, const std::string& type) const
-{
-    SdfPath primPath(path);
-    TfToken primType = UsdGeomTokens->Scope;
-    if (type == "Xform")
-    {
-        primType = UsdGeomTokens->Xform;
-    }
-    UsdPrim newPrim = m_usdMembers->stage()->DefinePrim(primPath, primType);
-}
-
-void UsdProcessor::addMesh(const std::string& path, SdfPath primPath)
-{
-    if (std::filesystem::exists(path))
-    {
-        auto assetStage = pxr::UsdStage::Open(path);
-        std::string name;
-        if (!primPath.IsEmpty())
-        {
-            name = primPath.GetName();
-        }
-        else
-        {
-            UsdPrim prim = assetStage->GetDefaultPrim();
-            SdfPath primPath = prim.GetPath();
-            name = primPath.GetName();
-            if (name == "root")
-            {
-                // take child of root, don't want the top-most root
-                prim = prim.GetChildren().front();
-                primPath = prim.GetPath();
-                name = primPath.GetName();
-            }
-        }
-
-        UsdPrim meshes = m_usdMembers->stage()->GetPrimAtPath(MeshesPath);
-        UsdPrim meshPrim = m_usdMembers->stage()->DefinePrim(MeshesPath.AppendPath(SdfPath(name)), UsdGeomTokens->Xform);
-        meshPrim.GetReferences().AddReference(path, primPath);
-		meshPrim.SetCustomDataByKey(QUBED::Keys::Type, QUBED::Values::MeshType);
-    }
 }
 
 void UsdProcessor::bakeStage(Node& root, Services& services)
@@ -478,70 +369,4 @@ void UsdProcessor::bakeStage(Node& root, Services& services)
     d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
         d3d12rs::D3D12RenderSystem>();
     renderer->executeAssetCopyOps();
-}
-
-void UsdProcessor::addBrush(pxr::SdfPath meshPath)
-{
-    UsdPrim meshPrim = stage()->GetPrimAtPath(meshPath);
-    const std::string meshName = meshPrim.GetName();
-    const std::string brushName = std::format("{}", meshName);
-    SdfPath brushPath = BrushesPath.AppendPath(SdfPath(brushName));
-
-    UsdPrim brushPrim = stage()->DefinePrim(brushPath, UsdGeomTokens->Xform);
-    brushPrim.GetReferences().AddReference(SdfReference("", meshPath));
-    brushPrim.SetInstanceable(true);
-    brushPrim.SetCustomDataByKey(QUBED::Keys::Type, QUBED::Values::BrushType);
-}
-
-void UsdProcessor::placeBrush(pxr::SdfPath brushPath)
-{
-    UsdPrim brushPrim = stage()->GetPrimAtPath(brushPath);
-    const std::string brushName = brushPrim.GetName();
-    const std::string objName = std::format("{}_01", brushName);
-    SdfPath objPath = WorldPath.AppendPath(SdfPath(objName));
-
-    stage()->SetEditTarget(m_usdMembers->worldLayer());
-
-    UsdPrim prim = stage()->DefinePrim(objPath, UsdGeomTokens->Xform);
-    prim.GetReferences().AddInternalReference(brushPath);
-    prim.SetInstanceable(true);
-
-    stage()->SetEditTarget(stage()->GetRootLayer());
-
-    // auto primSpecHandle = SdfCreatePrimInLayer(m_usdMembers->worldLayer(), objPath);
-    // primSpecHandle->SetTypeName(UsdGeomTokens->Xform);
-    // primSpecHandle->GetReferenceList().Add(brushPath.GetAsString());
-    // m_usdMembers->worldLayer()->Save();
-}
-
-void work(UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId)
-{
-    flatList.push_back(parent);
-    
-    for (UsdPrim child : prim.GetChildren())
-    {
-		const Prim childPrim {
-			.id = currentId++,
-			.parentId = parent.id,
-			.name = child.GetName().GetString().c_str(),
-		    .type = child.GetTypeName().GetText(),
-		    .path = child.GetPath().GetString().c_str()
-		};
-        work(child, childPrim, flatList, currentId);
-    }
-}
-
-void UsdProcessor::flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
-{
-    uint32_t currentId = 1;
-    
-    UsdPrim root = useDefaultPrim ? stage()->GetDefaultPrim() : stage()->GetPseudoRoot();
-    const Prim rootPrim {
-        .id = currentId++,
-        .parentId = 0,
-        .name = root.GetName().GetString().c_str(),
-        .type = root.GetTypeName().GetText(),
-        .path = root.GetPath().GetString().c_str()
-    };
-    work(root, rootPrim, flatList, currentId);
 }
