@@ -1,7 +1,14 @@
 #include "engine.h"
 
-#include "systems/enginesystem.h"
-#include "systems/windowingsystem.h"
+#include <systems/spriterendersystem.h>
+#include <systems/spriteanimationsystem.h>
+#include <systems/physicssystem.h>
+#include <systems/collisionsystem.h>
+#include <systems/timersystem.h>
+#include <systems/vulkanrendersystem.h>
+#include <systems/enginesystem.h>
+#include <systems/windowingsystem.h>
+#include <systems/lightingsystem.h>
 
 Engine::Engine(std::unique_ptr<Application> app) : m_app(std::move(app)),
                                                    m_services(world, compSys, eventQueue, inputState, protoInstancer),
@@ -43,6 +50,7 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     m_services.compSys().registerSystem(std::make_unique<PhysicsSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<CollisionSystem>(m_services));
     m_services.compSys().registerSystem(std::make_unique<SpriteAnimationSystem>(m_services));
+    m_services.compSys().registerSystem(std::make_unique<LightingSystem>(m_services));
 
     // D3D 12
     auto &renderSys = m_services.compSys().registerSystem(

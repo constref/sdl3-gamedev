@@ -7,6 +7,8 @@
 #include <d3dcompiler.h>
 #include <filesystem>
 #include <d3d11on12.h>
+
+#include "componentsystems.h"
 #include "util.h"
 
 using namespace DirectX;
@@ -48,6 +50,8 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int
     // {
     // 	OutputDebugStringA(std::format("{}\n", message).c_str());
     // };
+    m_lightSys = services.compSys().getSystemRegistry().getSystem<LightingSystem>();
+    assert(m_lightSys != nullptr && "Lighting system must not be null.");
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -265,7 +269,7 @@ bool D3D12RenderSystem::initialize()
         handle.Offset(1, m_descriptorSizes.CBV);
         
         // lights srv
-        auto lightsSrvDesv = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(MaxLights, sizeof(Light), i * MaxLights);
+        auto lightsSrvDesv = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(LightingSystem::MaxLights, sizeof(Light), i * LightingSystem::MaxLights);
         m_device->CreateShaderResourceView(m_lightsBuffer.Get(), &lightsSrvDesv, handle);
         handle.Offset(1, m_descriptorSizes.CBV);
     }
@@ -670,24 +674,19 @@ void D3D12RenderSystem::beginFrame()
     const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
     memcpy(static_cast<uint8_t*>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame,
            sizeof(cbPerFrame));
-    
-    // update lights
-    std::array lights = {
-        Light {
-            .position = XMFLOAT4(3, 0.7, -3, 1),
-            .color = XMFLOAT4(1.0, 0.2, 0.1, 0.0),
-            .falloff = 4
-        },
-    };
-    
-    uint32_t stageOffset = stageData(&lights, sizeof(lights), 4);
-    res.commandList->CopyBufferRegion(m_lightsBuffer.Get(), m_frameResIndex * LightsFrameSize, 
-        m_stagingBuffer.Get(), stageOffset, sizeof(lights));
 }
 
 void D3D12RenderSystem::endFrame()
 {
     auto& res = m_frameResources[m_frameResIndex];
+    
+    // update lights
+    auto &lights = m_lightSys->lights();
+    size_t lightsBytes = m_lightSys->lightsByteSize();
+    
+    uint32_t stageOffset = stageData(&lights, lightsBytes, 4);
+    res.commandList->CopyBufferRegion(m_lightsBuffer.Get(), m_frameResIndex * LightsFrameSize, 
+        m_stagingBuffer.Get(), stageOffset, lightsBytes);
 
     // transition the buffers to SRV compatible
     auto endState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
@@ -744,7 +743,7 @@ void D3D12RenderSystem::endFrame()
     if constexpr (Config::IsToolingMode())
     {
         // TODO: Handle keyed mutex deadlock timeout properly
-        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, 1000);
+        HRESULT hr = m_rtKeyedMutexes[res.renderTargetIndex]->AcquireSync(0, INFINITE);
         if (hr == WAIT_TIMEOUT)
         {
             // do nothing if we can't acquire a lock

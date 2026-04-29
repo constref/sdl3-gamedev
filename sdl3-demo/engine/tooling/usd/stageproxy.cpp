@@ -9,8 +9,11 @@ using namespace pxr;
 StageProxy::StageProxy(const UsdStageRefPtr &stage, ObjectsChangedFunc objectsChangedCallback)
 {
     m_stage = stage;
-    m_objectsChangedCallback = objectsChangedCallback;
-    TfNotice::Register(TfCreateWeakPtr(this), &StageProxy::onObjectsChanged);
+    if (objectsChangedCallback)
+    {
+        m_objectsChangedCallback = objectsChangedCallback;
+        TfNotice::Register(TfCreateWeakPtr(this), &StageProxy::onObjectsChanged);
+    }
 }
 
 ObjectsChangedFunc StageProxy::objectsChangedCallback() const

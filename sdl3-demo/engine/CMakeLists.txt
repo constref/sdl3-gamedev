@@ -44,6 +44,8 @@ set(ENGINE_SOURCES
 	"components/spritecomponent.cpp"
 	"components/meshcomponent.h"
 	"components/meshcomponent.cpp"
+	"components/lightingcomponent.h"
+	"components/lightingcomponent.cpp"
 	"messaging/observer.h"
 	"messaging/command.h"
 	"messaging/commanddispatcher.h"
@@ -93,6 +95,8 @@ set(ENGINE_SOURCES
 	"systems/d3d12/util.h"
 	"systems/d3d12/d3d12rendersystem.h"
 	"systems/d3d12/d3d12rendersystem.cpp"
+	"systems/lightingsystem.h"
+	"systems/lightingsystem.cpp"
 	"systems/context/rendercontext.h"
 	"components/componentstore.h"
 	"components/componentstore.cpp"
@@ -115,6 +119,10 @@ set(ENGINE_SOURCES
 	"containers/ringbuffer.h"
 	"tooling/platformutils.h"
 	"tooling/platformutils.cpp"
+	"persistence/project.h"
+	"persistence/project.cpp"
+	"assetid.h"
+	"assetid.cpp"
 )
 
 set(SHADER_SOURCES
@@ -166,7 +174,6 @@ target_include_directories(engine
 if (EXECUTION_MODE STREQUAL "TOOLING")
     find_package(pxr REQUIRED)
     find_package(cppzmq REQUIRED)
-	find_package(flatbuffers REQUIRED)
 	find_package(Protobuf CONFIG REQUIRED)
 
 	set(PROTOBUF_DIR ${CMAKE_SOURCE_DIR}/protobuf/cpp)
@@ -203,11 +210,12 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 
 	target_include_directories(enginetooling
 		PUBLIC
+		"ext/"
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${PROTOBUF_DIR}
 	)
     target_link_libraries(enginetooling
-        PRIVATE engine cppzmq usd usdGeom usdImaging hd flatbuffers::flatbuffers nubeproto)
+        PRIVATE engine cppzmq usd usdGeom usdImaging hd usdLux nubeproto)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)

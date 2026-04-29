@@ -15,7 +15,8 @@ struct Light
 {
     float4 position;
     float4 direction;
-    float range;
+    float4 color;
+    float falloff;
 };
 
 StructuredBuffer<float4x4> matrices : register(t0);
@@ -81,13 +82,14 @@ float4 PSMain(PixelIn input) : SV_TARGET
         finalColor += input.color * float4(0.9, 0.8, 0.8, 0) * lightAmt * intensity;
     }
     
-    const int numDirLights = 2;
-    float3 dirLights[2] = {float3(3, 0.7, -3), float3(1, 0.7, -10)};
+    const int numDirLights = 1;
+    float3 dirLights[1] = {float3(3, 0.7, -3)};
     for (int i = 0; i < numDirLights; ++i)
     {
         // point light
-        float3 lightPos = dirLights[i];
-        const float falloff = 4;
+        float3 lightPos = lights[i].position;
+        float4 lightColor = lights[i].color;
+        const float falloff = lights[i].falloff;
         float3 L = lightPos - input.positionW;
         float distance = length(L);
     
@@ -95,7 +97,7 @@ float4 PSMain(PixelIn input) : SV_TARGET
         {
             L = L / distance; // normalize
             float lightAmt = max(dot(L, normalize(input.normal)), 0);
-            finalColor += input.color * (float4(1.0, 0.2, 0.1, 0.0) * lightAmt) * (1 - smoothstep(falloff - 3, falloff, distance));
+            finalColor += input.color * (lightColor * lightAmt) * (1 - smoothstep(falloff - 3, falloff, distance));
         }
     }
 

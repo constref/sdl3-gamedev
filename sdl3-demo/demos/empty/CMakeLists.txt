@@ -35,5 +35,5 @@ if (EMSCRIPTEN)
 endif()
 
 if (EXECUTION_MODE STREQUAL "TOOLING")
-    target_link_libraries(empty PRIVATE enginetooling)
+	target_link_libraries(empty PRIVATE enginetooling)
 endif()

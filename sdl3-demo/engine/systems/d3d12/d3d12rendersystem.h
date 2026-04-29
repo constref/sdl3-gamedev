@@ -8,11 +8,11 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include <rendering/mesh.h>
+#include <rendering/light.h>
 #include <rendering/renderer.h>
+#include <systems/lightingsystem.h>
 
 #include <d3d11on12.h>
-
-#include <span>
 
 
 struct SDL_Window;
@@ -67,14 +67,6 @@ struct RenderObject
 	uint32_t baseMatrixIndex = 0;
 };
 
-struct Light
-{
-	DirectX::XMFLOAT4 position;
-	DirectX::XMFLOAT4 direction;
-	DirectX::XMFLOAT4 color;
-	float falloff;
-};
-
 struct ObjectMatrices
 {
 	DirectX::XMFLOAT4X4 world;
@@ -98,13 +90,14 @@ struct FrameResources
 	uint64_t fenceValue = 0;
 	std::vector<DrawOperation> drawOperations;
 };
-
+	
 class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, public Renderer
 {
 	constexpr static inline DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	constexpr static inline DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
 	HWND m_hWnd = NULL;
 	int m_width, m_height, m_logW, m_logH;
+	LightingSystem *m_lightSys;
 
 	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
 	ComPtr<IDXGIAdapter4> m_dxgiAdapter;
@@ -185,8 +178,9 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, publ
 	D3D12_RESOURCE_STATES m_objBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	
 	// lighting
-	constexpr static size_t MaxLights = 32;
-	constexpr static size_t LightsFrameSize = sizeof(Light) * MaxLights;
+	uint32_t m_numLights = 0;
+	uint32_t m_numPointLights = 0;
+	constexpr static size_t LightsFrameSize = sizeof(Light) * LightingSystem::MaxLights;
 	ComPtr<ID3D12Resource> m_lightsBuffer;
 	D3D12_RESOURCE_STATES m_lightsBufferState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 

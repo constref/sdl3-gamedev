@@ -18,6 +18,7 @@
 #include <pxr/usd/usdGeom/primvar.h>
 #include <pxr/usd/usd/tokens.h>
 #include <pxr/usd/usd/notice.h>
+#include <pxr/usd/usdLux/sphereLight.h>
 
 #include <systems/d3d12/d3d12rendersystem.h>
 #include <vulkan/vulkan_core.h>
@@ -26,7 +27,12 @@
 #include <tooling/usd/usdstagelistener.h>
 #include <componentsystems.h>
 #include <rendering/mesh.h>
+#include <components/lightingcomponent.h>
 #include "usdlogger.h"
+
+#include <persistence/project.h>
+
+#include <uuid.h>
 
 using namespace pxr;
 using namespace DirectX;
@@ -35,26 +41,24 @@ using namespace usd;
 
 namespace usd
 {
-
-class UsdMembers : public pxr::TfWeakBase
-{
-    UsdStageRefPtr m_stage;
-    SdfLayerRefPtr m_worldLayer;
-    UsdLogger m_usdLogger;
-    std::shared_ptr<usd::UsdStageListener> m_stageListener;
-
-public:
-    UsdMembers(std::shared_ptr<usd::UsdStageListener> stageListener) : m_stageListener(stageListener)
+    class UsdMembers : public pxr::TfWeakBase
     {
-        TfDiagnosticMgr::GetInstance().AddDelegate(&m_usdLogger);
-    }
+        UsdStageRefPtr m_stage;
+        SdfLayerRefPtr m_worldLayer;
+        UsdLogger m_usdLogger;
+        std::shared_ptr<usd::UsdStageListener> m_stageListener;
 
-    auto stage() const { return m_stage; }
-    void setStage(UsdStageRefPtr stage) { m_stage = stage; }
-    auto worldLayer() { return m_worldLayer; }
-    void setWorldLayer(SdfLayerRefPtr layer) { m_worldLayer = layer; }
-};
+    public:
+        UsdMembers(std::shared_ptr<usd::UsdStageListener> stageListener) : m_stageListener(stageListener)
+        {
+            TfDiagnosticMgr::GetInstance().AddDelegate(&m_usdLogger);
+        }
 
+        auto stage() const { return m_stage; }
+        void setStage(UsdStageRefPtr stage) { m_stage = stage; }
+        auto worldLayer() { return m_worldLayer; }
+        void setWorldLayer(SdfLayerRefPtr layer) { m_worldLayer = layer; }
+    };
 }
 
 
@@ -65,7 +69,7 @@ struct VertexId
     GfVec2f uv;
     constexpr static float epsilon = 0.001f;
 
-    bool operator==(const VertexId& o) const
+    bool operator==(const VertexId &o) const
     {
         const float nDot = GfDot(normal, o.normal);
         return index == o.index && nDot > 0.999f &&
@@ -75,7 +79,7 @@ struct VertexId
 
     struct Hasher
     {
-        size_t operator()(const VertexId& ve) const
+        size_t operator()(const VertexId &ve) const
         {
             size_t seed = 0;
             auto combine = [&](size_t value)
@@ -112,7 +116,6 @@ private:
 static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
 {
     Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
-
     UsdGeomPrimvarsAPI primvarApi(mesh);
     VtArray<GfVec3f> points;
     mesh.GetPointsAttr().Get(&points);
@@ -149,7 +152,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
         Logger::error(self, "Error triangulating face normals");
     }
     VtVec3fArray triNormals = triNormalsVal.Get<VtArray<GfVec3f>>();
-    for (GfVec3f& n : triNormals)
+    for (GfVec3f &n : triNormals)
     {
         n.Normalize();
     }
@@ -210,43 +213,42 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
     }
     Logger::info(self, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(),
                                    submeshIndices.size()));
-    std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>();
+    
+    std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>(AssetId::generate());
     newMesh->addSubmesh(SubMesh(submeshVerts, submeshIndices));
     return std::move(newMesh);
 }
 
-static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services& services,
-                        std::unordered_map<std::string, PrimGeo>& meshes)
+static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t parentId, std::vector<persistence::Node> &nodes, std::unordered_map<std::string, std::unique_ptr<Mesh>> &meshMap, uint32_t &meshIndex)
 {
     Logger::info(self, std::format("Processing path: {}", prim.GetPath().GetString()));
-    World& world = services.world();
-    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<d3d12rs::D3D12RenderSystem>();
 
     // lambda to process geom mesh and attach component to runtime Node
-    auto processGeomMesh = [self, &meshes, &services, renderer](Node& node, UsdGeomMesh meshPrim)
+    auto processGeomMesh = [self, &meshMap, &meshIndex](UsdGeomMesh meshPrim)
     {
         const std::string path = meshPrim.GetPath().GetString();
         Logger::info(self, std::format("Geomesh path: {}: ", path));
-
-        auto meshItr = meshes.find(path);
-        if (meshItr == meshes.end())
+        
+        auto meshItr = meshMap.find(path);
+        if (meshItr == meshMap.end())
         {
-            std::unique_ptr<Mesh> cpuMesh = processMesh(self, meshPrim);
-            GPUMeshHandle gpuHandle = renderer->loadMesh(*cpuMesh);
-
-            PrimGeo primGeo{
-                .mesh = std::move(cpuMesh),
-                .gpuHandle = gpuHandle
-            };
-
-            auto [itr, added] = meshes.insert({path, std::move(primGeo)});
+            std::unique_ptr<Mesh> mesh = processMesh(self, meshPrim);
+            auto [itr, added] = meshMap.insert({path, std::move(mesh)});
             meshItr = itr;
         }
-
-        services.compSys().addComponent<MeshComponent>(node, meshItr->second.gpuHandle);
+        return meshItr->second->id();
+        //     GPUMeshHandle gpuHandle = renderer->loadMesh(*cpuMesh);
+        //
+        //     PrimGeo primGeo{
+        //         .mesh = std::move(cpuMesh),
+        //         .gpuHandle = gpuHandle
+        //     };
+        //
+        //
+        // services.compSys().addComponent<MeshComponent>(node, meshItr->second.gpuHandle);
     };
 
-    auto extractTransform = [](UsdPrim prim, Node& node)
+    auto extractTransform = [](UsdPrim prim, Node &node)
     {
         UsdGeomXformable xf(prim);
         bool resetsXformStack = false;
@@ -276,15 +278,19 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
         }
     };
 
-    auto& typeInfo = prim.GetPrimTypeInfo();
+    auto &typeInfo = prim.GetPrimTypeInfo();
     if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
     {
+        persistence::Node node;
+        node.id = id++;
+        node.parentId = parentId;
+        
         // Xform, create a node with transform
-        NodeHandle hNode = world.createNode();
-        Node& node = world.getNode(hNode);
-        parent.addChild(node);
-
-        extractTransform(prim, node);
+        // NodeHandle hNode = world.createNode();
+        // Node &node = world.getNode(hNode);
+        // parent.addChild(node);
+        // extractTransform(prim, node);
+        //
         if (prim.IsInstance())
         {
             // refer to prim's prototype
@@ -294,7 +300,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
                 if (child.GetTypeName() == UsdGeomTokens->Mesh)
                 {
                     UsdGeomMesh meshPrim(child);
-                    processGeomMesh(node, meshPrim);
+                    node.meshId = processGeomMesh(meshPrim);
                 }
             }
         }
@@ -306,14 +312,15 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
                 if (child.GetTypeName() == UsdGeomTokens->Mesh)
                 {
                     UsdGeomMesh meshPrim(child);
-                    processGeomMesh(node, meshPrim);
+                    node.meshId = processGeomMesh(meshPrim);
                 }
                 else
                 {
-                    processPrim(self, child, parent, services, meshes);
+                    processPrim(self, child, id, node.id, nodes, meshMap, meshIndex);
                 }
             }
         }
+        nodes.push_back(node);
     }
     else if (prim.GetTypeName() == UsdGeomTokens->Scope)
     {
@@ -323,20 +330,30 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, Node& parent, Services
             // TODO: Ensure no material should be inherited from this Scope prim
             for (UsdPrim child : prim.GetChildren())
             {
-                processPrim(self, child, parent, services, meshes);
+                processPrim(self, child, id, parentId, nodes, meshMap, meshIndex);
             }
         }
     }
-    else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
-    {
-        NodeHandle hNode = world.createNode();
-        Node& node = world.getNode(hNode);
-        parent.addChild(node);
-
-        extractTransform(prim, node);
-        UsdGeomMesh meshPrim(prim);
-        processGeomMesh(node, meshPrim);
-    }
+    // else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
+    // {
+    //     NodeHandle hNode = world.createNode();
+    //     Node &node = world.getNode(hNode);
+    //     parent.addChild(node);
+    //
+    //     extractTransform(prim, node);
+    //     UsdGeomMesh meshPrim(prim);
+    //     processGeomMesh(node, meshPrim);
+    // }
+    // else if (prim.GetTypeName() == UsdLuxTokens->SphereLight)
+    // {
+    //     NodeHandle hNode = world.createNode();
+    //     Node &node = world.getNode(hNode);
+    //     parent.addChild(node);
+    //
+    //     extractTransform(prim, node);
+    //     auto &lightComp = services.compSys().addComponent<LightingComponent>(node);
+    //     lightComp.setColor(DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+    // }
 }
 
 UsdProcessor::UsdProcessor(std::shared_ptr<usd::UsdStageListener> listener)
@@ -353,20 +370,72 @@ UsdProcessor::~UsdProcessor()
     //TfNotice::Revoke(m_revokeKey);
 }
 
-void UsdProcessor::openStage(const std::string& usdPath)
+void UsdProcessor::openStage(const std::string &usdPath)
 {
     UsdStageRefPtr stage = pxr::UsdStage::Open(usdPath);
     m_usdMembers->setStage(stage);
 }
 
-void UsdProcessor::bakeStage(Node& root, Services& services)
+void UsdProcessor::bakeStage(Node &root, Services &services)
 {
+    std::vector<persistence::Node> nodes;
+    std::unordered_map<std::string, std::unique_ptr<Mesh>> meshMap;
+    
+    uint32_t nodeId = 0;
+    uint32_t meshIndex = 0;
     UsdPrim rootPrim = m_usdMembers->stage()->GetDefaultPrim();
     for (auto child : rootPrim.GetChildren())
     {
-        processPrim(this, child, root, services, m_meshes);
+        processPrim(this, child, nodeId++, 0, nodes, meshMap, meshIndex);
     }
-    d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
-        d3d12rs::D3D12RenderSystem>();
-    renderer->executeAssetCopyOps();
+    auto file = persistence::createFile("baked/test.nub");
+    
+    // nodes
+    uint32_t nodeCount = nodes.size();
+    file.write(reinterpret_cast<const char*>(&nodeCount), sizeof(nodeCount));
+    for (auto n : nodes)
+    {
+        file.write(reinterpret_cast<const char*>(&n), sizeof(persistence::Node));
+    }
+    
+    // meshes
+    uint32_t meshCount = meshMap.size();
+    file.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
+    for (const auto &itr : meshMap)
+    {
+        // mesh header
+        Mesh *mesh = itr.second.get();
+        persistence::Mesh prMesh;
+        prMesh.id = mesh->id();
+        prMesh.subMeshCount = mesh->subMeshes().size();
+        file.write(reinterpret_cast<const char*>(&prMesh), sizeof(persistence::Mesh));
+        
+        // submeshes
+        for (const auto &sm : mesh->subMeshes())
+        {
+            persistence::SubMesh prSubMesh;
+            prSubMesh.vertexCount = sm.vertices.size();
+            prSubMesh.indexCount = sm.indices.size();
+            file.write(reinterpret_cast<const char*>(&prSubMesh), sizeof(persistence::SubMesh));
+            
+            // write out vertices
+            for (const Vertex &v : sm.vertices)
+            {
+                file.write(reinterpret_cast<const char*>(&v), sizeof(Vertex));
+            }
+            
+            // write out indices
+            for (uint16_t idx : sm.indices)
+            {
+                file.write(reinterpret_cast<const char*>(&idx), sizeof(uint16_t));
+            }
+        }
+    }
+    
+    persistence::finish(file);
+    
+    //
+    // d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
+    //     d3d12rs::D3D12RenderSystem>();
+    // renderer->executeAssetCopyOps();
 }

@@ -14,15 +14,8 @@
 #include <messaging/events.h>
 #include <componentsystems.h>
 #include <systems/inputsystem.h>
-#include <systems/spriterendersystem.h>
-#include <systems/spriteanimationsystem.h>
-#include <systems/physicssystem.h>
-#include <systems/collisionsystem.h>
-#include <systems/timersystem.h>
-#include <systems/vulkanrendersystem.h>
 #include <systems/d3d12/d3d12rendersystem.h>
 #include <prototypeinstancer.h>
-#include <executionmode.h>
 #include <rendering/renderer.h>
 
 #ifdef __EMSCRIPTEN__
