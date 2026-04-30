@@ -200,25 +200,6 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/systems/editorsystem.h"
         "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
-	)
-
-	target_include_directories(enginetooling
-		PUBLIC
-		"ext/"
-		${CMAKE_CURRENT_SOURCE_DIR}
-		${PROTOBUF_DIR}
-	)
-    target_link_libraries(enginetooling
-        PRIVATE engine cppzmq nubeproto nubedusd)
-
-	if(MSVC)
-		target_compile_options(enginetooling PRIVATE /std:c++latest)
-		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
-	endif()
-
-	add_library(nubedusd SHARED
-		"tooling/usd/nubedusd.h"
-		"tooling/usd/nubedusd.cpp"
 		"tooling/usd/stageproxy.h"
 		"tooling/usd/stageproxy.cpp"
 		"tooling/usd.h"
@@ -231,5 +212,24 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/usdlogger.h"
 	)
 
-	target_link_libraries(nubedusd PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
+	target_include_directories(enginetooling
+		PUBLIC
+		"ext/"
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${PROTOBUF_DIR}
+	)
+    target_link_libraries(enginetooling
+        PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
+
+	if(MSVC)
+		target_compile_options(enginetooling PRIVATE /std:c++latest)
+		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+	endif()
+
+	add_library(nubedusd STATIC
+		"tooling/usd/nubedusd.h"
+		"tooling/usd/nubedusd.cpp"
+	)
+
+	target_link_libraries(nubedusd PRIVATE engine enginetooling cppzmq)
 endif()

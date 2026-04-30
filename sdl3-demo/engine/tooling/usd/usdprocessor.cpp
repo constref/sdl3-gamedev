@@ -346,6 +346,7 @@ UsdProcessor::UsdProcessor()
 
 void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
 {
+    /*
     // generate baked data
     std::vector<persistence::Node> nodes;
     std::unordered_map<std::string, uint32_t> nodeMap;
@@ -405,6 +406,7 @@ void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
     }
     
     persistence::finish(file);
+    */
     
     //
     // d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<

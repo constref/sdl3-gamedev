@@ -1,38 +1,27 @@
 #include "nubedusd.h"
 
-#include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usdGeom/tokens.h>
-#include <pxr/usd/usd/notice.h>
-
+// #include <pxr/usd/usd/stage.h>
+// #include <pxr/usd/usd/prim.h>
+// #include <pxr/usd/usdGeom/tokens.h>
+// #include <pxr/usd/usd/notice.h>
 #include "common.h"
 #include "stageproxy.h"
 
-#include <nube.pb.h>
-
-using namespace pxr;
 using namespace usd;
 
 StageProxy *CreateProject(const char *path, ObjectsChangedFunc objectsChangedCallback)
 {
-    UsdStageRefPtr stage = UsdStage::CreateNew(path);
-    stage->DefinePrim(SdfPath("/Library"), UsdGeomTokens->Scope);
-    stage->DefinePrim(SdfPath("/Library/Meshes"), UsdGeomTokens->Scope);
-    stage->DefinePrim(SdfPath("/Library/Brushes"), UsdGeomTokens->Scope);
-    UsdPrim world = stage->DefinePrim(SdfPath("/World"), UsdGeomTokens->Xform);
-    stage->SetDefaultPrim(world);
-    return new StageProxy(stage, objectsChangedCallback);
+    return StageProxy::create(path, objectsChangedCallback);
 }
 
 StageProxy *OpenProject(const char *path, ObjectsChangedFunc objectsChangedCallback)
 {
-    UsdStageRefPtr stage = UsdStage::Open(path);
-    return new StageProxy(stage, objectsChangedCallback);
+    return StageProxy::open(path, objectsChangedCallback);
 }
 
 void SaveProject(usd::StageProxy *proxy)
 {
-    proxy->stage()->Save();
+    proxy->save();
 }
 
 void DestroyProxy(usd::StageProxy *proxy)
@@ -42,8 +31,7 @@ void DestroyProxy(usd::StageProxy *proxy)
 
 usd::StageProxy *OpenStage(const char *path)
 {
-    UsdStageRefPtr stage = UsdStage::Open(path);
-    return new StageProxy(stage, nullptr);
+    return StageProxy::open(path, nullptr);
 }
 
 PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim)
