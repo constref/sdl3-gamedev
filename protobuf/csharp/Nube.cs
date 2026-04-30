@@ -24,32 +24,35 @@ namespace AvaloniaEditor.Proto.NUBE {
     static NubeReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpudWJlLnByb3RvEgROVUJFIoYCCg5FZGl0b3JFbnZlbG9wZRItCgdzdGFy",
+            "CgpudWJlLnByb3RvEgROVUJFIrECCg5FZGl0b3JFbnZlbG9wZRItCgdzdGFy",
             "dHVwGAEgASgLMhouTlVCRS5FbmdpbmVTdGFydHVwQ29tbWFuZEgAEi8KCHNo",
             "dXRkb3duGAIgASgLMhsuTlVCRS5FbmdpbmVTaHV0ZG93bkNvbW1hbmRIABIs",
             "Cg1rZXlib2FyZEV2ZW50GAMgASgLMhMuTlVCRS5LZXlib2FyZEV2ZW50SAAS",
             "LgoObW91c2VNb3ZlRXZlbnQYBCABKAsyFC5OVUJFLk1vdXNlTW92ZUV2ZW50",
             "SAASKwoJYmFrZVN0YWdlGAUgASgLMhYuTlVCRS5CYWtlU3RhZ2VDb21tYW5k",
-            "SABCCQoHcGF5bG9hZCI1ChRFbmdpbmVTdGFydHVwQ29tbWFuZBINCgV3aWR0",
-            "aBgBIAEoDRIOCgZoZWlnaHQYAiABKA0iFwoVRW5naW5lU2h1dGRvd25Db21t",
-            "YW5kIjEKDUtleWJvYXJkRXZlbnQSEAoIc2NhbmNvZGUYASABKA0SDgoGaXNE",
-            "b3duGAIgASgIIkIKDk1vdXNlTW92ZUV2ZW50EgkKAXgYASABKAUSCQoBeRgC",
-            "IAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwYBCABKAUiIwoQQmFrZVN0YWdl",
-            "Q29tbWFuZBIPCgd1c2RQYXRoGAEgASgJIk8KDkVuZ2luZUVudmVsb3BlEjIK",
-            "C2luaXREZXRhaWxzGAEgASgLMhsuTlVCRS5Jbml0aWFsaXphdGlvbkRldGFp",
-            "bHNIAEIJCgdwYXlsb2FkIlwKFUluaXRpYWxpemF0aW9uRGV0YWlscxIZChFt",
-            "YXhGcmFtZXNJbkZsaWdodBgBIAEoDRIVCg10YXJnZXRIYW5kbGVzGAIgAygE",
-            "EhEKCWVuZ2luZVVybBgDIAEoCUIcqgIZQXZhbG9uaWFFZGl0b3IuUHJvdG8u",
-            "TlVCRWIIZWRpdGlvbnNw6Ac="));
+            "SAASKQoIbG9hZE1lc2gYBiABKAsyFS5OVUJFLkxvYWRNZXNoQ29tbWFuZEgA",
+            "QgkKB3BheWxvYWQiNQoURW5naW5lU3RhcnR1cENvbW1hbmQSDQoFd2lkdGgY",
+            "ASABKA0SDgoGaGVpZ2h0GAIgASgNIhcKFUVuZ2luZVNodXRkb3duQ29tbWFu",
+            "ZCIxCg1LZXlib2FyZEV2ZW50EhAKCHNjYW5jb2RlGAEgASgNEg4KBmlzRG93",
+            "bhgCIAEoCCJCCg5Nb3VzZU1vdmVFdmVudBIJCgF4GAEgASgFEgkKAXkYAiAB",
+            "KAUSDAoEeFJlbBgDIAEoBRIMCgR5UmVsGAQgASgFIiMKEEJha2VTdGFnZUNv",
+            "bW1hbmQSDwoHdXNkUGF0aBgBIAEoCSJHCg9Mb2FkTWVzaENvbW1hbmQSDwoH",
+            "YXNzZXRJZBgBIAEoCRIRCglhc3NldFBhdGgYAiABKAkSEAoIcHJpbVBhdGgY",
+            "AyABKAkiTwoORW5naW5lRW52ZWxvcGUSMgoLaW5pdERldGFpbHMYASABKAsy",
+            "Gy5OVUJFLkluaXRpYWxpemF0aW9uRGV0YWlsc0gAQgkKB3BheWxvYWQiXAoV",
+            "SW5pdGlhbGl6YXRpb25EZXRhaWxzEhkKEW1heEZyYW1lc0luRmxpZ2h0GAEg",
+            "ASgNEhUKDXRhcmdldEhhbmRsZXMYAiADKAQSEQoJZW5naW5lVXJsGAMgASgJ",
+            "QhyqAhlBdmFsb25pYUVkaXRvci5Qcm90by5OVUJFYghlZGl0aW9uc3DoBw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "Shutdown", "KeyboardEvent", "MouseMoveEvent", "BakeStage" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "Shutdown", "KeyboardEvent", "MouseMoveEvent", "BakeStage", "LoadMesh" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand), global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand.Parser, new[]{ "Width", "Height" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand), global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.KeyboardEvent), global::AvaloniaEditor.Proto.NUBE.KeyboardEvent.Parser, new[]{ "Scancode", "IsDown" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent), global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent.Parser, new[]{ "X", "Y", "XRel", "YRel" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, new[]{ "UsdPath" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand), global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand.Parser, new[]{ "AssetId", "AssetPath", "PrimPath" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.InitializationDetails), global::AvaloniaEditor.Proto.NUBE.InitializationDetails.Parser, new[]{ "MaxFramesInFlight", "TargetHandles", "EngineUrl" }, null, null, null, null)
           }));
@@ -108,6 +111,9 @@ namespace AvaloniaEditor.Proto.NUBE {
           break;
         case PayloadOneofCase.BakeStage:
           BakeStage = other.BakeStage.Clone();
+          break;
+        case PayloadOneofCase.LoadMesh:
+          LoadMesh = other.LoadMesh.Clone();
           break;
       }
 
@@ -180,6 +186,18 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
     }
 
+    /// <summary>Field number for the "loadMesh" field.</summary>
+    public const int LoadMeshFieldNumber = 6;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand LoadMesh {
+      get { return payloadCase_ == PayloadOneofCase.LoadMesh ? (global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.LoadMesh;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
@@ -189,6 +207,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       KeyboardEvent = 3,
       MouseMoveEvent = 4,
       BakeStage = 5,
+      LoadMesh = 6,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -224,6 +243,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (!object.Equals(KeyboardEvent, other.KeyboardEvent)) return false;
       if (!object.Equals(MouseMoveEvent, other.MouseMoveEvent)) return false;
       if (!object.Equals(BakeStage, other.BakeStage)) return false;
+      if (!object.Equals(LoadMesh, other.LoadMesh)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -237,6 +257,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (payloadCase_ == PayloadOneofCase.KeyboardEvent) hash ^= KeyboardEvent.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) hash ^= MouseMoveEvent.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.BakeStage) hash ^= BakeStage.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.LoadMesh) hash ^= LoadMesh.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -276,6 +297,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(42);
         output.WriteMessage(BakeStage);
       }
+      if (payloadCase_ == PayloadOneofCase.LoadMesh) {
+        output.WriteRawTag(50);
+        output.WriteMessage(LoadMesh);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -306,6 +331,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(42);
         output.WriteMessage(BakeStage);
       }
+      if (payloadCase_ == PayloadOneofCase.LoadMesh) {
+        output.WriteRawTag(50);
+        output.WriteMessage(LoadMesh);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -330,6 +359,9 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
       if (payloadCase_ == PayloadOneofCase.BakeStage) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(BakeStage);
+      }
+      if (payloadCase_ == PayloadOneofCase.LoadMesh) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LoadMesh);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -373,6 +405,12 @@ namespace AvaloniaEditor.Proto.NUBE {
             BakeStage = new global::AvaloniaEditor.Proto.NUBE.BakeStageCommand();
           }
           BakeStage.MergeFrom(other.BakeStage);
+          break;
+        case PayloadOneofCase.LoadMesh:
+          if (LoadMesh == null) {
+            LoadMesh = new global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand();
+          }
+          LoadMesh.MergeFrom(other.LoadMesh);
           break;
       }
 
@@ -440,6 +478,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             BakeStage = subBuilder;
             break;
           }
+          case 50: {
+            global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand();
+            if (payloadCase_ == PayloadOneofCase.LoadMesh) {
+              subBuilder.MergeFrom(LoadMesh);
+            }
+            input.ReadMessage(subBuilder);
+            LoadMesh = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -502,6 +549,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             }
             input.ReadMessage(subBuilder);
             BakeStage = subBuilder;
+            break;
+          }
+          case 50: {
+            global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand();
+            if (payloadCase_ == PayloadOneofCase.LoadMesh) {
+              subBuilder.MergeFrom(LoadMesh);
+            }
+            input.ReadMessage(subBuilder);
+            LoadMesh = subBuilder;
             break;
           }
         }
@@ -1790,6 +1846,320 @@ namespace AvaloniaEditor.Proto.NUBE {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class LoadMeshCommand : pb::IMessage<LoadMeshCommand>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<LoadMeshCommand> _parser = new pb::MessageParser<LoadMeshCommand>(() => new LoadMeshCommand());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<LoadMeshCommand> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[6]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LoadMeshCommand() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LoadMeshCommand(LoadMeshCommand other) : this() {
+      assetId_ = other.assetId_;
+      assetPath_ = other.assetPath_;
+      primPath_ = other.primPath_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LoadMeshCommand Clone() {
+      return new LoadMeshCommand(this);
+    }
+
+    /// <summary>Field number for the "assetId" field.</summary>
+    public const int AssetIdFieldNumber = 1;
+    private readonly static string AssetIdDefaultValue = "";
+
+    private string assetId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string AssetId {
+      get { return assetId_ ?? AssetIdDefaultValue; }
+      set {
+        assetId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+    /// <summary>Gets whether the "assetId" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasAssetId {
+      get { return assetId_ != null; }
+    }
+    /// <summary>Clears the value of the "assetId" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearAssetId() {
+      assetId_ = null;
+    }
+
+    /// <summary>Field number for the "assetPath" field.</summary>
+    public const int AssetPathFieldNumber = 2;
+    private readonly static string AssetPathDefaultValue = "";
+
+    private string assetPath_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string AssetPath {
+      get { return assetPath_ ?? AssetPathDefaultValue; }
+      set {
+        assetPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+    /// <summary>Gets whether the "assetPath" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasAssetPath {
+      get { return assetPath_ != null; }
+    }
+    /// <summary>Clears the value of the "assetPath" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearAssetPath() {
+      assetPath_ = null;
+    }
+
+    /// <summary>Field number for the "primPath" field.</summary>
+    public const int PrimPathFieldNumber = 3;
+    private readonly static string PrimPathDefaultValue = "";
+
+    private string primPath_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string PrimPath {
+      get { return primPath_ ?? PrimPathDefaultValue; }
+      set {
+        primPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+    /// <summary>Gets whether the "primPath" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasPrimPath {
+      get { return primPath_ != null; }
+    }
+    /// <summary>Clears the value of the "primPath" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearPrimPath() {
+      primPath_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as LoadMeshCommand);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(LoadMeshCommand other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (AssetId != other.AssetId) return false;
+      if (AssetPath != other.AssetPath) return false;
+      if (PrimPath != other.PrimPath) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (HasAssetId) hash ^= AssetId.GetHashCode();
+      if (HasAssetPath) hash ^= AssetPath.GetHashCode();
+      if (HasPrimPath) hash ^= PrimPath.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (HasAssetId) {
+        output.WriteRawTag(10);
+        output.WriteString(AssetId);
+      }
+      if (HasAssetPath) {
+        output.WriteRawTag(18);
+        output.WriteString(AssetPath);
+      }
+      if (HasPrimPath) {
+        output.WriteRawTag(26);
+        output.WriteString(PrimPath);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (HasAssetId) {
+        output.WriteRawTag(10);
+        output.WriteString(AssetId);
+      }
+      if (HasAssetPath) {
+        output.WriteRawTag(18);
+        output.WriteString(AssetPath);
+      }
+      if (HasPrimPath) {
+        output.WriteRawTag(26);
+        output.WriteString(PrimPath);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (HasAssetId) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(AssetId);
+      }
+      if (HasAssetPath) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(AssetPath);
+      }
+      if (HasPrimPath) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PrimPath);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(LoadMeshCommand other) {
+      if (other == null) {
+        return;
+      }
+      if (other.HasAssetId) {
+        AssetId = other.AssetId;
+      }
+      if (other.HasAssetPath) {
+        AssetPath = other.AssetPath;
+      }
+      if (other.HasPrimPath) {
+        PrimPath = other.PrimPath;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            AssetId = input.ReadString();
+            break;
+          }
+          case 18: {
+            AssetPath = input.ReadString();
+            break;
+          }
+          case 26: {
+            PrimPath = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            AssetId = input.ReadString();
+            break;
+          }
+          case 18: {
+            AssetPath = input.ReadString();
+            break;
+          }
+          case 26: {
+            PrimPath = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class EngineEnvelope : pb::IMessage<EngineEnvelope>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1804,7 +2174,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[6]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2046,7 +2416,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[7]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

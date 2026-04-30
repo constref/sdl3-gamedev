@@ -37,6 +37,7 @@ class Engine
     double globalTime;
 
     // core m_services
+    AssetManager assetManager;
     ComponentSystems compSys;
     EventQueue eventQueue;
     World world;

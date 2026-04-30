@@ -93,7 +93,7 @@ void StageProxy::flatten(std::vector<Prim> &flatList, bool useDefaultPrim)
     work(root, rootPrim, flatList, currentId);
 }
 
-void StageProxy::addMesh(const char *assetPath, const char *primPath)
+void StageProxy::addMesh(const std::string &assetId, const std::string &assetPath, const std::string &primPath)
 {
     const std::string name = SdfPath(primPath).GetName();
     {
@@ -104,12 +104,17 @@ void StageProxy::addMesh(const char *assetPath, const char *primPath)
         auto spec = SdfCreatePrimInLayer(layer, meshPath);
         spec->SetSpecifier(SdfSpecifierDef);
         spec->SetTypeName(UsdGeomTokens->Xform);
+        
+        // associate the 
+        SdfAttributeSpecHandle attrAssetId = SdfAttributeSpec::New(spec, "assetInfo:assetId", SdfValueTypeNames->String);
+        attrAssetId->SetDefaultValue(VtValue(assetId));
+        
         SdfReference ref(assetPath, SdfPath(primPath));
         spec->GetReferenceList().Add(ref);
     }
 }
 
-void StageProxy::createBrush(const char *meshPath)
+void StageProxy::createBrush(const std::string &meshPath)
 {
     const std::string name = SdfPath(meshPath).GetName();
     {
@@ -125,7 +130,7 @@ void StageProxy::createBrush(const char *meshPath)
     }
 }
 
-void StageProxy::placeBrush(const char *brushPath)
+void StageProxy::placeBrush(const std::string &brushPath)
 {
     const std::string name = SdfPath(brushPath).GetName();
     {

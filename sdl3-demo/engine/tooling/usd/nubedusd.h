@@ -31,10 +31,11 @@ DLL_API usd::PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim
 DLL_API usd::Prim* GetPrimListData(usd::PrimList *list, uint32_t *outSize);
 DLL_API void DestroyPrimList(usd::PrimList *list);
 
-DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetPath, const char *primPath);
+DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath, const char *primPath);
 DLL_API void CreateBrush(usd::StageProxy *proxy, const char *primPath);
 DLL_API void PlaceBrush(usd::StageProxy *proxy, const char *brushPath);
 DLL_API void FlushChanges(usd::StageProxy *proxy);
+DLL_API void Bake(usd::StageProxy *proxy, const char *nubPath);
 
 DLL_API void SaveStage(usd::UsdProcessor *proc);
 DLL_API void DestroyUsdProcessor(usd::UsdProcessor *proc);

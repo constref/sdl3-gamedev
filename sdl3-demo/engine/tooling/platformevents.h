@@ -52,6 +52,13 @@ struct ApplicationEnteredForeground
 {
 };
 
+struct LoadMesh
+{
+	std::string assetId;
+	std::string assetPath;
+	std::string primPath;
+};
+
 using PlatformEvent = std::variant<
 	ApplicationEnteredBackground,
 	ApplicationEnteredForeground,
@@ -61,5 +68,6 @@ using PlatformEvent = std::variant<
 	MouseButtonEvent,
 	ResizeEvent,
 	ExitEvent,
-	usd::BakeStageEvent
+	usd::BakeStageEvent,
+	LoadMesh
 >;

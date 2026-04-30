@@ -20,8 +20,6 @@
 #include <pxr/usd/usd/notice.h>
 #include <pxr/usd/usdLux/sphereLight.h>
 
-#include <systems/d3d12/d3d12rendersystem.h>
-#include <vulkan/vulkan_core.h>
 #include <logger.h>
 #include <tooling/platformutils.h>
 #include <tooling/usd/usdstagelistener.h>
@@ -31,36 +29,11 @@
 #include "usdlogger.h"
 
 #include <persistence/project.h>
-
-#include <uuid.h>
+#include <tooling/usd/stageproxy.h>
 
 using namespace pxr;
 using namespace DirectX;
 using namespace usd;
-
-
-namespace usd
-{
-    class UsdMembers : public pxr::TfWeakBase
-    {
-        UsdStageRefPtr m_stage;
-        SdfLayerRefPtr m_worldLayer;
-        UsdLogger m_usdLogger;
-        std::shared_ptr<usd::UsdStageListener> m_stageListener;
-
-    public:
-        UsdMembers(std::shared_ptr<usd::UsdStageListener> stageListener) : m_stageListener(stageListener)
-        {
-            TfDiagnosticMgr::GetInstance().AddDelegate(&m_usdLogger);
-        }
-
-        auto stage() const { return m_stage; }
-        void setStage(UsdStageRefPtr stage) { m_stage = stage; }
-        auto worldLayer() { return m_worldLayer; }
-        void setWorldLayer(SdfLayerRefPtr layer) { m_worldLayer = layer; }
-    };
-}
-
 
 struct VertexId
 {
@@ -219,9 +192,11 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
     return std::move(newMesh);
 }
 
-static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t parentId, std::vector<persistence::Node> &nodes, std::unordered_map<std::string, std::unique_ptr<Mesh>> &meshMap, uint32_t &meshIndex)
+static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t parentId, std::vector<persistence::Node> &nodes,
+    std::unordered_map<std::string, uint32_t> &nodeMap,  std::unordered_map<std::string, std::unique_ptr<Mesh>> &meshMap, uint32_t &meshIndex)
 {
-    Logger::info(self, std::format("Processing path: {}", prim.GetPath().GetString()));
+    const std::string pathString = prim.GetPath().GetString();
+    Logger::info(self, std::format("Processing path: {}", pathString));
 
     // lambda to process geom mesh and attach component to runtime Node
     auto processGeomMesh = [self, &meshMap, &meshIndex](UsdGeomMesh meshPrim)
@@ -237,18 +212,9 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
             meshItr = itr;
         }
         return meshItr->second->id();
-        //     GPUMeshHandle gpuHandle = renderer->loadMesh(*cpuMesh);
-        //
-        //     PrimGeo primGeo{
-        //         .mesh = std::move(cpuMesh),
-        //         .gpuHandle = gpuHandle
-        //     };
-        //
-        //
-        // services.compSys().addComponent<MeshComponent>(node, meshItr->second.gpuHandle);
     };
 
-    auto extractTransform = [](UsdPrim prim, Node &node)
+    auto extractTransform = [](UsdPrim prim, persistence::Node &node)
     {
         UsdGeomXformable xf(prim);
         bool resetsXformStack = false;
@@ -259,7 +225,8 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
             {
                 GfVec3d translation;
                 bool got = op.Get<GfVec3d>(&translation);
-                node.setPosition(glm::vec3(translation[0], translation[1], -translation[2]));
+                    assert(got && "GOT!");
+                node.position = DirectX::XMFLOAT3(translation[0], translation[1], -translation[2]);
             }
             else if (op.GetOpType() == UsdGeomXformOp::TypeRotateXYZ)
             {
@@ -267,9 +234,10 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
                 {
                     GfVec3f rotations;
                     bool got = op.Get<GfVec3f>(&rotations);
-                    node.setRotation(XMFLOAT3(-DirectX::XMConvertToRadians(rotations[0]),
-                                              -DirectX::XMConvertToRadians(rotations[1]),
-                                              DirectX::XMConvertToRadians(rotations[2])));
+                    assert(got && "GOT!");
+                    node.rotation = XMFLOAT3(-DirectX::XMConvertToRadians(rotations[0]),
+                                             -DirectX::XMConvertToRadians(rotations[1]),
+                                             DirectX::XMConvertToRadians(rotations[2]));
                 }
             }
             else if (op.GetOpType() == UsdGeomXformOp::TypeScale)
@@ -279,50 +247,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
     };
 
     auto &typeInfo = prim.GetPrimTypeInfo();
-    if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
-    {
-        persistence::Node node;
-        node.id = id++;
-        node.parentId = parentId;
-        
-        // Xform, create a node with transform
-        // NodeHandle hNode = world.createNode();
-        // Node &node = world.getNode(hNode);
-        // parent.addChild(node);
-        // extractTransform(prim, node);
-        //
-        if (prim.IsInstance())
-        {
-            // refer to prim's prototype
-            UsdPrim prototype = prim.GetPrototype();
-            for (UsdPrim child : prototype.GetChildren())
-            {
-                if (child.GetTypeName() == UsdGeomTokens->Mesh)
-                {
-                    UsdGeomMesh meshPrim(child);
-                    node.meshId = processGeomMesh(meshPrim);
-                }
-            }
-        }
-        else
-        {
-            // look directly in prim's tree for mesh (not instance)
-            for (UsdPrim child : prim.GetChildren())
-            {
-                if (child.GetTypeName() == UsdGeomTokens->Mesh)
-                {
-                    UsdGeomMesh meshPrim(child);
-                    node.meshId = processGeomMesh(meshPrim);
-                }
-                else
-                {
-                    processPrim(self, child, id, node.id, nodes, meshMap, meshIndex);
-                }
-            }
-        }
-        nodes.push_back(node);
-    }
-    else if (prim.GetTypeName() == UsdGeomTokens->Scope)
+    if (prim.GetTypeName() == UsdGeomTokens->Scope)
     {
         // scopes are only for organization
         if (prim.IsActive())
@@ -330,65 +255,112 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
             // TODO: Ensure no material should be inherited from this Scope prim
             for (UsdPrim child : prim.GetChildren())
             {
-                processPrim(self, child, id, parentId, nodes, meshMap, meshIndex);
+                processPrim(self, child, id, parentId, nodes, nodeMap, meshMap, meshIndex);
             }
         }
     }
-    // else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
-    // {
-    //     NodeHandle hNode = world.createNode();
-    //     Node &node = world.getNode(hNode);
-    //     parent.addChild(node);
-    //
-    //     extractTransform(prim, node);
-    //     UsdGeomMesh meshPrim(prim);
-    //     processGeomMesh(node, meshPrim);
-    // }
-    // else if (prim.GetTypeName() == UsdLuxTokens->SphereLight)
-    // {
-    //     NodeHandle hNode = world.createNode();
-    //     Node &node = world.getNode(hNode);
-    //     parent.addChild(node);
-    //
-    //     extractTransform(prim, node);
-    //     auto &lightComp = services.compSys().addComponent<LightingComponent>(node);
-    //     lightComp.setColor(DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
-    // }
-}
-
-UsdProcessor::UsdProcessor(std::shared_ptr<usd::UsdStageListener> listener)
-{
-    m_usdMembers = std::make_unique<UsdMembers>(listener);
-    if (listener)
+    else
     {
-        TfNotice::Register(TfCreateWeakPtr(listener.get()), &UsdStageListener::onObjectsChanged);
+        persistence::Node node;
+        node.id = id++;
+        node.parentId = parentId;
+        extractTransform(prim, node);
+        nodeMap.insert({pathString, node.id});
+        
+        if (typeInfo.GetTypeName() == UsdGeomTokens->Xform)
+        {
+            if (prim.IsInstance())
+            {
+                // refer to prim's prototype
+                UsdPrim prototype = prim.GetPrototype();
+                for (UsdPrim child : prototype.GetChildren())
+                {
+                    if (child.GetTypeName() == UsdGeomTokens->Mesh)
+                    {
+                        UsdGeomMesh meshPrim(child);
+                        node.meshId = processGeomMesh(meshPrim);
+                    }
+                }
+            }
+            else
+            {
+                // look directly in prim's tree for mesh (not instance)
+                for (UsdPrim child : prim.GetChildren())
+                {
+                    if (child.GetTypeName() == UsdGeomTokens->Mesh)
+                    {
+                        UsdGeomMesh meshPrim(child);
+                        node.meshId = processGeomMesh(meshPrim);
+                    }
+                    else
+                    {
+                        processPrim(self, child, id, node.id, nodes, nodeMap, meshMap, meshIndex);
+                    }
+                }
+            }
+        }
+        else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
+        {
+            UsdGeomMesh meshPrim(prim);
+            node.meshId = processGeomMesh(meshPrim);
+        }
+        else if (prim.GetTypeName() == UsdLuxTokens->SphereLight)
+        {
+            // NodeHandle hNode = world.createNode();
+            // Node &node = world.getNode(hNode);
+            // parent.addChild(node);
+            //
+            // extractTransform(prim, node);
+            // auto &lightComp = services.compSys().addComponent<LightingComponent>(node);
+            // lightComp.setColor(DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+        }
+        nodes.push_back(node);
     }
 }
 
-UsdProcessor::~UsdProcessor()
+UsdProcessor::UsdProcessor()
 {
-    //TfNotice::Revoke(m_revokeKey);
 }
 
-void UsdProcessor::openStage(const std::string &usdPath)
-{
-    UsdStageRefPtr stage = pxr::UsdStage::Open(usdPath);
-    m_usdMembers->setStage(stage);
-}
+// SdfPath recurseMesh(UsdPrim prim)
+// {
+//     TfToken typeName = prim.GetTypeName();
+//     if (typeName == UsdGeomTokens->Mesh)
+//     {
+//         return prim.GetPath();
+//     }
+//     
+//     for (auto child : prim.GetChildren())
+//     {
+//         return recurseMesh(child);
+//     }
+// }
+//
+// std::string UsdProcessor::findMesh(std::string assetPath, std::string startPrim)
+// {
+//     auto stage = UsdStage::Open(assetPath);
+//     UsdPrim prim = stage->GetPrimAtPath(SdfPath(startPrim));
+//     SdfPath meshPath = recurseMesh(prim);
+//     return meshPath.GetString();
+// }
 
-void UsdProcessor::bakeStage(Node &root, Services &services)
+void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
 {
+    // generate baked data
     std::vector<persistence::Node> nodes;
+    std::unordered_map<std::string, uint32_t> nodeMap;
     std::unordered_map<std::string, std::unique_ptr<Mesh>> meshMap;
     
     uint32_t nodeId = 0;
     uint32_t meshIndex = 0;
-    UsdPrim rootPrim = m_usdMembers->stage()->GetDefaultPrim();
+    UsdPrim rootPrim = proxy.stage()->GetDefaultPrim();
     for (auto child : rootPrim.GetChildren())
     {
-        processPrim(this, child, nodeId++, 0, nodes, meshMap, meshIndex);
+        processPrim(this, child, nodeId++, 0, nodes, nodeMap, meshMap, meshIndex);
     }
-    auto file = persistence::createFile("baked/test.nub");
+    
+    // write the baked data to a file
+    auto file = persistence::createFile(nubPath);
     
     // nodes
     uint32_t nodeCount = nodes.size();

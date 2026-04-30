@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <assetid.h>
+#include <assets/assetid.h>
 #include "vertex.h"
 
 struct SubMesh

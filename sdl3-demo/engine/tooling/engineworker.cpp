@@ -1,15 +1,14 @@
 #include "engineworker.h"
 #include <format>
 #include <zmq.hpp>
-#include <tooling/usd/usdprocessor.h>
 #include <nube.pb.h>
+#include <usd.pb.h>
 
-#include "usd.pb.h"
+#include "usd/usdprocessor.h"
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
-    m_usdProcessor = std::make_unique<usd::UsdProcessor>(nullptr);
     m_listening = false;
     m_running = false;
     this->editorPID = editorPID;
@@ -156,14 +155,21 @@ void EngineWorker::start()
                         ack();
                         break;
                     }
+                    case NUBE::EditorEnvelope::kLoadMesh:
+                    {
+                        pushEvent(LoadMesh {
+                            .assetId = editorEnvelope.loadmesh().assetid(),
+                            .assetPath = editorEnvelope.loadmesh().assetpath(),
+                            .primPath = editorEnvelope.loadmesh().primpath()
+                        });
+                        break;
+                    }
                     case NUBE::EditorEnvelope::kBakeStage:
                     {
-                        m_usdProcessor->openStage(editorEnvelope.bakestage().usdpath());
-                        pushEvent(usd::BakeStageEvent(m_usdProcessor.get()));
                         ack();
                         break;
                     }
-                    default: Logger::error(this, "Unrecognized command received by editor");
+                    default: Logger::error(this, "Unrecognized command");
                 }
             }
         }
@@ -226,9 +232,12 @@ void EngineWorker::processEvents()
         }
         else if (std::holds_alternative<usd::BakeStageEvent>(e))
         {
-            NodeHandle hRoot = m_engine->application().getRoot();
-            Node &root = serv.world().getNode(hRoot);
-            m_usdProcessor->bakeStage(root, serv);
+        }
+        else if (std::holds_alternative<LoadMesh>(e))
+        {
+            LoadMesh &meshEvent = std::get<LoadMesh>(e);
+            usd::UsdProcessor proc;
+            // const std::string meshPath = proc.findMesh(meshEvent.assetPath, meshEvent.primPath);
         }
     }
 }

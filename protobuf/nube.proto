@@ -11,6 +11,7 @@ message EditorEnvelope {
     KeyboardEvent keyboardEvent = 3;
     MouseMoveEvent mouseMoveEvent = 4;
     BakeStageCommand bakeStage = 5;
+    LoadMeshCommand loadMesh = 6;
   }
 }
 message EngineStartupCommand {
@@ -34,6 +35,12 @@ message MouseMoveEvent {
 
 message BakeStageCommand {
   string usdPath = 1;
+}
+
+message LoadMeshCommand {
+  string assetId = 1;
+  string assetPath = 2;
+  string primPath = 3;
 }
 
 message EngineEnvelope {

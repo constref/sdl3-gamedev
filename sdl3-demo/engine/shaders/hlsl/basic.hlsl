@@ -29,6 +29,8 @@ cbuffer cbPerFrame : register(b1)
 {
     float4 camPosition;
     float4x4 viewProj;
+    int numDirectionalLights;
+    int numPointLights;
 }
 
 struct VertexIn

@@ -1,11 +1,12 @@
 #pragma once
 
-#include <tooling/usd.h>
+#include "../usd.h"
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/notice.h>
 #include <pxr/usd/usd/prim.h>
 #include "common.h"
 #include "usdprocessor.h"
+
 
 namespace usd
 {
@@ -26,8 +27,8 @@ namespace usd
         
         void work(pxr::UsdPrim prim, const Prim &parent, std::vector<Prim> &flatList, uint32_t &currentId);
         void flatten(std::vector<Prim> &flatList, bool useDefaultPrim);
-        void addMesh(const char *assetPath, const char *primPath);
-        void createBrush(const char *meshPath);
-        void placeBrush(const char *brushPath);
+        void addMesh(const std::string &assetId, const std::string &assetPath, const std::string &primPath);
+        void createBrush(const std::string &meshPath);
+        void placeBrush(const std::string &brushPath);
     };
 }

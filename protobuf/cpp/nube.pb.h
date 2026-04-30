@@ -83,6 +83,10 @@ class KeyboardEvent;
 struct KeyboardEventDefaultTypeInternal;
 extern KeyboardEventDefaultTypeInternal _KeyboardEvent_default_instance_;
 extern const ::google::protobuf::internal::ClassDataFull KeyboardEvent_class_data_;
+class LoadMeshCommand;
+struct LoadMeshCommandDefaultTypeInternal;
+extern LoadMeshCommandDefaultTypeInternal _LoadMeshCommand_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull LoadMeshCommand_class_data_;
 class MouseMoveEvent;
 struct MouseMoveEventDefaultTypeInternal;
 extern MouseMoveEventDefaultTypeInternal _MouseMoveEvent_default_instance_;
@@ -338,6 +342,247 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED MouseMoveEvent final : public ::goo
 };
 
 extern const ::google::protobuf::internal::ClassDataFull MouseMoveEvent_class_data_;
+// -------------------------------------------------------------------
+
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED LoadMeshCommand final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:NUBE.LoadMeshCommand) */ {
+ public:
+  inline LoadMeshCommand() : LoadMeshCommand(nullptr) {}
+  ~LoadMeshCommand() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(LoadMeshCommand* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(LoadMeshCommand));
+  }
+#endif
+
+  template <typename = void>
+  explicit constexpr LoadMeshCommand(::google::protobuf::internal::ConstantInitialized);
+
+  inline LoadMeshCommand(const LoadMeshCommand& from) : LoadMeshCommand(nullptr, from) {}
+  inline LoadMeshCommand(LoadMeshCommand&& from) noexcept
+      : LoadMeshCommand(nullptr, ::std::move(from)) {}
+  inline LoadMeshCommand& operator=(const LoadMeshCommand& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LoadMeshCommand& operator=(LoadMeshCommand&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+    return GetDescriptor();
+  }
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  [[nodiscard]] static const LoadMeshCommand& default_instance() {
+    return *reinterpret_cast<const LoadMeshCommand*>(
+        &_LoadMeshCommand_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 6;
+  friend void swap(LoadMeshCommand& a, LoadMeshCommand& b) { a.Swap(&b); }
+  inline void Swap(LoadMeshCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LoadMeshCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  [[nodiscard]] LoadMeshCommand* PROTOBUF_NONNULL
+  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<LoadMeshCommand>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const LoadMeshCommand& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const LoadMeshCommand& from) { LoadMeshCommand::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  [[nodiscard]] bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] ::size_t ByteSizeLong() const final;
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] int GetCachedSize() const {
+    return _impl_._cached_size_.Get();
+  }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(LoadMeshCommand* PROTOBUF_NONNULL other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "NUBE.LoadMeshCommand"; }
+
+  explicit LoadMeshCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  LoadMeshCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const LoadMeshCommand& from);
+  LoadMeshCommand(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, LoadMeshCommand&& from) noexcept
+      : LoadMeshCommand(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+  static void* PROTOBUF_NONNULL PlacementNew_(
+      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr auto InternalNewImpl_();
+
+ public:
+  static constexpr auto InternalGenerateClassData_();
+
+  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kAssetIdFieldNumber = 1,
+    kAssetPathFieldNumber = 2,
+    kPrimPathFieldNumber = 3,
+  };
+  // string assetId = 1;
+  [[nodiscard]] bool has_assetid()
+      const;
+  void clear_assetid() ;
+  [[nodiscard]] const ::std::string& assetid() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_assetid(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_assetid();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_assetid();
+  void set_allocated_assetid(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_assetid() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_assetid(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_assetid();
+
+  public:
+  // string assetPath = 2;
+  [[nodiscard]] bool has_assetpath()
+      const;
+  void clear_assetpath() ;
+  [[nodiscard]] const ::std::string& assetpath() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_assetpath(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_assetpath();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_assetpath();
+  void set_allocated_assetpath(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_assetpath() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_assetpath(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_assetpath();
+
+  public:
+  // string primPath = 3;
+  [[nodiscard]] bool has_primpath()
+      const;
+  void clear_primpath() ;
+  [[nodiscard]] const ::std::string& primpath() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_primpath(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_primpath();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_primpath();
+  void set_allocated_primpath(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_primpath() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_primpath(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_primpath();
+
+  public:
+  // @@protoc_insertion_point(class_scope:NUBE.LoadMeshCommand)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<2, 3,
+                                   0, 53,
+                                   2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  friend ::google::protobuf::internal::PrivateAccess;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+        const LoadMeshCommand& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::google::protobuf::internal::ArenaStringPtr assetid_;
+    ::google::protobuf::internal::ArenaStringPtr assetpath_;
+    ::google::protobuf::internal::ArenaStringPtr primpath_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_nube_2eproto;
+};
+
+extern const ::google::protobuf::internal::ClassDataFull LoadMeshCommand_class_data_;
 // -------------------------------------------------------------------
 
 class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED KeyboardEvent final : public ::google::protobuf::Message
@@ -608,7 +853,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InitializationDetails final : publi
     return *reinterpret_cast<const InitializationDetails*>(
         &_InitializationDetails_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 7;
+  static constexpr int kIndexInFileMessages = 8;
   friend void swap(InitializationDetails& a, InitializationDetails& b) { a.Swap(&b); }
   inline void Swap(InitializationDetails* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -1403,7 +1648,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EngineEnvelope final : public ::goo
     kInitDetails = 1,
     PAYLOAD_NOT_SET = 0,
   };
-  static constexpr int kIndexInFileMessages = 6;
+  static constexpr int kIndexInFileMessages = 7;
   friend void swap(EngineEnvelope& a, EngineEnvelope& b) { a.Swap(&b); }
   inline void Swap(EngineEnvelope* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -1624,6 +1869,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
     kKeyboardEvent = 3,
     kMouseMoveEvent = 4,
     kBakeStage = 5,
+    kLoadMesh = 6,
     PAYLOAD_NOT_SET = 0,
   };
   static constexpr int kIndexInFileMessages = 0;
@@ -1721,6 +1967,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
     kKeyboardEventFieldNumber = 3,
     kMouseMoveEventFieldNumber = 4,
     kBakeStageFieldNumber = 5,
+    kLoadMeshFieldNumber = 6,
   };
   // .NUBE.EngineStartupCommand startup = 1;
   [[nodiscard]] bool has_startup()
@@ -1822,6 +2069,26 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
   ::NUBE::BakeStageCommand* PROTOBUF_NONNULL _internal_mutable_bakestage();
 
   public:
+  // .NUBE.LoadMeshCommand loadMesh = 6;
+  [[nodiscard]] bool has_loadmesh()
+      const;
+  private:
+  bool _internal_has_loadmesh() const;
+
+  public:
+  void clear_loadmesh() ;
+  [[nodiscard]] const ::NUBE::LoadMeshCommand& loadmesh() const;
+  [[nodiscard]] ::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE release_loadmesh();
+  ::NUBE::LoadMeshCommand* PROTOBUF_NONNULL mutable_loadmesh();
+  void set_allocated_loadmesh(::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_loadmesh(::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE value);
+  ::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE unsafe_arena_release_loadmesh();
+
+  private:
+  const ::NUBE::LoadMeshCommand& _internal_loadmesh() const;
+  ::NUBE::LoadMeshCommand* PROTOBUF_NONNULL _internal_mutable_loadmesh();
+
+  public:
   void clear_payload();
   PayloadCase payload_case() const;
   // @@protoc_insertion_point(class_scope:NUBE.EditorEnvelope)
@@ -1832,11 +2099,12 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
   void set_has_keyboardevent();
   void set_has_mousemoveevent();
   void set_has_bakestage();
+  void set_has_loadmesh();
   [[nodiscard]] inline bool has_payload() const;
   inline void clear_has_payload();
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<0, 5,
-                                   5, 0,
+  static const ::google::protobuf::internal::TcParseTable<0, 6,
+                                   6, 0,
                                    2>
       _table_;
 
@@ -1865,6 +2133,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
       ::google::protobuf::Message* PROTOBUF_NULLABLE keyboardevent_;
       ::google::protobuf::Message* PROTOBUF_NULLABLE mousemoveevent_;
       ::google::protobuf::Message* PROTOBUF_NULLABLE bakestage_;
+      ::google::protobuf::Message* PROTOBUF_NULLABLE loadmesh_;
     } payload_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::uint32_t _oneof_case_[1];
@@ -2302,6 +2571,88 @@ inline ::NUBE::BakeStageCommand* PROTOBUF_NONNULL EditorEnvelope::mutable_bakest
   return _msg;
 }
 
+// .NUBE.LoadMeshCommand loadMesh = 6;
+inline bool EditorEnvelope::has_loadmesh() const {
+  return payload_case() == kLoadMesh;
+}
+inline bool EditorEnvelope::_internal_has_loadmesh() const {
+  return payload_case() == kLoadMesh;
+}
+inline void EditorEnvelope::set_has_loadmesh() {
+  _impl_._oneof_case_[0] = kLoadMesh;
+}
+inline void EditorEnvelope::clear_loadmesh() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kLoadMesh) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.loadmesh_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.loadmesh_);
+    }
+    clear_has_payload();
+  }
+}
+inline ::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE EditorEnvelope::release_loadmesh() {
+  // @@protoc_insertion_point(field_release:NUBE.EditorEnvelope.loadMesh)
+  if (payload_case() == kLoadMesh) {
+    clear_has_payload();
+    auto* temp = reinterpret_cast<::NUBE::LoadMeshCommand*>(_impl_.payload_.loadmesh_);
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.loadmesh_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::NUBE::LoadMeshCommand& EditorEnvelope::_internal_loadmesh() const {
+  return payload_case() == kLoadMesh ? static_cast<const ::NUBE::LoadMeshCommand&>(*reinterpret_cast<::NUBE::LoadMeshCommand*>(_impl_.payload_.loadmesh_))
+                     : reinterpret_cast<const ::NUBE::LoadMeshCommand&>(::NUBE::_LoadMeshCommand_default_instance_);
+}
+inline const ::NUBE::LoadMeshCommand& EditorEnvelope::loadmesh() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.EditorEnvelope.loadMesh)
+  return _internal_loadmesh();
+}
+inline ::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE EditorEnvelope::unsafe_arena_release_loadmesh() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:NUBE.EditorEnvelope.loadMesh)
+  if (payload_case() == kLoadMesh) {
+    clear_has_payload();
+    auto* temp = reinterpret_cast<::NUBE::LoadMeshCommand*>(_impl_.payload_.loadmesh_);
+    _impl_.payload_.loadmesh_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void EditorEnvelope::unsafe_arena_set_allocated_loadmesh(
+    ::NUBE::LoadMeshCommand* PROTOBUF_NULLABLE value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_loadmesh();
+    _impl_.payload_.loadmesh_ = reinterpret_cast<::google::protobuf::Message*>(value);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:NUBE.EditorEnvelope.loadMesh)
+}
+inline ::NUBE::LoadMeshCommand* PROTOBUF_NONNULL EditorEnvelope::_internal_mutable_loadmesh() {
+  if (payload_case() != kLoadMesh) {
+    clear_payload();
+    set_has_loadmesh();
+    _impl_.payload_.loadmesh_ = reinterpret_cast<::google::protobuf::Message*>(
+        ::google::protobuf::Message::DefaultConstruct<::NUBE::LoadMeshCommand>(GetArena()));
+  }
+  return reinterpret_cast<::NUBE::LoadMeshCommand*>(_impl_.payload_.loadmesh_);
+}
+inline ::NUBE::LoadMeshCommand* PROTOBUF_NONNULL EditorEnvelope::mutable_loadmesh()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::NUBE::LoadMeshCommand* _msg = _internal_mutable_loadmesh();
+  // @@protoc_insertion_point(field_mutable:NUBE.EditorEnvelope.loadMesh)
+  return _msg;
+}
+
 inline bool EditorEnvelope::has_payload() const {
   return payload_case() != PAYLOAD_NOT_SET;
 }
@@ -2630,6 +2981,217 @@ inline void BakeStageCommand::set_allocated_usdpath(::std::string* PROTOBUF_NULL
     _impl_.usdpath_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:NUBE.BakeStageCommand.usdPath)
+}
+
+// -------------------------------------------------------------------
+
+// LoadMeshCommand
+
+// string assetId = 1;
+inline bool LoadMeshCommand::has_assetid() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+  return value;
+}
+inline void LoadMeshCommand::clear_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetid_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline const ::std::string& LoadMeshCommand::assetid() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.assetId)
+  return _internal_assetid();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_assetid(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  _impl_.assetid_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.assetId)
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_assetid()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::std::string* _s = _internal_mutable_assetid();
+  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.assetId)
+  return _s;
+}
+inline const ::std::string& LoadMeshCommand::_internal_assetid() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.assetid_.Get();
+}
+inline void LoadMeshCommand::_internal_set_assetid(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetid_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.assetid_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.assetId)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  auto* released = _impl_.assetid_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.assetid_.Set("", GetArena());
+  }
+  return released;
+}
+inline void LoadMeshCommand::set_allocated_assetid(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+  _impl_.assetid_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.assetid_.IsDefault()) {
+    _impl_.assetid_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.assetId)
+}
+
+// string assetPath = 2;
+inline bool LoadMeshCommand::has_assetpath() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
+  return value;
+}
+inline void LoadMeshCommand::clear_assetpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetpath_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000002U);
+}
+inline const ::std::string& LoadMeshCommand::assetpath() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.assetPath)
+  return _internal_assetpath();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_assetpath(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  _impl_.assetpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.assetPath)
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_assetpath()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  ::std::string* _s = _internal_mutable_assetpath();
+  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.assetPath)
+  return _s;
+}
+inline const ::std::string& LoadMeshCommand::_internal_assetpath() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.assetpath_.Get();
+}
+inline void LoadMeshCommand::_internal_set_assetpath(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetpath_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_assetpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.assetpath_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_assetpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.assetPath)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000002U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  auto* released = _impl_.assetpath_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.assetpath_.Set("", GetArena());
+  }
+  return released;
+}
+inline void LoadMeshCommand::set_allocated_assetpath(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  }
+  _impl_.assetpath_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.assetpath_.IsDefault()) {
+    _impl_.assetpath_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.assetPath)
+}
+
+// string primPath = 3;
+inline bool LoadMeshCommand::has_primpath() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000004U);
+  return value;
+}
+inline void LoadMeshCommand::clear_primpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.primpath_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000004U);
+}
+inline const ::std::string& LoadMeshCommand::primpath() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.primPath)
+  return _internal_primpath();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_primpath(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  _impl_.primpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.primPath)
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_primpath()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  ::std::string* _s = _internal_mutable_primpath();
+  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.primPath)
+  return _s;
+}
+inline const ::std::string& LoadMeshCommand::_internal_primpath() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.primpath_.Get();
+}
+inline void LoadMeshCommand::_internal_set_primpath(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.primpath_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_primpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.primpath_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_primpath() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.primPath)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000004U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  auto* released = _impl_.primpath_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.primpath_.Set("", GetArena());
+  }
+  return released;
+}
+inline void LoadMeshCommand::set_allocated_primpath(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  }
+  _impl_.primpath_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.primpath_.IsDefault()) {
+    _impl_.primpath_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.primPath)
 }
 
 // -------------------------------------------------------------------

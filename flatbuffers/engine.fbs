@@ -1,3 +1,0 @@
-include "editor_envelope.fbs";
-include "engine_envelope.fbs";
-include "piped_envelope.fbs";

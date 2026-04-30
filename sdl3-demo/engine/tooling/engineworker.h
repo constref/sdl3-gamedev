@@ -6,12 +6,9 @@
 #include <memory>
 #include <containers/atomicringbuffer.h>
 
-namespace usd { class UsdProcessor; }
-
 class EngineWorker
 {
 	std::unique_ptr<Engine> m_engine;
-	std::unique_ptr<usd::UsdProcessor> m_usdProcessor;
 	int editorPID;
 	std::string url;
 

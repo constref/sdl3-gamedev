@@ -11,7 +11,7 @@
 #include <systems/lightingsystem.h>
 
 Engine::Engine(std::unique_ptr<Application> app) : m_app(std::move(app)),
-                                                   m_services(world, compSys, eventQueue, inputState, protoInstancer),
+                                                   m_services(assetManager, world, compSys, eventQueue, inputState, protoInstancer),
                                                    sdlState(SDL_GetKeyboardState(nullptr))
 {
     debugMode = false;

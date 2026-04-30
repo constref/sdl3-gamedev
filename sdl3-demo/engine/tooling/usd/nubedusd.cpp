@@ -4,7 +4,6 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usd/notice.h>
-#include <tooling/usd/usdprocessor.h>
 
 #include "common.h"
 #include "stageproxy.h"
@@ -45,11 +44,6 @@ usd::StageProxy *OpenStage(const char *path)
 {
     UsdStageRefPtr stage = UsdStage::Open(path);
     return new StageProxy(stage, nullptr);
-}
-
-void DestroyUsdProcessor(usd::UsdProcessor *proc)
-{
-    delete proc;
 }
 
 PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim)
@@ -118,9 +112,9 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
     return 0;
 }
 
-void AddMesh(StageProxy *proxy, const char *assetPath, const char *primPath)
+void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath, const char *primPath)
 {
-    proxy->addMesh(assetPath, primPath);
+    proxy->addMesh(assetId, assetPath, primPath);
     proxy->flushChanged();
 }
 
@@ -140,4 +134,8 @@ void PlaceBrush(StageProxy *proxy, const char *brushPath)
 void FlushChanges(StageProxy *proxy)
 {
     proxy->flushChanged();
+}
+
+void Bake(usd::StageProxy *proxy, const char *nubPath)
+{
 }

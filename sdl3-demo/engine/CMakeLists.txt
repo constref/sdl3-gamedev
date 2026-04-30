@@ -121,8 +121,10 @@ set(ENGINE_SOURCES
 	"tooling/platformutils.cpp"
 	"persistence/project.h"
 	"persistence/project.cpp"
-	"assetid.h"
-	"assetid.cpp"
+	"assets/assetid.h"
+	"assets/assetid.cpp"
+	"assets/assetmanager.h"
+	"assets/assetmanager.cpp"
 )
 
 set(SHADER_SOURCES
@@ -189,7 +191,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	target_link_libraries(nubeproto PUBLIC protobuf::libprotobuf)
 	target_include_directories(nubeproto PUBLIC ${PROTOBUF_DIR})
 
-	add_library(enginetooling
+	add_library(enginetooling STATIC
         "tooling/engineworker.h"
         "tooling/engineworker.cpp"
         "tooling/platformevents.h"
@@ -198,14 +200,6 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
         "tooling/systems/editorsystem.h"
         "tooling/systems/editorsystem.cpp"
         "tooling/events.h"
-		"tooling/usd.h"
-        "tooling/usd/usdprocessor.h"
-        "tooling/usd/usdprocessor.cpp"
-		"tooling/usd/rootcomponent.h"
-        "tooling/usd/rootcomponent.cpp"
-        "tooling/usd/events.h"
-		"tooling/usd/usdlogger.cpp"
-		"tooling/usd/usdlogger.h"
 	)
 
 	target_include_directories(enginetooling
@@ -215,7 +209,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		${PROTOBUF_DIR}
 	)
     target_link_libraries(enginetooling
-        PRIVATE engine cppzmq usd usdGeom usdImaging hd usdLux nubeproto)
+        PRIVATE engine cppzmq nubeproto nubedusd)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)
@@ -227,7 +221,15 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/nubedusd.cpp"
 		"tooling/usd/stageproxy.h"
 		"tooling/usd/stageproxy.cpp"
+		"tooling/usd.h"
+		"tooling/usd/usdprocessor.h"
+		"tooling/usd/usdprocessor.cpp"
+		"tooling/usd/rootcomponent.h"
+		"tooling/usd/rootcomponent.cpp"
+		"tooling/usd/events.h"
+		"tooling/usd/usdlogger.cpp"
+		"tooling/usd/usdlogger.h"
 	)
 
-	target_link_libraries(nubedusd PRIVATE enginetooling usd usdGeom cppzmq nubeproto)
+	target_link_libraries(nubedusd PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
 endif()

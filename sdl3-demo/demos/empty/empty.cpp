@@ -62,7 +62,7 @@ void Empty::start(Services& services, SDLState& state)
     services.inputState().setFocus(hPlayer);
     services.compSys().addComponent<CameraComponent>(player);
 
-    std::ifstream file("baked/test.nub", std::ios::binary);
+    std::ifstream file("demo.nub", std::ios::binary);
     uint32_t nodeCount = 0;
     file.read(reinterpret_cast<char*>(&nodeCount), sizeof(nodeCount));
 
@@ -99,22 +99,34 @@ void Empty::start(Services& services, SDLState& state)
     d3d12rs::D3D12RenderSystem* renderer = services.compSys().getSystemRegistry().getSystem<
         d3d12rs::D3D12RenderSystem>();
 
-	std::unordered_map<uuids::uuid, GPUMeshHandle> gpuMeshes;
+    // load meshes into GPU
+    std::vector<GPUMeshHandle> gpuMeshHandles;
+    for (const Mesh &mesh : meshes)
+    {
+        gpuMeshHandles.push_back(renderer->loadMesh(mesh));
+    }
+    renderer->executeAssetCopyOps(); // TODO: This shouldn't be here
+    
     for (const auto& n : nodes)
     {
         NodeHandle hNode = services.world().createNode();
         Node& node = services.world().getNode(hNode);
+        node.setPosition(glm::vec3(n.position.x, n.position.y, n.position.z));
+        node.setRotation(n.rotation);
 
         uuids::uuid nodeId;
         if (!n.meshId.isNull())
         {
             auto itr = std::find(meshes.begin(), meshes.end(), n.meshId);
             assert(itr != meshes.end() && "Mesh ID not found");
-
-            // check if already in GPU mesh map
-
-            GPUMeshHandle gpuMeshHandle = renderer->loadMesh(*itr);
+            
+            size_t index = std::distance(meshes.begin(), itr);
+            GPUMeshHandle gpuMeshHandle = gpuMeshHandles[index];
             services.compSys().addComponent<MeshComponent>(node, gpuMeshHandle);
+        }
+        else
+        {
+            exit(1);
         }
 		root.addChild(node);
     }
