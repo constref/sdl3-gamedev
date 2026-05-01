@@ -36,13 +36,13 @@ namespace AvaloniaEditor.Proto.NUBE {
             "ZCIxCg1LZXlib2FyZEV2ZW50EhAKCHNjYW5jb2RlGAEgASgNEg4KBmlzRG93",
             "bhgCIAEoCCJCCg5Nb3VzZU1vdmVFdmVudBIJCgF4GAEgASgFEgkKAXkYAiAB",
             "KAUSDAoEeFJlbBgDIAEoBRIMCgR5UmVsGAQgASgFIiMKEEJha2VTdGFnZUNv",
-            "bW1hbmQSDwoHdXNkUGF0aBgBIAEoCSJHCg9Mb2FkTWVzaENvbW1hbmQSDwoH",
-            "YXNzZXRJZBgBIAEoCRIRCglhc3NldFBhdGgYAiABKAkSEAoIcHJpbVBhdGgY",
-            "AyABKAkiTwoORW5naW5lRW52ZWxvcGUSMgoLaW5pdERldGFpbHMYASABKAsy",
-            "Gy5OVUJFLkluaXRpYWxpemF0aW9uRGV0YWlsc0gAQgkKB3BheWxvYWQiXAoV",
-            "SW5pdGlhbGl6YXRpb25EZXRhaWxzEhkKEW1heEZyYW1lc0luRmxpZ2h0GAEg",
-            "ASgNEhUKDXRhcmdldEhhbmRsZXMYAiADKAQSEQoJZW5naW5lVXJsGAMgASgJ",
-            "QhyqAhlBdmFsb25pYUVkaXRvci5Qcm90by5OVUJFYghlZGl0aW9uc3DoBw=="));
+            "bW1hbmQSDwoHdXNkUGF0aBgBIAEoCSI0Cg9Mb2FkTWVzaENvbW1hbmQSDwoH",
+            "YXNzZXRJZBgBIAEoCRIQCghtZXNoUGF0aBgCIAEoCSJPCg5FbmdpbmVFbnZl",
+            "bG9wZRIyCgtpbml0RGV0YWlscxgBIAEoCzIbLk5VQkUuSW5pdGlhbGl6YXRp",
+            "b25EZXRhaWxzSABCCQoHcGF5bG9hZCJcChVJbml0aWFsaXphdGlvbkRldGFp",
+            "bHMSGQoRbWF4RnJhbWVzSW5GbGlnaHQYASABKA0SFQoNdGFyZ2V0SGFuZGxl",
+            "cxgCIAMoBBIRCgllbmdpbmVVcmwYAyABKAlCHKoCGUF2YWxvbmlhRWRpdG9y",
+            "LlByb3RvLk5VQkViCGVkaXRpb25zcOgH"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -52,7 +52,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.KeyboardEvent), global::AvaloniaEditor.Proto.NUBE.KeyboardEvent.Parser, new[]{ "Scancode", "IsDown" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent), global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent.Parser, new[]{ "X", "Y", "XRel", "YRel" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, new[]{ "UsdPath" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand), global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand.Parser, new[]{ "AssetId", "AssetPath", "PrimPath" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand), global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand.Parser, new[]{ "AssetId", "MeshPath" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.InitializationDetails), global::AvaloniaEditor.Proto.NUBE.InitializationDetails.Parser, new[]{ "MaxFramesInFlight", "TargetHandles", "EngineUrl" }, null, null, null, null)
           }));
@@ -1881,8 +1881,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public LoadMeshCommand(LoadMeshCommand other) : this() {
       assetId_ = other.assetId_;
-      assetPath_ = other.assetPath_;
-      primPath_ = other.primPath_;
+      meshPath_ = other.meshPath_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1918,56 +1917,30 @@ namespace AvaloniaEditor.Proto.NUBE {
       assetId_ = null;
     }
 
-    /// <summary>Field number for the "assetPath" field.</summary>
-    public const int AssetPathFieldNumber = 2;
-    private readonly static string AssetPathDefaultValue = "";
+    /// <summary>Field number for the "meshPath" field.</summary>
+    public const int MeshPathFieldNumber = 2;
+    private readonly static string MeshPathDefaultValue = "";
 
-    private string assetPath_;
+    private string meshPath_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string AssetPath {
-      get { return assetPath_ ?? AssetPathDefaultValue; }
+    public string MeshPath {
+      get { return meshPath_ ?? MeshPathDefaultValue; }
       set {
-        assetPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        meshPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
-    /// <summary>Gets whether the "assetPath" field is set</summary>
+    /// <summary>Gets whether the "meshPath" field is set</summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool HasAssetPath {
-      get { return assetPath_ != null; }
+    public bool HasMeshPath {
+      get { return meshPath_ != null; }
     }
-    /// <summary>Clears the value of the "assetPath" field</summary>
+    /// <summary>Clears the value of the "meshPath" field</summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void ClearAssetPath() {
-      assetPath_ = null;
-    }
-
-    /// <summary>Field number for the "primPath" field.</summary>
-    public const int PrimPathFieldNumber = 3;
-    private readonly static string PrimPathDefaultValue = "";
-
-    private string primPath_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string PrimPath {
-      get { return primPath_ ?? PrimPathDefaultValue; }
-      set {
-        primPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-    /// <summary>Gets whether the "primPath" field is set</summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool HasPrimPath {
-      get { return primPath_ != null; }
-    }
-    /// <summary>Clears the value of the "primPath" field</summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void ClearPrimPath() {
-      primPath_ = null;
+    public void ClearMeshPath() {
+      meshPath_ = null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1986,8 +1959,7 @@ namespace AvaloniaEditor.Proto.NUBE {
         return true;
       }
       if (AssetId != other.AssetId) return false;
-      if (AssetPath != other.AssetPath) return false;
-      if (PrimPath != other.PrimPath) return false;
+      if (MeshPath != other.MeshPath) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1996,8 +1968,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     public override int GetHashCode() {
       int hash = 1;
       if (HasAssetId) hash ^= AssetId.GetHashCode();
-      if (HasAssetPath) hash ^= AssetPath.GetHashCode();
-      if (HasPrimPath) hash ^= PrimPath.GetHashCode();
+      if (HasMeshPath) hash ^= MeshPath.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -2020,13 +1991,9 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteString(AssetId);
       }
-      if (HasAssetPath) {
+      if (HasMeshPath) {
         output.WriteRawTag(18);
-        output.WriteString(AssetPath);
-      }
-      if (HasPrimPath) {
-        output.WriteRawTag(26);
-        output.WriteString(PrimPath);
+        output.WriteString(MeshPath);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -2042,13 +2009,9 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteString(AssetId);
       }
-      if (HasAssetPath) {
+      if (HasMeshPath) {
         output.WriteRawTag(18);
-        output.WriteString(AssetPath);
-      }
-      if (HasPrimPath) {
-        output.WriteRawTag(26);
-        output.WriteString(PrimPath);
+        output.WriteString(MeshPath);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -2063,11 +2026,8 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (HasAssetId) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(AssetId);
       }
-      if (HasAssetPath) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(AssetPath);
-      }
-      if (HasPrimPath) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(PrimPath);
+      if (HasMeshPath) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(MeshPath);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2084,11 +2044,8 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (other.HasAssetId) {
         AssetId = other.AssetId;
       }
-      if (other.HasAssetPath) {
-        AssetPath = other.AssetPath;
-      }
-      if (other.HasPrimPath) {
-        PrimPath = other.PrimPath;
+      if (other.HasMeshPath) {
+        MeshPath = other.MeshPath;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -2114,11 +2071,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             break;
           }
           case 18: {
-            AssetPath = input.ReadString();
-            break;
-          }
-          case 26: {
-            PrimPath = input.ReadString();
+            MeshPath = input.ReadString();
             break;
           }
         }
@@ -2145,11 +2098,7 @@ namespace AvaloniaEditor.Proto.NUBE {
             break;
           }
           case 18: {
-            AssetPath = input.ReadString();
-            break;
-          }
-          case 26: {
-            PrimPath = input.ReadString();
+            MeshPath = input.ReadString();
             break;
           }
         }

@@ -63,10 +63,7 @@ inline constexpr LoadMeshCommand::Impl_::Impl_(
         assetid_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
-        assetpath_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
-        primpath_(
+        meshpath_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()) {}
 
@@ -332,13 +329,11 @@ const ::uint32_t
         0,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_._has_bits_),
-        6, // hasbit index offset
+        5, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_.assetid_),
-        PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_.assetpath_),
-        PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_.primpath_),
+        PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_.meshpath_),
         0,
         1,
-        2,
         0x004, // bitmap
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_._oneof_case_[0]),
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_.payload_),
@@ -363,8 +358,8 @@ static const ::_pbi::MigrationSchema
         {24, sizeof(::NUBE::MouseMoveEvent)},
         {35, sizeof(::NUBE::BakeStageCommand)},
         {40, sizeof(::NUBE::LoadMeshCommand)},
-        {49, sizeof(::NUBE::EngineEnvelope)},
-        {53, sizeof(::NUBE::InitializationDetails)},
+        {47, sizeof(::NUBE::EngineEnvelope)},
+        {51, sizeof(::NUBE::InitializationDetails)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::NUBE::_EditorEnvelope_default_instance_._instance,
@@ -393,20 +388,19 @@ const char descriptor_table_protodef_nube_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIA
     "\r\022\016\n\006isDown\030\002 \001(\010\"B\n\016MouseMoveEvent\022\t\n\001x"
     "\030\001 \001(\005\022\t\n\001y\030\002 \001(\005\022\014\n\004xRel\030\003 \001(\005\022\014\n\004yRel\030"
     "\004 \001(\005\"#\n\020BakeStageCommand\022\017\n\007usdPath\030\001 \001"
-    "(\t\"G\n\017LoadMeshCommand\022\017\n\007assetId\030\001 \001(\t\022\021"
-    "\n\tassetPath\030\002 \001(\t\022\020\n\010primPath\030\003 \001(\t\"O\n\016E"
-    "ngineEnvelope\0222\n\013initDetails\030\001 \001(\0132\033.NUB"
-    "E.InitializationDetailsH\000B\t\n\007payload\"\\\n\025"
-    "InitializationDetails\022\031\n\021maxFramesInFlig"
-    "ht\030\001 \001(\r\022\025\n\rtargetHandles\030\002 \003(\004\022\021\n\tengin"
-    "eUrl\030\003 \001(\tB\034\252\002\031AvaloniaEditor.Proto.NUBE"
-    "b\010editionsp\350\007"
+    "(\t\"4\n\017LoadMeshCommand\022\017\n\007assetId\030\001 \001(\t\022\020"
+    "\n\010meshPath\030\002 \001(\t\"O\n\016EngineEnvelope\0222\n\013in"
+    "itDetails\030\001 \001(\0132\033.NUBE.InitializationDet"
+    "ailsH\000B\t\n\007payload\"\\\n\025InitializationDetai"
+    "ls\022\031\n\021maxFramesInFlight\030\001 \001(\r\022\025\n\rtargetH"
+    "andles\030\002 \003(\004\022\021\n\tengineUrl\030\003 \001(\tB\034\252\002\031Aval"
+    "oniaEditor.Proto.NUBEb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nube_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nube_2eproto = {
     false,
     false,
-    853,
+    834,
     descriptor_table_protodef_nube_2eproto,
     "nube.proto",
     &descriptor_table_nube_2eproto_once,
@@ -2252,8 +2246,7 @@ PROTOBUF_NDEBUG_INLINE LoadMeshCommand::Impl_::Impl_(
       : _has_bits_{from._has_bits_},
         _cached_size_{0},
         assetid_(arena, from.assetid_),
-        assetpath_(arena, from.assetpath_),
-        primpath_(arena, from.primpath_) {}
+        meshpath_(arena, from.meshpath_) {}
 
 LoadMeshCommand::LoadMeshCommand(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
@@ -2276,8 +2269,7 @@ PROTOBUF_NDEBUG_INLINE LoadMeshCommand::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0},
         assetid_(arena),
-        assetpath_(arena),
-        primpath_(arena) {}
+        meshpath_(arena) {}
 
 inline void LoadMeshCommand::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
@@ -2294,8 +2286,7 @@ inline void LoadMeshCommand::SharedDtor(MessageLite& self) {
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   this_._impl_.assetid_.Destroy();
-  this_._impl_.assetpath_.Destroy();
-  this_._impl_.primpath_.Destroy();
+  this_._impl_.meshpath_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -2341,16 +2332,16 @@ LoadMeshCommand::GetClassData() const {
   return LoadMeshCommand_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 0, 53, 2>
+const ::_pbi::TcParseTable<1, 2, 0, 44, 2>
 LoadMeshCommand::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_._has_bits_),
     0, // no _extensions_
-    3, 24,  // max_field_number, fast_idx_mask
+    2, 8,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967288,  // skipmap
+    4294967292,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    3,  // num_field_entries
+    2,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     LoadMeshCommand_class_data_.base(),
@@ -2360,36 +2351,28 @@ LoadMeshCommand::_table_ = {
     ::_pbi::TcParser::GetTable<::NUBE::LoadMeshCommand>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
+    // string meshPath = 2;
+    {::_pbi::TcParser::FastUS1,
+     {18, 1, 0,
+      PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.meshpath_)}},
     // string assetId = 1;
     {::_pbi::TcParser::FastUS1,
      {10, 0, 0,
       PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.assetid_)}},
-    // string assetPath = 2;
-    {::_pbi::TcParser::FastUS1,
-     {18, 1, 0,
-      PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.assetpath_)}},
-    // string primPath = 3;
-    {::_pbi::TcParser::FastUS1,
-     {26, 2, 0,
-      PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.primpath_)}},
   }}, {{
     65535, 65535
   }}, {{
     // string assetId = 1;
     {PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.assetid_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
-    // string assetPath = 2;
-    {PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.assetpath_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
-    // string primPath = 3;
-    {PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.primpath_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // string meshPath = 2;
+    {PROTOBUF_FIELD_OFFSET(LoadMeshCommand, _impl_.meshpath_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
   }},
   // no aux_entries
   {{
-    "\24\7\11\10\0\0\0\0"
+    "\24\7\10\0\0\0\0\0"
     "NUBE.LoadMeshCommand"
     "assetId"
-    "assetPath"
-    "primPath"
+    "meshPath"
   }},
 };
 PROTOBUF_NOINLINE void LoadMeshCommand::Clear() {
@@ -2400,15 +2383,12 @@ PROTOBUF_NOINLINE void LoadMeshCommand::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       _impl_.assetid_.ClearNonDefaultToEmpty();
     }
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      _impl_.assetpath_.ClearNonDefaultToEmpty();
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      _impl_.primpath_.ClearNonDefaultToEmpty();
+      _impl_.meshpath_.ClearNonDefaultToEmpty();
     }
   }
   _impl_._has_bits_.Clear();
@@ -2442,20 +2422,12 @@ PROTOBUF_NOINLINE void LoadMeshCommand::Clear() {
     target = stream->WriteStringMaybeAliased(1, _s, target);
   }
 
-  // string assetPath = 2;
+  // string meshPath = 2;
   if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    const ::std::string& _s = this_._internal_assetpath();
+    const ::std::string& _s = this_._internal_meshpath();
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "NUBE.LoadMeshCommand.assetPath");
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "NUBE.LoadMeshCommand.meshPath");
     target = stream->WriteStringMaybeAliased(2, _s, target);
-  }
-
-  // string primPath = 3;
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-    const ::std::string& _s = this_._internal_primpath();
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "NUBE.LoadMeshCommand.primPath");
-    target = stream->WriteStringMaybeAliased(3, _s, target);
   }
 
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -2483,21 +2455,16 @@ PROTOBUF_NOINLINE void LoadMeshCommand::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
     // string assetId = 1;
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
                                       this_._internal_assetid());
     }
-    // string assetPath = 2;
+    // string meshPath = 2;
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                      this_._internal_assetpath());
-    }
-    // string primPath = 3;
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                      this_._internal_primpath());
+                                      this_._internal_meshpath());
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -2518,15 +2485,12 @@ void LoadMeshCommand::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       _this->_internal_set_assetid(from._internal_assetid());
     }
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      _this->_internal_set_assetpath(from._internal_assetpath());
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      _this->_internal_set_primpath(from._internal_primpath());
+      _this->_internal_set_meshpath(from._internal_meshpath());
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -2549,8 +2513,7 @@ void LoadMeshCommand::InternalSwap(LoadMeshCommand* PROTOBUF_RESTRICT PROTOBUF_N
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.assetid_, &other->_impl_.assetid_, arena);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.assetpath_, &other->_impl_.assetpath_, arena);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.primpath_, &other->_impl_.primpath_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.meshpath_, &other->_impl_.meshpath_, arena);
 }
 
 ::google::protobuf::Metadata LoadMeshCommand::GetMetadata() const {

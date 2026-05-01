@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <span>
+#include <string>
 
 class AssetId
 {

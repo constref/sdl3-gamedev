@@ -141,7 +141,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_S
 add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
 if(MSVC)
-	target_compile_options(engine PRIVATE /std:c++latest)
+	#target_compile_options(engine PRIVATE /std:c++latest)
 	#target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
@@ -150,9 +150,6 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 	message(STATUS "Configuring Tooling Build")
 	target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
 endif()
-
-set(FLATBUFF_DIR ${CMAKE_SOURCE_DIR}/flatbuffers)
-message(STATUS ${FLATBUFF_DIR})
 
 target_link_libraries(engine PUBLIC
 	SDL3::SDL3
@@ -168,7 +165,6 @@ target_link_libraries(engine PUBLIC
 target_include_directories(engine
 	PRIVATE "ext/"
 	PUBLIC
-	${FLATBUFF_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -220,7 +216,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		${PROTOBUF_DIR}
 	)
     target_link_libraries(enginetooling
-        PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
+      PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
 
 	if(MSVC)
 		target_compile_options(enginetooling PRIVATE /std:c++latest)

@@ -62,6 +62,7 @@ void Empty::start(Services& services, SDLState& state)
     services.inputState().setFocus(hPlayer);
     services.compSys().addComponent<CameraComponent>(player);
 
+    /*
     std::ifstream file("demo.nub", std::ios::binary);
     uint32_t nodeCount = 0;
     file.read(reinterpret_cast<char*>(&nodeCount), sizeof(nodeCount));
@@ -80,7 +81,7 @@ void Empty::start(Services& services, SDLState& state)
         file.read(reinterpret_cast<char*>(&meshHeader), sizeof(persistence::Mesh));
 
         // build sub-mesh objects
-        Mesh mesh(meshHeader.id);
+        Mesh mesh;
         for (uint32_t j = 0; j < meshHeader.subMeshCount; ++j)
         {
             persistence::SubMesh submeshHeader;
@@ -130,6 +131,7 @@ void Empty::start(Services& services, SDLState& state)
         }
 		root.addChild(node);
     }
+    */
 
     root.addChild(player);
 }

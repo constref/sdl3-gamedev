@@ -186,7 +186,7 @@ std::unique_ptr<Mesh> UsdProcessor::processMesh(UsdGeomMesh mesh) const
     Logger::info(this, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(),
                                    submeshIndices.size()));
     
-    std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>(AssetId::generate());
+    std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>();
     newMesh->addSubmesh(SubMesh(submeshVerts, submeshIndices));
     return std::move(newMesh);
 }
@@ -210,7 +210,6 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
             auto [itr, added] = meshMap.insert({path, std::move(mesh)});
             meshItr = itr;
         }
-        return meshItr->second->id();
     };
 
     auto extractTransform = [](UsdPrim prim, persistence::Node &node)
@@ -277,7 +276,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
                     if (child.GetTypeName() == UsdGeomTokens->Mesh)
                     {
                         UsdGeomMesh meshPrim(child);
-                        node.meshId = processGeomMesh(meshPrim);
+                        processGeomMesh(meshPrim);
                     }
                 }
             }
@@ -289,7 +288,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
                     if (child.GetTypeName() == UsdGeomTokens->Mesh)
                     {
                         UsdGeomMesh meshPrim(child);
-                        node.meshId = processGeomMesh(meshPrim);
+                        processGeomMesh(meshPrim);
                     }
                     else
                     {
@@ -301,7 +300,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
         else if (prim.GetTypeName() == UsdGeomTokens->Mesh)
         {
             UsdGeomMesh meshPrim(prim);
-            node.meshId = processGeomMesh(meshPrim);
+            processGeomMesh(meshPrim);
         }
         else if (prim.GetTypeName() == UsdLuxTokens->SphereLight)
         {
@@ -355,7 +354,6 @@ void UsdProcessor::bakeStage(ProxyInternal &proxy, const std::string &nubPath)
         // mesh header
         Mesh *mesh = itr.second.get();
         persistence::Mesh prMesh;
-        prMesh.id = mesh->id();
         prMesh.subMeshCount = mesh->subMeshes().size();
         file.write(reinterpret_cast<const char*>(&prMesh), sizeof(persistence::Mesh));
         

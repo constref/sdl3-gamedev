@@ -491,8 +491,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED LoadMeshCommand final : public ::go
   // accessors -------------------------------------------------------
   enum : int {
     kAssetIdFieldNumber = 1,
-    kAssetPathFieldNumber = 2,
-    kPrimPathFieldNumber = 3,
+    kMeshPathFieldNumber = 2,
   };
   // string assetId = 1;
   [[nodiscard]] bool has_assetid()
@@ -511,46 +510,29 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED LoadMeshCommand final : public ::go
   ::std::string* PROTOBUF_NONNULL _internal_mutable_assetid();
 
   public:
-  // string assetPath = 2;
-  [[nodiscard]] bool has_assetpath()
+  // string meshPath = 2;
+  [[nodiscard]] bool has_meshpath()
       const;
-  void clear_assetpath() ;
-  [[nodiscard]] const ::std::string& assetpath() const;
+  void clear_meshpath() ;
+  [[nodiscard]] const ::std::string& meshpath() const;
   template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_assetpath(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_assetpath();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_assetpath();
-  void set_allocated_assetpath(::std::string* PROTOBUF_NULLABLE value);
+  void set_meshpath(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_meshpath();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_meshpath();
+  void set_allocated_meshpath(::std::string* PROTOBUF_NULLABLE value);
 
   private:
-  const ::std::string& _internal_assetpath() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_assetpath(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_assetpath();
-
-  public:
-  // string primPath = 3;
-  [[nodiscard]] bool has_primpath()
-      const;
-  void clear_primpath() ;
-  [[nodiscard]] const ::std::string& primpath() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_primpath(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_primpath();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_primpath();
-  void set_allocated_primpath(::std::string* PROTOBUF_NULLABLE value);
-
-  private:
-  const ::std::string& _internal_primpath() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_primpath(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_primpath();
+  const ::std::string& _internal_meshpath() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_meshpath(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_meshpath();
 
   public:
   // @@protoc_insertion_point(class_scope:NUBE.LoadMeshCommand)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 3,
-                                   0, 53,
+  static const ::google::protobuf::internal::TcParseTable<1, 2,
+                                   0, 44,
                                    2>
       _table_;
 
@@ -574,8 +556,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED LoadMeshCommand final : public ::go
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::internal::ArenaStringPtr assetid_;
-    ::google::protobuf::internal::ArenaStringPtr assetpath_;
-    ::google::protobuf::internal::ArenaStringPtr primpath_;
+    ::google::protobuf::internal::ArenaStringPtr meshpath_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -3056,142 +3037,73 @@ inline void LoadMeshCommand::set_allocated_assetid(::std::string* PROTOBUF_NULLA
   // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.assetId)
 }
 
-// string assetPath = 2;
-inline bool LoadMeshCommand::has_assetpath() const {
+// string meshPath = 2;
+inline bool LoadMeshCommand::has_meshpath() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
   return value;
 }
-inline void LoadMeshCommand::clear_assetpath() {
+inline void LoadMeshCommand::clear_meshpath() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.assetpath_.ClearToEmpty();
+  _impl_.meshpath_.ClearToEmpty();
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000002U);
 }
-inline const ::std::string& LoadMeshCommand::assetpath() const
+inline const ::std::string& LoadMeshCommand::meshpath() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.assetPath)
-  return _internal_assetpath();
+  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.meshPath)
+  return _internal_meshpath();
 }
 template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_assetpath(Arg_&& arg, Args_... args) {
+PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_meshpath(Arg_&& arg, Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  _impl_.assetpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.assetPath)
+  _impl_.meshpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.meshPath)
 }
-inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_assetpath()
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_meshpath()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::std::string* _s = _internal_mutable_assetpath();
-  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.assetPath)
+  ::std::string* _s = _internal_mutable_meshpath();
+  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.meshPath)
   return _s;
 }
-inline const ::std::string& LoadMeshCommand::_internal_assetpath() const {
+inline const ::std::string& LoadMeshCommand::_internal_meshpath() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.assetpath_.Get();
+  return _impl_.meshpath_.Get();
 }
-inline void LoadMeshCommand::_internal_set_assetpath(const ::std::string& value) {
+inline void LoadMeshCommand::_internal_set_meshpath(const ::std::string& value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.assetpath_.Set(value, GetArena());
+  _impl_.meshpath_.Set(value, GetArena());
 }
-inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_assetpath() {
+inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_meshpath() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.assetpath_.Mutable( GetArena());
+  return _impl_.meshpath_.Mutable( GetArena());
 }
-inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_assetpath() {
+inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_meshpath() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.assetPath)
+  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.meshPath)
   if (!CheckHasBit(_impl_._has_bits_[0], 0x00000002U)) {
     return nullptr;
   }
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  auto* released = _impl_.assetpath_.Release();
+  auto* released = _impl_.meshpath_.Release();
   if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
-    _impl_.assetpath_.Set("", GetArena());
+    _impl_.meshpath_.Set("", GetArena());
   }
   return released;
 }
-inline void LoadMeshCommand::set_allocated_assetpath(::std::string* PROTOBUF_NULLABLE value) {
+inline void LoadMeshCommand::set_allocated_meshpath(::std::string* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
-  _impl_.assetpath_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.assetpath_.IsDefault()) {
-    _impl_.assetpath_.Set("", GetArena());
+  _impl_.meshpath_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.meshpath_.IsDefault()) {
+    _impl_.meshpath_.Set("", GetArena());
   }
-  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.assetPath)
-}
-
-// string primPath = 3;
-inline bool LoadMeshCommand::has_primpath() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000004U);
-  return value;
-}
-inline void LoadMeshCommand::clear_primpath() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.primpath_.ClearToEmpty();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000004U);
-}
-inline const ::std::string& LoadMeshCommand::primpath() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:NUBE.LoadMeshCommand.primPath)
-  return _internal_primpath();
-}
-template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void LoadMeshCommand::set_primpath(Arg_&& arg, Args_... args) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  _impl_.primpath_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:NUBE.LoadMeshCommand.primPath)
-}
-inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::mutable_primpath()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::std::string* _s = _internal_mutable_primpath();
-  // @@protoc_insertion_point(field_mutable:NUBE.LoadMeshCommand.primPath)
-  return _s;
-}
-inline const ::std::string& LoadMeshCommand::_internal_primpath() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.primpath_.Get();
-}
-inline void LoadMeshCommand::_internal_set_primpath(const ::std::string& value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.primpath_.Set(value, GetArena());
-}
-inline ::std::string* PROTOBUF_NONNULL LoadMeshCommand::_internal_mutable_primpath() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.primpath_.Mutable( GetArena());
-}
-inline ::std::string* PROTOBUF_NULLABLE LoadMeshCommand::release_primpath() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:NUBE.LoadMeshCommand.primPath)
-  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000004U)) {
-    return nullptr;
-  }
-  ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  auto* released = _impl_.primpath_.Release();
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
-    _impl_.primpath_.Set("", GetArena());
-  }
-  return released;
-}
-inline void LoadMeshCommand::set_allocated_primpath(::std::string* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (value != nullptr) {
-    SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  } else {
-    ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  }
-  _impl_.primpath_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.primpath_.IsDefault()) {
-    _impl_.primpath_.Set("", GetArena());
-  }
-  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.primPath)
+  // @@protoc_insertion_point(field_set_allocated:NUBE.LoadMeshCommand.meshPath)
 }
 
 // -------------------------------------------------------------------

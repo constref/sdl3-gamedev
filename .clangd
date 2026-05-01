@@ -1,2 +1,2 @@
 CompileFlags:
-  CompilationDatabase: out/build/x64-debug-ninja-user/
+  CompilationDatabase: build/

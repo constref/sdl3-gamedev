@@ -39,8 +39,7 @@ message BakeStageCommand {
 
 message LoadMeshCommand {
   string assetId = 1;
-  string assetPath = 2;
-  string primPath = 3;
+  string meshPath = 2;
 }
 
 message EngineEnvelope {

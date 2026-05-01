@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-
-#include <assets/assetid.h>
 #include "vertex.h"
 
 struct SubMesh
@@ -22,18 +20,10 @@ struct SubMesh
 
 class Mesh
 {
-	AssetId m_id;
 	size_t m_vertexCount = 0;
 	size_t m_indexCount = 0;
 	std::vector<SubMesh> m_subMeshes;
 public:
-	Mesh(AssetId id) : m_id(id) {}
-	bool operator==(const Mesh &other) const
-	{
-		return m_id == other.m_id;
-	}
-	
-	AssetId id() const { return m_id; }
 	void addSubmesh(SubMesh &&subMesh)
 	{
 		m_vertexCount += subMesh.vertices.size();

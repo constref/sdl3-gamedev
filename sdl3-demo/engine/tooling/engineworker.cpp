@@ -1,8 +1,11 @@
 #include "engineworker.h"
 #include <format>
 #include <zmq.hpp>
+
 #include <nube.pb.h>
 #include <usd.pb.h>
+
+static AtomicRingBuffer<NUBE::EditorEnvelope, 64> g_envelopeBuffer;
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
@@ -96,6 +99,7 @@ void EngineWorker::start()
         if (result.has_value())
         {
             NUBE::EditorEnvelope editorEnvelope;
+			bool responded = false;
             bool parseSuccess = editorEnvelope.ParseFromArray(request.data(), request.size());
             if (parseSuccess)
             {
@@ -140,6 +144,7 @@ void EngineWorker::start()
                             }
                             m_engine->cleanup();
                         });
+						responded = true;
                         break;
                     }
                     case NUBE::EditorEnvelope::kShutdown:
@@ -150,34 +155,44 @@ void EngineWorker::start()
                             m_engineThread.join();
                         }
                         m_listening = false;
-                        ack();
                         break;
                     }
                     case NUBE::EditorEnvelope::kLoadMesh:
                     {
-                        pushEvent(LoadMesh {
-                            .assetId = editorEnvelope.loadmesh().assetid(),
-                            .assetPath = editorEnvelope.loadmesh().assetpath(),
-                            .primPath = editorEnvelope.loadmesh().primpath()
-                        });
+                        g_envelopeBuffer.add(editorEnvelope);
                         break;
                     }
                     case NUBE::EditorEnvelope::kBakeStage:
                     {
-                        ack();
                         break;
                     }
-                    default: Logger::error(this, "Unrecognized command");
+					default:
+					{
+						Logger::error(this, "Unrecognized command");
+					}
                 }
             }
+			if (!responded)
+			{
+				OutputDebugString("SENDING ACK");
+				ack();
+			}
         }
     }
 }
 
 void EngineWorker::processEvents()
 {
-    PlatformEvent e;
+	NUBE::EditorEnvelope ee;
+	while (g_envelopeBuffer.get(ee))
+	{
+		if (ee.has_loadmesh())
+		{
+			OutputDebugStringA("Got a LoadMesh");
+		}
+	}
     Services &serv = m_engine->services();
+    PlatformEvent e;
     while (eventBuffer.get(e))
     {
         // handle external events
