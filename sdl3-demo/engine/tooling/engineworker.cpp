@@ -4,8 +4,6 @@
 #include <nube.pb.h>
 #include <usd.pb.h>
 
-#include "usd/usdprocessor.h"
-
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
@@ -236,7 +234,6 @@ void EngineWorker::processEvents()
         else if (std::holds_alternative<LoadMesh>(e))
         {
             LoadMesh &meshEvent = std::get<LoadMesh>(e);
-            usd::UsdProcessor proc;
             // const std::string meshPath = proc.findMesh(meshEvent.assetPath, meshEvent.primPath);
         }
     }

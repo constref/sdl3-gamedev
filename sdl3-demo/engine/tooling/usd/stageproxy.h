@@ -5,6 +5,7 @@
 #include <vector>
 #include "common.h"
 #include "interoptypes.h"
+#include <rendering/mesh.h>
 
 namespace usd
 {
@@ -26,7 +27,7 @@ public:
     void save() const;
     void flatten(std::vector<Prim> &flatList, bool useDefaultPrim) const;
     void addMesh(const std::string &assetId, const std::string &assetPath, const std::string &primPath) const;
-    void bakeMesh(const std::string &assetId, const std::string &assetPath, const std::string &primPath) const;
+    std::unique_ptr<Mesh> bakeMesh(const std::string &assetId, const std::string &primPath) const;
     void createBrush(const std::string &meshPath) const;
     void placeBrush(const std::string &brushPath) const;
 };

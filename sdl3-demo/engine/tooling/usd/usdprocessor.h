@@ -1,19 +1,23 @@
 #pragma once
+#include <memory>
 #include <string>
+
+#define NOMINMAX
+#include <pxr/usd/usdGeom/mesh.h>
 
 class Mesh;
 
 namespace usd
 {
-class StageProxy;
-class UsdStageListener;
+class ProxyInternal;
 
 class UsdProcessor
 {
 public:
     UsdProcessor();
-    // std::string findMesh(std::string assetPath, std::string startPrim);
-    void bakeStage(StageProxy &stage, const std::string &nubPath);
+    void bakeStage(ProxyInternal& proxy, const std::string& nubPath);
+
+    std::unique_ptr<Mesh> processMesh(pxr::UsdGeomMesh mesh) const;
 
 };
 }

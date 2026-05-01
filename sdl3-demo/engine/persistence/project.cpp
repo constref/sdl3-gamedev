@@ -10,3 +10,7 @@ void persistence::finish(std::ofstream &file)
 {
     file.close();
 }
+
+void persistence::writeMeshFile(const std::string &assetId, const Mesh &mesh)
+{
+}

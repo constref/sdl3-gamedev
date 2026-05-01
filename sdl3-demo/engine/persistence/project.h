@@ -9,7 +9,7 @@ namespace persistence
     struct Project
     {
     };
-    
+
     struct Node
     {
         uint32_t id = 0;
@@ -18,20 +18,21 @@ namespace persistence
         DirectX::XMFLOAT3 position = {};
         DirectX::XMFLOAT3 rotation = {};
     };
-    
+
     struct Mesh
     {
         AssetId id;
         uint32_t subMeshCount = 0;
     };
-    
+
     struct SubMesh
     {
         uint32_t vertexCount = 0;
         uint32_t indexCount = 0;
     };
-    
+
     std::ofstream createFile(const std::string &filepath);
     void finish(std::ofstream &file);
-}
 
+    void writeMeshFile(const std::string &assetId, const Mesh &mesh);
+}

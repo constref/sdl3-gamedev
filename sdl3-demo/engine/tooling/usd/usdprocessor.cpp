@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <functional>
 
-#define NOMINMAX
 #include <pxr/base/tf/diagnosticMgr.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/usd/stage.h>
@@ -29,7 +28,7 @@
 #include "usdlogger.h"
 
 #include <persistence/project.h>
-#include <tooling/usd/stageproxy.h>
+#include <tooling/usd/proxyinternal.h>
 
 using namespace pxr;
 using namespace DirectX;
@@ -86,9 +85,9 @@ private:
 };
 
 
-static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
+std::unique_ptr<Mesh> UsdProcessor::processMesh(UsdGeomMesh mesh) const
 {
-    Logger::info(self, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
+    Logger::info(this, std::format("Processing UsdGeomMesh:{}", mesh.GetPath().GetString()));
     UsdGeomPrimvarsAPI primvarApi(mesh);
     VtArray<GfVec3f> points;
     mesh.GetPointsAttr().Get(&points);
@@ -122,7 +121,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
         usdNormals.data(), usdNormals.size(), HdTypeFloatVec3, &triNormalsVal);
     if (triNormResult == HdMeshComputationResult::Error)
     {
-        Logger::error(self, "Error triangulating face normals");
+        Logger::error(this, "Error triangulating face normals");
     }
     VtVec3fArray triNormals = triNormalsVal.Get<VtArray<GfVec3f>>();
     for (GfVec3f &n : triNormals)
@@ -143,7 +142,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
     assert(
         (triNormals.size() == indexCount && triSts.size() == indexCount) &&
         "Normals / UVs and index counts must match");
-    Logger::info(self, "Vertex data triangulated, generating vertex and index data");
+    Logger::info(this, "Vertex data triangulated, generating vertex and index data");
 
     // map that will hold each unique vertex entry during processing
     std::unordered_map<VertexId, uint32_t, VertexId::Hasher> vertexMap;
@@ -184,7 +183,7 @@ static std::unique_ptr<Mesh> processMesh(UsdProcessor *self, UsdGeomMesh mesh)
             indexPos++;
         }
     }
-    Logger::info(self, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(),
+    Logger::info(this, std::format("Submesh generated with {} vertices and {} indices", submeshVerts.size(),
                                    submeshIndices.size()));
     
     std::unique_ptr<Mesh> newMesh = std::make_unique<Mesh>(AssetId::generate());
@@ -207,7 +206,7 @@ static void processPrim(UsdProcessor *self, UsdPrim prim, uint32_t id, uint32_t 
         auto meshItr = meshMap.find(path);
         if (meshItr == meshMap.end())
         {
-            std::unique_ptr<Mesh> mesh = processMesh(self, meshPrim);
+            std::unique_ptr<Mesh> mesh = self->processMesh(meshPrim);
             auto [itr, added] = meshMap.insert({path, std::move(mesh)});
             meshItr = itr;
         }
@@ -322,9 +321,8 @@ UsdProcessor::UsdProcessor()
 {
 }
 
-void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
+void UsdProcessor::bakeStage(ProxyInternal &proxy, const std::string &nubPath)
 {
-    /*
     // generate baked data
     std::vector<persistence::Node> nodes;
     std::unordered_map<std::string, uint32_t> nodeMap;
@@ -384,10 +382,4 @@ void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
     }
     
     persistence::finish(file);
-    */
-    
-    //
-    // d3d12rs::D3D12RenderSystem *renderer = services.compSys().getSystemRegistry().getSystem<
-    //     d3d12rs::D3D12RenderSystem>();
-    // renderer->executeAssetCopyOps();
 }

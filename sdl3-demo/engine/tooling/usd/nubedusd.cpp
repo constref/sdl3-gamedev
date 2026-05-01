@@ -98,7 +98,11 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
 void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath, const char *primPath)
 {
     proxy->addMesh(assetId, assetPath, primPath);
-    proxy->bakeMesh(assetId, assetPath, primPath);
+
+    // bake the newly selected mesh prim
+    std::unique_ptr<StageProxy> meshProxy(StageProxy::open(assetPath, nullptr));
+    auto mesh = meshProxy->bakeMesh(assetId, primPath);
+
     proxy->flushChanged();
 }
 
