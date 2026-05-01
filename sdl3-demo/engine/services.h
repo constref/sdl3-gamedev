@@ -1,11 +1,11 @@
 #pragma once
-#include <assets/assetmanager.h>
 
 class World;
 class EventQueue;
 class InputState;
 class ComponentSystems;
 class PrototypeInstancer;
+class AssetManager;
 
 class Services
 {

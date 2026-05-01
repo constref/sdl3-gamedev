@@ -5,6 +5,7 @@
 #include <nube.pb.h>
 #include <usd.pb.h>
 
+static AtomicRingBuffer<NUBE::EditorEnvelope, 64> g_inputEvents;
 static AtomicRingBuffer<NUBE::EditorEnvelope, 64> g_envelopeBuffer;
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
@@ -45,33 +46,7 @@ void EngineWorker::start()
                 bool parseSuccess = editorEnvelope.ParseFromArray(msg.data(), msg.size());
                 if (parseSuccess)
                 {
-                    switch (editorEnvelope.payload_case())
-                    {
-                        case NUBE::EditorEnvelope::kKeyboardEvent:
-                        {
-                            const auto &keyEvent = editorEnvelope.keyboardevent();
-                            if (keyEvent.isdown())
-                            {
-                                pushEvent(KeyDown{.scancode = keyEvent.scancode()});
-                            }
-                            else
-                            {
-                                pushEvent(KeyUp{.scancode = keyEvent.scancode()});
-                            }
-                            break;
-                        }
-                        case NUBE::EditorEnvelope::kMouseMoveEvent:
-                        {
-                            const auto &mouseMoveEvent = editorEnvelope.mousemoveevent();
-                            pushEvent(MouseMoveEvent{
-                                .x = mouseMoveEvent.x(), .y = mouseMoveEvent.y(),
-                                .xRel = mouseMoveEvent.xrel(), .yRel = mouseMoveEvent.yrel()
-                            });
-                            break;
-                        }
-                        case NUBE::EditorEnvelope::PAYLOAD_NOT_SET:
-                            break;
-                    }
+					g_inputEvents.add(editorEnvelope);
                 }
             }
         }
@@ -147,28 +122,9 @@ void EngineWorker::start()
 						responded = true;
                         break;
                     }
-                    case NUBE::EditorEnvelope::kShutdown:
-                    {
-                        m_running = false;
-                        if (m_engineThread.joinable())
-                        {
-                            m_engineThread.join();
-                        }
-                        m_listening = false;
-                        break;
-                    }
-                    case NUBE::EditorEnvelope::kLoadMesh:
-                    {
-                        g_envelopeBuffer.add(editorEnvelope);
-                        break;
-                    }
-                    case NUBE::EditorEnvelope::kBakeStage:
-                    {
-                        break;
-                    }
 					default:
 					{
-						Logger::error(this, "Unrecognized command");
+						g_envelopeBuffer.add(editorEnvelope);
 					}
                 }
             }
@@ -179,87 +135,68 @@ void EngineWorker::start()
 			}
         }
     }
+	if (m_engineThread.joinable())
+	{
+		m_engineThread.join();
+	}
 }
 
 void EngineWorker::processEvents()
 {
+    Services &serv = m_engine->services();
 	NUBE::EditorEnvelope ee;
-	while (g_envelopeBuffer.get(ee))
+
+	// drain input event buffer first
+	while (g_inputEvents.get(ee))
 	{
-		if (ee.has_loadmesh())
+		using namespace NUBE;
+		switch (ee.payload_case())
 		{
-			OutputDebugStringA("Got a LoadMesh");
+			case EditorEnvelope::kKeyboardEvent:
+			{
+				const auto &keyEvent = ee.keyboardevent();
+				if (keyEvent.isdown())
+				{
+					serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode());
+				}
+				else
+				{
+					serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode());
+				}
+				break;
+			}
+			case EditorEnvelope::kMouseMoveEvent:
+			{
+				const auto &mouseEvent = ee.mousemoveevent();
+				serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x(),
+															mouseEvent.y(), mouseEvent.xrel(), mouseEvent.yrel());
+				break;
+			}
 		}
 	}
-    Services &serv = m_engine->services();
-    PlatformEvent e;
-    while (eventBuffer.get(e))
-    {
-        // handle external events
-        if (std::holds_alternative<KeyDown>(e))
-        {
-            const KeyDown &keyEvent = std::get<KeyDown>(e);
-            serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
-        }
-        else if (std::holds_alternative<KeyUp>(e))
-        {
-            const KeyUp &keyEvent = std::get<KeyUp>(e);
-            serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode);
-        }
-        else if (std::holds_alternative<MouseMoveEvent>(e))
-        {
-            const MouseMoveEvent &mouseEvent = std::get<MouseMoveEvent>(e);
-            serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x,
-                                                        mouseEvent.y, mouseEvent.xRel, mouseEvent.yRel);
-        }
-        else if (std::holds_alternative<MouseButtonEvent>(e))
-        {
-            //const MouseButtonEvent &mouseButtonEvent = std::get<MouseButtonEvent>(e);
-            //if (mouseButtonEvent.isDown)
-            //{
-            //	m_app.onMouseButtonDown(mouseButtonEvent.buttonIndex);
-            //}
-            //else
-            //{
-            //	m_app.onMouseButtonUp(mouseButtonEvent.buttonIndex);
-            //}
-        }
-        else if (std::holds_alternative<ResizeEvent>(e))
-        {
-            //const ResizeEvent &event = std::get<ResizeEvent>(e);
-            //m_app.onResizeRenderer(event.x, event.y, event.width, event.height);
-        }
-        else if (std::holds_alternative<ApplicationEnteredBackground>(e))
-        {
-            //m_app.pause();
-        }
-        else if (std::holds_alternative<ApplicationEnteredForeground>(e))
-        {
-            //m_app.resume();
-        }
-        else if (std::holds_alternative<ExitEvent>(e))
-        {
-            Logger::info(this, "Engine exit event received, stopping run-loop");
-            m_listening = false;
-            m_running = false;
-        }
-        else if (std::holds_alternative<usd::BakeStageEvent>(e))
-        {
-        }
-        else if (std::holds_alternative<LoadMesh>(e))
-        {
-            LoadMesh &meshEvent = std::get<LoadMesh>(e);
-            // const std::string meshPath = proc.findMesh(meshEvent.assetPath, meshEvent.primPath);
-        }
-    }
+
+	// process all other engine events
+	while (g_envelopeBuffer.get(ee))
+	{
+		using namespace NUBE;
+		switch (ee.payload_case())
+		{
+			case EditorEnvelope::kLoadMesh:
+			{
+				break;
+			}
+			case EditorEnvelope::kShutdown:
+			{
+				Logger::info(this, "Engine exit event received, stopping run-loop");
+				m_running = false;
+				m_listening = false;
+			}
+			default:
+			{
+				Logger::warn(this, "Unhandled worker event");
+			}
+		}
+	}
 }
 
-void EngineWorker::pushEvent(const PlatformEvent &event)
-{
-    eventBuffer.add(event);
-}
-
-Engine& EngineWorker::getEngine()
-{
-    return *m_engine;
-}
+Engine &EngineWorker::getEngine() { return *m_engine; }

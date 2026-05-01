@@ -14,7 +14,6 @@ class EngineWorker
 
 	bool m_listening;
 	bool m_running;
-	AtomicRingBuffer<PlatformEvent, 64> eventBuffer;
 	std::thread publisherThread;
 	std::thread m_engineThread;
 	std::thread m_repThread;
@@ -26,6 +25,5 @@ public:
 
 	void start();
 	void processEvents();
-	void pushEvent(const PlatformEvent &event);
 	Engine &getEngine();
 };

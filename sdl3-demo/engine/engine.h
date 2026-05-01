@@ -17,6 +17,7 @@
 #include <systems/d3d12/d3d12rendersystem.h>
 #include <prototypeinstancer.h>
 #include <rendering/renderer.h>
+#include <assets/assetmanager.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
