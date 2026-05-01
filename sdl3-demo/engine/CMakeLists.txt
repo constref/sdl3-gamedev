@@ -210,6 +210,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		"tooling/usd/events.h"
 		"tooling/usd/usdlogger.cpp"
 		"tooling/usd/usdlogger.h"
+		"tooling/usd/interoptypes.h"
 	)
 
 	target_include_directories(enginetooling
@@ -226,7 +227,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
 		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 	endif()
 
-	add_library(nubedusd STATIC
+	add_library(nubedusd SHARED
 		"tooling/usd/nubedusd.h"
 		"tooling/usd/nubedusd.cpp"
 	)

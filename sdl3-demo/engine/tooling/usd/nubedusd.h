@@ -1,14 +1,12 @@
 #pragma once
-#include <string>
 
-#include "usdprocessor.h"
 #include <zmq.hpp>
 #include "common.h"
 
 namespace usd
 {
+    struct Prim;
     class StageProxy;
-    class UsdProcessor;
     using PrimList = std::vector<usd::Prim>;
 };
 
@@ -20,7 +18,6 @@ namespace usd
 #endif
 
 extern "C" {
-
 DLL_API usd::StageProxy *CreateProject(const char *path, usd::ObjectsChangedFunc objectsChangedCallback);
 DLL_API usd::StageProxy *OpenProject(const char *path, usd::ObjectsChangedFunc objectsChangedCallback);
 DLL_API void SaveProject(usd::StageProxy *proxy);
@@ -28,7 +25,7 @@ DLL_API void DestroyProxy(usd::StageProxy *proxy);
 DLL_API usd::StageProxy *OpenStage(const char *path);
 
 DLL_API usd::PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim);
-DLL_API usd::Prim* GetPrimListData(usd::PrimList *list, uint32_t *outSize);
+DLL_API usd::Prim *GetPrimListData(usd::PrimList *list, uint32_t *outSize);
 DLL_API void DestroyPrimList(usd::PrimList *list);
 
 DLL_API void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath, const char *primPath);
@@ -37,12 +34,10 @@ DLL_API void PlaceBrush(usd::StageProxy *proxy, const char *brushPath);
 DLL_API void FlushChanges(usd::StageProxy *proxy);
 DLL_API void Bake(usd::StageProxy *proxy, const char *nubPath);
 
-DLL_API void SaveStage(usd::UsdProcessor *proc);
-DLL_API void DestroyUsdProcessor(usd::UsdProcessor *proc);
-
-DLL_API zmq::context_t* CreateContext();
+// Zero MQ
+DLL_API zmq::context_t *CreateContext();
 DLL_API void DestroyContext(zmq::context_t *context);
-DLL_API zmq::socket_t* CreateSocket(zmq::context_t *context, int socketType);
+DLL_API zmq::socket_t *CreateSocket(zmq::context_t *context, int socketType);
 DLL_API void BindSocket(zmq::socket_t *socket, const char *address);
 DLL_API void ConnectSocket(zmq::socket_t *socket, const char *address);
 DLL_API void DestroySocket(zmq::socket_t *socket);

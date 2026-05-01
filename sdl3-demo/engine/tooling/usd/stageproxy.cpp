@@ -6,6 +6,9 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/notice.h>
 #include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdGeom/mesh.h>
+
+#include <tooling/usd/usdprocessor.h>
 
 using namespace usd;
 using namespace pxr;
@@ -18,6 +21,7 @@ namespace usd
         ObjectsChangedFunc m_objectsChangedCallback;
         uint8_t m_msgBuffer[1024];
         std::vector<std::string> m_resyncedPaths;
+
     public:
         ProxyInternal(const UsdStageRefPtr& stage, ObjectsChangedFunc objectsChangedCallback)
         {
@@ -151,13 +155,27 @@ void StageProxy::addMesh(const std::string& assetId, const std::string& assetPat
         spec->SetSpecifier(SdfSpecifierDef);
         spec->SetTypeName(UsdGeomTokens->Xform);
 
-        // associate the 
+        // associate the mesh prim with the asset ID
         SdfAttributeSpecHandle attrAssetId =
             SdfAttributeSpec::New(spec, "assetInfo:assetId", SdfValueTypeNames->String);
         attrAssetId->SetDefaultValue(VtValue(assetId));
 
         SdfReference ref(assetPath, SdfPath(primPath));
         spec->GetReferenceList().Add(ref);
+    }
+}
+
+void StageProxy::bakeMesh(const std::string& assetId, const std::string& assetPath, const std::string& primPath) const
+{
+    // bake the mesh
+    auto assetStage = UsdStage::Open(assetPath);
+	auto assetPrim = assetStage->GetPrimAtPath(SdfPath(primPath));
+    for (UsdPrim desc : assetPrim.GetAllDescendants())
+    {
+        if (desc.IsA<UsdGeomMesh>())
+        {
+            auto str = desc.GetPath().GetString();
+        }
     }
 }
 

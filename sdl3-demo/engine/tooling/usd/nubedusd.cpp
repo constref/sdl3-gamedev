@@ -1,9 +1,4 @@
 #include "nubedusd.h"
-
-// #include <pxr/usd/usd/stage.h>
-// #include <pxr/usd/usd/prim.h>
-// #include <pxr/usd/usdGeom/tokens.h>
-// #include <pxr/usd/usd/notice.h>
 #include "common.h"
 #include "stageproxy.h"
 
@@ -103,6 +98,7 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
 void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath, const char *primPath)
 {
     proxy->addMesh(assetId, assetPath, primPath);
+    proxy->bakeMesh(assetId, assetPath, primPath);
     proxy->flushChanged();
 }
 

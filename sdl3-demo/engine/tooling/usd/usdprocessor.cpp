@@ -322,28 +322,6 @@ UsdProcessor::UsdProcessor()
 {
 }
 
-// SdfPath recurseMesh(UsdPrim prim)
-// {
-//     TfToken typeName = prim.GetTypeName();
-//     if (typeName == UsdGeomTokens->Mesh)
-//     {
-//         return prim.GetPath();
-//     }
-//     
-//     for (auto child : prim.GetChildren())
-//     {
-//         return recurseMesh(child);
-//     }
-// }
-//
-// std::string UsdProcessor::findMesh(std::string assetPath, std::string startPrim)
-// {
-//     auto stage = UsdStage::Open(assetPath);
-//     UsdPrim prim = stage->GetPrimAtPath(SdfPath(startPrim));
-//     SdfPath meshPath = recurseMesh(prim);
-//     return meshPath.GetString();
-// }
-
 void UsdProcessor::bakeStage(StageProxy &proxy, const std::string &nubPath)
 {
     /*
