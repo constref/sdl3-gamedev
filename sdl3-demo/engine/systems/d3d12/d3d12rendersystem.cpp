@@ -85,6 +85,10 @@ bool D3D12RenderSystem::initialize()
         {
             maxDedicatedVRam = adapterDesc.DedicatedVideoMemory;
             DXCHK(dxgiAdapter1.As(&m_dxgiAdapter), "Coudn't acquire the DXGIAdapter4");
+
+            // TODO: Don't take first adapter, this needs to be based on what the Avalonia tool uses or user selected
+	    // break out after grabbing the first adapter
+            break;
         }
     }
 
