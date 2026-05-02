@@ -353,17 +353,17 @@ void UsdProcessor::bakeStage(ProxyInternal &proxy, const std::string &nubPath)
     {
         // mesh header
         Mesh *mesh = itr.second.get();
-        persistence::Mesh prMesh;
+        persistence::MeshHeader prMesh;
         prMesh.subMeshCount = mesh->subMeshes().size();
-        file.write(reinterpret_cast<const char*>(&prMesh), sizeof(persistence::Mesh));
+        file.write(reinterpret_cast<const char*>(&prMesh), sizeof(persistence::MeshHeader));
         
         // submeshes
         for (const auto &sm : mesh->subMeshes())
         {
-            persistence::SubMesh prSubMesh;
+            persistence::SubMeshHeader prSubMesh;
             prSubMesh.vertexCount = sm.vertices.size();
             prSubMesh.indexCount = sm.indices.size();
-            file.write(reinterpret_cast<const char*>(&prSubMesh), sizeof(persistence::SubMesh));
+            file.write(reinterpret_cast<const char*>(&prSubMesh), sizeof(persistence::SubMeshHeader));
             
             // write out vertices
             for (const Vertex &v : sm.vertices)

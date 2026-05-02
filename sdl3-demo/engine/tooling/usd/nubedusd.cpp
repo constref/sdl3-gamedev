@@ -1,6 +1,7 @@
 #include "nubedusd.h"
 #include "common.h"
 #include "stageproxy.h"
+#include <persistence/project.h>
 
 using namespace usd;
 
@@ -102,6 +103,9 @@ void AddMesh(usd::StageProxy *proxy, const char *assetId, const char *assetPath,
     // bake the newly selected mesh prim
     std::unique_ptr<StageProxy> meshProxy(StageProxy::open(assetPath, nullptr));
     auto mesh = meshProxy->bakeMesh(assetId, primPath);
+
+    // save the baked mesh to disk
+    persistence::writeMeshFile(assetId, *mesh);
 
     proxy->flushChanged();
 }

@@ -3,6 +3,10 @@
 #include <fstream>
 #include <assets/assetid.h>
 #include <DirectXMath.h>
+#include <memory>
+#include <rendering/mesh.h>
+
+#include <uuid.h>
 
 namespace persistence
 {
@@ -19,13 +23,13 @@ namespace persistence
         DirectX::XMFLOAT3 rotation = {};
     };
 
-    struct Mesh
+    struct MeshHeader
     {
-        AssetId id;
+	uuids::uuid id;
         uint32_t subMeshCount = 0;
     };
 
-    struct SubMesh
+    struct SubMeshHeader
     {
         uint32_t vertexCount = 0;
         uint32_t indexCount = 0;
@@ -34,5 +38,6 @@ namespace persistence
     std::ofstream createFile(const std::string &filepath);
     void finish(std::ofstream &file);
 
+    std::unique_ptr<Mesh> readMeeshFile(const std::string &assetId);
     void writeMeshFile(const std::string &assetId, const Mesh &mesh);
 }

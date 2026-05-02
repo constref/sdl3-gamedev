@@ -73,12 +73,11 @@ void StageProxy::flatten(std::vector<Prim>& flatList, bool useDefaultPrim) const
 
     UsdPrim root = useDefaultPrim ? m_internal->stage()->GetDefaultPrim() : m_internal->stage()->GetPseudoRoot();
     const Prim rootPrim{
-        .id = currentId++,
-        .parentId = 0,
-        .name = root.GetName().GetString().c_str(),
-        .type = root.GetTypeName().GetText(),
-        .path = root.GetPath().GetString().c_str()
-        };
+      .id = currentId++, .parentId = 0,
+      .name = root.GetName().GetString().c_str(),
+      .type = root.GetTypeName().GetText(),
+      .path = root.GetPath().GetString().c_str()
+	};              
     work(root, rootPrim, flatList, currentId);
 }
 
