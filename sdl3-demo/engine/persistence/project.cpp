@@ -62,17 +62,12 @@ void persistence::writeMeshFile(const std::string &assetId, const Mesh &mesh)
 	SubMeshHeader subMeshHeader;
         subMeshHeader.vertexCount = sm.vertices.size();
         subMeshHeader.indexCount = sm.indices.size();
-	// write out vertices
-	for (const Vertex &v : sm.vertices)
-	{
-	    file.write(reinterpret_cast<const char*>(&v), sizeof(Vertex));
-	}
+	file.write(reinterpret_cast<const char *>(&subMeshHeader), sizeof(SubMeshHeader));
 
+	// write out vertices
+	file.write(reinterpret_cast<const char *>(sm.vertices.data()), sm.vertexByteSize());
 	// write out indices
-	for (uint16_t idx : sm.indices)
-	{
-	    file.write(reinterpret_cast<const char*>(&idx), sizeof(uint16_t));
-	}
+	file.write(reinterpret_cast<const char *>(sm.indices.data()), sm.indexByteSize());
     }
     file.close();
 }
