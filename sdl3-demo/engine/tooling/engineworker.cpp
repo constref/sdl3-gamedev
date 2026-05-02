@@ -8,9 +8,6 @@
 #include <nube.pb.h>
 #include <usd.pb.h>
 
-static AtomicRingBuffer<NUBE::EditorEnvelope, 64> g_inputEvents;
-static AtomicRingBuffer<NUBE::EditorEnvelope, 64> g_envelopeBuffer;
-
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
     m_engine = std::make_unique<Engine>(std::move(app));
@@ -31,33 +28,11 @@ void EngineWorker::start()
     m_listening = true;
     zmq::context_t ctx;
 
-    // subscribe to editor event publisher
-    m_subThread = std::thread([this, &ctx]()
-    {
-        zmq::socket_t sub(ctx, zmq::socket_type::sub);
-        sub.connect(std::format("{}-EditorPub", url));
-        sub.set(zmq::sockopt::subscribe, "");
-        sub.set(zmq::sockopt::rcvtimeo, 1000);
-
-        while (m_listening)
-        {
-            zmq::message_t msg;
-            auto result = sub.recv(msg, zmq::recv_flags::none);
-            if (result.has_value() && result.value() > 0)
-            {
-                NUBE::EditorEnvelope editorEnvelope;
-                bool parseSuccess = editorEnvelope.ParseFromArray(msg.data(), msg.size());
-                if (parseSuccess)
-                {
-                    g_inputEvents.add(editorEnvelope);
-                }
-            }
-        }
-    });
-    if (m_subThread.joinable())
-    {
-        m_subThread.detach();
-    }
+    // socket for low-latency events (input)
+    zmq::socket_t sub(ctx, zmq::socket_type::sub);
+    sub.connect(std::format("{}-EditorPub", url));
+    sub.set(zmq::sockopt::subscribe, "");
+    sub.set(zmq::sockopt::rcvtimeo, 1000);
 
     // create socket for engine->tooling data
     zmq::socket_t rep = zmq::socket_t(ctx, zmq::socket_type::rep);
@@ -69,12 +44,51 @@ void EngineWorker::start()
         rep.send(response, zmq::send_flags::none);
     };
 
-    // incoming editor requests
     while (m_listening)
     {
+        // input events
+        zmq::message_t inputMsg;
+        auto msgReceived = sub.recv(inputMsg, zmq::recv_flags::dontwait);
+        if (msgReceived)
+        {
+            NUBE::EditorEnvelope editorEnvelope;
+            bool parseSuccess = editorEnvelope.ParseFromArray(inputMsg.data(), inputMsg.size());
+            if (parseSuccess)
+            {
+                Services &services = m_engine->services();
+                switch (editorEnvelope.payload_case())
+                {
+                    case NUBE::EditorEnvelope::kKeyboardEvent:
+                    {
+                        const auto &keyEvent = editorEnvelope.keyboardevent();
+                        if (keyEvent.isdown())
+                        {
+                            services.eventQueue().enqueue<KeyDownEvent>(services.inputState().getFocusTarget(), 0,
+                                                                        keyEvent.scancode());
+                        }
+                        else
+                        {
+                            services.eventQueue().enqueue<KeyUpEvent>(services.inputState().getFocusTarget(), 0,
+                                                                      keyEvent.scancode());
+                        }
+                        break;
+                    }
+                    case NUBE::EditorEnvelope::kMouseMoveEvent:
+                    {
+                        const auto &mouseEvent = editorEnvelope.mousemoveevent();
+                        services.eventQueue().enqueue<MouseMotionEvent>(services.inputState().getFocusTarget(), 0,
+                                                                        mouseEvent.x(), mouseEvent.y(),
+                                                                        mouseEvent.xrel(), mouseEvent.yrel());
+                        break;
+                    }
+                }
+            }
+        }
+
+        // incoming editor requests
         zmq::message_t request;
-        auto result = rep.recv(request, zmq::recv_flags::none);
-        if (result.has_value())
+        auto result = rep.recv(request, zmq::recv_flags::dontwait);
+        if (result)
         {
             NUBE::EditorEnvelope editorEnvelope;
             bool responded = false;
@@ -113,21 +127,28 @@ void EngineWorker::start()
                         }
 
                         m_running = true;
-                        m_engineThread = std::thread([this]()
-                        {
-                            while (m_running)
-                            {
-                                processEvents();
-                                m_engine->step();
-                            }
-                            m_engine->cleanup();
-                        });
                         responded = true;
                         break;
                     }
+                    case NUBE::EditorEnvelope::kLoadMesh:
+                    {
+                        Services &serv = m_engine->services();
+                        const auto &cmd = editorEnvelope.loadmesh();
+                        auto assetId = uuids::uuid::from_string(cmd.assetid());
+                        assert(assetId.has_value() && "Invalid asset-id UUID provided");
+                        auto mesh = persistence::readMeeshFile(cmd.assetid());
+                        serv.assetManager().loadMesh(assetId.value(), std::move(mesh));
+                        break;
+                    }
+                    case NUBE::EditorEnvelope::kShutdown:
+                    {
+                        Logger::info(this, "Engine exit event received, stopping run-loop");
+                        m_running = false;
+                        m_listening = false;
+                    }
                     default:
                     {
-                        g_envelopeBuffer.add(editorEnvelope);
+                        Logger::warn(this, "Unhandled worker event");
                     }
                 }
             }
@@ -136,74 +157,14 @@ void EngineWorker::start()
                 ack();
             }
         }
-    }
-    if (m_engineThread.joinable())
-    {
-        m_engineThread.join();
-    }
-}
 
-void EngineWorker::processEvents()
-{
-    Services &serv = m_engine->services();
-    NUBE::EditorEnvelope ee;
-
-    // drain input event buffer first
-    while (g_inputEvents.get(ee))
-    {
-        using namespace NUBE;
-        switch (ee.payload_case())
+        // run the engine
+        if (m_running)
         {
-            case EditorEnvelope::kKeyboardEvent:
-            {
-                const auto &keyEvent = ee.keyboardevent();
-                if (keyEvent.isdown())
-                {
-                    serv.eventQueue().enqueue<KeyDownEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode());
-                }
-                else
-                {
-                    serv.eventQueue().enqueue<KeyUpEvent>(serv.inputState().getFocusTarget(), 0, keyEvent.scancode());
-                }
-                break;
-            }
-            case EditorEnvelope::kMouseMoveEvent:
-            {
-                const auto &mouseEvent = ee.mousemoveevent();
-                serv.eventQueue().enqueue<MouseMotionEvent>(serv.inputState().getFocusTarget(), 0, mouseEvent.x(),
-                                                            mouseEvent.y(), mouseEvent.xrel(), mouseEvent.yrel());
-                break;
-            }
+            m_engine->step();
         }
     }
-
-    // process all other engine events
-    while (g_envelopeBuffer.get(ee))
-    {
-        using namespace NUBE;
-        switch (ee.payload_case())
-        {
-            case EditorEnvelope::kLoadMesh:
-            {
-                const auto &cmd = ee.loadmesh();
-                auto assetId = uuids::uuid::from_string(cmd.assetid());
-                assert(assetId.has_value() && "Invalid asset-id UUID provided");
-                auto mesh = persistence::readMeeshFile(cmd.assetid());
-                serv.assetManager().loadMesh(assetId.value(), std::move(mesh));
-                break;
-            }
-            case EditorEnvelope::kShutdown:
-            {
-                Logger::info(this, "Engine exit event received, stopping run-loop");
-                m_running = false;
-                m_listening = false;
-            }
-            default:
-            {
-                Logger::warn(this, "Unhandled worker event");
-            }
-        }
-    }
+    m_engine->cleanup();
 }
 
 Engine &EngineWorker::getEngine() { return *m_engine; }
