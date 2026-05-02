@@ -27,6 +27,33 @@ namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
 namespace NUBE {
 
+inline constexpr NodeHandle::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        index_{::uint64_t{0u}},
+        generation_{0u} {}
+
+template <typename>
+constexpr NodeHandle::NodeHandle(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(NodeHandle_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
+}
+struct NodeHandleDefaultTypeInternal {
+  constexpr NodeHandleDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~NodeHandleDefaultTypeInternal() {}
+  union {
+    NodeHandle _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 NodeHandleDefaultTypeInternal _NodeHandle_default_instance_;
+
 inline constexpr MouseMoveEvent::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
@@ -197,6 +224,24 @@ struct EngineShutdownCommandDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EngineShutdownCommandDefaultTypeInternal _EngineShutdownCommand_default_instance_;
+template <typename>
+constexpr CreateNodeCommand::CreateNodeCommand(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(CreateNodeCommand_class_data_.base()){}
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase() {
+}
+#endif  // PROTOBUF_CUSTOM_VTABLE
+struct CreateNodeCommandDefaultTypeInternal {
+  constexpr CreateNodeCommandDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CreateNodeCommandDefaultTypeInternal() {}
+  union {
+    CreateNodeCommand _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CreateNodeCommandDefaultTypeInternal _CreateNodeCommand_default_instance_;
 
 inline constexpr BakeStageCommand::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
@@ -296,6 +341,7 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::NUBE::EditorEnvelope, _impl_.payload_),
         PROTOBUF_FIELD_OFFSET(::NUBE::EditorEnvelope, _impl_.payload_),
         PROTOBUF_FIELD_OFFSET(::NUBE::EditorEnvelope, _impl_.payload_),
+        PROTOBUF_FIELD_OFFSET(::NUBE::EditorEnvelope, _impl_.payload_),
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineStartupCommand, _impl_._has_bits_),
         5, // hasbit index offset
@@ -334,8 +380,17 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::NUBE::LoadMeshCommand, _impl_.meshpath_),
         0,
         1,
+        0x000, // bitmap
+        0x081, // bitmap
+        PROTOBUF_FIELD_OFFSET(::NUBE::NodeHandle, _impl_._has_bits_),
+        5, // hasbit index offset
+        PROTOBUF_FIELD_OFFSET(::NUBE::NodeHandle, _impl_.index_),
+        PROTOBUF_FIELD_OFFSET(::NUBE::NodeHandle, _impl_.generation_),
+        0,
+        1,
         0x004, // bitmap
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_._oneof_case_[0]),
+        PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_.payload_),
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_.payload_),
         PROTOBUF_FIELD_OFFSET(::NUBE::EngineEnvelope, _impl_.payload_),
         0x081, // bitmap
@@ -352,14 +407,16 @@ const ::uint32_t
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, sizeof(::NUBE::EditorEnvelope)},
-        {9, sizeof(::NUBE::EngineStartupCommand)},
-        {16, sizeof(::NUBE::EngineShutdownCommand)},
-        {17, sizeof(::NUBE::KeyboardEvent)},
-        {24, sizeof(::NUBE::MouseMoveEvent)},
-        {35, sizeof(::NUBE::BakeStageCommand)},
-        {40, sizeof(::NUBE::LoadMeshCommand)},
-        {47, sizeof(::NUBE::EngineEnvelope)},
-        {51, sizeof(::NUBE::InitializationDetails)},
+        {10, sizeof(::NUBE::EngineStartupCommand)},
+        {17, sizeof(::NUBE::EngineShutdownCommand)},
+        {18, sizeof(::NUBE::KeyboardEvent)},
+        {25, sizeof(::NUBE::MouseMoveEvent)},
+        {36, sizeof(::NUBE::BakeStageCommand)},
+        {41, sizeof(::NUBE::LoadMeshCommand)},
+        {48, sizeof(::NUBE::CreateNodeCommand)},
+        {49, sizeof(::NUBE::NodeHandle)},
+        {56, sizeof(::NUBE::EngineEnvelope)},
+        {61, sizeof(::NUBE::InitializationDetails)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::NUBE::_EditorEnvelope_default_instance_._instance,
@@ -369,44 +426,50 @@ static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::NUBE::_MouseMoveEvent_default_instance_._instance,
     &::NUBE::_BakeStageCommand_default_instance_._instance,
     &::NUBE::_LoadMeshCommand_default_instance_._instance,
+    &::NUBE::_CreateNodeCommand_default_instance_._instance,
+    &::NUBE::_NodeHandle_default_instance_._instance,
     &::NUBE::_EngineEnvelope_default_instance_._instance,
     &::NUBE::_InitializationDetails_default_instance_._instance,
 };
 const char descriptor_table_protodef_nube_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\nnube.proto\022\004NUBE\"\261\002\n\016EditorEnvelope\022-\n"
+    "\n\nnube.proto\022\004NUBE\"\340\002\n\016EditorEnvelope\022-\n"
     "\007startup\030\001 \001(\0132\032.NUBE.EngineStartupComma"
     "ndH\000\022/\n\010shutdown\030\002 \001(\0132\033.NUBE.EngineShut"
     "downCommandH\000\022,\n\rkeyboardEvent\030\003 \001(\0132\023.N"
     "UBE.KeyboardEventH\000\022.\n\016mouseMoveEvent\030\004 "
     "\001(\0132\024.NUBE.MouseMoveEventH\000\022+\n\tbakeStage"
     "\030\005 \001(\0132\026.NUBE.BakeStageCommandH\000\022)\n\010load"
-    "Mesh\030\006 \001(\0132\025.NUBE.LoadMeshCommandH\000B\t\n\007p"
-    "ayload\"5\n\024EngineStartupCommand\022\r\n\005width\030"
-    "\001 \001(\r\022\016\n\006height\030\002 \001(\r\"\027\n\025EngineShutdownC"
-    "ommand\"1\n\rKeyboardEvent\022\020\n\010scancode\030\001 \001("
-    "\r\022\016\n\006isDown\030\002 \001(\010\"B\n\016MouseMoveEvent\022\t\n\001x"
-    "\030\001 \001(\005\022\t\n\001y\030\002 \001(\005\022\014\n\004xRel\030\003 \001(\005\022\014\n\004yRel\030"
-    "\004 \001(\005\"#\n\020BakeStageCommand\022\017\n\007usdPath\030\001 \001"
-    "(\t\"4\n\017LoadMeshCommand\022\017\n\007assetId\030\001 \001(\t\022\020"
-    "\n\010meshPath\030\002 \001(\t\"O\n\016EngineEnvelope\0222\n\013in"
-    "itDetails\030\001 \001(\0132\033.NUBE.InitializationDet"
-    "ailsH\000B\t\n\007payload\"\\\n\025InitializationDetai"
-    "ls\022\031\n\021maxFramesInFlight\030\001 \001(\r\022\025\n\rtargetH"
-    "andles\030\002 \003(\004\022\021\n\tengineUrl\030\003 \001(\tB\034\252\002\031Aval"
-    "oniaEditor.Proto.NUBEb\010editionsp\350\007"
+    "Mesh\030\006 \001(\0132\025.NUBE.LoadMeshCommandH\000\022-\n\nc"
+    "reateNode\030\007 \001(\0132\027.NUBE.CreateNodeCommand"
+    "H\000B\t\n\007payload\"5\n\024EngineStartupCommand\022\r\n"
+    "\005width\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\"\027\n\025EngineSh"
+    "utdownCommand\"1\n\rKeyboardEvent\022\020\n\010scanco"
+    "de\030\001 \001(\r\022\016\n\006isDown\030\002 \001(\010\"B\n\016MouseMoveEve"
+    "nt\022\t\n\001x\030\001 \001(\005\022\t\n\001y\030\002 \001(\005\022\014\n\004xRel\030\003 \001(\005\022\014"
+    "\n\004yRel\030\004 \001(\005\"#\n\020BakeStageCommand\022\017\n\007usdP"
+    "ath\030\001 \001(\t\"4\n\017LoadMeshCommand\022\017\n\007assetId\030"
+    "\001 \001(\t\022\020\n\010meshPath\030\002 \001(\t\"\023\n\021CreateNodeCom"
+    "mand\"/\n\nNodeHandle\022\r\n\005index\030\001 \001(\004\022\022\n\ngen"
+    "eration\030\002 \001(\r\"w\n\016EngineEnvelope\0222\n\013initD"
+    "etails\030\001 \001(\0132\033.NUBE.InitializationDetail"
+    "sH\000\022&\n\nnodeHandle\030\002 \001(\0132\020.NUBE.NodeHandl"
+    "eH\000B\t\n\007payload\"\\\n\025InitializationDetails\022"
+    "\031\n\021maxFramesInFlight\030\001 \001(\r\022\025\n\rtargetHand"
+    "les\030\002 \003(\004\022\021\n\tengineUrl\030\003 \001(\tB\034\252\002\031Avaloni"
+    "aEditor.Proto.NUBEb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nube_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nube_2eproto = {
     false,
     false,
-    834,
+    991,
     descriptor_table_protodef_nube_2eproto,
     "nube.proto",
     &descriptor_table_nube_2eproto_once,
     nullptr,
     0,
-    9,
+    11,
     schemas,
     file_default_instances,
     TableStruct_nube_2eproto::offsets,
@@ -500,6 +563,19 @@ void EditorEnvelope::set_allocated_loadmesh(::NUBE::LoadMeshCommand* PROTOBUF_NU
   }
   // @@protoc_insertion_point(field_set_allocated:NUBE.EditorEnvelope.loadMesh)
 }
+void EditorEnvelope::set_allocated_createnode(::NUBE::CreateNodeCommand* PROTOBUF_NULLABLE createnode) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (createnode) {
+    ::google::protobuf::Arena* submessage_arena = createnode->GetArena();
+    if (message_arena != submessage_arena) {
+      createnode = ::google::protobuf::internal::GetOwnedMessage(message_arena, createnode, submessage_arena);
+    }
+    set_has_createnode();
+    _impl_.payload_.createnode_ = createnode;
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.EditorEnvelope.createNode)
+}
 EditorEnvelope::EditorEnvelope(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, EditorEnvelope_class_data_.base()) {
@@ -550,6 +626,9 @@ EditorEnvelope::EditorEnvelope(
         break;
       case kLoadMesh:
         _impl_.payload_.loadmesh_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.loadmesh_);
+        break;
+      case kCreateNode:
+        _impl_.payload_.createnode_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.createnode_);
         break;
   }
 
@@ -634,6 +713,14 @@ void EditorEnvelope::clear_payload() {
       }
       break;
     }
+    case kCreateNode: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.createnode_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.createnode_);
+      }
+      break;
+    }
     case PAYLOAD_NOT_SET: {
       break;
     }
@@ -684,18 +771,18 @@ EditorEnvelope::GetClassData() const {
   return EditorEnvelope_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 6, 6, 0, 2>
+const ::_pbi::TcParseTable<0, 7, 7, 0, 2>
 EditorEnvelope::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(EditorEnvelope,
                           _impl_._cached_size_),  // no hasbits
     0, // no _extensions_
-    6, 0,  // max_field_number, fast_idx_mask
+    7, 0,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967232,  // skipmap
+    4294967168,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    6,  // num_field_entries
-    6,  // num_aux_entries
+    7,  // num_field_entries
+    7,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     EditorEnvelope_class_data_.base(),
     nullptr,  // post_loop_handler
@@ -720,6 +807,8 @@ EditorEnvelope::_table_ = {
     {PROTOBUF_FIELD_OFFSET(EditorEnvelope, _impl_.payload_.bakestage_), _Internal::kOneofCaseOffset + 0, 4, (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
     // .NUBE.LoadMeshCommand loadMesh = 6;
     {PROTOBUF_FIELD_OFFSET(EditorEnvelope, _impl_.payload_.loadmesh_), _Internal::kOneofCaseOffset + 0, 5, (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .NUBE.CreateNodeCommand createNode = 7;
+    {PROTOBUF_FIELD_OFFSET(EditorEnvelope, _impl_.payload_.createnode_), _Internal::kOneofCaseOffset + 0, 6, (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::NUBE::EngineStartupCommand>()},
@@ -728,6 +817,7 @@ EditorEnvelope::_table_ = {
       {::_pbi::TcParser::GetTable<::NUBE::MouseMoveEvent>()},
       {::_pbi::TcParser::GetTable<::NUBE::BakeStageCommand>()},
       {::_pbi::TcParser::GetTable<::NUBE::LoadMeshCommand>()},
+      {::_pbi::TcParser::GetTable<::NUBE::CreateNodeCommand>()},
   }},
   {{
   }},
@@ -798,6 +888,12 @@ PROTOBUF_NOINLINE void EditorEnvelope::Clear() {
           stream);
       break;
     }
+    case kCreateNode: {
+      target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+          7, *this_._impl_.payload_.createnode_, this_._impl_.payload_.createnode_->GetCachedSize(), target,
+          stream);
+      break;
+    }
     default:
       break;
   }
@@ -859,6 +955,12 @@ PROTOBUF_NOINLINE void EditorEnvelope::Clear() {
     case kLoadMesh: {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.loadmesh_);
+      break;
+    }
+    // .NUBE.CreateNodeCommand createNode = 7;
+    case kCreateNode: {
+      total_size += 1 +
+                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.createnode_);
       break;
     }
     case PAYLOAD_NOT_SET: {
@@ -940,6 +1042,14 @@ void EditorEnvelope::MergeImpl(::google::protobuf::MessageLite& to_msg,
           _this->_impl_.payload_.loadmesh_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.loadmesh_);
         } else {
           _this->_impl_.payload_.loadmesh_->MergeFrom(*from._impl_.payload_.loadmesh_);
+        }
+        break;
+      }
+      case kCreateNode: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.createnode_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.createnode_);
+        } else {
+          _this->_impl_.payload_.createnode_->MergeFrom(*from._impl_.payload_.createnode_);
         }
         break;
       }
@@ -2521,6 +2631,395 @@ void LoadMeshCommand::InternalSwap(LoadMeshCommand* PROTOBUF_RESTRICT PROTOBUF_N
 }
 // ===================================================================
 
+class CreateNodeCommand::_Internal {
+ public:
+};
+
+CreateNodeCommand::CreateNodeCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, CreateNodeCommand_class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(arena_constructor:NUBE.CreateNodeCommand)
+}
+CreateNodeCommand::CreateNodeCommand(
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
+    const CreateNodeCommand& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, CreateNodeCommand_class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  CreateNodeCommand* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+
+  // @@protoc_insertion_point(copy_constructor:NUBE.CreateNodeCommand)
+}
+
+inline void* PROTOBUF_NONNULL CreateNodeCommand::PlacementNew_(
+    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
+  return ::new (mem) CreateNodeCommand(arena);
+}
+constexpr auto CreateNodeCommand::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CreateNodeCommand),
+                                            alignof(CreateNodeCommand));
+}
+constexpr auto CreateNodeCommand::InternalGenerateClassData_() {
+  return ::google::protobuf::internal::ClassDataFull{
+      ::google::protobuf::internal::ClassData{
+          &_CreateNodeCommand_default_instance_._instance,
+          &_table_.header,
+          nullptr,  // IsInitialized
+          &CreateNodeCommand::MergeImpl,
+          ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<CreateNodeCommand>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+          &CreateNodeCommand::SharedDtor,
+          ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<CreateNodeCommand>(), &CreateNodeCommand::ByteSizeLong,
+              &CreateNodeCommand::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          PROTOBUF_FIELD_OFFSET(CreateNodeCommand, _impl_._cached_size_),
+          false,
+      },
+      &CreateNodeCommand::kDescriptorMethods,
+      &descriptor_table_nube_2eproto,
+      nullptr,  // tracker
+  };
+}
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
+    ::google::protobuf::internal::ClassDataFull CreateNodeCommand_class_data_ =
+        CreateNodeCommand::InternalGenerateClassData_();
+
+PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+CreateNodeCommand::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&CreateNodeCommand_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(CreateNodeCommand_class_data_.tc_table);
+  return CreateNodeCommand_class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 0, 0, 0, 2>
+CreateNodeCommand::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(CreateNodeCommand,
+                          _impl_._cached_size_),  // no hasbits
+    0, // no _extensions_
+    0, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967295,  // skipmap
+    offsetof(decltype(_table_), field_names),  // no field_entries
+    0,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    CreateNodeCommand_class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::NUBE::CreateNodeCommand>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+  }}, {{
+    65535, 65535
+  }}, // no field_entries, or aux_entries
+  {{
+  }},
+};
+
+
+
+
+
+
+
+::google::protobuf::Metadata CreateNodeCommand::GetMetadata() const {
+  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class NodeHandle::_Internal {
+ public:
+  using HasBits =
+      decltype(::std::declval<NodeHandle>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_._has_bits_);
+};
+
+NodeHandle::NodeHandle(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, NodeHandle_class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:NUBE.NodeHandle)
+}
+NodeHandle::NodeHandle(
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const NodeHandle& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, NodeHandle_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(from._impl_) {
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+}
+PROTOBUF_NDEBUG_INLINE NodeHandle::Impl_::Impl_(
+    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
+    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+      : _cached_size_{0} {}
+
+inline void NodeHandle::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char*>(&_impl_) +
+               offsetof(Impl_, index_),
+           0,
+           offsetof(Impl_, generation_) -
+               offsetof(Impl_, index_) +
+               sizeof(Impl_::generation_));
+}
+NodeHandle::~NodeHandle() {
+  // @@protoc_insertion_point(destructor:NUBE.NodeHandle)
+  SharedDtor(*this);
+}
+inline void NodeHandle::SharedDtor(MessageLite& self) {
+  NodeHandle& this_ = static_cast<NodeHandle&>(self);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.~Impl_();
+}
+
+inline void* PROTOBUF_NONNULL NodeHandle::PlacementNew_(
+    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
+  return ::new (mem) NodeHandle(arena);
+}
+constexpr auto NodeHandle::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(NodeHandle),
+                                            alignof(NodeHandle));
+}
+constexpr auto NodeHandle::InternalGenerateClassData_() {
+  return ::google::protobuf::internal::ClassDataFull{
+      ::google::protobuf::internal::ClassData{
+          &_NodeHandle_default_instance_._instance,
+          &_table_.header,
+          nullptr,  // IsInitialized
+          &NodeHandle::MergeImpl,
+          ::google::protobuf::Message::GetNewImpl<NodeHandle>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+          &NodeHandle::SharedDtor,
+          ::google::protobuf::Message::GetClearImpl<NodeHandle>(), &NodeHandle::ByteSizeLong,
+              &NodeHandle::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_._cached_size_),
+          false,
+      },
+      &NodeHandle::kDescriptorMethods,
+      &descriptor_table_nube_2eproto,
+      nullptr,  // tracker
+  };
+}
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
+    ::google::protobuf::internal::ClassDataFull NodeHandle_class_data_ =
+        NodeHandle::InternalGenerateClassData_();
+
+PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+NodeHandle::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&NodeHandle_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(NodeHandle_class_data_.tc_table);
+  return NodeHandle_class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 0, 0, 2>
+NodeHandle::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_._has_bits_),
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    NodeHandle_class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::NUBE::NodeHandle>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // uint32 generation = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(NodeHandle, _impl_.generation_), 1>(),
+     {16, 1, 0,
+      PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.generation_)}},
+    // uint64 index = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(NodeHandle, _impl_.index_), 0>(),
+     {8, 0, 0,
+      PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.index_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // uint64 index = 1;
+    {PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.index_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt64)},
+    // uint32 generation = 2;
+    {PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.generation_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+  }},
+  // no aux_entries
+  {{
+  }},
+};
+PROTOBUF_NOINLINE void NodeHandle::Clear() {
+// @@protoc_insertion_point(message_clear_start:NUBE.NodeHandle)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+    ::memset(&_impl_.index_, 0, static_cast<::size_t>(
+        reinterpret_cast<char*>(&_impl_.generation_) -
+        reinterpret_cast<char*>(&_impl_.index_)) + sizeof(_impl_.generation_));
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::uint8_t* PROTOBUF_NONNULL NodeHandle::_InternalSerialize(
+    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
+  const NodeHandle& this_ = static_cast<const NodeHandle&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::uint8_t* PROTOBUF_NONNULL NodeHandle::_InternalSerialize(
+    ::uint8_t* PROTOBUF_NONNULL target,
+    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  const NodeHandle& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    this_.CheckHasBitConsistency();
+  }
+  // @@protoc_insertion_point(serialize_to_array_start:NUBE.NodeHandle)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = this_._impl_._has_bits_[0];
+  // uint64 index = 1;
+  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+        1, this_._internal_index(), target);
+  }
+
+  // uint32 generation = 2;
+  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+        2, this_._internal_generation(), target);
+  }
+
+  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:NUBE.NodeHandle)
+  return target;
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+::size_t NodeHandle::ByteSizeLong(const MessageLite& base) {
+  const NodeHandle& this_ = static_cast<const NodeHandle&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+::size_t NodeHandle::ByteSizeLong() const {
+  const NodeHandle& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(message_byte_size_start:NUBE.NodeHandle)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void)cached_has_bits;
+
+  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+  cached_has_bits = this_._impl_._has_bits_[0];
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+    // uint64 index = 1;
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+          this_._internal_index());
+    }
+    // uint32 generation = 2;
+    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+          this_._internal_generation());
+    }
+  }
+  return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                             &this_._impl_._cached_size_);
+}
+
+void NodeHandle::MergeImpl(::google::protobuf::MessageLite& to_msg,
+                            const ::google::protobuf::MessageLite& from_msg) {
+   auto* const _this =
+      static_cast<NodeHandle*>(&to_msg);
+  auto& from = static_cast<const NodeHandle&>(from_msg);
+  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
+    from.CheckHasBitConsistency();
+  }
+  // @@protoc_insertion_point(class_specific_merge_from_start:NUBE.NodeHandle)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+      _this->_impl_.index_ = from._impl_.index_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      _this->_impl_.generation_ = from._impl_.generation_;
+    }
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+}
+
+void NodeHandle::CopyFrom(const NodeHandle& from) {
+  // @@protoc_insertion_point(class_specific_copy_from_start:NUBE.NodeHandle)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void NodeHandle::InternalSwap(NodeHandle* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
+  using ::std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.generation_)
+      + sizeof(NodeHandle::_impl_.generation_)
+      - PROTOBUF_FIELD_OFFSET(NodeHandle, _impl_.index_)>(
+          reinterpret_cast<char*>(&_impl_.index_),
+          reinterpret_cast<char*>(&other->_impl_.index_));
+}
+
+::google::protobuf::Metadata NodeHandle::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
 class EngineEnvelope::_Internal {
  public:
   static constexpr ::int32_t kOneofCaseOffset =
@@ -2539,6 +3038,19 @@ void EngineEnvelope::set_allocated_initdetails(::NUBE::InitializationDetails* PR
     _impl_.payload_.initdetails_ = initdetails;
   }
   // @@protoc_insertion_point(field_set_allocated:NUBE.EngineEnvelope.initDetails)
+}
+void EngineEnvelope::set_allocated_nodehandle(::NUBE::NodeHandle* PROTOBUF_NULLABLE nodehandle) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (nodehandle) {
+    ::google::protobuf::Arena* submessage_arena = nodehandle->GetArena();
+    if (message_arena != submessage_arena) {
+      nodehandle = ::google::protobuf::internal::GetOwnedMessage(message_arena, nodehandle, submessage_arena);
+    }
+    set_has_nodehandle();
+    _impl_.payload_.nodehandle_ = nodehandle;
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.EngineEnvelope.nodeHandle)
 }
 EngineEnvelope::EngineEnvelope(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
@@ -2575,6 +3087,9 @@ EngineEnvelope::EngineEnvelope(
       break;
       case kInitDetails:
         _impl_.payload_.initdetails_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.initdetails_);
+        break;
+      case kNodeHandle:
+        _impl_.payload_.nodehandle_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.nodehandle_);
         break;
   }
 
@@ -2616,6 +3131,14 @@ void EngineEnvelope::clear_payload() {
         delete _impl_.payload_.initdetails_;
       } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
         ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.initdetails_);
+      }
+      break;
+    }
+    case kNodeHandle: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.nodehandle_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.nodehandle_);
       }
       break;
     }
@@ -2669,18 +3192,18 @@ EngineEnvelope::GetClassData() const {
   return EngineEnvelope_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 1, 1, 0, 2>
+const ::_pbi::TcParseTable<0, 2, 2, 0, 2>
 EngineEnvelope::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(EngineEnvelope,
                           _impl_._cached_size_),  // no hasbits
     0, // no _extensions_
-    1, 0,  // max_field_number, fast_idx_mask
+    2, 0,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967294,  // skipmap
+    4294967292,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    1,  // num_field_entries
-    1,  // num_aux_entries
+    2,  // num_field_entries
+    2,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     EngineEnvelope_class_data_.base(),
     nullptr,  // post_loop_handler
@@ -2695,9 +3218,12 @@ EngineEnvelope::_table_ = {
   }}, {{
     // .NUBE.InitializationDetails initDetails = 1;
     {PROTOBUF_FIELD_OFFSET(EngineEnvelope, _impl_.payload_.initdetails_), _Internal::kOneofCaseOffset + 0, 0, (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .NUBE.NodeHandle nodeHandle = 2;
+    {PROTOBUF_FIELD_OFFSET(EngineEnvelope, _impl_.payload_.nodehandle_), _Internal::kOneofCaseOffset + 0, 1, (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::NUBE::InitializationDetails>()},
+      {::_pbi::TcParser::GetTable<::NUBE::NodeHandle>()},
   }},
   {{
   }},
@@ -2731,13 +3257,22 @@ PROTOBUF_NOINLINE void EngineEnvelope::Clear() {
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
 
-  // .NUBE.InitializationDetails initDetails = 1;
-  if (this_.payload_case() == kInitDetails) {
-    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        1, *this_._impl_.payload_.initdetails_, this_._impl_.payload_.initdetails_->GetCachedSize(), target,
-        stream);
+  switch (this_.payload_case()) {
+    case kInitDetails: {
+      target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+          1, *this_._impl_.payload_.initdetails_, this_._impl_.payload_.initdetails_->GetCachedSize(), target,
+          stream);
+      break;
+    }
+    case kNodeHandle: {
+      target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+          2, *this_._impl_.payload_.nodehandle_, this_._impl_.payload_.nodehandle_->GetCachedSize(), target,
+          stream);
+      break;
+    }
+    default:
+      break;
   }
-
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
     target =
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -2766,6 +3301,12 @@ PROTOBUF_NOINLINE void EngineEnvelope::Clear() {
     case kInitDetails: {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.initdetails_);
+      break;
+    }
+    // .NUBE.NodeHandle nodeHandle = 2;
+    case kNodeHandle: {
+      total_size += 1 +
+                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.nodehandle_);
       break;
     }
     case PAYLOAD_NOT_SET: {
@@ -2807,6 +3348,14 @@ void EngineEnvelope::MergeImpl(::google::protobuf::MessageLite& to_msg,
           _this->_impl_.payload_.initdetails_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.initdetails_);
         } else {
           _this->_impl_.payload_.initdetails_->MergeFrom(*from._impl_.payload_.initdetails_);
+        }
+        break;
+      }
+      case kNodeHandle: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.nodehandle_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.payload_.nodehandle_);
+        } else {
+          _this->_impl_.payload_.nodehandle_->MergeFrom(*from._impl_.payload_.nodehandle_);
         }
         break;
       }

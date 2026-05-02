@@ -12,6 +12,7 @@ message EditorEnvelope {
     MouseMoveEvent mouseMoveEvent = 4;
     BakeStageCommand bakeStage = 5;
     LoadMeshCommand loadMesh = 6;
+    CreateNodeCommand createNode = 7;
   }
 }
 message EngineStartupCommand {
@@ -42,9 +43,18 @@ message LoadMeshCommand {
   string meshPath = 2;
 }
 
+message CreateNodeCommand {
+}
+
+message NodeHandle {
+  uint64 index = 1;
+  uint32 generation = 2;
+}
+
 message EngineEnvelope {
   oneof payload {
     InitializationDetails initDetails = 1;
+    NodeHandle nodeHandle = 2;
   }
 }
 

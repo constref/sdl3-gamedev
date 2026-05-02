@@ -1,8 +1,8 @@
 #include "engineworker.h"
-#include "persistence/project.h"
-#include "uuid.h"
 #include <format>
 #include <memory>
+#include <persistence/project.h>
+#include <uuid.h>
 #include <zmq.hpp>
 
 #include <nube.pb.h>
@@ -95,6 +95,7 @@ void EngineWorker::start()
             bool parseSuccess = editorEnvelope.ParseFromArray(request.data(), request.size());
             if (parseSuccess)
             {
+                Services &services = m_engine->services();
                 switch (editorEnvelope.payload_case())
                 {
                     case NUBE::EditorEnvelope::kStartup:
@@ -132,12 +133,33 @@ void EngineWorker::start()
                     }
                     case NUBE::EditorEnvelope::kLoadMesh:
                     {
-                        Services &serv = m_engine->services();
                         const auto &cmd = editorEnvelope.loadmesh();
                         auto assetId = uuids::uuid::from_string(cmd.assetid());
                         assert(assetId.has_value() && "Invalid asset-id UUID provided");
                         auto mesh = persistence::readMeeshFile(cmd.assetid());
-                        serv.assetManager().loadMesh(assetId.value(), std::move(mesh));
+                        services.assetManager().loadMesh(assetId.value(), std::move(mesh));
+                        break;
+                    }
+                    case NUBE::EditorEnvelope::kCreateNode:
+                    {
+                        NodeHandle hNode = services.world().createNode();
+                        NUBE::NodeHandle *handle = new NUBE::NodeHandle;
+                        handle->set_index(hNode.index());
+                        handle->set_generation(hNode.generation());
+
+                        NUBE::EngineEnvelope envelope;
+                        envelope.set_allocated_nodehandle(handle);
+
+                        size_t size = envelope.ByteSizeLong();
+                        std::vector<uint8_t> buffer(size);
+                        bool success = envelope.SerializeToArray(buffer.data(), buffer.size());
+                        if (success)
+                        {
+                            std::span<uint8_t> span(buffer.data(), buffer.size());
+                            zmq::message_t response(span);
+                            rep.send(response, zmq::send_flags::none);
+                            responded = true;
+                        }
                         break;
                     }
                     case NUBE::EditorEnvelope::kShutdown:

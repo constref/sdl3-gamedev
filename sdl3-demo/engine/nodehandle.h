@@ -1,24 +1,20 @@
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
-struct NodeHandle
+class NodeHandle
 {
-	size_t index;
-	uint32_t generation;
+    size_t m_index;
+    uint32_t m_generation;
 
-	NodeHandle() : index(0), generation(0) {}
-	NodeHandle(size_t idx, uint32_t gen) : index(idx), generation(gen) {}
+ public:
+    NodeHandle() : m_index(0), m_generation(0) {}
+    NodeHandle(size_t idx, uint32_t gen) : m_index(idx), m_generation(gen) {}
 
-	bool isValid() const
-	{
-		return generation != 0;
-	}
+    auto index() const { return m_index; }
+    auto generation() const { return m_generation; }
+    bool isValid() const { return m_generation != 0; }
 
-	bool operator==(const NodeHandle &other)
-	{
-		return index == other.index && generation == other.generation;
-	}
+    bool operator==(const NodeHandle &other) { return m_index == other.m_index && m_generation == other.m_generation; }
 };
-

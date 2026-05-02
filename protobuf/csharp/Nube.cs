@@ -24,36 +24,42 @@ namespace AvaloniaEditor.Proto.NUBE {
     static NubeReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpudWJlLnByb3RvEgROVUJFIrECCg5FZGl0b3JFbnZlbG9wZRItCgdzdGFy",
+            "CgpudWJlLnByb3RvEgROVUJFIuACCg5FZGl0b3JFbnZlbG9wZRItCgdzdGFy",
             "dHVwGAEgASgLMhouTlVCRS5FbmdpbmVTdGFydHVwQ29tbWFuZEgAEi8KCHNo",
             "dXRkb3duGAIgASgLMhsuTlVCRS5FbmdpbmVTaHV0ZG93bkNvbW1hbmRIABIs",
             "Cg1rZXlib2FyZEV2ZW50GAMgASgLMhMuTlVCRS5LZXlib2FyZEV2ZW50SAAS",
             "LgoObW91c2VNb3ZlRXZlbnQYBCABKAsyFC5OVUJFLk1vdXNlTW92ZUV2ZW50",
             "SAASKwoJYmFrZVN0YWdlGAUgASgLMhYuTlVCRS5CYWtlU3RhZ2VDb21tYW5k",
             "SAASKQoIbG9hZE1lc2gYBiABKAsyFS5OVUJFLkxvYWRNZXNoQ29tbWFuZEgA",
-            "QgkKB3BheWxvYWQiNQoURW5naW5lU3RhcnR1cENvbW1hbmQSDQoFd2lkdGgY",
-            "ASABKA0SDgoGaGVpZ2h0GAIgASgNIhcKFUVuZ2luZVNodXRkb3duQ29tbWFu",
-            "ZCIxCg1LZXlib2FyZEV2ZW50EhAKCHNjYW5jb2RlGAEgASgNEg4KBmlzRG93",
-            "bhgCIAEoCCJCCg5Nb3VzZU1vdmVFdmVudBIJCgF4GAEgASgFEgkKAXkYAiAB",
-            "KAUSDAoEeFJlbBgDIAEoBRIMCgR5UmVsGAQgASgFIiMKEEJha2VTdGFnZUNv",
-            "bW1hbmQSDwoHdXNkUGF0aBgBIAEoCSI0Cg9Mb2FkTWVzaENvbW1hbmQSDwoH",
-            "YXNzZXRJZBgBIAEoCRIQCghtZXNoUGF0aBgCIAEoCSJPCg5FbmdpbmVFbnZl",
-            "bG9wZRIyCgtpbml0RGV0YWlscxgBIAEoCzIbLk5VQkUuSW5pdGlhbGl6YXRp",
-            "b25EZXRhaWxzSABCCQoHcGF5bG9hZCJcChVJbml0aWFsaXphdGlvbkRldGFp",
-            "bHMSGQoRbWF4RnJhbWVzSW5GbGlnaHQYASABKA0SFQoNdGFyZ2V0SGFuZGxl",
-            "cxgCIAMoBBIRCgllbmdpbmVVcmwYAyABKAlCHKoCGUF2YWxvbmlhRWRpdG9y",
-            "LlByb3RvLk5VQkViCGVkaXRpb25zcOgH"));
+            "Ei0KCmNyZWF0ZU5vZGUYByABKAsyFy5OVUJFLkNyZWF0ZU5vZGVDb21tYW5k",
+            "SABCCQoHcGF5bG9hZCI1ChRFbmdpbmVTdGFydHVwQ29tbWFuZBINCgV3aWR0",
+            "aBgBIAEoDRIOCgZoZWlnaHQYAiABKA0iFwoVRW5naW5lU2h1dGRvd25Db21t",
+            "YW5kIjEKDUtleWJvYXJkRXZlbnQSEAoIc2NhbmNvZGUYASABKA0SDgoGaXNE",
+            "b3duGAIgASgIIkIKDk1vdXNlTW92ZUV2ZW50EgkKAXgYASABKAUSCQoBeRgC",
+            "IAEoBRIMCgR4UmVsGAMgASgFEgwKBHlSZWwYBCABKAUiIwoQQmFrZVN0YWdl",
+            "Q29tbWFuZBIPCgd1c2RQYXRoGAEgASgJIjQKD0xvYWRNZXNoQ29tbWFuZBIP",
+            "Cgdhc3NldElkGAEgASgJEhAKCG1lc2hQYXRoGAIgASgJIhMKEUNyZWF0ZU5v",
+            "ZGVDb21tYW5kIi8KCk5vZGVIYW5kbGUSDQoFaW5kZXgYASABKAQSEgoKZ2Vu",
+            "ZXJhdGlvbhgCIAEoDSJ3Cg5FbmdpbmVFbnZlbG9wZRIyCgtpbml0RGV0YWls",
+            "cxgBIAEoCzIbLk5VQkUuSW5pdGlhbGl6YXRpb25EZXRhaWxzSAASJgoKbm9k",
+            "ZUhhbmRsZRgCIAEoCzIQLk5VQkUuTm9kZUhhbmRsZUgAQgkKB3BheWxvYWQi",
+            "XAoVSW5pdGlhbGl6YXRpb25EZXRhaWxzEhkKEW1heEZyYW1lc0luRmxpZ2h0",
+            "GAEgASgNEhUKDXRhcmdldEhhbmRsZXMYAiADKAQSEQoJZW5naW5lVXJsGAMg",
+            "ASgJQhyqAhlBdmFsb25pYUVkaXRvci5Qcm90by5OVUJFYghlZGl0aW9uc3Do",
+            "Bw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "Shutdown", "KeyboardEvent", "MouseMoveEvent", "BakeStage", "LoadMesh" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EditorEnvelope), global::AvaloniaEditor.Proto.NUBE.EditorEnvelope.Parser, new[]{ "Startup", "Shutdown", "KeyboardEvent", "MouseMoveEvent", "BakeStage", "LoadMesh", "CreateNode" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand), global::AvaloniaEditor.Proto.NUBE.EngineStartupCommand.Parser, new[]{ "Width", "Height" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand), global::AvaloniaEditor.Proto.NUBE.EngineShutdownCommand.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.KeyboardEvent), global::AvaloniaEditor.Proto.NUBE.KeyboardEvent.Parser, new[]{ "Scancode", "IsDown" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent), global::AvaloniaEditor.Proto.NUBE.MouseMoveEvent.Parser, new[]{ "X", "Y", "XRel", "YRel" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.BakeStageCommand), global::AvaloniaEditor.Proto.NUBE.BakeStageCommand.Parser, new[]{ "UsdPath" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand), global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand.Parser, new[]{ "AssetId", "MeshPath" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand), global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.NodeHandle), global::AvaloniaEditor.Proto.NUBE.NodeHandle.Parser, new[]{ "Index", "Generation" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.EngineEnvelope), global::AvaloniaEditor.Proto.NUBE.EngineEnvelope.Parser, new[]{ "InitDetails", "NodeHandle" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::AvaloniaEditor.Proto.NUBE.InitializationDetails), global::AvaloniaEditor.Proto.NUBE.InitializationDetails.Parser, new[]{ "MaxFramesInFlight", "TargetHandles", "EngineUrl" }, null, null, null, null)
           }));
     }
@@ -114,6 +120,9 @@ namespace AvaloniaEditor.Proto.NUBE {
           break;
         case PayloadOneofCase.LoadMesh:
           LoadMesh = other.LoadMesh.Clone();
+          break;
+        case PayloadOneofCase.CreateNode:
+          CreateNode = other.CreateNode.Clone();
           break;
       }
 
@@ -198,6 +207,18 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
     }
 
+    /// <summary>Field number for the "createNode" field.</summary>
+    public const int CreateNodeFieldNumber = 7;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand CreateNode {
+      get { return payloadCase_ == PayloadOneofCase.CreateNode ? (global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.CreateNode;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
@@ -208,6 +229,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       MouseMoveEvent = 4,
       BakeStage = 5,
       LoadMesh = 6,
+      CreateNode = 7,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -244,6 +266,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (!object.Equals(MouseMoveEvent, other.MouseMoveEvent)) return false;
       if (!object.Equals(BakeStage, other.BakeStage)) return false;
       if (!object.Equals(LoadMesh, other.LoadMesh)) return false;
+      if (!object.Equals(CreateNode, other.CreateNode)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -258,6 +281,7 @@ namespace AvaloniaEditor.Proto.NUBE {
       if (payloadCase_ == PayloadOneofCase.MouseMoveEvent) hash ^= MouseMoveEvent.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.BakeStage) hash ^= BakeStage.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.LoadMesh) hash ^= LoadMesh.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.CreateNode) hash ^= CreateNode.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -301,6 +325,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(50);
         output.WriteMessage(LoadMesh);
       }
+      if (payloadCase_ == PayloadOneofCase.CreateNode) {
+        output.WriteRawTag(58);
+        output.WriteMessage(CreateNode);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -335,6 +363,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(50);
         output.WriteMessage(LoadMesh);
       }
+      if (payloadCase_ == PayloadOneofCase.CreateNode) {
+        output.WriteRawTag(58);
+        output.WriteMessage(CreateNode);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -362,6 +394,9 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
       if (payloadCase_ == PayloadOneofCase.LoadMesh) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(LoadMesh);
+      }
+      if (payloadCase_ == PayloadOneofCase.CreateNode) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(CreateNode);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -411,6 +446,12 @@ namespace AvaloniaEditor.Proto.NUBE {
             LoadMesh = new global::AvaloniaEditor.Proto.NUBE.LoadMeshCommand();
           }
           LoadMesh.MergeFrom(other.LoadMesh);
+          break;
+        case PayloadOneofCase.CreateNode:
+          if (CreateNode == null) {
+            CreateNode = new global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand();
+          }
+          CreateNode.MergeFrom(other.CreateNode);
           break;
       }
 
@@ -487,6 +528,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             LoadMesh = subBuilder;
             break;
           }
+          case 58: {
+            global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand();
+            if (payloadCase_ == PayloadOneofCase.CreateNode) {
+              subBuilder.MergeFrom(CreateNode);
+            }
+            input.ReadMessage(subBuilder);
+            CreateNode = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -558,6 +608,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             }
             input.ReadMessage(subBuilder);
             LoadMesh = subBuilder;
+            break;
+          }
+          case 58: {
+            global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand subBuilder = new global::AvaloniaEditor.Proto.NUBE.CreateNodeCommand();
+            if (payloadCase_ == PayloadOneofCase.CreateNode) {
+              subBuilder.MergeFrom(CreateNode);
+            }
+            input.ReadMessage(subBuilder);
+            CreateNode = subBuilder;
             break;
           }
         }
@@ -2109,6 +2168,434 @@ namespace AvaloniaEditor.Proto.NUBE {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class CreateNodeCommand : pb::IMessage<CreateNodeCommand>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<CreateNodeCommand> _parser = new pb::MessageParser<CreateNodeCommand>(() => new CreateNodeCommand());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<CreateNodeCommand> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[7]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CreateNodeCommand() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CreateNodeCommand(CreateNodeCommand other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CreateNodeCommand Clone() {
+      return new CreateNodeCommand(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as CreateNodeCommand);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(CreateNodeCommand other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(CreateNodeCommand other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class NodeHandle : pb::IMessage<NodeHandle>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<NodeHandle> _parser = new pb::MessageParser<NodeHandle>(() => new NodeHandle());
+    private pb::UnknownFieldSet _unknownFields;
+    private int _hasBits0;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<NodeHandle> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[8]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public NodeHandle() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public NodeHandle(NodeHandle other) : this() {
+      _hasBits0 = other._hasBits0;
+      index_ = other.index_;
+      generation_ = other.generation_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public NodeHandle Clone() {
+      return new NodeHandle(this);
+    }
+
+    /// <summary>Field number for the "index" field.</summary>
+    public const int IndexFieldNumber = 1;
+    private readonly static ulong IndexDefaultValue = 0UL;
+
+    private ulong index_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ulong Index {
+      get { if ((_hasBits0 & 1) != 0) { return index_; } else { return IndexDefaultValue; } }
+      set {
+        _hasBits0 |= 1;
+        index_ = value;
+      }
+    }
+    /// <summary>Gets whether the "index" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasIndex {
+      get { return (_hasBits0 & 1) != 0; }
+    }
+    /// <summary>Clears the value of the "index" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearIndex() {
+      _hasBits0 &= ~1;
+    }
+
+    /// <summary>Field number for the "generation" field.</summary>
+    public const int GenerationFieldNumber = 2;
+    private readonly static uint GenerationDefaultValue = 0;
+
+    private uint generation_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint Generation {
+      get { if ((_hasBits0 & 2) != 0) { return generation_; } else { return GenerationDefaultValue; } }
+      set {
+        _hasBits0 |= 2;
+        generation_ = value;
+      }
+    }
+    /// <summary>Gets whether the "generation" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasGeneration {
+      get { return (_hasBits0 & 2) != 0; }
+    }
+    /// <summary>Clears the value of the "generation" field</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearGeneration() {
+      _hasBits0 &= ~2;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as NodeHandle);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(NodeHandle other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Index != other.Index) return false;
+      if (Generation != other.Generation) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (HasIndex) hash ^= Index.GetHashCode();
+      if (HasGeneration) hash ^= Generation.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (HasIndex) {
+        output.WriteRawTag(8);
+        output.WriteUInt64(Index);
+      }
+      if (HasGeneration) {
+        output.WriteRawTag(16);
+        output.WriteUInt32(Generation);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (HasIndex) {
+        output.WriteRawTag(8);
+        output.WriteUInt64(Index);
+      }
+      if (HasGeneration) {
+        output.WriteRawTag(16);
+        output.WriteUInt32(Generation);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (HasIndex) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt64Size(Index);
+      }
+      if (HasGeneration) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(Generation);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(NodeHandle other) {
+      if (other == null) {
+        return;
+      }
+      if (other.HasIndex) {
+        Index = other.Index;
+      }
+      if (other.HasGeneration) {
+        Generation = other.Generation;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Index = input.ReadUInt64();
+            break;
+          }
+          case 16: {
+            Generation = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Index = input.ReadUInt64();
+            break;
+          }
+          case 16: {
+            Generation = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class EngineEnvelope : pb::IMessage<EngineEnvelope>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2123,7 +2610,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[7]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2146,6 +2633,9 @@ namespace AvaloniaEditor.Proto.NUBE {
       switch (other.PayloadCase) {
         case PayloadOneofCase.InitDetails:
           InitDetails = other.InitDetails.Clone();
+          break;
+        case PayloadOneofCase.NodeHandle:
+          NodeHandle = other.NodeHandle.Clone();
           break;
       }
 
@@ -2170,11 +2660,24 @@ namespace AvaloniaEditor.Proto.NUBE {
       }
     }
 
+    /// <summary>Field number for the "nodeHandle" field.</summary>
+    public const int NodeHandleFieldNumber = 2;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::AvaloniaEditor.Proto.NUBE.NodeHandle NodeHandle {
+      get { return payloadCase_ == PayloadOneofCase.NodeHandle ? (global::AvaloniaEditor.Proto.NUBE.NodeHandle) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.NodeHandle;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
       None = 0,
       InitDetails = 1,
+      NodeHandle = 2,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2206,6 +2709,7 @@ namespace AvaloniaEditor.Proto.NUBE {
         return true;
       }
       if (!object.Equals(InitDetails, other.InitDetails)) return false;
+      if (!object.Equals(NodeHandle, other.NodeHandle)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -2215,6 +2719,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     public override int GetHashCode() {
       int hash = 1;
       if (payloadCase_ == PayloadOneofCase.InitDetails) hash ^= InitDetails.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.NodeHandle) hash ^= NodeHandle.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2238,6 +2743,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteMessage(InitDetails);
       }
+      if (payloadCase_ == PayloadOneofCase.NodeHandle) {
+        output.WriteRawTag(18);
+        output.WriteMessage(NodeHandle);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -2252,6 +2761,10 @@ namespace AvaloniaEditor.Proto.NUBE {
         output.WriteRawTag(10);
         output.WriteMessage(InitDetails);
       }
+      if (payloadCase_ == PayloadOneofCase.NodeHandle) {
+        output.WriteRawTag(18);
+        output.WriteMessage(NodeHandle);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -2264,6 +2777,9 @@ namespace AvaloniaEditor.Proto.NUBE {
       int size = 0;
       if (payloadCase_ == PayloadOneofCase.InitDetails) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(InitDetails);
+      }
+      if (payloadCase_ == PayloadOneofCase.NodeHandle) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(NodeHandle);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2283,6 +2799,12 @@ namespace AvaloniaEditor.Proto.NUBE {
             InitDetails = new global::AvaloniaEditor.Proto.NUBE.InitializationDetails();
           }
           InitDetails.MergeFrom(other.InitDetails);
+          break;
+        case PayloadOneofCase.NodeHandle:
+          if (NodeHandle == null) {
+            NodeHandle = new global::AvaloniaEditor.Proto.NUBE.NodeHandle();
+          }
+          NodeHandle.MergeFrom(other.NodeHandle);
           break;
       }
 
@@ -2314,6 +2836,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             InitDetails = subBuilder;
             break;
           }
+          case 18: {
+            global::AvaloniaEditor.Proto.NUBE.NodeHandle subBuilder = new global::AvaloniaEditor.Proto.NUBE.NodeHandle();
+            if (payloadCase_ == PayloadOneofCase.NodeHandle) {
+              subBuilder.MergeFrom(NodeHandle);
+            }
+            input.ReadMessage(subBuilder);
+            NodeHandle = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -2342,6 +2873,15 @@ namespace AvaloniaEditor.Proto.NUBE {
             InitDetails = subBuilder;
             break;
           }
+          case 18: {
+            global::AvaloniaEditor.Proto.NUBE.NodeHandle subBuilder = new global::AvaloniaEditor.Proto.NUBE.NodeHandle();
+            if (payloadCase_ == PayloadOneofCase.NodeHandle) {
+              subBuilder.MergeFrom(NodeHandle);
+            }
+            input.ReadMessage(subBuilder);
+            NodeHandle = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -2365,7 +2905,7 @@ namespace AvaloniaEditor.Proto.NUBE {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[8]; }
+      get { return global::AvaloniaEditor.Proto.NUBE.NubeReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

@@ -1,88 +1,78 @@
 #pragma once
 
-#include <vector>
 #include <node.h>
 #include <objectholder.h>
+#include <vector>
 
-template<typename T, size_t MaxObjects>
-class ObjectPool
+template <typename T, size_t MaxObjects> class ObjectPool
 {
-	using Holder = ObjectHolder<T>;
+    using Holder = ObjectHolder<T>;
 
-	std::vector<Holder> objects;
-	std::vector<size_t> freeList;
+    std::vector<Holder> objects;
+    std::vector<size_t> freeList;
 
 public:
-	ObjectPool()
-	{
-		reset();
-	}
-	
-	void reset()
-	{
-		// preallocate objects
-		objects.clear(); // needed for subsequent resets
-		objects.resize(MaxObjects);
+    ObjectPool() { reset(); }
 
-		// generate freelist
-		freeList.clear();
-		freeList.reserve(MaxObjects);
-		for (size_t i = 0; i < objects.size(); ++i)
-		{
-			freeList.push_back(i);
-		}
-	}
+    void reset()
+    {
+        // preallocate objects
+        objects.clear(); // needed for subsequent resets
+        objects.resize(MaxObjects);
 
-	constexpr static size_t capacity()
-	{
-		return MaxObjects;
-	}
+        // generate freelist
+        freeList.clear();
+        freeList.reserve(MaxObjects);
+        for (size_t i = 0; i < objects.size(); ++i)
+        {
+            freeList.push_back(i);
+        }
+    }
 
-	NodeHandle createNode()
-	{
-		assert(!freeList.empty() && "Out of object slots in pool");
+    constexpr static size_t capacity() { return MaxObjects; }
 
-		size_t idx = freeList.back();
-		freeList.pop_back();
+    NodeHandle createNode()
+    {
+        assert(!freeList.empty() && "Out of object slots in pool");
 
-		Holder &holder = objects[idx];
-		holder.generation++;
-		holder.free = false;
-		holder.object.emplace(NodeHandle(idx, holder.generation));
+        size_t idx = freeList.back();
+        freeList.pop_back();
 
-		return holder.object.value().getHandle();
-	}
+        Holder &holder = objects[idx];
+        holder.generation++;
+        holder.free = false;
+        holder.object.emplace(NodeHandle(idx, holder.generation));
 
-	void free(NodeHandle handle)
-	{
-		assert(handle.index < objects.size() - 1 && "Object handle index out-of-bounds!");
-		Holder &holder = objects[handle.index];
-		if (handle.generation == holder.generation && !holder.free)
-		{
-			holder.free = true;
-			holder.object.reset();
+        return holder.object.value().getHandle();
+    }
 
-			assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
-			freeList.push_back(handle.index);
-		}
-	}
+    void free(NodeHandle handle)
+    {
+        assert(handle.index() < objects.size() - 1 && "Object handle index out-of-bounds!");
+        Holder &holder = objects[handle.index()];
+        if (handle.generation() == holder.generation && !holder.free)
+        {
+            holder.free = true;
+            holder.object.reset();
 
-	Node &getNode(const NodeHandle handle)
-	{
-		Holder &holder = objects[handle.index];
-		assert(!holder.free && "Attempted to access a freed object");
-		assert(holder.generation == handle.generation && "Attempted to access an invalid object handle");
-		return holder.object.value();
-	}
+            assert(freeList.size() < MaxObjects && "Free list is already at capacity.");
+            freeList.push_back(handle.index());
+        }
+    }
 
-	size_t getFreeCount() const
-	{
-		return freeList.size();
-	}
+    Node &getNode(const NodeHandle handle)
+    {
+        Holder &holder = objects[handle.index()];
+        assert(!holder.free && "Attempted to access a freed object");
+        assert(holder.generation == handle.generation() && "Attempted to access an invalid object handle");
+        return holder.object.value();
+    }
+
+    size_t getFreeCount() const { return freeList.size(); }
 };
 
 class World : public ObjectPool<Node, 3000>
 {
 public:
-	World() {}
+    World() {}
 };

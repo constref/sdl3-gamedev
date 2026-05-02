@@ -10,8 +10,8 @@
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
-#include <vulkan/vulkan_win32.h>
 #include <windows.h>
+#include <vulkan/vulkan_win32.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
