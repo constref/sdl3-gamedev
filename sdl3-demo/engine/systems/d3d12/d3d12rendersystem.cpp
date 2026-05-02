@@ -2,11 +2,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include <logger.h>
 #include <SDL3/SDL_system.h>
+#include <d3d11on12.h>
 #include <d3dcompiler.h>
 #include <filesystem>
-#include <d3d11on12.h>
+#include <logger.h>
 
 #include "componentsystems.h"
 #include "util.h"
@@ -15,20 +15,20 @@ using namespace DirectX;
 
 namespace d3d12rs
 {
-    constexpr static uint16_t FramesInFlight = Config::ExecSelect(2, 1);
-    constexpr static uint16_t RenderTargetCount = Config::ExecSelect(3, 2);
-    constexpr static uint16_t MaxCopyOps = 32;
-    constexpr static uint32_t MaxVertCount = 5000;
-    constexpr static size_t CopyStagingSize = 1024 * 1024 * 32;
-    constexpr static size_t PerFrameStagingSize = 1024 * 1024;
-    constexpr static uint16_t AlignmentVertexIndex = 4;
-}
+constexpr static uint16_t FramesInFlight = Config::ExecSelect(2, 1);
+constexpr static uint16_t RenderTargetCount = Config::ExecSelect(3, 2);
+constexpr static uint16_t MaxCopyOps = 32;
+constexpr static uint32_t MaxVertCount = 5000;
+constexpr static size_t CopyStagingSize = 1024 * 1024 * 32;
+constexpr static size_t PerFrameStagingSize = 1024 * 1024;
+constexpr static uint16_t AlignmentVertexIndex = 4;
+} // namespace d3d12rs
 
 using namespace Microsoft::WRL;
 using namespace d3d12rs;
 
-D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int width, int height, int logW,
-                                     int logH) : System(services)
+D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int width, int height, int logW, int logH)
+    : System(services)
 {
     m_width = width;
     m_height = height;
@@ -41,8 +41,8 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int
     m_backBuffers.resize(RenderTargetCount);
     if (Config::IsStandaloneMode())
     {
-        m_hWnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER,
-                                              NULL);
+        m_hWnd =
+            (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
         assert(m_hWnd && "Unable to acquire HWND for provided window");
     }
 
@@ -54,10 +54,7 @@ D3D12RenderSystem::D3D12RenderSystem(Services& services, SDL_Window* window, int
     assert(m_lightSys != nullptr && "Lighting system must not be null.");
 }
 
-D3D12RenderSystem::~D3D12RenderSystem()
-{
-    shutdown();
-}
+D3D12RenderSystem::~D3D12RenderSystem() { shutdown(); }
 
 bool D3D12RenderSystem::initialize()
 {
@@ -87,7 +84,7 @@ bool D3D12RenderSystem::initialize()
             DXCHK(dxgiAdapter1.As(&m_dxgiAdapter), "Coudn't acquire the DXGIAdapter4");
 
             // TODO: Don't take first adapter, this needs to be based on what the Avalonia tool uses or user selected
-	    // break out after grabbing the first adapter
+            // break out after grabbing the first adapter
             break;
         }
     }
@@ -108,9 +105,7 @@ bool D3D12RenderSystem::initialize()
         infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
         infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
 
-        std::array severities{
-            D3D12_MESSAGE_SEVERITY_INFO
-        };
+        std::array severities{D3D12_MESSAGE_SEVERITY_INFO};
 
         std::array denyIds{
             D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
@@ -141,8 +136,8 @@ bool D3D12RenderSystem::initialize()
     {
         // need the 11on12 device to created keyed-mutex from textures later
         DXCHK(D3D11On12CreateDevice(m_device.Get(), D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0,
-                  reinterpret_cast<IUnknown**>(m_commandQueue.GetAddressOf()), 1, 0,
-                  m_device11.GetAddressOf(), m_deviceContext11.GetAddressOf(), nullptr),
+                                    reinterpret_cast<IUnknown **>(m_commandQueue.GetAddressOf()), 1, 0,
+                                    m_device11.GetAddressOf(), m_deviceContext11.GetAddressOf(), nullptr),
               "Unable to create D3D11on12 device for texture-sharing");
         DXCHK(m_device11.As(&m_device11on12), "Unable to acquire 11On12Device");
     }
@@ -155,8 +150,8 @@ bool D3D12RenderSystem::initialize()
         bool allowTearing = false;
         if (SUCCEEDED(factory4.As(&factory5)))
         {
-            if (SUCCEEDED(factory5->CheckFeatureSupport(
-                DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing))))
+            if (SUCCEEDED(factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing,
+                                                        sizeof(allowTearing))))
             {
                 m_allowTearing = allowTearing;
             }
@@ -166,20 +161,22 @@ bool D3D12RenderSystem::initialize()
     // per-frame command resources
     for (int i = 0; i < FramesInFlight; ++i)
     {
-        auto& res = m_frameResources[i];
-        DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(res.commandAllocator.GetAddressOf())),
+        auto &res = m_frameResources[i];
+        DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                               IID_PPV_ARGS(res.commandAllocator.GetAddressOf())),
               "Couldn't create the command allocator");
         DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, res.commandAllocator.Get(), nullptr,
-                  IID_PPV_ARGS(&res.commandList)),
+                                          IID_PPV_ARGS(&res.commandList)),
               "Couldn't create the command list");
         DXCHK(res.commandList->Close(), "Couldn't close command list");
     }
 
     // asset loader command resources
-    DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_assetCmdAllocator.GetAddressOf())),
+    DXCHK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                           IID_PPV_ARGS(m_assetCmdAllocator.GetAddressOf())),
           "Couldn't create the asset command allocator");
     DXCHK(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_assetCmdAllocator.Get(), nullptr,
-              IID_PPV_ARGS(m_assetCmdList.GetAddressOf())),
+                                      IID_PPV_ARGS(m_assetCmdList.GetAddressOf())),
           "Couldn't create the asset command list");
     DXCHK(m_assetCmdList->Close(), "Couldn't close asset command list");
 
@@ -199,17 +196,18 @@ bool D3D12RenderSystem::initialize()
         constexpr size_t stagingBufferTotalSize = FramesInFlight * PerFrameStagingSize;
         auto stagingDesc = CD3DX12_RESOURCE_DESC::Buffer(stagingBufferTotalSize);
         DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &stagingDesc,
-                  D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
+                                                D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                                IID_PPV_ARGS(m_stagingBuffer.GetAddressOf())),
               "Unable to create the main staging buffer");
         DXCHK(m_stagingBuffer->Map(0, &readRange, &m_stagingBasePtr), "Unable to map staging buffer");
         m_stagingPtr = m_stagingBasePtr;
-
     }
     // asset loading staging buffer
     {
         auto assetStagingDesc = CD3DX12_RESOURCE_DESC::Buffer(CopyStagingSize);
         DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &assetStagingDesc,
-                  D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_assetStagingBuffer.GetAddressOf())),
+                                                D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                                IID_PPV_ARGS(m_assetStagingBuffer.GetAddressOf())),
               "Unable to create the asset staging buffer");
         DXCHK(m_assetStagingBuffer->Map(0, &readRange, &m_assetStagingPtr), "Unable to map asset staging buffer");
     }
@@ -226,26 +224,31 @@ bool D3D12RenderSystem::initialize()
     const size_t cbPerFrameSize = align(sizeof(ConstsPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
     auto cbPerFrameDesc = CD3DX12_RESOURCE_DESC::Buffer(cbPerFrameSize * FramesInFlight);
     DXCHK(m_device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &cbPerFrameDesc,
-              D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cbBuffPerFrame.GetAddressOf())),
+                                            D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                            IID_PPV_ARGS(m_cbBuffPerFrame.GetAddressOf())),
           "Unable to create per-obj CB buffer");
     DXCHK(m_cbBuffPerFrame->Map(0, &readRange, &m_cbPerFramePtr), "Unable to map cb buffer");
 
     // matrix data buffer
     auto srvMatrixDesc = CD3DX12_RESOURCE_DESC::Buffer(MatrixFrameSize * FramesInFlight);
     DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvMatrixDesc,
-              D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_matrixBuffer.GetAddressOf())),
+                                            D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                            IID_PPV_ARGS(m_matrixBuffer.GetAddressOf())),
           "Unable to create matrix buffer");
 
     // Render objects buffer
     auto srvRenderInfoDesc = CD3DX12_RESOURCE_DESC::Buffer(ROFrameSize * FramesInFlight);
     DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvRenderInfoDesc,
-              D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
+                                            D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                            IID_PPV_ARGS(m_objBuffer.GetAddressOf())),
           "Unable to create render-object buffer");
-    
+
     // Light buffer
     auto srvLightDesc = CD3DX12_RESOURCE_DESC::Buffer(LightsFrameSize * FramesInFlight);
-    DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvLightDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_lightsBuffer.GetAddressOf())),
-        "Unable to create lights buffer");
+    DXCHK(m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &srvLightDesc,
+                                            D3D12_RESOURCE_STATE_COMMON, nullptr,
+                                            IID_PPV_ARGS(m_lightsBuffer.GetAddressOf())),
+          "Unable to create lights buffer");
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
     for (uint32_t i = 0; i < FramesInFlight; ++i)
@@ -261,29 +264,27 @@ bool D3D12RenderSystem::initialize()
         handle.Offset(1, m_descriptorSizes.CBV);
 
         // matrix srv
-        auto matSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(
-            MatricesPerFrame, sizeof(XMFLOAT4X4), i * MatricesPerFrame);
+        auto matSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(MatricesPerFrame, sizeof(XMFLOAT4X4),
+                                                                              i * MatricesPerFrame);
         m_device->CreateShaderResourceView(m_matrixBuffer.Get(), &matSrvDesc, handle);
         handle.Offset(1, m_descriptorSizes.CBV);
 
         // render object srv
-        auto objSrvDesc = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(
-            ROPerFrame, sizeof(RenderObject), i * ROPerFrame);
+        auto objSrvDesc =
+            CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(ROPerFrame, sizeof(RenderObject), i * ROPerFrame);
         m_device->CreateShaderResourceView(m_objBuffer.Get(), &objSrvDesc, handle);
         handle.Offset(1, m_descriptorSizes.CBV);
-        
+
         // lights srv
-        auto lightsSrvDesv = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(LightingSystem::MaxLights, sizeof(Light), i * LightingSystem::MaxLights);
+        auto lightsSrvDesv = CD3DX12_SHADER_RESOURCE_VIEW_DESC::StructuredBuffer(
+            LightingSystem::MaxLights, sizeof(Light), i * LightingSystem::MaxLights);
         m_device->CreateShaderResourceView(m_lightsBuffer.Get(), &lightsSrvDesv, handle);
         handle.Offset(1, m_descriptorSizes.CBV);
     }
 
     // create a root signature
-    std::array descTable
-    {
-        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CBVCount, 1),
-        CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, SRVCount, 0)
-    };
+    std::array descTable{CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, CBVCount, 1),
+                         CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, SRVCount, 0)};
 
     std::array<CD3DX12_ROOT_PARAMETER1, 2> rootParameters{};
     rootParameters[0].InitAsConstants(1, 0);
@@ -298,18 +299,19 @@ bool D3D12RenderSystem::initialize()
     DXCHK(D3D12SerializeVersionedRootSignature(&rootSigDesc, serializedRootSig.GetAddressOf(), error.GetAddressOf()),
           "Unable to serialize root signature");
     DXCHK(m_device->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(),
-              IID_PPV_ARGS(m_rootSig.GetAddressOf())), "Error creating root signature");
+                                        IID_PPV_ARGS(m_rootSig.GetAddressOf())),
+          "Error creating root signature");
 
     loadAssets();
     return true;
 }
 
-uint32_t D3D12RenderSystem::stageData(const void* srcPtr, size_t byteSize, size_t alignment)
+uint32_t D3D12RenderSystem::stageData(const void *srcPtr, size_t byteSize, size_t alignment)
 {
     size_t alignedSize = align(byteSize, alignment);
-    assert(
-        m_stagingOffset + alignedSize < PerFrameStagingSize && "Not enough room in staging buffer for the copy operation");
-    memcpy(static_cast<uint8_t*>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
+    assert(m_stagingOffset + alignedSize < PerFrameStagingSize &&
+           "Not enough room in staging buffer for the copy operation");
+    memcpy(static_cast<uint8_t *>(m_stagingPtr) + m_stagingOffset, srcPtr, byteSize);
     uint32_t dataOffset = m_stagingOffset;
     m_stagingOffset += alignedSize;
 
@@ -317,16 +319,14 @@ uint32_t D3D12RenderSystem::stageData(const void* srcPtr, size_t byteSize, size_
 }
 
 void D3D12RenderSystem::scheduleAssetCopy(size_t stagingOffset, size_t dataSize, ComPtr<ID3D12Resource> dstBuffer,
-                                        D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
+                                          D3D12_RESOURCE_STATES dstStateBefore, D3D12_RESOURCE_STATES dstStateAfter)
 {
     assert(m_copyOperations.size() < MaxCopyOps && "Copy operations buffer at capacity");
-    m_copyOperations.push_back(CopyOperation{
-        .stagingOffset = stagingOffset,
-        .byteSize = dataSize,
-        .dstBuffer = dstBuffer.Get(),
-        .dstStateBefore = dstStateBefore,
-        .dstStateAfter = dstStateAfter
-    });
+    m_copyOperations.push_back(CopyOperation{.stagingOffset = stagingOffset,
+                                             .byteSize = dataSize,
+                                             .dstBuffer = dstBuffer.Get(),
+                                             .dstStateBefore = dstStateBefore,
+                                             .dstStateAfter = dstStateAfter});
 }
 
 void D3D12RenderSystem::executeAssetCopyOps()
@@ -344,20 +344,20 @@ void D3D12RenderSystem::executeAssetCopyOps()
 
     for (int i = 0; i < m_copyOperations.size(); ++i)
     {
-        auto& copyOP = m_copyOperations[i];
-        m_assetCmdList->CopyBufferRegion(copyOP.dstBuffer.Get(), 0, m_assetStagingBuffer.Get(),
-            copyOP.stagingOffset, copyOP.byteSize);
+        auto &copyOP = m_copyOperations[i];
+        m_assetCmdList->CopyBufferRegion(copyOP.dstBuffer.Get(), 0, m_assetStagingBuffer.Get(), copyOP.stagingOffset,
+                                         copyOP.byteSize);
 
         if (copyOP.dstStateAfter != D3D12_RESOURCE_STATE_COMMON)
         {
-            barriers.push_back( CD3DX12_RESOURCE_BARRIER::Transition(copyOP.dstBuffer.Get(),
-                copyOP.dstStateBefore, copyOP.dstStateAfter));
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(copyOP.dstBuffer.Get(), copyOP.dstStateBefore,
+                                                                    copyOP.dstStateAfter));
         }
     }
     m_assetCmdList->ResourceBarrier(barriers.size(), barriers.data());
     m_copyOperations.clear();
 
-    std::array<ID3D12CommandList*, 1> commandLists{m_assetCmdList.Get()};
+    std::array<ID3D12CommandList *, 1> commandLists{m_assetCmdList.Get()};
     m_assetCmdList->Close();
     m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
     m_commandQueue->Signal(m_fence.Get(), ++m_fenceValue);
@@ -373,20 +373,11 @@ void D3D12RenderSystem::executeAssetCopyOps()
     }
 }
 
-void D3D12RenderSystem::setViewMatrix(const DirectX::XMMATRIX& viewMatrix)
-{
-    m_viewMatrix = viewMatrix;
-}
+void D3D12RenderSystem::setViewMatrix(const DirectX::XMMATRIX &viewMatrix) { m_viewMatrix = viewMatrix; }
 
-void D3D12RenderSystem::setCamPosition(float x, float y, float z)
-{
-    m_camPosition = XMFLOAT4(x, y, z, 1.0f);
-}
+void D3D12RenderSystem::setCamPosition(float x, float y, float z) { m_camPosition = XMFLOAT4(x, y, z, 1.0f); }
 
-void D3D12RenderSystem::setCamDirection(float x, float y, float z)
-{
-    m_camDirection = XMFLOAT4(x, y, z, 0.0f);
-}
+void D3D12RenderSystem::setCamDirection(float x, float y, float z) { m_camDirection = XMFLOAT4(x, y, z, 0.0f); }
 
 std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID) const
 {
@@ -403,22 +394,15 @@ std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID) 
     for (uint16_t i = 0; i < RenderTargetCount; ++i)
     {
         HANDLE duplicatedHandle = nullptr;
-        BOOL success = DuplicateHandle(
-            GetCurrentProcess(),
-            m_ntHandles[i],
-            editorProcess,
-            &duplicatedHandle,
-            0,
-            FALSE,
-            DUPLICATE_SAME_ACCESS);
+        BOOL success = DuplicateHandle(GetCurrentProcess(), m_ntHandles[i], editorProcess, &duplicatedHandle, 0, FALSE,
+                                       DUPLICATE_SAME_ACCESS);
         assert(success && "Unable to duplicate HANDLE");
         sharedHandles.push_back(reinterpret_cast<uint64_t>(duplicatedHandle));
     }
     return sharedHandles;
 }
 
-
-GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
+GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh &mesh)
 {
     auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -432,12 +416,12 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     uint16_t vertexStart = 0;
     for (int i = 0; i < mesh.subMeshes().size(); ++i)
     {
-        auto& sm = mesh.subMeshes()[i];
+        auto &sm = mesh.subMeshes()[i];
         gpuMesh.subMeshes[i].vertexStart = vertexStart;
         gpuMesh.subMeshes[i].vertexCount = sm.vertices.size();
 
         const size_t vertDataSize = sm.vertices.size() * sm.vertexElementSize();
-        memcpy(static_cast<uint8_t*>(m_assetStagingPtr) + m_assetStagingOffset, sm.vertices.data(), vertDataSize);
+        memcpy(static_cast<uint8_t *>(m_assetStagingPtr) + m_assetStagingOffset, sm.vertices.data(), vertDataSize);
         m_assetStagingOffset += vertDataSize;
         vertTotalSize += vertDataSize;
         vertexStart += sm.vertices.size();
@@ -450,12 +434,12 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     uint16_t indexStart = 0;
     for (int i = 0; i < mesh.subMeshes().size(); ++i)
     {
-        auto& sm = mesh.subMeshes()[i];
+        auto &sm = mesh.subMeshes()[i];
         gpuMesh.subMeshes[i].indexStart = indexStart;
         gpuMesh.subMeshes[i].indexCount = sm.indices.size();
 
         const size_t indexDataSize = sm.indices.size() * sm.indexElementSize();
-        memcpy(static_cast<uint8_t*>(m_assetStagingPtr) + m_assetStagingOffset, sm.indices.data(), indexDataSize);
+        memcpy(static_cast<uint8_t *>(m_assetStagingPtr) + m_assetStagingOffset, sm.indices.data(), indexDataSize);
         m_assetStagingOffset += indexDataSize;
         indexTotalSize += indexDataSize;
         indexStart += sm.indices.size();
@@ -467,7 +451,7 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescV, buffStateV, nullptr,
                                       IID_PPV_ARGS(gpuMesh.vertexBuffer.GetAddressOf()));
     scheduleAssetCopy(vbStagingStart, vertTotalSize, gpuMesh.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-                    D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+                      D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
     gpuMesh.vertexView = D3D12_VERTEX_BUFFER_VIEW{};
     gpuMesh.vertexView.BufferLocation = gpuMesh.vertexBuffer->GetGPUVirtualAddress();
@@ -479,7 +463,7 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &resDescI, buffStateI, nullptr,
                                       IID_PPV_ARGS(gpuMesh.indexBuffer.GetAddressOf()));
     scheduleAssetCopy(ibStagingStart, indexTotalSize, gpuMesh.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-                    D3D12_RESOURCE_STATE_INDEX_BUFFER);
+                      D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
     gpuMesh.indexView = D3D12_INDEX_BUFFER_VIEW{};
     gpuMesh.indexView.BufferLocation = gpuMesh.indexBuffer->GetGPUVirtualAddress();
@@ -491,10 +475,7 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh& mesh)
     return newHandle;
 }
 
-const GPUMesh& D3D12RenderSystem::getMesh(GPUMeshHandle handle)
-{
-    return m_gpuMeshes[handle];
-}
+const GPUMesh &D3D12RenderSystem::getMesh(GPUMeshHandle handle) { return m_gpuMeshes[handle]; }
 
 void D3D12RenderSystem::loadAssets()
 {
@@ -534,24 +515,22 @@ void D3D12RenderSystem::shutdown()
 
 ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
 {
-    std::array vertexInputs{
-        D3D12_INPUT_ELEMENT_DESC{
-            .SemanticName = "POSITION", .Format = DXGI_FORMAT_R32G32B32_FLOAT, .InputSlot = 0,
-            .AlignedByteOffset = offsetof(Vertex, position)
-        },
-        D3D12_INPUT_ELEMENT_DESC{
-            .SemanticName = "NORMAL", .Format = DXGI_FORMAT_R32G32B32_FLOAT, .InputSlot = 0,
-            .AlignedByteOffset = offsetof(Vertex, normal)
-        },
-        D3D12_INPUT_ELEMENT_DESC{
-            .SemanticName = "COLOR", .Format = DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot = 0,
-            .AlignedByteOffset = offsetof(Vertex, color)
-        },
-        D3D12_INPUT_ELEMENT_DESC{
-            .SemanticName = "TEXCOORD", .Format = DXGI_FORMAT_R32G32_FLOAT, .InputSlot = 0,
-            .AlignedByteOffset = offsetof(Vertex, uv)
-        }
-    };
+    std::array vertexInputs{D3D12_INPUT_ELEMENT_DESC{.SemanticName = "POSITION",
+                                                     .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                     .InputSlot = 0,
+                                                     .AlignedByteOffset = offsetof(Vertex, position)},
+                            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "NORMAL",
+                                                     .Format = DXGI_FORMAT_R32G32B32_FLOAT,
+                                                     .InputSlot = 0,
+                                                     .AlignedByteOffset = offsetof(Vertex, normal)},
+                            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "COLOR",
+                                                     .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+                                                     .InputSlot = 0,
+                                                     .AlignedByteOffset = offsetof(Vertex, color)},
+                            D3D12_INPUT_ELEMENT_DESC{.SemanticName = "TEXCOORD",
+                                                     .Format = DXGI_FORMAT_R32G32_FLOAT,
+                                                     .InputSlot = 0,
+                                                     .AlignedByteOffset = offsetof(Vertex, uv)}};
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
     psoDesc.pRootSignature = m_rootSig.Get();
@@ -580,8 +559,8 @@ ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
     return pso;
 }
 
-ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string& file, const std::string& entryPoint,
-                                                  const std::string& target)
+ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string &file, const std::string &entryPoint,
+                                                  const std::string &target)
 {
     const std::wstring wFile = std::wstring(file.begin(), file.end());
     constexpr UINT compileFlags = Config::DebugSelect(D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0);
@@ -591,15 +570,15 @@ ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string& file, const
     {
         Logger::info(this, std::format("Compiling {} : {}() : {}", file, entryPoint, target));
         ComPtr<ID3DBlob> errors = nullptr;
-        HRESULT hr = D3DCompileFromFile(wFile.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(),
-                                        target.c_str(),
-                                        compileFlags, 0, bytecode.GetAddressOf(), errors.GetAddressOf());
+        HRESULT hr =
+            D3DCompileFromFile(wFile.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(),
+                               target.c_str(), compileFlags, 0, bytecode.GetAddressOf(), errors.GetAddressOf());
         if (FAILED(hr))
         {
             Logger::error(this, "Error in shader compilation");
             if (errors)
             {
-                Logger::error(this, reinterpret_cast<char*>(errors->GetBufferPointer()));
+                Logger::error(this, reinterpret_cast<char *>(errors->GetBufferPointer()));
                 return nullptr;
             }
         }
@@ -612,7 +591,7 @@ ComPtr<ID3DBlob> D3D12RenderSystem::compileShader(const std::string& file, const
     return bytecode;
 }
 
-bool D3D12RenderSystem::createShaders(const std::string& shaderName)
+bool D3D12RenderSystem::createShaders(const std::string &shaderName)
 {
     const std::string prefix = "sdl3-demo/engine/shaders/hlsl";
     const std::string file = std::format("{}/{}.hlsl", prefix, shaderName);
@@ -624,7 +603,7 @@ bool D3D12RenderSystem::createShaders(const std::string& shaderName)
 void D3D12RenderSystem::beginFrame()
 {
     m_frameResIndex = m_frameIndex % FramesInFlight;
-    auto& res = m_frameResources[m_frameResIndex];
+    auto &res = m_frameResources[m_frameResIndex];
 
     // ensure frame resources are available
     if (m_fence->GetCompletedValue() < res.fenceValue)
@@ -640,12 +619,12 @@ void D3D12RenderSystem::beginFrame()
     // initialize frame data
     m_nextROIndex = 0;
     m_nextMatrixIndex = 0;
-    m_stagingPtr = static_cast<uint8_t*>(m_stagingBasePtr) + m_frameResIndex * PerFrameStagingSize;
+    m_stagingPtr = static_cast<uint8_t *>(m_stagingBasePtr) + m_frameResIndex * PerFrameStagingSize;
     res.drawOperations.clear();
 
     if constexpr (Config::IsStandaloneMode())
     {
-        res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex(); 
+        res.renderTargetIndex = m_swapchain->GetCurrentBackBufferIndex();
     }
     else
     {
@@ -655,12 +634,11 @@ void D3D12RenderSystem::beginFrame()
     res.commandList->Reset(res.commandAllocator.Get(), m_pso.Get());
 
     // transition the matrix and RO buffers to copy-dest
-    std::array barriersPreCopy
-    {
+    std::array barriersPreCopy{
         CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), m_matrixBuffState, D3D12_RESOURCE_STATE_COPY_DEST),
         CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), m_objBufferState, D3D12_RESOURCE_STATE_COPY_DEST),
-        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), m_lightsBufferState, D3D12_RESOURCE_STATE_COPY_DEST)
-    };
+        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), m_lightsBufferState,
+                                             D3D12_RESOURCE_STATE_COPY_DEST)};
     res.commandList->ResourceBarrier(barriersPreCopy.size(), barriersPreCopy.data());
 
     // view and projection calculations
@@ -676,30 +654,28 @@ void D3D12RenderSystem::beginFrame()
     ConstsPerFrame cbPerFrame{};
     XMStoreFloat4x4(&cbPerFrame.viewProj, m_viewProjMatrix);
     const size_t perFrameAlignedSize = align(sizeof(cbPerFrame), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-    memcpy(static_cast<uint8_t*>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame,
+    memcpy(static_cast<uint8_t *>(m_cbPerFramePtr) + perFrameAlignedSize * m_frameResIndex, &cbPerFrame,
            sizeof(cbPerFrame));
 }
 
 void D3D12RenderSystem::endFrame()
 {
-    auto& res = m_frameResources[m_frameResIndex];
-    
+    auto &res = m_frameResources[m_frameResIndex];
+
     // update lights
     auto &lights = m_lightSys->lights();
     size_t lightsBytes = m_lightSys->lightsByteSize();
-    
+
     uint32_t stageOffset = stageData(&lights, lightsBytes, 4);
-    res.commandList->CopyBufferRegion(m_lightsBuffer.Get(), m_frameResIndex * LightsFrameSize, 
-        m_stagingBuffer.Get(), stageOffset, lightsBytes);
+    res.commandList->CopyBufferRegion(m_lightsBuffer.Get(), m_frameResIndex * LightsFrameSize, m_stagingBuffer.Get(),
+                                      stageOffset, lightsBytes);
 
     // transition the buffers to SRV compatible
     auto endState = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
-    std::array barriersPostCopy
-    {
+    std::array barriersPostCopy{
         CD3DX12_RESOURCE_BARRIER::Transition(m_matrixBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState),
         CD3DX12_RESOURCE_BARRIER::Transition(m_objBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState),
-        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState)
-    };
+        CD3DX12_RESOURCE_BARRIER::Transition(m_lightsBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, endState)};
     res.commandList->ResourceBarrier(barriersPostCopy.size(), barriersPostCopy.data());
 
     m_matrixBuffState = endState;
@@ -716,20 +692,22 @@ void D3D12RenderSystem::endFrame()
     res.commandList->SetGraphicsRootDescriptorTable(1, descHandle);
 
     // viewport and scissor setup
-    static D3D12_VIEWPORT viewport{
-        .TopLeftX = 0, .TopLeftY = 0, .Width = static_cast<float>(m_width), .Height = static_cast<float>(m_height),
-        .MinDepth = 0, .MaxDepth = 1
-    };
+    static D3D12_VIEWPORT viewport{.TopLeftX = 0,
+                                   .TopLeftY = 0,
+                                   .Width = static_cast<float>(m_width),
+                                   .Height = static_cast<float>(m_height),
+                                   .MinDepth = 0,
+                                   .MaxDepth = 1};
     res.commandList->RSSetViewports(1, &viewport);
     static D3D12_RECT scissorRect{.left = 0, .top = 0, .right = m_width, .bottom = m_height};
     res.commandList->RSSetScissorRects(1, &scissorRect);
 
-    ComPtr<ID3D12Resource> renderTarget = Config::ExecSelect(m_backBuffers[res.renderTargetIndex],
-                                                             m_renderTargetTextures[res.renderTargetIndex]);
-    D3D12_RESOURCE_STATES rtStatePostDraw = Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    auto rtBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), rtStatePostDraw,
-        D3D12_RESOURCE_STATE_RENDER_TARGET);
+    ComPtr<ID3D12Resource> renderTarget =
+        Config::ExecSelect(m_backBuffers[res.renderTargetIndex], m_renderTargetTextures[res.renderTargetIndex]);
+    D3D12_RESOURCE_STATES rtStatePostDraw =
+        Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    auto rtBarrier =
+        CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), rtStatePostDraw, D3D12_RESOURCE_STATE_RENDER_TARGET);
     res.commandList->ResourceBarrier(1, &rtBarrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
@@ -756,10 +734,10 @@ void D3D12RenderSystem::endFrame()
     }
 
     // draw all objects
-    for (const DrawOperation& drawOp : res.drawOperations)
+    for (const DrawOperation &drawOp : res.drawOperations)
     {
-        const GPUMesh& mesh = getMesh(drawOp.meshHandle);
-        for (const GPUSubMesh& subMesh : mesh.subMeshes)
+        const GPUMesh &mesh = getMesh(drawOp.meshHandle);
+        for (const GPUSubMesh &subMesh : mesh.subMeshes)
         {
             res.commandList->SetGraphicsRoot32BitConstant(0, drawOp.roIndex, 0);
             res.commandList->IASetVertexBuffers(0, 1, &mesh.vertexView);
@@ -768,10 +746,10 @@ void D3D12RenderSystem::endFrame()
         }
     }
 
-    D3D12_RESOURCE_STATES stateBeforePostDraw = Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT,
-                                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                               rtStatePostDraw);
+    D3D12_RESOURCE_STATES stateBeforePostDraw =
+        Config::ExecSelect(D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    auto presentBarrier =
+        CD3DX12_RESOURCE_BARRIER::Transition(renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, rtStatePostDraw);
     res.commandList->ResourceBarrier(1, &presentBarrier);
 
     if constexpr (Config::IsToolingMode())
@@ -780,7 +758,7 @@ void D3D12RenderSystem::endFrame()
     }
     res.commandList->Close();
 
-    std::array<ID3D12CommandList*, 1> commandLists{res.commandList.Get()};
+    std::array<ID3D12CommandList *, 1> commandLists{res.commandList.Get()};
     m_commandQueue->ExecuteCommandLists(commandLists.size(), commandLists.data());
 
     if constexpr (Config::IsStandaloneMode())
@@ -795,15 +773,12 @@ void D3D12RenderSystem::endFrame()
     m_stagingOffset = 0;
 }
 
-void D3D12RenderSystem::update(Node& node)
+void D3D12RenderSystem::update(Node &node)
 {
-    auto& res = m_frameResources[m_frameResIndex];
+    auto &res = m_frameResources[m_frameResIndex];
     const uint32_t roIndex = m_nextROIndex++;
 
-    RenderObject ro
-    {
-        .baseMatrixIndex = m_nextMatrixIndex
-    };
+    RenderObject ro{.baseMatrixIndex = m_nextMatrixIndex};
 
     // calculate object transformation matrices
     XMMATRIX rotX = XMMatrixRotationX(node.getRotation().x);
@@ -837,9 +812,7 @@ void D3D12RenderSystem::update(Node& node)
     res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
 }
 
-void D3D12RenderSystem::updateTextures()
-{
-}
+void D3D12RenderSystem::updateTextures() {}
 
 bool D3D12RenderSystem::createSwapchain()
 {
@@ -861,11 +834,9 @@ bool D3D12RenderSystem::createSwapchain()
     {
         // create internal render targets
         constexpr auto rtFlags =
-            Config::ExecSelect(
-                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
-        auto renderTargetDesc = CD3DX12_RESOURCE_DESC::Tex2D(SwapchainFormat, m_logW, m_logH,
-            1, 0, 1, 0, rtFlags);
+            Config::ExecSelect(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+                               D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        auto renderTargetDesc = CD3DX12_RESOURCE_DESC::Tex2D(SwapchainFormat, m_logW, m_logH, 1, 0, 1, 0, rtFlags);
         auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT);
 
         D3D12_CLEAR_VALUE clearValue{.Format = SwapchainFormat, .Color = {1, 0, 0, 1}};
@@ -874,8 +845,9 @@ bool D3D12RenderSystem::createSwapchain()
         for (auto &renderTarget : m_renderTargetTextures)
         {
             DXCHK(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &renderTargetDesc,
-                D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(renderTarget.GetAddressOf())),
-                "Unable to create internal render target texture");
+                                                    D3D12_RESOURCE_STATE_COMMON, &clearValue,
+                                                    IID_PPV_ARGS(renderTarget.GetAddressOf())),
+                  "Unable to create internal render target texture");
         }
 
         Logger::info(this, "Creating and initializing swapchain resources");
@@ -884,14 +856,14 @@ bool D3D12RenderSystem::createSwapchain()
 
         UINT factoryFlags = Config::DebugSelect(DXGI_CREATE_FACTORY_DEBUG, 0);
         DXCHK(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&dxgiFactory4)),
-            "Couldn't create DXGIFactory2 during swapchain init");
+              "Couldn't create DXGIFactory2 during swapchain init");
 
         DXGI_SWAP_CHAIN_DESC1 swapchainDesc{};
         swapchainDesc.Width = m_width;
         swapchainDesc.Height = m_height;
         swapchainDesc.Format = SwapchainFormat;
         swapchainDesc.Stereo = FALSE;
-        swapchainDesc.SampleDesc = { 1, 0 };
+        swapchainDesc.SampleDesc = {1, 0};
         swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapchainDesc.BufferCount = RenderTargetCount;
         swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
@@ -900,17 +872,18 @@ bool D3D12RenderSystem::createSwapchain()
         swapchainDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
         ComPtr<IDXGISwapChain1> swapchain;
-        DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr, &
-            swapchain), "Failed to create a swapchain for the given HWND");
+        DXCHK(dxgiFactory4->CreateSwapChainForHwnd(m_commandQueue.Get(), m_hWnd, &swapchainDesc, nullptr, nullptr,
+                                                   &swapchain),
+              "Failed to create a swapchain for the given HWND");
         DXCHK(dxgiFactory4->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER),
-            "Failed to disable full-screen shortcut.");
+              "Failed to disable full-screen shortcut.");
         DXCHK(swapchain.As(&m_swapchain), "Error getting swapchain");
 
         // grab the swapchain image buffers
         for (int i = 0; i < RenderTargetCount; ++i)
         {
             DXCHK(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backBuffers[i].GetAddressOf())),
-                "Unable to get swapchain back buffer");
+                  "Unable to get swapchain back buffer");
         }
     }
     else
@@ -980,7 +953,8 @@ bool D3D12RenderSystem::createSwapchain()
 
     CD3DX12_HEAP_PROPERTIES dsHeapProps(D3D12_HEAP_TYPE_DEFAULT);
     DXCHK(m_device->CreateCommittedResource(&dsHeapProps, D3D12_HEAP_FLAG_NONE, &dsDesc,
-              D3D12_RESOURCE_STATE_DEPTH_WRITE, &dsClearVal, IID_PPV_ARGS(m_depthStencil.GetAddressOf())),
+                                            D3D12_RESOURCE_STATE_DEPTH_WRITE, &dsClearVal,
+                                            IID_PPV_ARGS(m_depthStencil.GetAddressOf())),
           "Unable to create depth resource");
 
     m_descriptorSizes.DSV = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -1004,6 +978,4 @@ void D3D12RenderSystem::flushGPU()
     }
 }
 
-void D3D12RenderSystem::updateGPUTextures()
-{
-}
+void D3D12RenderSystem::updateGPUTextures() {}
