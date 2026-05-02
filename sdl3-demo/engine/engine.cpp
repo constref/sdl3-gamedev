@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#include <framecontext.h>
 #include <systems/collisionsystem.h>
 #include <systems/enginesystem.h>
 #include <systems/lightingsystem.h>
@@ -130,7 +131,7 @@ void Engine::step()
     {
         // clamp actual delta time if too large due to
         // breakpoint or major slow-down
-        deltaTime = min(deltaTime, dtThreshold);
+        deltaTime = std::min(deltaTime, dtThreshold);
     }
 
     globalTime += deltaTime;

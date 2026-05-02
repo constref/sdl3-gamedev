@@ -6,3 +6,4 @@ IndentCaseLabels: true
 LambdaBodyIndentation: OuterScope
 ColumnLimit: 120
 AlignAfterOpenBracket: Align
+AccessModifierOffset: -4

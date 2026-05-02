@@ -1,23 +1,21 @@
 #pragma once
 
-#include <format>
-#include <memory>
-#include <array>
 #include <SDL3/SDL.h>
-#include <sdlstate.h>
-#include <inputstate.h>
-#include <framecontext.h>
 #include <application.h>
-#include <node.h>
-#include <world.h>
+#include <assets/assetmanager.h>
+#include <componentsystems.h>
+#include <framecontext.h>
+#include <inputstate.h>
+#include <memory>
 #include <messaging/eventqueue.h>
 #include <messaging/events.h>
-#include <componentsystems.h>
-#include <systems/inputsystem.h>
-#include <systems/d3d12/d3d12rendersystem.h>
+#include <node.h>
 #include <prototypeinstancer.h>
 #include <rendering/renderer.h>
-#include <assets/assetmanager.h>
+#include <sdlstate.h>
+#include <systems/d3d12/d3d12rendersystem.h>
+#include <systems/inputsystem.h>
+#include <world.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -54,14 +52,14 @@ public:
 
     bool initialize(int logW, int logH, int width, int height);
     Renderer *getRenderer() const;
-    Services& services();
+    Services &services();
     void cleanup();
     void run();
     void start();
     void stop();
     void clear();
     void step();
-    
+
     Application &application();
 
 private:
