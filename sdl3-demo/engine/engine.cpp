@@ -1,18 +1,18 @@
 #include "engine.h"
 
-#include <systems/spriterendersystem.h>
-#include <systems/spriteanimationsystem.h>
-#include <systems/physicssystem.h>
 #include <systems/collisionsystem.h>
+#include <systems/enginesystem.h>
+#include <systems/lightingsystem.h>
+#include <systems/physicssystem.h>
+#include <systems/spriteanimationsystem.h>
+#include <systems/spriterendersystem.h>
 #include <systems/timersystem.h>
 #include <systems/vulkanrendersystem.h>
-#include <systems/enginesystem.h>
 #include <systems/windowingsystem.h>
-#include <systems/lightingsystem.h>
 
-Engine::Engine(std::unique_ptr<Application> app) : m_app(std::move(app)),
-                                                   m_services(assetManager, world, compSys, eventQueue, inputState, protoInstancer),
-                                                   sdlState(SDL_GetKeyboardState(nullptr))
+Engine::Engine(std::unique_ptr<Application> app)
+    : m_app(std::move(app)), m_services(assetManager, world, compSys, eventQueue, inputState, protoInstancer),
+      sdlState(SDL_GetKeyboardState(nullptr))
 {
     debugMode = false;
     running = false;
@@ -62,8 +62,8 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     renderer = &renderSys;
 
     // Vulkan
-    // auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(window, width, height, logW, logH, m_services));
-    // if (!renderSys.initialize())
+    // auto &renderSys = m_services.compSys().registerSystem(std::make_unique<vks::VulkanRenderSystem>(window, width,
+    // height, logW, logH, m_services)); if (!renderSys.initialize())
     // {
     // 	return false;
     // }
@@ -76,21 +76,15 @@ bool Engine::initialize(int logW, int logH, int width, int height)
     {
         return false;
     }
-    
+
     start();
-    
+
     return true;
 }
 
-Renderer *Engine::getRenderer() const
-{
-    return renderer;
-}
+Renderer *Engine::getRenderer() const { return renderer; }
 
-Services& Engine::services()
-{
-    return m_services;
-}
+Services &Engine::services() { return m_services; }
 
 void Engine::cleanup()
 {
@@ -120,15 +114,9 @@ void Engine::start()
     renderer->updateGPUTextures();
 }
 
-void Engine::stop()
-{
-    running = false;
-}
+void Engine::stop() { running = false; }
 
-void Engine::clear()
-{
-    services().world().reset();
-}
+void Engine::clear() { services().world().reset(); }
 
 void Engine::step()
 {
@@ -215,10 +203,7 @@ void Engine::step()
     m_services.compSys().removeScheduled();
 }
 
-Application& Engine::application()
-{
-    return *m_app;
-}
+Application &Engine::application() { return *m_app; }
 
 void Engine::processSystems(Node &obj, World &world)
 {
@@ -237,6 +222,6 @@ void Engine::processSystems(Node &obj, World &world)
 
 void Engine::emIterate(void *userData)
 {
-    auto *engine = static_cast<Engine*>(userData);
+    auto *engine = static_cast<Engine *>(userData);
     engine->step();
 }

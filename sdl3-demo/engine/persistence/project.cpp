@@ -35,10 +35,8 @@ std::unique_ptr<Mesh> persistence::readMeeshFile(const std::string &assetId)
         SubMesh subMesh;
         subMesh.vertices.resize(smHeader.vertexCount);
         subMesh.indices.resize(smHeader.indexCount);
-        file.read(reinterpret_cast<char *>(subMesh.vertices.data()),
-                  subMesh.vertexByteSize());
-        file.read(reinterpret_cast<char *>(subMesh.indices.data()),
-                  subMesh.indexByteSize());
+        file.read(reinterpret_cast<char *>(subMesh.vertices.data()), subMesh.vertexByteSize());
+        file.read(reinterpret_cast<char *>(subMesh.indices.data()), subMesh.indexByteSize());
         mesh->addSubmesh(std::move(subMesh));
     }
     file.close();
@@ -64,15 +62,12 @@ void persistence::writeMeshFile(const std::string &assetId, const Mesh &mesh)
         SubMeshHeader subMeshHeader;
         subMeshHeader.vertexCount = sm.vertices.size();
         subMeshHeader.indexCount = sm.indices.size();
-        file.write(reinterpret_cast<const char *>(&subMeshHeader),
-                   sizeof(SubMeshHeader));
+        file.write(reinterpret_cast<const char *>(&subMeshHeader), sizeof(SubMeshHeader));
 
         // write out vertices
-        file.write(reinterpret_cast<const char *>(sm.vertices.data()),
-                   sm.vertexByteSize());
+        file.write(reinterpret_cast<const char *>(sm.vertices.data()), sm.vertexByteSize());
         // write out indices
-        file.write(reinterpret_cast<const char *>(sm.indices.data()),
-                   sm.indexByteSize());
+        file.write(reinterpret_cast<const char *>(sm.indices.data()), sm.indexByteSize());
     }
     file.close();
 }

@@ -2,6 +2,7 @@
 #include "persistence/project.h"
 #include "uuid.h"
 #include <format>
+#include <memory>
 #include <zmq.hpp>
 
 #include <nube.pb.h>
