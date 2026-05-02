@@ -1,10 +1,10 @@
 #include "project.h"
-#include <rendering/mesh.h>
-#include <rendering/vertex.h>
 #include <fstream>
 #include <ios>
 #include <memory>
 #include <optional>
+#include <rendering/mesh.h>
+#include <rendering/vertex.h>
 #include <vector>
 
 #include "uuid.h"
@@ -24,28 +24,30 @@ std::unique_ptr<Mesh> persistence::readMeeshFile(const std::string &assetId)
 
     Mesh *mesh = new Mesh;
     MeshHeader meshHeader;
-    file.read(reinterpret_cast<char  *>(&meshHeader), sizeof(MeshHeader));
+    file.read(reinterpret_cast<char *>(&meshHeader), sizeof(MeshHeader));
 
     for (int i = 0; i < meshHeader.subMeshCount; ++i)
-	{
-		SubMeshHeader smHeader;
-		file.read(reinterpret_cast<char *>(&smHeader), sizeof(SubMeshHeader));
+    {
+        SubMeshHeader smHeader;
+        file.read(reinterpret_cast<char *>(&smHeader), sizeof(SubMeshHeader));
 
-		// read vertex data
-		SubMesh subMesh;
-		subMesh.vertices.resize(smHeader.vertexCount);
-		subMesh.indices.resize(smHeader.indexCount);
-		file.read(reinterpret_cast<char *>(subMesh.vertices.data()), subMesh.vertexByteSize());
-		file.read(reinterpret_cast<char *>(subMesh.indices.data()), subMesh.indexByteSize());
-		mesh->addSubmesh(std::move(subMesh));
-	}
+        // read vertex data
+        SubMesh subMesh;
+        subMesh.vertices.resize(smHeader.vertexCount);
+        subMesh.indices.resize(smHeader.indexCount);
+        file.read(reinterpret_cast<char *>(subMesh.vertices.data()),
+                  subMesh.vertexByteSize());
+        file.read(reinterpret_cast<char *>(subMesh.indices.data()),
+                  subMesh.indexByteSize());
+        mesh->addSubmesh(std::move(subMesh));
+    }
     file.close();
 
     return std::unique_ptr<Mesh>(mesh);
 }
 
 void persistence::writeMeshFile(const std::string &assetId, const Mesh &mesh)
-{    
+{
     std::string outputPath = "baked/assets/" + assetId + ".nmo";
     std::ofstream file(outputPath, std::ios::binary);
 
@@ -58,16 +60,19 @@ void persistence::writeMeshFile(const std::string &assetId, const Mesh &mesh)
     file.write(reinterpret_cast<char *>(&meshHeader), sizeof(MeshHeader));
 
     for (const SubMesh &sm : mesh.subMeshes())
-	{
-		SubMeshHeader subMeshHeader;
-		subMeshHeader.vertexCount = sm.vertices.size();
-		subMeshHeader.indexCount = sm.indices.size();
-		file.write(reinterpret_cast<const char *>(&subMeshHeader), sizeof(SubMeshHeader));
+    {
+        SubMeshHeader subMeshHeader;
+        subMeshHeader.vertexCount = sm.vertices.size();
+        subMeshHeader.indexCount = sm.indices.size();
+        file.write(reinterpret_cast<const char *>(&subMeshHeader),
+                   sizeof(SubMeshHeader));
 
-		// write out vertices
-		file.write(reinterpret_cast<const char *>(sm.vertices.data()), sm.vertexByteSize());
-		// write out indices
-		file.write(reinterpret_cast<const char *>(sm.indices.data()), sm.indexByteSize());
-	}
+        // write out vertices
+        file.write(reinterpret_cast<const char *>(sm.vertices.data()),
+                   sm.vertexByteSize());
+        // write out indices
+        file.write(reinterpret_cast<const char *>(sm.indices.data()),
+                   sm.indexByteSize());
+    }
     file.close();
 }

@@ -40,6 +40,7 @@ bool Empty::initialize(Services& services, SDLState& state)
         services.compSys().registerSystem(std::make_unique<EditorSystem>(services));
     }
     services.compSys().registerSystem(std::make_unique<FPSCameraSystem>(services));
+
     return true;
 }
 
