@@ -13,6 +13,7 @@ message EditorEnvelope {
     BakeStageCommand bakeStage = 5;
     LoadMeshCommand loadMesh = 6;
     CreateNodeCommand createNode = 7;
+    AttachMeshCommand attachMesh = 8;
   }
 }
 message EngineStartupCommand {
@@ -44,11 +45,17 @@ message LoadMeshCommand {
 }
 
 message CreateNodeCommand {
+  NodeHandle parent = 1;
 }
 
 message NodeHandle {
   uint64 index = 1;
   uint32 generation = 2;
+}
+
+message AttachMeshCommand {
+  string assetId = 1;
+  NodeHandle targetNode = 2;
 }
 
 message EngineEnvelope {

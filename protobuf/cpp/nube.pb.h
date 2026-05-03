@@ -55,6 +55,10 @@ extern "C" {
 extern const ::google::protobuf::internal::DescriptorTable descriptor_table_nube_2eproto;
 }  // extern "C"
 namespace NUBE {
+class AttachMeshCommand;
+struct AttachMeshCommandDefaultTypeInternal;
+extern AttachMeshCommandDefaultTypeInternal _AttachMeshCommand_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull AttachMeshCommand_class_data_;
 class BakeStageCommand;
 struct BakeStageCommandDefaultTypeInternal;
 extern BakeStageCommandDefaultTypeInternal _BakeStageCommand_default_instance_;
@@ -1054,7 +1058,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InitializationDetails final : publi
     return *reinterpret_cast<const InitializationDetails*>(
         &_InitializationDetails_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 10;
+  static constexpr int kIndexInFileMessages = 11;
   friend void swap(InitializationDetails& a, InitializationDetails& b) { a.Swap(&b); }
   inline void Swap(InitializationDetails* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -1586,143 +1590,6 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EngineShutdownCommand final : publi
 extern const ::google::protobuf::internal::ClassDataFull EngineShutdownCommand_class_data_;
 // -------------------------------------------------------------------
 
-class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CreateNodeCommand final : public ::google::protobuf::internal::ZeroFieldsBase
-/* @@protoc_insertion_point(class_definition:NUBE.CreateNodeCommand) */ {
- public:
-  inline CreateNodeCommand() : CreateNodeCommand(nullptr) {}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CreateNodeCommand* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(CreateNodeCommand));
-  }
-#endif
-
-  template <typename = void>
-  explicit constexpr CreateNodeCommand(::google::protobuf::internal::ConstantInitialized);
-
-  inline CreateNodeCommand(const CreateNodeCommand& from) : CreateNodeCommand(nullptr, from) {}
-  inline CreateNodeCommand(CreateNodeCommand&& from) noexcept
-      : CreateNodeCommand(nullptr, ::std::move(from)) {}
-  inline CreateNodeCommand& operator=(const CreateNodeCommand& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline CreateNodeCommand& operator=(CreateNodeCommand&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
-  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
-    return GetDescriptor();
-  }
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
-  GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  [[nodiscard]] static const CreateNodeCommand& default_instance() {
-    return *reinterpret_cast<const CreateNodeCommand*>(
-        &_CreateNodeCommand_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 7;
-  friend void swap(CreateNodeCommand& a, CreateNodeCommand& b) { a.Swap(&b); }
-  inline void Swap(CreateNodeCommand* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(CreateNodeCommand* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  [[nodiscard]] CreateNodeCommand* PROTOBUF_NONNULL
-  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::internal::ZeroFieldsBase::DefaultConstruct<CreateNodeCommand>(arena);
-  }
-  using ::google::protobuf::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const CreateNodeCommand& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::CopyImpl(*this, from);
-  }
-  using ::google::protobuf::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const CreateNodeCommand& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::MergeImpl(*this, from);
-  }
-
-  public:
-  [[nodiscard]] bool IsInitialized() const {
-    return true;
-  }
- private:
-  template <typename T>
-  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "NUBE.CreateNodeCommand"; }
-
-  explicit CreateNodeCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CreateNodeCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CreateNodeCommand& from);
-  CreateNodeCommand(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CreateNodeCommand&& from) noexcept
-      : CreateNodeCommand(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static constexpr auto InternalNewImpl_();
-
- public:
-  static constexpr auto InternalGenerateClassData_();
-
-  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-  // @@protoc_insertion_point(class_scope:NUBE.CreateNodeCommand)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<0, 0,
-                                   0, 0,
-                                   2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  friend ::google::protobuf::internal::PrivateAccess;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  friend struct ::TableStruct_nube_2eproto;
-};
-
-extern const ::google::protobuf::internal::ClassDataFull CreateNodeCommand_class_data_;
-// -------------------------------------------------------------------
-
 class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED BakeStageCommand final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:NUBE.BakeStageCommand) */ {
  public:
@@ -1987,7 +1854,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EngineEnvelope final : public ::goo
     kNodeHandle = 2,
     PAYLOAD_NOT_SET = 0,
   };
-  static constexpr int kIndexInFileMessages = 9;
+  static constexpr int kIndexInFileMessages = 10;
   friend void swap(EngineEnvelope& a, EngineEnvelope& b) { a.Swap(&b); }
   inline void Swap(EngineEnvelope* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -2169,6 +2036,429 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EngineEnvelope final : public ::goo
 extern const ::google::protobuf::internal::ClassDataFull EngineEnvelope_class_data_;
 // -------------------------------------------------------------------
 
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CreateNodeCommand final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:NUBE.CreateNodeCommand) */ {
+ public:
+  inline CreateNodeCommand() : CreateNodeCommand(nullptr) {}
+  ~CreateNodeCommand() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(CreateNodeCommand* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(CreateNodeCommand));
+  }
+#endif
+
+  template <typename = void>
+  explicit constexpr CreateNodeCommand(::google::protobuf::internal::ConstantInitialized);
+
+  inline CreateNodeCommand(const CreateNodeCommand& from) : CreateNodeCommand(nullptr, from) {}
+  inline CreateNodeCommand(CreateNodeCommand&& from) noexcept
+      : CreateNodeCommand(nullptr, ::std::move(from)) {}
+  inline CreateNodeCommand& operator=(const CreateNodeCommand& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline CreateNodeCommand& operator=(CreateNodeCommand&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+    return GetDescriptor();
+  }
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  [[nodiscard]] static const CreateNodeCommand& default_instance() {
+    return *reinterpret_cast<const CreateNodeCommand*>(
+        &_CreateNodeCommand_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 7;
+  friend void swap(CreateNodeCommand& a, CreateNodeCommand& b) { a.Swap(&b); }
+  inline void Swap(CreateNodeCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(CreateNodeCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  [[nodiscard]] CreateNodeCommand* PROTOBUF_NONNULL
+  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<CreateNodeCommand>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const CreateNodeCommand& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const CreateNodeCommand& from) { CreateNodeCommand::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  [[nodiscard]] bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] ::size_t ByteSizeLong() const final;
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] int GetCachedSize() const {
+    return _impl_._cached_size_.Get();
+  }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(CreateNodeCommand* PROTOBUF_NONNULL other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "NUBE.CreateNodeCommand"; }
+
+  explicit CreateNodeCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  CreateNodeCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CreateNodeCommand& from);
+  CreateNodeCommand(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CreateNodeCommand&& from) noexcept
+      : CreateNodeCommand(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+  static void* PROTOBUF_NONNULL PlacementNew_(
+      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr auto InternalNewImpl_();
+
+ public:
+  static constexpr auto InternalGenerateClassData_();
+
+  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kParentFieldNumber = 1,
+  };
+  // .NUBE.NodeHandle parent = 1;
+  [[nodiscard]] bool has_parent()
+      const;
+  void clear_parent() ;
+  [[nodiscard]] const ::NUBE::NodeHandle& parent() const;
+  [[nodiscard]] ::NUBE::NodeHandle* PROTOBUF_NULLABLE release_parent();
+  ::NUBE::NodeHandle* PROTOBUF_NONNULL mutable_parent();
+  void set_allocated_parent(::NUBE::NodeHandle* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_parent(::NUBE::NodeHandle* PROTOBUF_NULLABLE value);
+  ::NUBE::NodeHandle* PROTOBUF_NULLABLE unsafe_arena_release_parent();
+
+  private:
+  const ::NUBE::NodeHandle& _internal_parent() const;
+  ::NUBE::NodeHandle* PROTOBUF_NONNULL _internal_mutable_parent();
+
+  public:
+  // @@protoc_insertion_point(class_scope:NUBE.CreateNodeCommand)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<0, 1,
+                                   1, 0,
+                                   2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  friend ::google::protobuf::internal::PrivateAccess;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+        const CreateNodeCommand& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::NUBE::NodeHandle* PROTOBUF_NULLABLE parent_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_nube_2eproto;
+};
+
+extern const ::google::protobuf::internal::ClassDataFull CreateNodeCommand_class_data_;
+// -------------------------------------------------------------------
+
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED AttachMeshCommand final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:NUBE.AttachMeshCommand) */ {
+ public:
+  inline AttachMeshCommand() : AttachMeshCommand(nullptr) {}
+  ~AttachMeshCommand() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(AttachMeshCommand* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(AttachMeshCommand));
+  }
+#endif
+
+  template <typename = void>
+  explicit constexpr AttachMeshCommand(::google::protobuf::internal::ConstantInitialized);
+
+  inline AttachMeshCommand(const AttachMeshCommand& from) : AttachMeshCommand(nullptr, from) {}
+  inline AttachMeshCommand(AttachMeshCommand&& from) noexcept
+      : AttachMeshCommand(nullptr, ::std::move(from)) {}
+  inline AttachMeshCommand& operator=(const AttachMeshCommand& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AttachMeshCommand& operator=(AttachMeshCommand&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+    return GetDescriptor();
+  }
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  [[nodiscard]] static const AttachMeshCommand& default_instance() {
+    return *reinterpret_cast<const AttachMeshCommand*>(
+        &_AttachMeshCommand_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 9;
+  friend void swap(AttachMeshCommand& a, AttachMeshCommand& b) { a.Swap(&b); }
+  inline void Swap(AttachMeshCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AttachMeshCommand* PROTOBUF_NONNULL other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  [[nodiscard]] AttachMeshCommand* PROTOBUF_NONNULL
+  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<AttachMeshCommand>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const AttachMeshCommand& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const AttachMeshCommand& from) { AttachMeshCommand::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  [[nodiscard]] bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] ::size_t ByteSizeLong() const final;
+  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  [[nodiscard]] int GetCachedSize() const {
+    return _impl_._cached_size_.Get();
+  }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(AttachMeshCommand* PROTOBUF_NONNULL other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "NUBE.AttachMeshCommand"; }
+
+  explicit AttachMeshCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  AttachMeshCommand(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const AttachMeshCommand& from);
+  AttachMeshCommand(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, AttachMeshCommand&& from) noexcept
+      : AttachMeshCommand(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+  static void* PROTOBUF_NONNULL PlacementNew_(
+      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr auto InternalNewImpl_();
+
+ public:
+  static constexpr auto InternalGenerateClassData_();
+
+  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kAssetIdFieldNumber = 1,
+    kTargetNodeFieldNumber = 2,
+  };
+  // string assetId = 1;
+  [[nodiscard]] bool has_assetid()
+      const;
+  void clear_assetid() ;
+  [[nodiscard]] const ::std::string& assetid() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_assetid(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_assetid();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_assetid();
+  void set_allocated_assetid(::std::string* PROTOBUF_NULLABLE value);
+
+  private:
+  const ::std::string& _internal_assetid() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_assetid(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_assetid();
+
+  public:
+  // .NUBE.NodeHandle targetNode = 2;
+  [[nodiscard]] bool has_targetnode()
+      const;
+  void clear_targetnode() ;
+  [[nodiscard]] const ::NUBE::NodeHandle& targetnode() const;
+  [[nodiscard]] ::NUBE::NodeHandle* PROTOBUF_NULLABLE release_targetnode();
+  ::NUBE::NodeHandle* PROTOBUF_NONNULL mutable_targetnode();
+  void set_allocated_targetnode(::NUBE::NodeHandle* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_targetnode(::NUBE::NodeHandle* PROTOBUF_NULLABLE value);
+  ::NUBE::NodeHandle* PROTOBUF_NULLABLE unsafe_arena_release_targetnode();
+
+  private:
+  const ::NUBE::NodeHandle& _internal_targetnode() const;
+  ::NUBE::NodeHandle* PROTOBUF_NONNULL _internal_mutable_targetnode();
+
+  public:
+  // @@protoc_insertion_point(class_scope:NUBE.AttachMeshCommand)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<1, 2,
+                                   1, 38,
+                                   2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  friend ::google::protobuf::internal::PrivateAccess;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+    inline explicit Impl_(
+        ::google::protobuf::internal::InternalVisibility visibility,
+        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
+        const AttachMeshCommand& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::google::protobuf::internal::ArenaStringPtr assetid_;
+    ::NUBE::NodeHandle* PROTOBUF_NULLABLE targetnode_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_nube_2eproto;
+};
+
+extern const ::google::protobuf::internal::ClassDataFull AttachMeshCommand_class_data_;
+// -------------------------------------------------------------------
+
 class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:NUBE.EditorEnvelope) */ {
  public:
@@ -2233,6 +2523,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
     kBakeStage = 5,
     kLoadMesh = 6,
     kCreateNode = 7,
+    kAttachMesh = 8,
     PAYLOAD_NOT_SET = 0,
   };
   static constexpr int kIndexInFileMessages = 0;
@@ -2332,6 +2623,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
     kBakeStageFieldNumber = 5,
     kLoadMeshFieldNumber = 6,
     kCreateNodeFieldNumber = 7,
+    kAttachMeshFieldNumber = 8,
   };
   // .NUBE.EngineStartupCommand startup = 1;
   [[nodiscard]] bool has_startup()
@@ -2473,6 +2765,26 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
   ::NUBE::CreateNodeCommand* PROTOBUF_NONNULL _internal_mutable_createnode();
 
   public:
+  // .NUBE.AttachMeshCommand attachMesh = 8;
+  [[nodiscard]] bool has_attachmesh()
+      const;
+  private:
+  bool _internal_has_attachmesh() const;
+
+  public:
+  void clear_attachmesh() ;
+  [[nodiscard]] const ::NUBE::AttachMeshCommand& attachmesh() const;
+  [[nodiscard]] ::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE release_attachmesh();
+  ::NUBE::AttachMeshCommand* PROTOBUF_NONNULL mutable_attachmesh();
+  void set_allocated_attachmesh(::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_attachmesh(::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE value);
+  ::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE unsafe_arena_release_attachmesh();
+
+  private:
+  const ::NUBE::AttachMeshCommand& _internal_attachmesh() const;
+  ::NUBE::AttachMeshCommand* PROTOBUF_NONNULL _internal_mutable_attachmesh();
+
+  public:
   void clear_payload();
   PayloadCase payload_case() const;
   // @@protoc_insertion_point(class_scope:NUBE.EditorEnvelope)
@@ -2485,11 +2797,12 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
   void set_has_bakestage();
   void set_has_loadmesh();
   void set_has_createnode();
+  void set_has_attachmesh();
   [[nodiscard]] inline bool has_payload() const;
   inline void clear_has_payload();
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<0, 7,
-                                   7, 0,
+  static const ::google::protobuf::internal::TcParseTable<0, 8,
+                                   8, 0,
                                    2>
       _table_;
 
@@ -2520,6 +2833,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED EditorEnvelope final : public ::goo
       ::google::protobuf::Message* PROTOBUF_NULLABLE bakestage_;
       ::google::protobuf::Message* PROTOBUF_NULLABLE loadmesh_;
       ::google::protobuf::Message* PROTOBUF_NULLABLE createnode_;
+      ::google::protobuf::Message* PROTOBUF_NULLABLE attachmesh_;
     } payload_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::uint32_t _oneof_case_[1];
@@ -3121,6 +3435,88 @@ inline ::NUBE::CreateNodeCommand* PROTOBUF_NONNULL EditorEnvelope::mutable_creat
   return _msg;
 }
 
+// .NUBE.AttachMeshCommand attachMesh = 8;
+inline bool EditorEnvelope::has_attachmesh() const {
+  return payload_case() == kAttachMesh;
+}
+inline bool EditorEnvelope::_internal_has_attachmesh() const {
+  return payload_case() == kAttachMesh;
+}
+inline void EditorEnvelope::set_has_attachmesh() {
+  _impl_._oneof_case_[0] = kAttachMesh;
+}
+inline void EditorEnvelope::clear_attachmesh() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kAttachMesh) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.attachmesh_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.attachmesh_);
+    }
+    clear_has_payload();
+  }
+}
+inline ::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE EditorEnvelope::release_attachmesh() {
+  // @@protoc_insertion_point(field_release:NUBE.EditorEnvelope.attachMesh)
+  if (payload_case() == kAttachMesh) {
+    clear_has_payload();
+    auto* temp = reinterpret_cast<::NUBE::AttachMeshCommand*>(_impl_.payload_.attachmesh_);
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.attachmesh_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::NUBE::AttachMeshCommand& EditorEnvelope::_internal_attachmesh() const {
+  return payload_case() == kAttachMesh ? static_cast<const ::NUBE::AttachMeshCommand&>(*reinterpret_cast<::NUBE::AttachMeshCommand*>(_impl_.payload_.attachmesh_))
+                     : reinterpret_cast<const ::NUBE::AttachMeshCommand&>(::NUBE::_AttachMeshCommand_default_instance_);
+}
+inline const ::NUBE::AttachMeshCommand& EditorEnvelope::attachmesh() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.EditorEnvelope.attachMesh)
+  return _internal_attachmesh();
+}
+inline ::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE EditorEnvelope::unsafe_arena_release_attachmesh() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:NUBE.EditorEnvelope.attachMesh)
+  if (payload_case() == kAttachMesh) {
+    clear_has_payload();
+    auto* temp = reinterpret_cast<::NUBE::AttachMeshCommand*>(_impl_.payload_.attachmesh_);
+    _impl_.payload_.attachmesh_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void EditorEnvelope::unsafe_arena_set_allocated_attachmesh(
+    ::NUBE::AttachMeshCommand* PROTOBUF_NULLABLE value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_attachmesh();
+    _impl_.payload_.attachmesh_ = reinterpret_cast<::google::protobuf::Message*>(value);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:NUBE.EditorEnvelope.attachMesh)
+}
+inline ::NUBE::AttachMeshCommand* PROTOBUF_NONNULL EditorEnvelope::_internal_mutable_attachmesh() {
+  if (payload_case() != kAttachMesh) {
+    clear_payload();
+    set_has_attachmesh();
+    _impl_.payload_.attachmesh_ = reinterpret_cast<::google::protobuf::Message*>(
+        ::google::protobuf::Message::DefaultConstruct<::NUBE::AttachMeshCommand>(GetArena()));
+  }
+  return reinterpret_cast<::NUBE::AttachMeshCommand*>(_impl_.payload_.attachmesh_);
+}
+inline ::NUBE::AttachMeshCommand* PROTOBUF_NONNULL EditorEnvelope::mutable_attachmesh()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::NUBE::AttachMeshCommand* _msg = _internal_mutable_attachmesh();
+  // @@protoc_insertion_point(field_mutable:NUBE.EditorEnvelope.attachMesh)
+  return _msg;
+}
+
 inline bool EditorEnvelope::has_payload() const {
   return payload_case() != PAYLOAD_NOT_SET;
 }
@@ -3597,6 +3993,105 @@ inline void LoadMeshCommand::set_allocated_meshpath(::std::string* PROTOBUF_NULL
 
 // CreateNodeCommand
 
+// .NUBE.NodeHandle parent = 1;
+inline bool CreateNodeCommand::has_parent() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+  PROTOBUF_ASSUME(!value || _impl_.parent_ != nullptr);
+  return value;
+}
+inline void CreateNodeCommand::clear_parent() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.parent_ != nullptr) _impl_.parent_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline const ::NUBE::NodeHandle& CreateNodeCommand::_internal_parent() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::NUBE::NodeHandle* p = _impl_.parent_;
+  return p != nullptr ? *p : reinterpret_cast<const ::NUBE::NodeHandle&>(::NUBE::_NodeHandle_default_instance_);
+}
+inline const ::NUBE::NodeHandle& CreateNodeCommand::parent() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.CreateNodeCommand.parent)
+  return _internal_parent();
+}
+inline void CreateNodeCommand::unsafe_arena_set_allocated_parent(
+    ::NUBE::NodeHandle* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.parent_);
+  }
+  _impl_.parent_ = reinterpret_cast<::NUBE::NodeHandle*>(value);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:NUBE.CreateNodeCommand.parent)
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NULLABLE CreateNodeCommand::release_parent() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::NUBE::NodeHandle* released = _impl_.parent_;
+  _impl_.parent_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NULLABLE CreateNodeCommand::unsafe_arena_release_parent() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.CreateNodeCommand.parent)
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::NUBE::NodeHandle* temp = _impl_.parent_;
+  _impl_.parent_ = nullptr;
+  return temp;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NONNULL CreateNodeCommand::_internal_mutable_parent() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.parent_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::NUBE::NodeHandle>(GetArena());
+    _impl_.parent_ = reinterpret_cast<::NUBE::NodeHandle*>(p);
+  }
+  return _impl_.parent_;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NONNULL CreateNodeCommand::mutable_parent()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::NUBE::NodeHandle* _msg = _internal_mutable_parent();
+  // @@protoc_insertion_point(field_mutable:NUBE.CreateNodeCommand.parent)
+  return _msg;
+}
+inline void CreateNodeCommand::set_allocated_parent(::NUBE::NodeHandle* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.parent_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+
+  _impl_.parent_ = reinterpret_cast<::NUBE::NodeHandle*>(value);
+  // @@protoc_insertion_point(field_set_allocated:NUBE.CreateNodeCommand.parent)
+}
+
 // -------------------------------------------------------------------
 
 // NodeHandle
@@ -3657,6 +4152,178 @@ inline ::uint32_t NodeHandle::_internal_generation() const {
 inline void NodeHandle::_internal_set_generation(::uint32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.generation_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// AttachMeshCommand
+
+// string assetId = 1;
+inline bool AttachMeshCommand::has_assetid() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+  return value;
+}
+inline void AttachMeshCommand::clear_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetid_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline const ::std::string& AttachMeshCommand::assetid() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.AttachMeshCommand.assetId)
+  return _internal_assetid();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void AttachMeshCommand::set_assetid(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  _impl_.assetid_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:NUBE.AttachMeshCommand.assetId)
+}
+inline ::std::string* PROTOBUF_NONNULL AttachMeshCommand::mutable_assetid()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::std::string* _s = _internal_mutable_assetid();
+  // @@protoc_insertion_point(field_mutable:NUBE.AttachMeshCommand.assetId)
+  return _s;
+}
+inline const ::std::string& AttachMeshCommand::_internal_assetid() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.assetid_.Get();
+}
+inline void AttachMeshCommand::_internal_set_assetid(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.assetid_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL AttachMeshCommand::_internal_mutable_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.assetid_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE AttachMeshCommand::release_assetid() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.AttachMeshCommand.assetId)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  auto* released = _impl_.assetid_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.assetid_.Set("", GetArena());
+  }
+  return released;
+}
+inline void AttachMeshCommand::set_allocated_assetid(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+  _impl_.assetid_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.assetid_.IsDefault()) {
+    _impl_.assetid_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:NUBE.AttachMeshCommand.assetId)
+}
+
+// .NUBE.NodeHandle targetNode = 2;
+inline bool AttachMeshCommand::has_targetnode() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
+  PROTOBUF_ASSUME(!value || _impl_.targetnode_ != nullptr);
+  return value;
+}
+inline void AttachMeshCommand::clear_targetnode() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.targetnode_ != nullptr) _impl_.targetnode_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000002U);
+}
+inline const ::NUBE::NodeHandle& AttachMeshCommand::_internal_targetnode() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::NUBE::NodeHandle* p = _impl_.targetnode_;
+  return p != nullptr ? *p : reinterpret_cast<const ::NUBE::NodeHandle&>(::NUBE::_NodeHandle_default_instance_);
+}
+inline const ::NUBE::NodeHandle& AttachMeshCommand::targetnode() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:NUBE.AttachMeshCommand.targetNode)
+  return _internal_targetnode();
+}
+inline void AttachMeshCommand::unsafe_arena_set_allocated_targetnode(
+    ::NUBE::NodeHandle* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.targetnode_);
+  }
+  _impl_.targetnode_ = reinterpret_cast<::NUBE::NodeHandle*>(value);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:NUBE.AttachMeshCommand.targetNode)
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NULLABLE AttachMeshCommand::release_targetnode() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  ::NUBE::NodeHandle* released = _impl_.targetnode_;
+  _impl_.targetnode_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NULLABLE AttachMeshCommand::unsafe_arena_release_targetnode() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:NUBE.AttachMeshCommand.targetNode)
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  ::NUBE::NodeHandle* temp = _impl_.targetnode_;
+  _impl_.targetnode_ = nullptr;
+  return temp;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NONNULL AttachMeshCommand::_internal_mutable_targetnode() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.targetnode_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::NUBE::NodeHandle>(GetArena());
+    _impl_.targetnode_ = reinterpret_cast<::NUBE::NodeHandle*>(p);
+  }
+  return _impl_.targetnode_;
+}
+inline ::NUBE::NodeHandle* PROTOBUF_NONNULL AttachMeshCommand::mutable_targetnode()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  ::NUBE::NodeHandle* _msg = _internal_mutable_targetnode();
+  // @@protoc_insertion_point(field_mutable:NUBE.AttachMeshCommand.targetNode)
+  return _msg;
+}
+inline void AttachMeshCommand::set_allocated_targetnode(::NUBE::NodeHandle* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.targetnode_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
+  }
+
+  _impl_.targetnode_ = reinterpret_cast<::NUBE::NodeHandle*>(value);
+  // @@protoc_insertion_point(field_set_allocated:NUBE.AttachMeshCommand.targetNode)
 }
 
 // -------------------------------------------------------------------

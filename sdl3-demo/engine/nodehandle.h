@@ -8,7 +8,7 @@ class NodeHandle
     size_t m_index;
     uint32_t m_generation;
 
- public:
+public:
     NodeHandle() : m_index(0), m_generation(0) {}
     NodeHandle(size_t idx, uint32_t gen) : m_index(idx), m_generation(gen) {}
 

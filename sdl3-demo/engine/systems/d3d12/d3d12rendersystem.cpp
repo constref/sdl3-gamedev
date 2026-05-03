@@ -808,8 +808,8 @@ void D3D12RenderSystem::update(Node &node)
                                       (m_frameResIndex * ROFrameSize) + roIndex * sizeof(RenderObject),
                                       m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
-    auto [mc] = getRequiredComponents(node);
-    res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
+    // auto [mc] = getRequiredComponents(node);
+    // res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
 }
 
 void D3D12RenderSystem::updateTextures() {}

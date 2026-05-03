@@ -1,4 +1,5 @@
 #include "engineworker.h"
+#include "nodehandle.h"
 #include <format>
 #include <memory>
 #include <persistence/project.h>
@@ -7,6 +8,8 @@
 
 #include <nube.pb.h>
 #include <usd.pb.h>
+
+#include <components/meshcomponent.h>
 
 EngineWorker::EngineWorker(std::unique_ptr<Application> app, int editorPID, const std::string &url)
 {
@@ -159,6 +162,23 @@ void EngineWorker::start()
                             zmq::message_t response(span);
                             rep.send(response, zmq::send_flags::none);
                             responded = true;
+                        }
+                        break;
+                    }
+                    case NUBE::EditorEnvelope::kAttachMesh:
+                    {
+                        auto targetHandle = editorEnvelope.attachmesh().targetnode();
+                        NodeHandle hNode(targetHandle.index(), targetHandle.generation());
+                        Node &node = services.world().getNode(hNode);
+
+                        auto meshId = uuids::uuid::from_string(editorEnvelope.attachmesh().assetid());
+                        if (!meshId.has_value())
+                        {
+                            Logger::error(this, "The provided meshId is invalid");
+                        }
+                        else
+                        {
+                            auto &meshComp = services.compSys().addComponent<MeshComponent>(node, meshId.value());
                         }
                         break;
                     }

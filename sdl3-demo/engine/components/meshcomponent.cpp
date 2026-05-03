@@ -1,16 +1,6 @@
 #include "meshcomponent.h"
+#include "component.h"
 
-MeshComponent::MeshComponent(Node &owner, GPUMeshHandle meshHandle) : Component(owner)
-{
-	setHandle(meshHandle);
-}
-
-GPUMeshHandle MeshComponent::getHandle() const
-{
-	return handle;
-}
-
-void MeshComponent::setHandle(GPUMeshHandle handle)
-{
-	this->handle = handle;
-}
+MeshComponent::MeshComponent(Node &owner, uuids::uuid meshId) : Component(owner) { m_meshId = meshId; }
+auto MeshComponent::meshId() const { return m_meshId; }
+void MeshComponent::setMeshId(uuids::uuid meshId) { m_meshId = meshId; }
