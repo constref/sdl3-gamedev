@@ -29,6 +29,9 @@
 #include "tooling/systems/editorinputsystem.h"
 #include "tooling/systems/nodeauthoringcomponent.h"
 
+
+#include <assets/meshloader.h>
+
 using namespace DirectX;
 
 bool Empty::initialize(Services& services, SDLState& state)
@@ -133,6 +136,8 @@ void Empty::start(Services& services, SDLState& state)
 		root.addChild(node);
     }
     */
+
+    LoadResult result = assets::loadGltf("D:/glTF-Sample-Models/2.0/FlightHelmet/glTF/FlightHelmet.gltf");
 
     root.addChild(player);
 }

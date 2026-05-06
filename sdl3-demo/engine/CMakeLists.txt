@@ -126,6 +126,8 @@ set(ENGINE_SOURCES
   "assets/assetmanager.h"
   "assets/assetmanager.cpp"
   "assets/std_image_impl.cpp"
+  "assets/meshloader.h"
+  "assets/meshloader.cpp"
 )
 
 set(SHADER_SOURCES
@@ -164,8 +166,8 @@ target_link_libraries(engine PUBLIC
 )
 
 target_include_directories(engine
-  PRIVATE "ext/"
   PUBLIC
+  "ext/"
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

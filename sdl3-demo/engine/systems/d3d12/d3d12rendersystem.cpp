@@ -713,7 +713,7 @@ void D3D12RenderSystem::endFrame()
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
                                             res.renderTargetIndex, m_descriptorSizes.RTV);
 
-    FLOAT clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    FLOAT clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     FLOAT dsvClear[] = {0.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0,
@@ -809,7 +809,7 @@ void D3D12RenderSystem::update(Node &node)
                                       m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
     auto [mc] = getRequiredComponents(node);
-    res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
+    //res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
 }
 
 void D3D12RenderSystem::updateTextures() {}
