@@ -8,20 +8,18 @@
 #define VMA_IMPLEMENTATION
 #include <ext/vk_mem_alloc.h>
 
+#include <algorithm>
+#include <fstream>
+#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <sstream>
+#include <stb_image.h>
+
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-#include <iostream>
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE
-#include <algorithm>
-#include <fstream>
-#include <glm/gtc/matrix_transform.hpp>
-#include <sstream>
 #include <tiny_gltf.h>
 
 #include <systems/d3d11rendersystem.h>

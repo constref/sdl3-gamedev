@@ -11,6 +11,6 @@ class MeshComponent : public Component
 
 public:
     MeshComponent(Node &owner, uuids::uuid meshId);
-    auto meshId() const;
+    uuids::uuid meshId() const;
     void setMeshId(uuids::uuid meshId);
 };

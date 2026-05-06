@@ -7,132 +7,133 @@ find_package(DirectX-Headers REQUIRED)
 set(CMAKE_CXX_STANDARD 23)
 
 set(ENGINE_SOURCES
-	"tmx.cpp"
-	"timer.h"
-	"animation.h"
-	"engine.h"
-	"engine.cpp"
-	"bootstrap.h"
-	"bootstrap.cpp"
-	"application.h"
-	"executionmode.h"
-	"rendering/renderer.h"
-	"rendering/renderer.cpp"
-	"rendering/mesh.h"
-	"rendering/vertex.h"
-	"sdlstate.h"
-	"resources.h"
-	"resources.cpp"
-	"framecontext.h"
-	"inputstate.h"
-	"components/component.h"
-	"components/component.cpp"
-	"components/enginecomponent.h"
-	"components/animationcomponent.h"
-	"components/animationcomponent.cpp"
-	"components/inputcomponent.h"
-	"components/inputcomponent.cpp"
-	"components/physicscomponent.h"
-	"components/physicscomponent.cpp"
-	"components/collisioncomponent.h"
-	"components/collisioncomponent.cpp"
-	"components/cameracomponent.h"
-	"components/cameracomponent.cpp"
-	"components/basiccameracomponent.h"
-	"components/basiccameracomponent.cpp"
-	"components/spritecomponent.h"
-	"components/spritecomponent.cpp"
-	"components/meshcomponent.h"
-	"components/meshcomponent.cpp"
-	"components/lightingcomponent.h"
-	"components/lightingcomponent.cpp"
-	"messaging/observer.h"
-	"messaging/command.h"
-	"messaging/commanddispatcher.h"
-	"messaging/commands.h"
-	"world.h"
-	"world.cpp"
-	"objectholder.h"
-	"nodehandle.h"
-	"node.h"
-	"node.cpp"
-	"messaging/eventqueue.h"
-	"messaging/events.h"
-	"messaging/dispatcher.h"
-	"messaging/eventdispatcher.h"
-	"messaging/event.h"
-	"messaging/messaging.h"
-	"framestage.h"
-	"components/maintainercomponent.h"
-	"logger.h"
-	"containers/ringbuffer.h"
-	"containers/atomicringbuffer.h"
-	"animationplaybackmode.h"
-	"systems/system.h"
-	"systems/enginesystem.h"
-	"systems/enginesystem.cpp"
-	"systems/windowingsystem.h"
-	"systems/windowingsystem.cpp"
-	"systems/physicssystem.h"
-	"systems/physicssystem.cpp"
-	"systems/inputsystem.h"
-	"systems/inputsystem.cpp"
-	"systems/spriterendersystem.h"
-	"systems/spriterendersystem.cpp"
-	"systems/spriteanimationsystem.h"
-	"systems/spriteanimationsystem.cpp"
-	"systems/collisionsystem.h"
-	"systems/collisionsystem.cpp"
-	"systems/systemregistry.h"
-	"systems/fpscamerasystem.h"
-	"systems/fpscamerasystem.cpp"
-	"systems/basiccamerasystem.h"
-	"systems/basiccamerasystem.cpp"
-	"systems/vulkanrendersystem.cpp"
-	"systems/vulkanrendersystem.h"
-	"systems/d3d11rendersystem.h"
-	"systems/d3d11rendersystem.cpp"
-	"systems/d3d12/util.h"
-	"systems/d3d12/d3d12rendersystem.h"
-	"systems/d3d12/d3d12rendersystem.cpp"
-	"systems/lightingsystem.h"
-	"systems/lightingsystem.cpp"
-	"systems/context/rendercontext.h"
-	"components/componentstore.h"
-	"components/componentstore.cpp"
-	"services.h"
-	"componentsystems.h"
-	"componentsystems.cpp"
-	"components/componententry.h"
-	"config.h"
-	"systems/timersystem.h"
-	"systems/timersystem.cpp"
-	"messaging/eventqueue.cpp"
-	"resourceid.h"
-	"resourceloader.h"
-	"resourceloader.cpp"
-	"prototypeid.h"
-	"prototypeinstancer.h"
-	"prototypeinstancer.cpp"
-	"ext/tiny_gltf.cc"
-	"containers/atomicringbuffer.h"
-	"containers/ringbuffer.h"
-	"tooling/platformutils.h"
-	"tooling/platformutils.cpp"
-	"persistence/project.h"
-	"persistence/project.cpp"
-	"assets/assetid.h"
-	"assets/assetid.cpp"
-	"assets/assetmanager.h"
-	"assets/assetmanager.cpp"
+  "tmx.cpp"
+  "timer.h"
+  "animation.h"
+  "engine.h"
+  "engine.cpp"
+  "bootstrap.h"
+  "bootstrap.cpp"
+  "application.h"
+  "executionmode.h"
+  "rendering/renderer.h"
+  "rendering/renderer.cpp"
+  "rendering/mesh.h"
+  "rendering/vertex.h"
+  "sdlstate.h"
+  "resources.h"
+  "resources.cpp"
+  "framecontext.h"
+  "inputstate.h"
+  "components/component.h"
+  "components/component.cpp"
+  "components/enginecomponent.h"
+  "components/animationcomponent.h"
+  "components/animationcomponent.cpp"
+  "components/inputcomponent.h"
+  "components/inputcomponent.cpp"
+  "components/physicscomponent.h"
+  "components/physicscomponent.cpp"
+  "components/collisioncomponent.h"
+  "components/collisioncomponent.cpp"
+  "components/cameracomponent.h"
+  "components/cameracomponent.cpp"
+  "components/basiccameracomponent.h"
+  "components/basiccameracomponent.cpp"
+  "components/spritecomponent.h"
+  "components/spritecomponent.cpp"
+  "components/meshcomponent.h"
+  "components/meshcomponent.cpp"
+  "components/lightingcomponent.h"
+  "components/lightingcomponent.cpp"
+  "messaging/observer.h"
+  "messaging/command.h"
+  "messaging/commanddispatcher.h"
+  "messaging/commands.h"
+  "world.h"
+  "world.cpp"
+  "objectholder.h"
+  "nodehandle.h"
+  "node.h"
+  "node.cpp"
+  "messaging/eventqueue.h"
+  "messaging/events.h"
+  "messaging/dispatcher.h"
+  "messaging/eventdispatcher.h"
+  "messaging/event.h"
+  "messaging/messaging.h"
+  "framestage.h"
+  "components/maintainercomponent.h"
+  "logger.h"
+  "containers/ringbuffer.h"
+  "containers/atomicringbuffer.h"
+  "animationplaybackmode.h"
+  "systems/system.h"
+  "systems/enginesystem.h"
+  "systems/enginesystem.cpp"
+  "systems/windowingsystem.h"
+  "systems/windowingsystem.cpp"
+  "systems/physicssystem.h"
+  "systems/physicssystem.cpp"
+  "systems/inputsystem.h"
+  "systems/inputsystem.cpp"
+  "systems/spriterendersystem.h"
+  "systems/spriterendersystem.cpp"
+  "systems/spriteanimationsystem.h"
+  "systems/spriteanimationsystem.cpp"
+  "systems/collisionsystem.h"
+  "systems/collisionsystem.cpp"
+  "systems/systemregistry.h"
+  "systems/fpscamerasystem.h"
+  "systems/fpscamerasystem.cpp"
+  "systems/basiccamerasystem.h"
+  "systems/basiccamerasystem.cpp"
+  "systems/vulkanrendersystem.cpp"
+  "systems/vulkanrendersystem.h"
+  "systems/d3d11rendersystem.h"
+  "systems/d3d11rendersystem.cpp"
+  "systems/d3d12/util.h"
+  "systems/d3d12/d3d12rendersystem.h"
+  "systems/d3d12/d3d12rendersystem.cpp"
+  "systems/lightingsystem.h"
+  "systems/lightingsystem.cpp"
+  "systems/context/rendercontext.h"
+  "components/componentstore.h"
+  "components/componentstore.cpp"
+  "services.h"
+  "componentsystems.h"
+  "componentsystems.cpp"
+  "components/componententry.h"
+  "config.h"
+  "systems/timersystem.h"
+  "systems/timersystem.cpp"
+  "messaging/eventqueue.cpp"
+  "resourceid.h"
+  "resourceloader.h"
+  "resourceloader.cpp"
+  "prototypeid.h"
+  "prototypeinstancer.h"
+  "prototypeinstancer.cpp"
+  "ext/tiny_gltf.cc"
+  "containers/atomicringbuffer.h"
+  "containers/ringbuffer.h"
+  "tooling/platformutils.h"
+  "tooling/platformutils.cpp"
+  "persistence/project.h"
+  "persistence/project.cpp"
+  "assets/assetid.h"
+  "assets/assetid.cpp"
+  "assets/assetmanager.h"
+  "assets/assetmanager.cpp"
+  "assets/std_image_impl.cpp"
 )
 
 set(SHADER_SOURCES
-	"shaders/shader.vert"
-	"shaders/shader.frag"
-	"shaders/sprite.vert"
-	"shaders/sprite.frag"
-	"shaders/hlsl/basic.hlsl"
+  "shaders/shader.vert"
+  "shaders/shader.frag"
+  "shaders/sprite.vert"
+  "shaders/sprite.frag"
+  "shaders/hlsl/basic.hlsl"
 )
 
 set_source_files_properties(${SHADER_SOURCES} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -141,92 +142,90 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_SOURCES} ${SHADER_S
 add_library(engine STATIC ${ENGINE_SOURCES} ${SHADER_SOURCES})
 
 if(MSVC)
-	#target_compile_options(engine PRIVATE /std:c++latest)
-	#target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+  #target_compile_options(engine PRIVATE /std:c++latest)
+  #target_link_options(engine PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
 endif()
 
 target_compile_definitions(engine PRIVATE TINYGLTF_NO_STB_IMAGE)
 if (EXECUTION_MODE STREQUAL "TOOLING")
-	message(STATUS "Configuring Tooling Build")
-	target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
+  message(STATUS "Configuring Tooling Build")
+  target_compile_definitions(engine PUBLIC EXECUTION_MODE_TOOLING)
 endif()
 
 target_link_libraries(engine PUBLIC
-	SDL3::SDL3
-	Vulkan::Vulkan
-	Vulkan::volk
-	Vulkan::shaderc_combined
-	glm::glm
-	tinyxml2::tinyxml2
-	dxgi d3d11 d3d12 d3dcompiler
-	Microsoft::DirectX-Headers
+  SDL3::SDL3
+  Vulkan::Vulkan
+  Vulkan::volk
+  Vulkan::shaderc_combined
+  glm::glm
+  tinyxml2::tinyxml2
+  dxgi d3d11 d3d12 d3dcompiler
+  Microsoft::DirectX-Headers
 )
 
 target_include_directories(engine
-	PRIVATE "ext/"
-	PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE "ext/"
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # tooling specific
 if (EXECUTION_MODE STREQUAL "TOOLING")
-    find_package(pxr REQUIRED)
-    find_package(cppzmq REQUIRED)
-	find_package(Protobuf CONFIG REQUIRED)
+  find_package(pxr REQUIRED)
+  find_package(cppzmq REQUIRED)
+  find_package(Protobuf CONFIG REQUIRED)
 
-	set(PROTOBUF_DIR ${CMAKE_SOURCE_DIR}/protobuf/cpp)
-    message(STATUS "USD Libs: ${PXR_LIBRARIES}")
-    message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
-	
-	add_library(nubeproto STATIC
-		"${PROTOBUF_DIR}/nube.pb.cc"
-		"${PROTOBUF_DIR}/nube.pb.h"
-		"${PROTOBUF_DIR}/usd.pb.cc"
-		"${PROTOBUF_DIR}/usd.pb.h")
-	
-	target_link_libraries(nubeproto PUBLIC protobuf::libprotobuf)
-	target_include_directories(nubeproto PUBLIC ${PROTOBUF_DIR})
+  set(PROTOBUF_DIR ${CMAKE_SOURCE_DIR}/protobuf/cpp)
+  message(STATUS "USD Libs: ${PXR_LIBRARIES}")
+  message(STATUS "USD Includes: ${PXR_INCLUDE_DIRS}")
+  
+  add_library(nubeproto STATIC
+    "${PROTOBUF_DIR}/nube.pb.cc"
+    "${PROTOBUF_DIR}/nube.pb.h"
+    "${PROTOBUF_DIR}/usd.pb.cc"
+    "${PROTOBUF_DIR}/usd.pb.h")
+  
+  target_link_libraries(nubeproto PUBLIC protobuf::libprotobuf)
+  target_include_directories(nubeproto PUBLIC ${PROTOBUF_DIR})
 
-	add_library(enginetooling STATIC
-        "tooling/engineworker.h"
-        "tooling/engineworker.cpp"
-        "tooling/platformevents.h"
-        "tooling/systems/editorinputsystem.h"
-        "tooling/systems/editorinputsystem.cpp"
-        "tooling/systems/editorsystem.h"
-        "tooling/systems/editorsystem.cpp"
-        "tooling/events.h"
-		"tooling/usd/stageproxy.h"
-		"tooling/usd/stageproxy.cpp"
-		"tooling/usd.h"
-		"tooling/usd/usdprocessor.h"
-		"tooling/usd/usdprocessor.cpp"
-		"tooling/usd/rootcomponent.h"
-		"tooling/usd/rootcomponent.cpp"
-		"tooling/usd/events.h"
-		"tooling/usd/usdlogger.cpp"
-		"tooling/usd/usdlogger.h"
-		"tooling/usd/interoptypes.h"
-	)
+  add_library(enginetooling STATIC
+    "tooling/engineworker.h"
+    "tooling/engineworker.cpp"
+    "tooling/systems/editorinputsystem.h"
+    "tooling/systems/editorinputsystem.cpp"
+    "tooling/systems/editorsystem.h"
+    "tooling/systems/editorsystem.cpp"
+    "tooling/events.h"
+    "tooling/usd/stageproxy.h"
+    "tooling/usd/stageproxy.cpp"
+    "tooling/usd.h"
+    "tooling/usd/usdprocessor.h"
+    "tooling/usd/usdprocessor.cpp"
+    "tooling/usd/rootcomponent.h"
+    "tooling/usd/rootcomponent.cpp"
+    "tooling/usd/events.h"
+    "tooling/usd/usdlogger.cpp"
+    "tooling/usd/usdlogger.h"
+    "tooling/usd/interoptypes.h")
 
-	target_include_directories(enginetooling
-		PUBLIC
-		"ext/"
-		${CMAKE_CURRENT_SOURCE_DIR}
-		${PROTOBUF_DIR}
-	)
-    target_link_libraries(enginetooling
-      PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
+  target_include_directories(enginetooling
+    PUBLIC
+    "ext/"
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROTOBUF_DIR})
 
-	if(MSVC)
-		target_compile_options(enginetooling PRIVATE /std:c++latest)
-		#target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
-	endif()
+  target_link_libraries(enginetooling
+    PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
 
-	add_library(nubedusd SHARED
-		"tooling/usd/nubedusd.h"
-		"tooling/usd/nubedusd.cpp"
-	)
+  if(MSVC)
+    target_compile_options(enginetooling PRIVATE /std:c++latest)
+    #target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+  endif()
 
-	target_link_libraries(nubedusd PRIVATE engine enginetooling cppzmq)
+  add_library(nubedusd SHARED
+    "tooling/usd/nubedusd.h"
+    "tooling/usd/nubedusd.cpp"
+  )
+
+  target_link_libraries(nubedusd PRIVATE engine enginetooling cppzmq)
 endif()

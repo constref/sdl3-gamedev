@@ -1,6 +1,7 @@
 #include "nubedusd.h"
 #include "common.h"
 #include "stageproxy.h"
+#include <algorithm>
 #include <persistence/project.h>
 
 using namespace usd;
@@ -15,20 +16,11 @@ StageProxy *OpenProject(const char *path, ObjectsChangedFunc objectsChangedCallb
     return StageProxy::open(path, objectsChangedCallback);
 }
 
-void SaveProject(usd::StageProxy *proxy)
-{
-    proxy->save();
-}
+void SaveProject(usd::StageProxy *proxy) { proxy->save(); }
 
-void DestroyProxy(usd::StageProxy *proxy)
-{
-    delete proxy;
-}
+void DestroyProxy(usd::StageProxy *proxy) { delete proxy; }
 
-usd::StageProxy *OpenStage(const char *path)
-{
-    return StageProxy::open(path, nullptr);
-}
+usd::StageProxy *OpenStage(const char *path) { return StageProxy::open(path, nullptr); }
 
 PrimList *BuildPrimList(usd::StageProxy *proxy, bool useDefaultPrim)
 {
@@ -43,20 +35,11 @@ usd::Prim *GetPrimListData(PrimList *list, uint32_t *outSize)
     return list->data();
 }
 
-void DestroyPrimList(PrimList *list)
-{
-    delete list;
-}
+void DestroyPrimList(PrimList *list) { delete list; }
 
-zmq::context_t *CreateContext()
-{
-    return new zmq::context_t();
-}
+zmq::context_t *CreateContext() { return new zmq::context_t(); }
 
-void DestroyContext(zmq::context_t *context)
-{
-    delete context;
-}
+void DestroyContext(zmq::context_t *context) { delete context; }
 
 zmq::socket_t *CreateSocket(zmq::context_t *context, int socketType)
 {
@@ -64,20 +47,11 @@ zmq::socket_t *CreateSocket(zmq::context_t *context, int socketType)
     return socket;
 }
 
-void BindSocket(zmq::socket_t *socket, const char *address)
-{
-    socket->bind(address);
-}
+void BindSocket(zmq::socket_t *socket, const char *address) { socket->bind(address); }
 
-void ConnectSocket(zmq::socket_t *socket, const char *address)
-{
-    socket->connect(address);
-}
+void ConnectSocket(zmq::socket_t *socket, const char *address) { socket->connect(address); }
 
-void DestroySocket(zmq::socket_t *socket)
-{
-    delete socket;
-}
+void DestroySocket(zmq::socket_t *socket) { delete socket; }
 
 void Send(zmq::socket_t *socket, const uint8_t *data, size_t size)
 {
@@ -89,7 +63,8 @@ size_t Receive(zmq::socket_t *socket, uint8_t *buffer, size_t maxSize)
 {
     zmq::message_t msg;
     auto result = socket->recv(msg, zmq::recv_flags::none);
-    if (result.has_value()) {
+    if (result.has_value())
+    {
         memcpy(buffer, msg.data(), result.value());
         return result.value();
     }
@@ -122,12 +97,13 @@ void PlaceBrush(StageProxy *proxy, const char *brushPath)
     proxy->flushChanged();
 }
 
+void FlushChanges(StageProxy *proxy) { proxy->flushChanged(); }
 
-void FlushChanges(StageProxy *proxy)
-{
-    proxy->flushChanged();
-}
+void Bake(usd::StageProxy *proxy, const char *nubPath) {}
 
-void Bake(usd::StageProxy *proxy, const char *nubPath)
+void GetProperty(usd::StageProxy *proxy, const char *primPath, const char *propName, char *buffer, int buffSize)
 {
+    if (buffSize == 0) return;
+    std::string propValue = proxy->getProperty(primPath, propName);
+    strncpy_s(buffer, buffSize, propValue.c_str(), std::min(buffSize - 1, static_cast<int>(propValue.length())));
 }
