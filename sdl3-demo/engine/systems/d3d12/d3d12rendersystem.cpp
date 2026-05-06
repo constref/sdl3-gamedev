@@ -1,4 +1,6 @@
 #include "d3d12rendersystem.h"
+#include "components/meshcomponent.h"
+#include <directx/d3d12.h>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -7,6 +9,8 @@
 #include <d3dcompiler.h>
 #include <filesystem>
 #include <logger.h>
+
+#include <assets/assetmanager.h>
 
 #include "componentsystems.h"
 #include "util.h"
@@ -37,7 +41,8 @@ D3D12RenderSystem::D3D12RenderSystem(Services &services, SDL_Window *window, int
     m_fenceEvent = NULL;
     m_fenceValue = FramesInFlight;
     m_frameResources.resize(FramesInFlight);
-    m_camPosition = XMFLOAT4(0, 0, 0, 1);
+    m_camPosition = XMFLOAT4(0, 0, -3, 1);
+    m_camDirection = XMFLOAT4(0, 0, 1, 1);
     m_backBuffers.resize(RenderTargetCount);
     if (Config::IsStandaloneMode())
     {
@@ -402,7 +407,7 @@ std::vector<uint64_t> D3D12RenderSystem::getSharedTextureHandles(int editorPID) 
     return sharedHandles;
 }
 
-GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh &mesh)
+GPUMeshHandle D3D12RenderSystem::loadMesh(const uuids::uuid assetId, const Mesh &mesh)
 {
     auto defaultHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -472,6 +477,10 @@ GPUMeshHandle D3D12RenderSystem::loadMesh(const Mesh &mesh)
 
     GPUMeshHandle newHandle = m_gpuMeshes.size();
     m_gpuMeshes.push_back(std::move(gpuMesh));
+
+    // track the GPU handle for this AssetId
+    assetMeshHandles.insert({assetId, newHandle});
+
     return newHandle;
 }
 
@@ -539,7 +548,7 @@ ComPtr<ID3D12PipelineState> D3D12RenderSystem::createPipelineStateObject()
     psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psBytecode.Get());
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
-    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
     psoDesc.SampleMask = UINT_MAX;
@@ -713,7 +722,7 @@ void D3D12RenderSystem::endFrame()
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
                                             res.renderTargetIndex, m_descriptorSizes.RTV);
 
-    FLOAT clearColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
+    FLOAT clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     FLOAT dsvClear[] = {0.0f, 0.0f, 0.0f, 1.0f};
     res.commandList->ClearDepthStencilView(m_dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0, 0, 0,
@@ -809,7 +818,22 @@ void D3D12RenderSystem::update(Node &node)
                                       m_stagingBuffer.Get(), stageRObjOffset, sizeof(RenderObject));
 
     auto [mc] = getRequiredComponents(node);
-    //res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = mc->getHandle()});
+    auto handleItr = assetMeshHandles.find(mc->meshId());
+    GPUMeshHandle meshHandle;
+    if (handleItr == assetMeshHandles.end())
+    {
+        Mesh *mesh = services.assetManager().getMesh(mc->meshId());
+        if (mesh)
+        {
+            meshHandle = loadMesh(mc->meshId(), *mesh);
+            executeAssetCopyOps();
+        }
+    }
+    else
+    {
+        meshHandle = handleItr->second;
+    }
+    res.drawOperations.push_back(DrawOperation{.roIndex = roIndex, .meshHandle = meshHandle});
 }
 
 void D3D12RenderSystem::updateTextures() {}

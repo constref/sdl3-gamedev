@@ -38,7 +38,7 @@ LoadResult loadGltf(const std::string &path)
     // load all meshes first
     for (const tinygltf::Mesh &mesh : model.meshes)
     {
-        Mesh *newMesh = new Mesh();
+        auto newMesh = std::make_unique<Mesh>();
         for (const tinygltf::Primitive &primitive : mesh.primitives)
         {
             SubMesh subMesh;
@@ -56,13 +56,55 @@ LoadResult loadGltf(const std::string &path)
                     for (int i = 0; i < access.count; ++i)
                     {
                         size_t offset = bv.byteOffset + access.byteOffset +
-                                        i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(DirectX::XMFLOAT4));
+                                        i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(DirectX::XMFLOAT3));
                         const DirectX::XMFLOAT3 *pos =
                             reinterpret_cast<const DirectX::XMFLOAT3 *>(buffer.data.data() + offset);
                         subMesh.vertices.push_back(Vertex{.position = *pos});
                     }
                 }
             }
+            // vertex normals
+            if (const auto &itr = primitive.attributes.find("NORMAL"); itr != primitive.attributes.end())
+            {
+                const auto &[name, index] = *itr;
+                const tinygltf::Accessor &access = model.accessors[index];
+                const tinygltf::BufferView &bv = model.bufferViews[access.bufferView];
+                const tinygltf::Buffer &buffer = model.buffers[bv.buffer];
+
+                if (access.type == TINYGLTF_TYPE_VEC3)
+                {
+                    for (int i = 0; i < access.count; ++i)
+                    {
+                        size_t offset = bv.byteOffset + access.byteOffset +
+                                        i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(DirectX::XMFLOAT3));
+                        const DirectX::XMFLOAT3 *normal =
+                            reinterpret_cast<const DirectX::XMFLOAT3 *>(buffer.data.data() + offset);
+                        subMesh.vertices[i].normal = *normal;
+                    }
+		}
+	    }
+
+            // vertex color
+            if (const auto &itr = primitive.attributes.find("COLOR_0"); itr != primitive.attributes.end())
+            {
+                const auto &[name, index] = *itr;
+                const tinygltf::Accessor &access = model.accessors[index];
+                const tinygltf::BufferView &bv = model.bufferViews[access.bufferView];
+                const tinygltf::Buffer &buffer = model.buffers[bv.buffer];
+
+                if (access.type == TINYGLTF_TYPE_VEC3)
+                {
+                    for (int i = 0; i < access.count; ++i)
+                    {
+                        size_t offset = bv.byteOffset + access.byteOffset +
+                                        i * ((bv.byteStride > 0) ? bv.byteStride : sizeof(DirectX::XMFLOAT4));
+                        const DirectX::XMFLOAT4 *color =
+                            reinterpret_cast<const DirectX::XMFLOAT4 *>(buffer.data.data() + offset);
+                        subMesh.vertices[i].color = *color;
+                    }
+		}
+	    }
+
             // load primitive vertices into sub-mesh
             if (const auto &itr = primitive.attributes.find("TEXCOORD_0"); itr != primitive.attributes.end())
             {
@@ -115,8 +157,8 @@ LoadResult loadGltf(const std::string &path)
             }
             newMesh->addSubmesh(std::move(subMesh));
         }
-        result.meshes.insert({mesh.name, std::unique_ptr<Mesh>(newMesh)});
+        result.meshes.insert({mesh.name, std::move(newMesh)});
     }
     return result;
 }
-}; // namespace asssts
+}; // namespace assets

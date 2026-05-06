@@ -14,4 +14,5 @@ class AssetManager
 
 public:
     void loadMesh(uuids::uuid assetId, std::unique_ptr<Mesh> mesh);
+    Mesh *getMesh(const uuids::uuid &assetId);
 };

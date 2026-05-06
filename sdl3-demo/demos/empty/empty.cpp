@@ -28,8 +28,10 @@
 #include "tooling/systems/editorsystem.h"
 #include "tooling/systems/editorinputsystem.h"
 #include "tooling/systems/nodeauthoringcomponent.h"
+#include "components/lightingcomponent.h"
 
 
+#include <assets/assetmanager.h>
 #include <assets/meshloader.h>
 
 using namespace DirectX;
@@ -55,7 +57,7 @@ void Empty::start(Services& services, SDLState& state)
 
     NodeHandle hPlayer = world.createNode();
     Node& player = world.getNode(hPlayer);
-    player.setPosition(glm::vec3(5, 0.6f, -1));
+    player.setPosition(glm::vec3(0, 0, -3));
     auto& physics = services.compSys().addComponent<PhysicsComponent>(player);
     physics.setAcceleration(glm::vec3(30, 30, 30));
     physics.setMaxSpeed(glm::vec3(50, 50, 50));
@@ -65,6 +67,7 @@ void Empty::start(Services& services, SDLState& state)
     input.setAxes(0, 2, 1); // A/D controls X-axis, W/S controls Z-axis
     services.inputState().setFocus(hPlayer);
     services.compSys().addComponent<CameraComponent>(player);
+    root.addChild(player);
 
     /*
     std::ifstream file("demo.nub", std::ios::binary);
@@ -137,7 +140,18 @@ void Empty::start(Services& services, SDLState& state)
     }
     */
 
-    LoadResult result = assets::loadGltf("D:/glTF-Sample-Models/2.0/FlightHelmet/glTF/FlightHelmet.gltf");
+    LoadResult result = assets::loadGltf("S:/projects/constref/sdl3-demo/data/new_triptych/sphere.gltf");
+    auto assetUuid = uuids::uuid::from_string("917f5503-01d2-411b-b9f7-ed5b54ca7697");
+    services.assetManager().loadMesh(assetUuid.value(), std::move(result.meshes.at("Sphere")));
 
-    root.addChild(player);
+    NodeHandle hNode = services.world().createNode();
+    Node &node = services.world().getNode(hNode);
+    auto &meshComp = services.compSys().addComponent<MeshComponent>(node, assetUuid.value());
+    root.addChild(node);
+
+    NodeHandle hLight = services.world().createNode();
+    Node &light = services.world().getNode(hLight);
+    light.setPosition(glm::vec3(-2, 3, 0));
+    services.compSys().addComponent<LightingComponent>(light);
+    root.addChild(light);
 }

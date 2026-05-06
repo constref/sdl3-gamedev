@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uuid.h"
 #include <components/meshcomponent.h>
 #include <systems/system.h>
 
@@ -10,6 +11,7 @@
 #include <rendering/mesh.h>
 #include <rendering/renderer.h>
 #include <systems/lightingsystem.h>
+#include <unordered_map>
 #include <wrl.h>
 
 #include <d3d11on12.h>
@@ -146,6 +148,7 @@ class D3D12RenderSystem : public System<FrameStage::Render, MeshComponent>, publ
     ComPtr<ID3D12Fence> m_fence;
 
     // assets
+    std::unordered_map<uuids::uuid, GPUMeshHandle> assetMeshHandles;
     std::vector<GPUMesh> m_gpuMeshes;
     std::array<GPUMeshHandle, World::capacity()> m_nodeMeshHandles;
     ComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
@@ -192,7 +195,7 @@ public:
     ~D3D12RenderSystem() override;
 
     bool initialize();
-    GPUMeshHandle loadMesh(const Mesh &mesh);
+    GPUMeshHandle loadMesh(const uuids::uuid assetId, const Mesh &mesh);
     const GPUMesh &getMesh(GPUMeshHandle handle);
     void loadAssets();
     void releaseAssets() override;

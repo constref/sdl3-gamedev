@@ -84,9 +84,8 @@ float4 PSMain(PixelIn input) : SV_TARGET
         finalColor += input.color * float4(0.9, 0.8, 0.8, 0) * lightAmt * intensity;
     }
     
-    const int numDirLights = 1;
-    float3 dirLights[1] = {float3(3, 0.7, -3)};
-    for (int i = 0; i < numDirLights; ++i)
+    const int numPointLights = 1;
+    for (int i = 0; i < numPointLights; ++i)
     {
         // point light
         float3 lightPos = lights[i].position;
