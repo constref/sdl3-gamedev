@@ -220,7 +220,7 @@ if (EXECUTION_MODE STREQUAL "TOOLING")
     PRIVATE engine usd usdGeom usdImaging hd usdLux cppzmq nubeproto)
 
   if(MSVC)
-    target_compile_options(enginetooling PRIVATE /std:c++latest)
+    target_compile_options(enginetooling PRIVATE /std:c++latest /Zc:preprocessor)
     #target_link_options(enginetooling PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
   endif()
 
