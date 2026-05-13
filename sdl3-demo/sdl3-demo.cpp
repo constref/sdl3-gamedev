@@ -24,7 +24,7 @@ struct SDLState
 
 	SDLState() : keys(SDL_GetKeyboardState(nullptr))
 	{
-		fullscreen = true;
+		fullscreen = false;
 	}
 };
 
@@ -81,9 +81,9 @@ struct Resources
 	SDL_Texture *texIdle, *texRun, *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
 		*texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit, *texEnemyDie;
 
-	std::vector<Mix_Chunk *> chunks;
-	Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
-	Mix_Music *musicMain;
+	//std::vector<Mix_Chunk *> chunks;
+	//Mix_Chunk *chunkShoot, *chunkShootHit, *chunkEnemyHit;
+	//Mix_Music *musicMain;
 
 	std::vector<TileSetTextures> tilesetTextures;
 	std::unique_ptr<tmx::Map> map;
@@ -96,13 +96,13 @@ struct Resources
 		return tex;
 	}
 
-	Mix_Chunk *loadChunk(const std::string &filepath)
-	{
-		Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
-		Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
-		chunks.push_back(chunk);
-		return chunk;
-	}
+	//Mix_Chunk *loadChunk(const std::string &filepath)
+	//{
+	//	Mix_Chunk *chunk = Mix_LoadWAV(filepath.c_str());
+	//	Mix_VolumeChunk(chunk, MIX_MAX_VOLUME / 2);
+	//	chunks.push_back(chunk);
+	//	return chunk;
+	//}
 
 	void load(SDLState &state)
 	{
@@ -136,11 +136,11 @@ struct Resources
 		texEnemyHit = loadTexture(state.renderer, "data/enemy_hit.png");
 		texEnemyDie = loadTexture(state.renderer, "data/enemy_die.png");
 
-		chunkShoot = loadChunk("data/audio/shoot.wav");
-		chunkShootHit = loadChunk("data/audio/wall_hit.wav");
-		chunkEnemyHit = loadChunk("data/audio/shoot_hit.wav");
+		//chunkShoot = loadChunk("data/audio/shoot.wav");
+		//chunkShootHit = loadChunk("data/audio/wall_hit.wav");
+		//chunkEnemyHit = loadChunk("data/audio/shoot_hit.wav");
 
-		musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
+		//musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
 		map = tmx::loadMap("data/maps/smallmap.tmx");
@@ -166,12 +166,12 @@ struct Resources
 			SDL_DestroyTexture(tex);
 		}
 
-		for (Mix_Chunk *chunk : chunks)
-		{
-			Mix_FreeChunk(chunk);
-		}
+		//for (Mix_Chunk *chunk : chunks)
+		//{
+		//	Mix_FreeChunk(chunk);
+		//}
 
-		Mix_FreeMusic(musicMain);
+		//Mix_FreeMusic(musicMain);
 	}
 };
 
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 	createTiles(state, gs, res);
 	uint64_t prevTime = SDL_GetTicks();
 
-	Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
+	//Mix_VolumeMusic(MIX_MAX_VOLUME / 3);
 	//Mix_PlayMusic(res.musicMain, -1);
 
 	// start the game loop
@@ -363,12 +363,12 @@ bool initialize(SDLState &state)
 	SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	// initialize the SDL_mixer library
-	if (!Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr))
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
-		cleanup(state);
-		initSuccess = false;
-	}
+	//if (!Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr))
+	//{
+	//	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating audio device", state.window);
+	//	cleanup(state);
+	//	initSuccess = false;
+	//}
 
 	SDL_SetWindowFullscreen(state.window, state.fullscreen);
 
@@ -453,7 +453,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		obj.animations[obj.currentAnimation].step(deltaTime);
 	}
 
-	if (obj.dynamic && !obj.grounded)
+	if (obj.dynamic)
 	{
 		// apply some gravity
 		obj.velocity += glm::vec2(0, 500) * deltaTime * obj.gravityFactor;
@@ -534,7 +534,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						gs.bullets.push_back(bullet);
 					}
 
-					Mix_PlayChannel(-1, res.chunkShoot, 0);
+					//Mix_PlayChannel(-1, res.chunkShoot, 0);
 				}
 			}
 			else
@@ -680,48 +680,22 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		obj.velocity.x = currentDirection * obj.maxSpeedX;
 	}
 
-	// add velocity to position
-	obj.position += obj.velocity * deltaTime;
-
 	// handle collision detection
-	bool foundGround = false;
-	for (auto &layer : gs.layers)
+	for (int i = 0; i < obj.position.length(); ++i)
 	{
-		for (GameObject &objB : layer)
-		{
-			if (&obj != &objB)
-			{
-				checkCollision(state, gs, res, obj, objB, deltaTime);
+		// add velocity to position
+		obj.position[i] += obj.velocity[i] * deltaTime;
 
-				if (objB.type == ObjectType::level)
+		for (auto &layer : gs.layers)
+		{
+			for (GameObject &objB : layer)
+			{
+				if (&obj != &objB)
 				{
-					// grounded sensor
-					SDL_FRect sensor{
-						.x = obj.position.x + obj.collider.x,
-						.y = obj.position.y + obj.collider.y + obj.collider.h,
-						.w = obj.collider.w, .h = 1
-					};
-					SDL_FRect rectB{
-						.x = objB.position.x + objB.collider.x,
-						.y = objB.position.y + objB.collider.y,
-						.w = objB.collider.w, .h = objB.collider.h
-					};
-					SDL_FRect rectC{ 0 };
-					if (SDL_GetRectIntersectionFloat(&sensor, &rectB, &rectC))
-					{
-						foundGround = true;
-					}
+					checkCollision(state, gs, res, obj, objB, deltaTime);
 				}
 			}
 		}
-	}
-	if (obj.grounded != foundGround)
-	{
-		if (foundGround && obj.type == ObjectType::player)
-		{
-			obj.data.player.state = PlayerState::running;
-		}
-		obj.grounded = foundGround;
 	}
 }
 
@@ -731,16 +705,19 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 {
 	const auto genericResponse = [&]()
 	{
+		bool contacts[4]{ false }; // top, right, bottom, left
 		if (rectC.w < rectC.h)
 		{
 			// horizontal collision
 			if (objA.velocity.x > 0) // going right
 			{
 				objA.position.x -= rectC.w;
+				contacts[1] = true;
 			}
 			else if (objA.velocity.x < 0)
 			{
 				objA.position.x += rectC.w;
+				contacts[3] = true;
 			}
 			objA.velocity.x = 0;
 		}
@@ -750,12 +727,43 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			if (objA.velocity.y > 0)
 			{
 				objA.position.y -= rectC.h; // going down
+				contacts[2] = true;
+
+				if (objA.type == ObjectType::player)
+				{
+					objA.data.player.state = PlayerState::idle;
+				}
 			}
 			else if (objA.velocity.y < 0)
 			{
 				objA.position.y += rectC.h; // going up
+				contacts[0] = true;
 			}
 			objA.velocity.y = 0;
+		}
+		if (contacts[0] && contacts[0] != objA.contacts[0])
+		{
+			// hit head
+		}
+		else if (contacts[1] && contacts[1] != objA.contacts[1])
+		{
+			// hit right
+		}
+		else if (contacts[2] && !objA.contacts[2])
+		{
+			{
+				printf("falling\n");
+				objA.grounded = false;
+			}
+		}
+		else if (contacts[3] && contacts[3] != objA.contacts[3])
+		{
+			// hit left
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			objA.contacts[i] = contacts[i];
 		}
 	};
 
@@ -791,7 +799,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 				{
 					case ObjectType::level:
 					{
-						Mix_PlayChannel(-1, res.chunkShootHit, 0);
+						//Mix_PlayChannel(-1, res.chunkShootHit, 0);
 						break;
 					}
 					case ObjectType::enemy:
@@ -813,7 +821,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 								objB.texture = res.texEnemyDie;
 								objB.currentAnimation = res.ANIM_ENEMY_DIE;
 							}
-							Mix_PlayChannel(-1, res.chunkEnemyHit, 0);
+							//Mix_PlayChannel(-1, res.chunkEnemyHit, 0);
 						}
 						else
 						{
@@ -841,6 +849,26 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 }
 
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
+{
+    const float minXA = a.x;
+    const float maxXA = a.x + a.w;
+    const float minYA = a.y;
+    const float maxYA = a.y + a.h;
+    const float minXB = b.x;
+    const float maxXB = b.x + b.w;
+    const float minYB = b.y;
+    const float maxYB = b.y + b.h;
+
+    if ((minXA < maxXB && maxXA > minXB) && (minYA < maxYB && maxYA > minYB))
+    {
+        overlap.x = std::min(maxXA - minXB, maxXB - minXA);
+        overlap.y = std::min(maxYA - minYB, maxYB - minYA);
+        return true;
+    }
+    return false;
+}
+
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime)
 {
@@ -856,87 +884,18 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 		.w = b.collider.w,
 		.h = b.collider.h
 	};
-	SDL_FRect rectC{ 0 };
 
-	if (SDL_GetRectIntersectionFloat(&rectA, &rectB, &rectC))
+	glm::vec3 overlap;
+	if (intersectAABB(rectA, rectB, overlap))
 	{
 		// found intersection, respond accordingly
+		SDL_FRect rectC{.x = 0, .y = 0, .w = overlap.x, .h = overlap.y};
 		collisionResponse(state, gs, res, rectA, rectB, rectC, a, b, deltaTime);
 	}
 }
 
 void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 {
-	/*
-const auto loadMap = [&state, &gs, &res](short layer[MAP_ROWS][MAP_COLS])
-	{
-		const auto createObject = [&state](int r, int c, SDL_Texture *tex, ObjectType type)
-			{
-				GameObject o;
-				o.type = type;
-				o.position = glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
-				o.texture = tex;
-				o.collider = { .x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE };
-				return o;
-			};
-
-		for (int r = 0; r < MAP_ROWS; r++)
-		{
-			for (int c = 0; c < MAP_COLS; c++)
-			{
-				switch (layer[r][c])
-				{
-					case 1: // ground
-					{
-						GameObject o = createObject(r, c, res.texGround, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
-						break;
-					}
-					case 2: // panel
-					{
-						GameObject o = createObject(r, c, res.texPanel, ObjectType::level);
-						gs.layers[LAYER_IDX_LEVEL].push_back(o);
-						break;
-					}
-					case 3: // enemy
-					{
-						GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
-						o.data.enemy = EnemyData();
-						o.currentAnimation = res.ANIM_ENEMY;
-						o.animations = res.enemyAnims;
-						o.collider = SDL_FRect{
-							.x = 10, .y = 4, .w = 12, .h = 28
-						};
-						o.maxSpeedX = 15;
-						o.dynamic = true;
-						gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
-						break;
-					}
-					case 4: // player
-					{
-					}
-					case 5: // grass
-					{
-						GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
-						gs.foregroundTiles.push_back(o);
-						break;
-					}
-					case 6: // brick
-					{
-						GameObject o = createObject(r, c, res.texBrick, ObjectType::level);
-						gs.backgroundTiles.push_back(o);
-						break;
-					}
-				}
-			}
-		}
-	};
-loadMap(map);
-loadMap(background);
-loadMap(foreground);
-assert(gs.playerIndex != -1);
-		*/
-
 	struct LayerVisitor
 	{
 		const SDLState &state;
@@ -1016,7 +975,7 @@ assert(gs.playerIndex != -1);
 					};
 					newLayer.push_back(player);
 					gs.playerIndex = 0;
-					gs.playerLayer = gs.layers.size();
+					gs.playerLayer = static_cast<int>(gs.layers.size());
 				}
 				else if (obj.type == "Enemy")
 				{
@@ -1053,6 +1012,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 		{
 			obj.data.player.state = PlayerState::jumping;
 			obj.velocity.y += JUMP_FORCE;
+			obj.grounded = false;
 		}
 	};
 
