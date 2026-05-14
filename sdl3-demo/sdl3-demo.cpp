@@ -181,6 +181,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 	const Resources &res, float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -453,12 +454,6 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		obj.animations[obj.currentAnimation].step(deltaTime);
 	}
 
-	if (obj.dynamic)
-	{
-		// apply some gravity
-		obj.velocity += glm::vec2(0, 500) * deltaTime * obj.gravityFactor;
-	}
-
 	float currentDirection = 0;
 	if (obj.type == ObjectType::player)
 	{
@@ -673,6 +668,8 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	{
 		obj.direction = currentDirection;
 	}
+	
+	// physics and collision detection
 	// add acceleration to velocity
 	obj.velocity += currentDirection * obj.acceleration * deltaTime;
 	if (std::abs(obj.velocity.x) > obj.maxSpeedX)
@@ -680,22 +677,94 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		obj.velocity.x = currentDirection * obj.maxSpeedX;
 	}
 
-	// handle collision detection
-	for (int i = 0; i < obj.position.length(); ++i)
+	// apply some gravity
+	if (obj.dynamic)
 	{
-		// add velocity to position
-		obj.position[i] += obj.velocity[i] * deltaTime;
+		obj.velocity += glm::vec2(0, 500) * deltaTime * obj.gravityFactor;
+	}
+
+	// handle collisions
+	glm::vec2 tentativePos = obj.position;
+	bool contacts[4]{ false }; // top, right, bottom, left
+	for (int axis = 0; axis < obj.position.length(); ++axis)
+	{
+		// integrate velocity per axis
+		tentativePos[axis] += obj.velocity[axis] * deltaTime;
 
 		for (auto &layer : gs.layers)
 		{
 			for (GameObject &objB : layer)
 			{
-				if (&obj != &objB)
+				if (&obj != &objB && objB.type == ObjectType::level
+					&& objB.collider.w > 0 && objB.collider.h > 0)
 				{
-					checkCollision(state, gs, res, obj, objB, deltaTime);
+					SDL_FRect rectA{
+						.x = tentativePos.x + obj.collider.x,
+						.y = tentativePos.y + obj.collider.y,
+						.w = obj.collider.w,
+						.h = obj.collider.h
+					};
+					SDL_FRect rectB{
+						.x = objB.position.x + objB.collider.x,
+						.y = objB.position.y + objB.collider.y,
+						.w = objB.collider.w,
+						.h = objB.collider.h
+					};
+
+					glm::vec3 overlap;
+					if (intersectAABB(rectA, rectB, overlap))
+					{
+						// found intersection, respond accordingly
+						if (axis == 0 && overlap.x) // Horizontal collision
+						{
+							if (obj.velocity.x > 0) // right
+							{
+								tentativePos.x -= overlap.x;
+								contacts[1] = true;
+							}
+							else if (obj.velocity.x <= 0) // left
+							{
+								tentativePos.x += overlap.x;
+								contacts[3] = true;
+							}
+							obj.velocity.x = 0;
+						}
+						else if (axis == 1 && overlap.y) // Vertical collision
+						{
+							if (obj.velocity.y > 0) // down
+							{
+								tentativePos.y -= overlap.y;
+								contacts[2] = true;
+							}
+							else if (obj.velocity.y <= 0) // up
+							{
+								tentativePos.y += overlap.y;
+								contacts[0] = true;
+							}
+							obj.velocity.y = 0;
+						}
+					}
 				}
 			}
 		}
+	}
+
+	obj.grounded = contacts[2];
+	if (contacts[2] && !obj.contacts[2])
+	{
+		// landed event
+	}
+	else if (!contacts[2] && obj.contacts[2])
+	{
+		// leave ground event
+	}
+
+	// update position after collision checks
+	obj.position = tentativePos;
+	// track contacts
+	for (int i = 0; i < 4; i++)
+	{
+		obj.contacts[i] = contacts[i];
 	}
 }
 
@@ -851,22 +920,22 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 
 bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
 {
-    const float minXA = a.x;
-    const float maxXA = a.x + a.w;
-    const float minYA = a.y;
-    const float maxYA = a.y + a.h;
-    const float minXB = b.x;
-    const float maxXB = b.x + b.w;
-    const float minYB = b.y;
-    const float maxYB = b.y + b.h;
+	const float minXA = a.x;
+	const float maxXA = a.x + a.w;
+	const float minYA = a.y;
+	const float maxYA = a.y + a.h;
+	const float minXB = b.x;
+	const float maxXB = b.x + b.w;
+	const float minYB = b.y;
+	const float maxYB = b.y + b.h;
 
-    if ((minXA < maxXB && maxXA > minXB) && (minYA < maxYB && maxYA > minYB))
-    {
-        overlap.x = std::min(maxXA - minXB, maxXB - minXA);
-        overlap.y = std::min(maxYA - minYB, maxYB - minYA);
-        return true;
-    }
-    return false;
+	if ((minXA < maxXB && maxXA > minXB) && (minYA < maxYB && maxYA > minYB))
+	{
+		overlap.x = std::min(maxXA - minXB, maxXB - minXA);
+		overlap.y = std::min(maxYA - minYB, maxYB - minYA);
+		return true;
+	}
+	return false;
 }
 
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
@@ -889,7 +958,7 @@ void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	if (intersectAABB(rectA, rectB, overlap))
 	{
 		// found intersection, respond accordingly
-		SDL_FRect rectC{.x = 0, .y = 0, .w = overlap.x, .h = overlap.y};
+		SDL_FRect rectC{ .x = 0, .y = 0, .w = overlap.x, .h = overlap.y };
 		collisionResponse(state, gs, res, rectA, rectB, rectC, a, b, deltaTime);
 	}
 }
@@ -928,7 +997,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				{
 					const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
 						[tGid](const TileSetTextures &tst) {
-						return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
+							return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
 					});
 
 					const TileSetTextures &tst = *itr;
@@ -1010,9 +1079,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 	{
 		if (key == SDL_SCANCODE_K && keyDown && obj.grounded)
 		{
-			obj.data.player.state = PlayerState::jumping;
 			obj.velocity.y += JUMP_FORCE;
-			obj.grounded = false;
 		}
 	};
 
