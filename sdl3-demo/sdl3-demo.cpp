@@ -182,6 +182,8 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
 bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap);
+void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
+	GameObject &objA, GameObject &objB, glm::vec2 normal, float deltaTime);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -195,7 +197,7 @@ int main(int argc, char *argv[])
 	state.width = 1600;
 	state.height = 900;
 	state.logW = 640;
-	state.logH = 320;
+	state.logH = 360;
 
 	if (!initialize(state))
 	{
@@ -271,7 +273,10 @@ int main(int argc, char *argv[])
 		// update bullets
 		for (GameObject &bullet : gs.bullets)
 		{
-			update(state, gs, res, bullet, deltaTime);
+			if (bullet.data.bullet.state != BulletState::inactive)
+			{
+				update(state, gs, res, bullet, deltaTime);
+			}
 		}
 
 		const int mapWPixels = res.map->mapWidth * res.map->tileWidth;
@@ -668,7 +673,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	{
 		obj.direction = currentDirection;
 	}
-	
+
 	// physics and collision detection
 	// add acceleration to velocity
 	obj.velocity += currentDirection * obj.acceleration * deltaTime;
@@ -677,7 +682,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		obj.velocity.x = currentDirection * obj.maxSpeedX;
 	}
 
-	// apply some gravity
+	// apply gravity
 	if (obj.dynamic)
 	{
 		obj.velocity += glm::vec2(0, 500) * deltaTime * obj.gravityFactor;
@@ -686,7 +691,8 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 	// handle collisions
 	glm::vec2 tentativePos = obj.position;
 	bool contacts[4]{ false }; // top, right, bottom, left
-	for (int axis = 0; axis < obj.position.length(); ++axis)
+
+	for (int axis = 0; axis < obj.position.length() && obj.dynamic; ++axis)
 	{
 		// integrate velocity per axis
 		tentativePos[axis] += obj.velocity[axis] * deltaTime;
@@ -695,8 +701,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		{
 			for (GameObject &objB : layer)
 			{
-				if (&obj != &objB && objB.type == ObjectType::level
-					&& objB.collider.w > 0 && objB.collider.h > 0)
+				if (&obj != &objB && objB.collider.w > 0 && objB.collider.h > 0)
 				{
 					SDL_FRect rectA{
 						.x = tentativePos.x + obj.collider.x,
@@ -715,145 +720,84 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 					if (intersectAABB(rectA, rectB, overlap))
 					{
 						// found intersection, respond accordingly
+						glm::vec2 normal{ 0 };
 						if (axis == 0 && overlap.x) // Horizontal collision
 						{
 							if (obj.velocity.x > 0) // right
 							{
 								tentativePos.x -= overlap.x;
+								normal = glm::vec2(-1, 0);
 								contacts[1] = true;
 							}
 							else if (obj.velocity.x <= 0) // left
 							{
 								tentativePos.x += overlap.x;
+								normal = glm::vec2(1, 0);
 								contacts[3] = true;
 							}
-							obj.velocity.x = 0;
 						}
 						else if (axis == 1 && overlap.y) // Vertical collision
 						{
 							if (obj.velocity.y > 0) // down
 							{
 								tentativePos.y -= overlap.y;
+								normal = glm::vec2(0, -1);
 								contacts[2] = true;
 							}
 							else if (obj.velocity.y <= 0) // up
 							{
 								tentativePos.y += overlap.y;
+								normal = glm::vec2(0, 1);
 								contacts[0] = true;
 							}
-							obj.velocity.y = 0;
 						}
+						collisionResponse(state, gs, res, obj, objB, normal, deltaTime);
 					}
 				}
 			}
 		}
-	}
 
-	obj.grounded = contacts[2];
-	if (contacts[2] && !obj.contacts[2])
-	{
-		// landed event
-	}
-	else if (!contacts[2] && obj.contacts[2])
-	{
-		// leave ground event
-	}
+		obj.grounded = contacts[2];
+		if (contacts[2] && !obj.contacts[2])
+		{
+			// landed event
+			if (obj.type == ObjectType::player)
+			{
+				// reset jump state
+				obj.data.player.state = currentDirection ? PlayerState::running : PlayerState::idle;
+			}
+		}
+		else if (!contacts[2] && obj.contacts[2])
+		{
+			// leave ground event
+		}
+		// track contacts
+		for (int i = 0; i < 4; i++)
+		{
+			obj.contacts[i] = contacts[i];
+		}
 
-	// update position after collision checks
-	obj.position = tentativePos;
-	// track contacts
-	for (int i = 0; i < 4; i++)
-	{
-		obj.contacts[i] = contacts[i];
+		// update position after collision checks
+		obj.position = tentativePos;
 	}
 }
 
 void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
-	const SDL_FRect &rectA, const SDL_FRect &rectB, const SDL_FRect &rectC,
-	GameObject &objA, GameObject &objB, float deltaTime)
+	GameObject &objA, GameObject &objB, glm::vec2 normal, float deltaTime)
 {
-	const auto genericResponse = [&]()
-	{
-		bool contacts[4]{ false }; // top, right, bottom, left
-		if (rectC.w < rectC.h)
-		{
-			// horizontal collision
-			if (objA.velocity.x > 0) // going right
-			{
-				objA.position.x -= rectC.w;
-				contacts[1] = true;
-			}
-			else if (objA.velocity.x < 0)
-			{
-				objA.position.x += rectC.w;
-				contacts[3] = true;
-			}
-			objA.velocity.x = 0;
-		}
-		else
-		{
-			// vertical collision
-			if (objA.velocity.y > 0)
-			{
-				objA.position.y -= rectC.h; // going down
-				contacts[2] = true;
-
-				if (objA.type == ObjectType::player)
-				{
-					objA.data.player.state = PlayerState::idle;
-				}
-			}
-			else if (objA.velocity.y < 0)
-			{
-				objA.position.y += rectC.h; // going up
-				contacts[0] = true;
-			}
-			objA.velocity.y = 0;
-		}
-		if (contacts[0] && contacts[0] != objA.contacts[0])
-		{
-			// hit head
-		}
-		else if (contacts[1] && contacts[1] != objA.contacts[1])
-		{
-			// hit right
-		}
-		else if (contacts[2] && !objA.contacts[2])
-		{
-			{
-				printf("falling\n");
-				objA.grounded = false;
-			}
-		}
-		else if (contacts[3] && contacts[3] != objA.contacts[3])
-		{
-			// hit left
-		}
-
-		for (int i = 0; i < 4; i++)
-		{
-			objA.contacts[i] = contacts[i];
-		}
-	};
-
-	// object we are checking
 	if (objA.type == ObjectType::player)
 	{
-		// object it is colliding with
-		switch (objB.type)
+		if (objB.type == ObjectType::level)
 		{
-			case ObjectType::level:
+			if (normal.x != 0)
 			{
-				genericResponse();
-				break;
+				// vertical collision
+				objA.velocity.x = 0;
 			}
-			case ObjectType::enemy:
+			else if (normal.y != 0)
 			{
-				if (objB.data.enemy.state != EnemyState::dead)
-				{
-					objA.velocity = glm::vec2(100, 0) * -objA.direction;
-				}
-				break;
+				// horizontal collision
+				objA.velocity.y = 0;
 			}
 		}
 	}
@@ -866,8 +810,23 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 			{
 				switch (objB.type)
 				{
+					case ObjectType::player:
+					{
+						passthrough = true;
+						break;
+					}
 					case ObjectType::level:
 					{
+						if (normal.x != 0)
+						{
+							// vertical collision
+							objA.velocity.x = 0;
+						}
+						else if (normal.y != 0)
+						{
+							// horizontal collision
+							objA.velocity.y = 0;
+						}
 						//Mix_PlayChannel(-1, res.chunkShootHit, 0);
 						break;
 					}
@@ -887,6 +846,9 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 							if (d.healthPoints <= 0)
 							{
 								d.state = EnemyState::dead;
+								objB.dynamic = false;
+								objB.collider.w = 0;
+								objB.collider.h = 0;
 								objB.texture = res.texEnemyDie;
 								objB.currentAnimation = res.ANIM_ENEMY_DIE;
 							}
@@ -902,8 +864,8 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 				}
 				if (!passthrough)
 				{
-					genericResponse();
 					objA.velocity *= 0;
+					objA.dynamic = false;
 					objA.data.bullet.state = BulletState::colliding;
 					objA.texture = res.texBulletHit;
 					objA.currentAnimation = res.ANIM_BULLET_HIT;
@@ -914,7 +876,19 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	}
 	else if (objA.type == ObjectType::enemy)
 	{
-		genericResponse();
+		if (objB.type == ObjectType::level)
+		{
+			if (normal.x != 0)
+			{
+				// vertical collision
+				objA.velocity.x = 0;
+			}
+			else if (normal.y != 0)
+			{
+				// horizontal collision
+				objA.velocity.y = 0;
+			}
+		}
 	}
 }
 
@@ -936,31 +910,6 @@ bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
 		return true;
 	}
 	return false;
-}
-
-void checkCollision(const SDLState &state, GameState &gs, Resources &res,
-	GameObject &a, GameObject &b, float deltaTime)
-{
-	SDL_FRect rectA{
-		.x = a.position.x + a.collider.x,
-		.y = a.position.y + a.collider.y,
-		.w = a.collider.w,
-		.h = a.collider.h
-	};
-	SDL_FRect rectB{
-		.x = b.position.x + b.collider.x,
-		.y = b.position.y + b.collider.y,
-		.w = b.collider.w,
-		.h = b.collider.h
-	};
-
-	glm::vec3 overlap;
-	if (intersectAABB(rectA, rectB, overlap))
-	{
-		// found intersection, respond accordingly
-		SDL_FRect rectC{ .x = 0, .y = 0, .w = overlap.x, .h = overlap.y };
-		collisionResponse(state, gs, res, rectA, rectB, rectC, a, b, deltaTime);
-	}
 }
 
 void createTiles(const SDLState &state, GameState &gs, const Resources &res)
@@ -997,7 +946,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				{
 					const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
 						[tGid](const TileSetTextures &tst) {
-							return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
+						return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
 					});
 
 					const TileSetTextures &tst = *itr;
@@ -1080,6 +1029,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 		if (key == SDL_SCANCODE_K && keyDown && obj.grounded)
 		{
 			obj.velocity.y += JUMP_FORCE;
+			obj.data.player.state = PlayerState::jumping;
 		}
 	};
 
