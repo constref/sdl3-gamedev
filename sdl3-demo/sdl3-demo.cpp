@@ -721,30 +721,34 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 					{
 						// found intersection, respond accordingly
 						glm::vec2 normal{ 0 };
-						if (axis == 0 && overlap.x) // Horizontal collision
+						if (axis == 0) // Horizontal collision
 						{
-							if (obj.velocity.x > 0) // right
+							if (obj.position.x + obj.collider.x + obj.collider.w <= 
+								objB.position.x + objB.collider.x) // right
 							{
 								tentativePos.x -= overlap.x;
 								normal = glm::vec2(-1, 0);
 								contacts[1] = true;
 							}
-							else if (obj.velocity.x <= 0) // left
+							else if (obj.position.x + obj.collider.x >=
+								objB.position.x + objB.collider.x + objB.collider.w) // left
 							{
 								tentativePos.x += overlap.x;
 								normal = glm::vec2(1, 0);
 								contacts[3] = true;
 							}
 						}
-						else if (axis == 1 && overlap.y) // Vertical collision
+						else if (axis == 1) // Vertical collision
 						{
-							if (obj.velocity.y > 0) // down
+							if (obj.position.y + obj.collider.y + obj.collider.h <= 
+								objB.position.y + objB.collider.y) // down
 							{
 								tentativePos.y -= overlap.y;
 								normal = glm::vec2(0, -1);
 								contacts[2] = true;
 							}
-							else if (obj.velocity.y <= 0) // up
+							else if (obj.position.y + obj.collider.y >= 
+								objB.position.y + objB.collider.y + objB.collider.h) // left
 							{
 								tentativePos.y += overlap.y;
 								normal = glm::vec2(0, 1);
@@ -817,16 +821,6 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 					}
 					case ObjectType::level:
 					{
-						if (normal.x != 0)
-						{
-							// vertical collision
-							objA.velocity.x = 0;
-						}
-						else if (normal.y != 0)
-						{
-							// horizontal collision
-							objA.velocity.y = 0;
-						}
 						//Mix_PlayChannel(-1, res.chunkShootHit, 0);
 						break;
 					}
