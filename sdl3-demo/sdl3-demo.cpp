@@ -181,9 +181,10 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 	const Resources &res, float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res, GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
-bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap);
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap);
 void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
-	GameObject &objA, GameObject &objB, glm::vec2 normal, float deltaTime);
+	GameObject &objA, GameObject &objB, glm::vec2 &tentativePos, glm::vec2 normal,
+	glm::vec2 overlap, float deltaTime);
 void checkCollision(const SDLState &state, GameState &gs, Resources &res,
 	GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
@@ -716,46 +717,41 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 						.h = objB.collider.h
 					};
 
-					glm::vec3 overlap;
+					glm::vec2 overlap;
 					if (intersectAABB(rectA, rectB, overlap))
 					{
-						// found intersection, respond accordingly
 						glm::vec2 normal{ 0 };
 						if (axis == 0) // Horizontal collision
 						{
-							if (obj.position.x + obj.collider.x + obj.collider.w <= 
+							if (obj.position.x + obj.collider.x + obj.collider.w <=
 								objB.position.x + objB.collider.x) // right
 							{
-								tentativePos.x -= overlap.x;
 								normal = glm::vec2(-1, 0);
 								contacts[1] = true;
 							}
 							else if (obj.position.x + obj.collider.x >=
 								objB.position.x + objB.collider.x + objB.collider.w) // left
 							{
-								tentativePos.x += overlap.x;
 								normal = glm::vec2(1, 0);
 								contacts[3] = true;
 							}
 						}
 						else if (axis == 1) // Vertical collision
 						{
-							if (obj.position.y + obj.collider.y + obj.collider.h <= 
+							if (obj.position.y + obj.collider.y + obj.collider.h <=
 								objB.position.y + objB.collider.y) // down
 							{
-								tentativePos.y -= overlap.y;
 								normal = glm::vec2(0, -1);
 								contacts[2] = true;
 							}
-							else if (obj.position.y + obj.collider.y >= 
-								objB.position.y + objB.collider.y + objB.collider.h) // left
+							else if (obj.position.y + obj.collider.y >=
+								objB.position.y + objB.collider.y + objB.collider.h) // up
 							{
-								tentativePos.y += overlap.y;
 								normal = glm::vec2(0, 1);
 								contacts[0] = true;
 							}
 						}
-						collisionResponse(state, gs, res, obj, objB, normal, deltaTime);
+						collisionResponse(state, gs, res, obj, objB, tentativePos, normal, overlap, deltaTime);
 					}
 				}
 			}
@@ -775,7 +771,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 		{
 			// leave ground event
 		}
-		// track contacts
+		// update object's contacts
 		for (int i = 0; i < 4; i++)
 		{
 			obj.contacts[i] = contacts[i];
@@ -787,41 +783,53 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
 }
 
 void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
-	GameObject &objA, GameObject &objB, glm::vec2 normal, float deltaTime)
+	GameObject &objA, GameObject &objB, glm::vec2 &tentativePos, glm::vec2 normal,
+	glm::vec2 overlap, float deltaTime)
 {
+	auto resolveCollision = [&objA, &tentativePos, &normal, &overlap]()
+	{
+		tentativePos += normal * overlap;
+	};
+	auto clearVelocity = [&objA, &tentativePos, &normal, &overlap]()
+	{
+		if (normal.x != 0)
+		{
+			objA.velocity.x = 0;
+		}
+		else if (normal.y != 0)
+		{
+			objA.velocity.y = 0;
+		}
+	};
+
 	if (objA.type == ObjectType::player)
 	{
 		if (objB.type == ObjectType::level)
 		{
-			if (normal.x != 0)
-			{
-				// vertical collision
-				objA.velocity.x = 0;
-			}
-			else if (normal.y != 0)
-			{
-				// horizontal collision
-				objA.velocity.y = 0;
-			}
+			clearVelocity();
+			resolveCollision();
 		}
 	}
 	else if (objA.type == ObjectType::bullet)
 	{
-		bool passthrough = false;
+		auto destroyBullet = [&objA, &res, resolveCollision, clearVelocity]()
+		{
+			objA.dynamic = false;
+			objA.data.bullet.state = BulletState::colliding;
+			objA.texture = res.texBulletHit;
+			objA.currentAnimation = res.ANIM_BULLET_HIT;
+			resolveCollision();
+			clearVelocity();
+		};
 		switch (objA.data.bullet.state)
 		{
 			case BulletState::moving:
 			{
 				switch (objB.type)
 				{
-					case ObjectType::player:
-					{
-						passthrough = true;
-						break;
-					}
 					case ObjectType::level:
 					{
-						//Mix_PlayChannel(-1, res.chunkShootHit, 0);
+						destroyBullet();
 						break;
 					}
 					case ObjectType::enemy:
@@ -829,6 +837,8 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 						EnemyData &d = objB.data.enemy;
 						if (d.state != EnemyState::dead)
 						{
+							destroyBullet();
+
 							objB.direction = -objA.direction;
 							objB.shouldFlash = true;
 							objB.flashTimer.reset();
@@ -848,21 +858,7 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 							}
 							//Mix_PlayChannel(-1, res.chunkEnemyHit, 0);
 						}
-						else
-						{
-							// don't collide with dead enemies
-							passthrough = true;
-						}
-						break;
 					}
-				}
-				if (!passthrough)
-				{
-					objA.velocity *= 0;
-					objA.dynamic = false;
-					objA.data.bullet.state = BulletState::colliding;
-					objA.texture = res.texBulletHit;
-					objA.currentAnimation = res.ANIM_BULLET_HIT;
 				}
 				break;
 			}
@@ -872,21 +868,13 @@ void collisionResponse(const SDLState &state, GameState &gs, Resources &res,
 	{
 		if (objB.type == ObjectType::level)
 		{
-			if (normal.x != 0)
-			{
-				// vertical collision
-				objA.velocity.x = 0;
-			}
-			else if (normal.y != 0)
-			{
-				// horizontal collision
-				objA.velocity.y = 0;
-			}
+			clearVelocity();
+			resolveCollision();
 		}
 	}
 }
 
-bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec3 &overlap)
+bool intersectAABB(const SDL_FRect &a, const SDL_FRect &b, glm::vec2 &overlap)
 {
 	const float minXA = a.x;
 	const float maxXA = a.x + a.w;
