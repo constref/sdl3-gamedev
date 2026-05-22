@@ -69,6 +69,7 @@ struct GameObject
 	ObjectType type;
 	ObjectData data;
 	glm::vec2 position, velocity, acceleration;
+	bool contacts[4]; // Top, Right, Bottom, Left
 	float direction;
 	float maxSpeedX;
 	std::vector<Animation> animations;
@@ -80,8 +81,9 @@ struct GameObject
 	Timer flashTimer;
 	bool shouldFlash;
 	int spriteFrame;
+	float gravityFactor;
 
-	GameObject() : data{ .level = LevelData() }, collider{ 0 }, flashTimer(0.05f)
+	GameObject() : data{ .level = LevelData() }, collider{ 0 }, flashTimer(0.05f), contacts{false}
 	{
 		type = ObjectType::level;
 		direction = 1;
@@ -93,5 +95,6 @@ struct GameObject
 		grounded = false;
 		shouldFlash = false;
 		spriteFrame = 1;
+		gravityFactor = 1;
 	}
 };
