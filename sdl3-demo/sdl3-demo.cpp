@@ -158,7 +158,7 @@ struct Resources
 		//musicMain = Mix_LoadMUS("data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3");
 
 		// load the map XML and preload image(s)
-		map = tmx::loadMap("data/maps/smallmap.tmx");
+		map = tmx::loadMap("data/maps/largemap.tmx");
 		for (tmx::TileSet &tileSet : map->tileSets)
 		{
 			TileSetTextures tst;
@@ -945,7 +945,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res)
 				{
 					const auto itr = std::find_if(res.tilesetTextures.begin(), res.tilesetTextures.end(),
 						[tGid](const TileSetTextures &tst) {
-						return tGid >= tst.firstGid && tGid < tst.firstGid + tst.textures.size() - 1;
+						return tGid >= tst.firstGid && tGid <= tst.firstGid + tst.textures.size() - 1;
 					});
 
 					const TileSetTextures &tst = *itr;
